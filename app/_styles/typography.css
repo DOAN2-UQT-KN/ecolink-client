@@ -1,0 +1,71 @@
+@utility font-title-primary {
+  font-family: var(--font-title);
+  font-size: 128px;
+  line-height: 128px;
+}
+
+@utility font-display-11 {
+  font-family: var(--font-display);
+  font-size: 72px;
+  line-height: 72px;
+}
+
+@utility font-display-10 {
+  font-family: var(--font-display);
+  font-size: 60px;
+  line-height: 60px;
+}
+
+@utility font-display-9 {
+  font-family: var(--font-display);
+  font-size: 48px;
+  line-height: 48px;
+}
+
+@utility font-display-8 {
+  font-family: var(--font-display);
+  font-size: 36px;
+  line-height: 40px;
+}
+
+@utility font-display-7 {
+  font-family: var(--font-display);
+  font-size: 30px;
+  line-height: 36px;
+}
+
+@utility font-display-6 {
+  font-family: var(--font-display);
+  font-size: 24px;
+  line-height: 32px;
+}
+
+@utility font-display-5 {
+  font-family: var(--font-display);
+  font-size: 20px;
+  line-height: 32px;
+}
+
+@utility font-display-4 {
+  font-family: var(--font-display);
+  font-size: 18px;
+  line-height: 30px;
+}
+
+@utility font-display-3 {
+  font-family: var(--font-display);
+  font-size: 16px;
+  line-height: 26px;
+}
+
+@utility font-display-2 {
+  font-family: var(--font-display);
+  font-size: 14px;
+  line-height: 24px;
+}
+
+@utility font-display-1 {
+  font-family: var(--font-display);
+  font-size: 12px;
+  line-height: 22px;
+}

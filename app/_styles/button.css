@@ -1,0 +1,48 @@
+.btn {
+  @apply inline-flex items-center justify-center font-medium transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 rounded-[8px] gap-[8px];
+}
+
+.btn-green {
+  @apply bg-[var(--background-quaternary)] text-[var(--background-primary)] border border-transparent hover:bg-[var(--background-tertiary)];
+}
+
+.btn-brown {
+  @apply bg-[var(--button-accent)] text-[var(--background-primary)] border border-transparent hover:bg-[var(--button-accent-hover)];
+}
+
+.btn-outlined-green {
+  @apply bg-transparent border border-[var(--background-quaternary)] text-[var(--background-quaternary)] hover:bg-[var(--background-secondary)] hover:text-[var(--background-quaternary)];
+}
+
+.btn-outlined-brown {
+  @apply bg-transparent border border-[var(--button-accent)] text-[var(--button-accent)] hover:bg-[var(--button-accent)] hover:text-[var(--background-primary)];
+}
+
+.btn-large {
+  @apply px-[22px] py-[12px];
+  font-family: var(--font-display);
+  font-size: 14px;
+  line-height: 26px;
+  font-weight: 600;
+}
+
+.btn-medium {
+  @apply px-[20px] py-[10px];
+  font-family: var(--font-display);
+  font-size: 14px;
+  line-height: 14px;
+  font-weight: semibold;
+}
+
+.btn-small {
+  @apply px-[10px] py-[13px] text-[10px];
+  border-radius: 10px !important;
+}
+
+.btn-disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+.btn-enabled {
+  @apply cursor-pointer;
+}
