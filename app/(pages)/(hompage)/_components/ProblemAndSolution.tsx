@@ -58,7 +58,7 @@ const ProblemAndSolution = () => {
                 key="0"
                 className="text-background-quaternary italic whitespace-nowrap"
               />,
-              <br key="1" />,
+              <br key="1" className="inline lg:hidden" />,
             ]}
           />
         </h1>

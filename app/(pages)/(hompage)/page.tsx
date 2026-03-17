@@ -20,11 +20,11 @@ export default function Home() {
 
       <ForVolunteers />
 
-      <Divider />
+      <Divider className="text-background-tertiary my-15" />
 
       <ForCitizens />
 
-      <Divider />
+      <Divider className="text-background-tertiary my-15" />
 
       <CallToAction />
     </div>

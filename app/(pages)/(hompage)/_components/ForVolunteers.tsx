@@ -37,19 +37,19 @@ const ForVolunteer = () => {
     return volunteerItems.map((item) => (
       <CollapseCard
         key={item.key}
-        title={item.title}
+        title={t(item.title)}
         className="h-full"
         defaultOpen
       >
-        <p>{item.description}</p>
+        <p>{t(item.description)}</p>
       </CollapseCard>
     ));
   }, [t]);
 
   return (
-    <div className="flex flex-col px-[10px] pb-[40px] w-full lg:px-[120px]">
-      <div className="flex flex-col items-center">
-        <Tag variant="green">Smart Environmental System</Tag>
+    <div className="flex flex-col px-[10px] w-full lg:px-[120px] ">
+      <div className="flex flex-col items-center gap-5 pb-5">
+        <Tag variant="green">Take Action</Tag>
 
         <h1 className="text-center">
           <Trans
@@ -60,7 +60,7 @@ const ForVolunteer = () => {
                 key="0"
                 className="text-background-quaternary italic whitespace-nowrap"
               />,
-              <br key="1" />,
+              <br key="1" className="lg:hidden inline" />,
             ]}
           />
         </h1>
