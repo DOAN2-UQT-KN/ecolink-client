@@ -375,13 +375,13 @@ const Header: React.FC<CardNavProps> = ({ ease = "power3.out", menuColor }) => {
       {(items || []).slice(0, 3).map((item, idx) => (
         <SpotlightCard
           key={idx}
-          spotlightColor="rgba(151, 175, 97, 0.2)"
+          spotlightColor="rgba(151, 175, 97, 0.3)"
           className="nav-card select-none relative flex flex-col gap-2 p-[12px_12px] lg:p-[20px_16px] rounded-[calc(0.75rem-0.2rem)] min-w-0 flex-[1_1_auto] h-auto md:min-h-[60px] md:h-full md:min-h-0 md:flex-[1_1_0%] bg-white/40 rounded-2xl backdrop-blur-xl border border-white/50 text-black"
         >
           <div className="nav-card-label tracking-[-0.5px] text-[16px] md:text-[22px] font-display-5 font-semibold">
             {t(item.label)}
           </div>
-          <div className="nav-card-links mt-auto flex flex-col gap-1 md:gap-[4px]">
+          <div className="nav-card-links mt-auto flex flex-col gap-0 md:gap-[4px]">
             {item.links?.map((lnk, i) => (
               <a
                 key={`${lnk.label}-${i}`}
@@ -390,7 +390,7 @@ const Header: React.FC<CardNavProps> = ({ ease = "power3.out", menuColor }) => {
                   before:content-[''] before:absolute before:bottom-[-2px] before:left-0
                   before:w-0 before:h-[1px] before:bg-button-accent
                   before:transition-all before:duration-300
-                  hover:before:w-full flex flex-row items-center gap-1 w-fit hover:cursor-pointer font-display-2
+                  hover:before:w-full flex flex-row items-center gap-1 w-fit hover:cursor-pointer font-display-1 md:font-display-3
                 "
                 href={lnk.href}
                 aria-label={t(lnk.ariaLabel)}

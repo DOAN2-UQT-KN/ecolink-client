@@ -77,7 +77,7 @@ const ContentCard = ({
           <div>
             <p
               ref={textRef}
-              className={`font-display-1 text-foreground-secondary ${!isExpanded ? "line-clamp-2 md:line-clamp-4" : ""}`}
+              className={`font-display-1 lg:font-display-2 text-foreground-secondary ${!isExpanded ? "line-clamp-2 md:line-clamp-4" : ""}`}
             >
               {t(description)}
             </p>
@@ -87,7 +87,7 @@ const ContentCard = ({
                   e.stopPropagation();
                   setIsExpanded(true);
                 }}
-                className="font-display-1 mt-1 font-medium text-foreground underline decoration-1 underline-offset-2"
+                className="font-display-1 lg:font-display- mt-1 font-medium text-foreground underline decoration-1 underline-offset-2"
               >
                 {t("See more")}
               </button>

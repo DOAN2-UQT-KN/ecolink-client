@@ -66,7 +66,7 @@ const SpotlightCard: React.FC<SpotlightCardProps> = ({
       onBlur={handleBlur}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className={`relative rounded-3xl shadow-sm hover:shadow-lg  border border-neutral-800 bg-neutral-900 overflow-hidden p-8 transition-transform duration-200 ease-out will-change-transform ${className}`}
+      className={`relative rounded-3xl shadow-sm hover:shadow-lg  border-2 border-neutral-800 bg-neutral-900 overflow-hidden p-8 transition-transform duration-200 ease-out will-change-transform ${className}`}
       style={{
         transform: `perspective(1000px) rotateX(${tilt.rotateX}deg) rotateY(${tilt.rotateY}deg) scale3d(1, 1, 1)`,
       }}

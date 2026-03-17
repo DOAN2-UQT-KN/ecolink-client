@@ -45,7 +45,7 @@ const ProblemAndSolution = () => {
   }, [t]);
 
   return (
-    <div className="flex flex-col items-center justify-between py-[40px] px-[10px] lg:px-[70px] gap-10 w-full">
+    <div className="flex flex-col items-center justify-between py-[40px] px-[10px] lg:px-[120px] gap-10 w-full">
       <div className="flex flex-col items-center gap-5 ">
         <Tag variant="green">Smart Environmental System</Tag>
 

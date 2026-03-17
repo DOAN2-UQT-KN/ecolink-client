@@ -10,7 +10,7 @@ const HeroSection = () => {
   const { t } = useTranslation();
 
   return (
-    <section className="flex flex-col lg:flex-row items-center justify-between w-full px-[20px] lg:px-[80px] xl:px-[100px] ">
+    <section className="flex flex-col lg:flex-row items-center justify-between w-full px-[20px] lg:px-[150px] ">
       <Image
         src="/herosection.png"
         alt="Hero Image"
