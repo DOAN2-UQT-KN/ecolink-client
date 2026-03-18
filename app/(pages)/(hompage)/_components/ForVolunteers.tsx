@@ -1,9 +1,12 @@
+"use client";
+
 import CollapseCard from "@/components/shared/CollapseCard";
 import { Tag } from "@/components/shared/Tag";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import Image from "next/image";
 import { useCallback } from "react";
 import { Trans, useTranslation } from "react-i18next";
+import { motion } from "framer-motion";
 
 const MOBILE_IMG = "/take-action-mobile.png";
 const DESKTOP_IMG = "/take-action-desktop.png";
@@ -48,7 +51,13 @@ const ForVolunteer = () => {
 
   return (
     <div className="flex flex-col px-[10px] w-full lg:px-[120px] ">
-      <div className="flex flex-col items-center gap-5 pb-5">
+      <motion.div
+        initial={{ opacity: 0, y: -50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+        className="flex flex-col items-center gap-5 pb-5"
+      >
         <Tag variant="green">Take Action</Tag>
 
         <h1 className="text-center">
@@ -64,19 +73,32 @@ const ForVolunteer = () => {
             ]}
           />
         </h1>
-      </div>
+      </motion.div>
 
       <div className="flex flex-col lg:flex-row items-center justify-between w-full lg:gap-10">
-        <Image
-          src={isLarge ? DESKTOP_IMG : MOBILE_IMG}
-          alt="For volunteers"
-          width={isLarge ? 572 : 393}
-          height={isLarge ? 582 : 378}
-          className="w-full h-auto"
-        />{" "}
-        <div className="flex flex-col px-[10px] gap-3 w-full">
+        <motion.div
+          initial={{ opacity: 0, x: -50 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
+          <Image
+            src={isLarge ? DESKTOP_IMG : MOBILE_IMG}
+            alt="For volunteers"
+            width={isLarge ? 572 : 393}
+            height={isLarge ? 582 : 378}
+            className="w-[393px] lg:w-[572px] h-auto"
+          />
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, x: 50 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="flex flex-col px-[10px] gap-3 w-full"
+        >
           {renderVolunteerItems()}
-        </div>
+        </motion.div>
       </div>
     </div>
   );

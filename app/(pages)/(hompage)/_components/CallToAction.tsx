@@ -1,11 +1,20 @@
+"use client";
+
 import { Button } from "@/components/shared/Button";
 import { Trans, useTranslation } from "react-i18next";
+import { motion } from "framer-motion";
 
 const CallToAction = () => {
   const { t } = useTranslation("common");
 
   return (
-    <div className="flex flex-col items-center justify-between gap-[30px]  px-[30px]">
+    <motion.div
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      viewport={{ once: true }}
+      transition={{ duration: 1 }}
+      className="flex flex-col items-center justify-between gap-[30px]  px-[30px]"
+    >
       <span className="font-title text-[30px] md:text-[60px] text-center">
         <Trans
           ns="common"
@@ -34,7 +43,7 @@ const CallToAction = () => {
       </p>
 
       <Button variant="green">{t("Join EcoLink")}</Button>
-    </div>
+    </motion.div>
   );
 };
 

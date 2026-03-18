@@ -1,9 +1,12 @@
+"use client";
+
 import { Button } from "@/components/shared/Button";
 import { Tag } from "@/components/shared/Tag";
 import FeatureCard from "@/components/shared/FeatureCard";
 import { Trans, useTranslation } from "react-i18next";
 import { useMemo } from "react";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { motion } from "framer-motion";
 
 const ForCitizens = () => {
   const { t } = useTranslation("common");
@@ -57,7 +60,13 @@ const ForCitizens = () => {
 
   return (
     <div className="flex flex-col px-[10px] w-full lg:pl-[160px] lg:pr-[120px] lg:flex-row md:items-start md:justify-center md:gap-[50px] ">
-      <div className="flex flex-col items-center gap-5 pb-5 md:items-start">
+      <motion.div
+        initial={{ opacity: 0, x: -50 }}
+        whileInView={{ opacity: 1, x: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+        className="flex flex-col items-center gap-5 pb-5 md:items-start"
+      >
         <Tag variant="green">Raise Your Voice</Tag>
 
         <h1 className="text-center lg:text-left">
@@ -79,15 +88,21 @@ const ForCitizens = () => {
             "Report waste and environmental issues in just a few simple steps. Your voice empowers the community to act faster and create meaningful change for the Earth.",
           )}
         </p>
-      </div>
+      </motion.div>
 
-      <div className="flex flex-col lg:flex-row items-center lg:items-stretch justify-between w-full gap-[30px] px-[20px] py-[10px] lg:w-3/4 w-full">
+      <motion.div
+        initial={{ opacity: 0, x: 50 }}
+        whileInView={{ opacity: 1, x: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+        className="flex flex-col lg:flex-row items-center lg:items-stretch justify-between w-full gap-[30px] px-[20px] py-[10px] lg:w-3/4 w-full"
+      >
         <FeatureCard {...forCitizensItems[0]} />
         <div className="flex flex-col gap-[30px] w-full">
           <FeatureCard {...forCitizensItems[1]} />
           <FeatureCard {...forCitizensItems[2]} />
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };
