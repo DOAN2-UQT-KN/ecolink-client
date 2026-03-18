@@ -10,7 +10,7 @@ const HeroSection = () => {
   const { t } = useTranslation();
 
   return (
-    <section className="flex flex-col lg:flex-row items-center justify-between w-full px-[20px] lg:px-[150px] ">
+    <section className="flex flex-col lg:flex-row items-center justify-between w-full px-[20px] lg:px-[160px] ">
       <Image
         src="/herosection.png"
         alt="Hero Image"
@@ -55,7 +55,7 @@ const HeroSection = () => {
       <Image
         src="/herosection.png"
         alt="Hero Image"
-        width={470}
+        width={600}
         height={418}
         className="hidden lg:block 3xl:!hidden"
       />

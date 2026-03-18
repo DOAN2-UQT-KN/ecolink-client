@@ -13,9 +13,10 @@ const ForCitizens = () => {
       {
         key: "report-trash",
         imageSrc: "/report-trash.png",
-        title: "Report Waste",
-        description:
+        title: t("Report Waste"),
+        description: t(
           "Take a photo and submit the waste location in just a few steps.",
+        ),
         button: (
           <Button variant="brown" className="w-full" onClick={() => {}}>
             {t("Try Now")}
@@ -28,9 +29,10 @@ const ForCitizens = () => {
       {
         key: "track-progress",
         imageSrc: "/track-progress.png",
-        title: "Track Progress",
-        description:
+        title: t("Track Progress"),
+        description: t(
           "Track the cleanup status in real time directly on the map.",
+        ),
         imageWidth: 163,
         imageHeight: 171,
         imageClassName: "w-[163px] h-[171px]",
@@ -40,9 +42,10 @@ const ForCitizens = () => {
       {
         key: "support-movement",
         imageSrc: "/support-movement.png",
-        title: "Support the Movement",
-        description:
+        title: t("Support the Movement"),
+        description: t(
           "Share reports and cleanup results to raise community awareness.",
+        ),
         imageWidth: isMedium ? 247 : 233,
         imageHeight: isMedium ? 162 : 153,
         imageClassName: "w-[233px] h-[153px] md:w-[247px] md:h-[162px]",
@@ -53,11 +56,11 @@ const ForCitizens = () => {
   );
 
   return (
-    <div className="flex flex-col px-[10px] w-full lg:px-[120px] md:flex-row md:items-start md:justify-left md:gap-[50px] ">
+    <div className="flex flex-col px-[10px] w-full lg:pl-[160px] lg:pr-[120px] lg:flex-row md:items-start md:justify-center md:gap-[50px] ">
       <div className="flex flex-col items-center gap-5 pb-5 md:items-start">
         <Tag variant="green">Raise Your Voice</Tag>
 
-        <h1 className="text-center md:text-left">
+        <h1 className="text-center lg:text-left">
           <Trans
             ns="common"
             i18nKey="forCitizens"
@@ -71,14 +74,14 @@ const ForCitizens = () => {
           />
         </h1>
 
-        <p className="text-justify  font-display-2 text-foreground-secondary">
+        <p className="text-justify font-display-2 text-foreground-secondary  lg:w-[600px] md:w-[300px]">
           {t(
             "Report waste and environmental issues in just a few simple steps. Your voice empowers the community to act faster and create meaningful change for the Earth.",
           )}
         </p>
       </div>
 
-      <div className="flex flex-col md:flex-row items-center md:items-stretch justify-between w-full gap-[30px] px-[20px] py-[10px] md:w-3/4">
+      <div className="flex flex-col lg:flex-row items-center lg:items-stretch justify-between w-full gap-[30px] px-[20px] py-[10px] lg:w-3/4 w-full">
         <FeatureCard {...forCitizensItems[0]} />
         <div className="flex flex-col gap-[30px] w-full">
           <FeatureCard {...forCitizensItems[1]} />

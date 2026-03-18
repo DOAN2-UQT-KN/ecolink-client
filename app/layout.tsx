@@ -4,6 +4,7 @@ import I18nProvider from "@/components/providers/I18nProvider";
 import Header from "@/components/layout/Header";
 import { Inter } from "next/font/google";
 import { cn } from "@/lib/utils";
+import Footer from "@/components/layout/Footer";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -42,6 +43,7 @@ export default function RootLayout({
       <body className="antialiased">
         <Header />
         <I18nProvider>{children}</I18nProvider>
+        <Footer />
       </body>
     </html>
   );

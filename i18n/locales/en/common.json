@@ -52,5 +52,15 @@
   "EcoLink Support": "EcoLink Support",
   "Close menu": "Close menu",
   "Open menu": "Open menu",
-  "forCitizens": "<0>Speaks Up</0> <1/> for Earth"
+  "forCitizens": "<0>Speaks Up</0> <1/> for Earth",
+  "Raise Your Voice": "Raise Your Voice",
+  "Report waste and environmental issues in just a few simple steps. Your voice empowers the community to act faster and create meaningful change for the Earth.": "Report waste and environmental issues in just a few simple steps. Your voice empowers the community to act faster and create meaningful change for the Earth.",
+  "Report Waste": "Report Waste",
+  "Take a photo and submit the waste location in just a few steps.": "Take a photo and submit the waste location in just a few steps.",
+  "Try Now": "Try Now",
+  "Track Progress": "Track Progress",
+  "Track the cleanup status in real time directly on the map.": "Track the cleanup status in real time directly on the map.",
+  "Support the Movement": "Support the Movement",
+  "Share reports and cleanup results to raise community awareness.": "Share reports and cleanup results to raise community awareness.",
+  "callToAction": "Act Today for a <1/> <0>Greener Tomorrow</0>"
 }
