@@ -5,21 +5,46 @@ import { Divider } from "@/components/shared/Divider";
 import { Tag } from "@/components/shared/Tag";
 import Image from "next/image";
 import { useTranslation } from "react-i18next";
+import { motion } from "framer-motion";
 
 const HeroSection = () => {
   const { t } = useTranslation();
 
-  return (
-    <section className="flex flex-col lg:flex-row items-center justify-between w-full px-[20px] lg:px-[80px] xl:px-[100px] ">
-      <Image
-        src="/herosection.png"
-        alt="Hero Image"
-        width={368}
-        height={282}
-        className="lg:hidden"
-      />
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2,
+      },
+    },
+  };
 
-      <div className="flex flex-col items-center lg:items-start justify-between lg:w-[617px] 3xl:!w-[800px] gap-[17px] lg:gap-6">
+  const itemVariants = {
+    hidden: { opacity: 0, y: -20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+  };
+
+  return (
+    <motion.section
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="flex flex-col lg:flex-row items-center justify-between w-full px-[20px] lg:px-[160px] "
+    >
+      <motion.div variants={itemVariants} className="lg:hidden">
+        <Image
+          src="/herosection.png"
+          alt="Hero Image"
+          width={368}
+          height={282}
+        />
+      </motion.div>
+
+      <motion.div
+        variants={itemVariants}
+        className="flex flex-col items-center lg:items-start justify-between lg:w-[617px] 3xl:!w-[800px] gap-[17px] lg:gap-6"
+      >
         <Tag variant="green">EcoLink Platform</Tag>
 
         <div className="w-fit">
@@ -42,24 +67,29 @@ const HeroSection = () => {
           <Button variant="green">{t("Join now")}</Button>
           <Button variant="outlined-green">{t("Explore more")}</Button>
         </div>
-      </div>
+      </motion.div>
 
-      <Image
-        src="/herosection.png"
-        alt="Hero Image"
-        width={800}
-        height={618}
-        className="hidden 3xl:block"
-      />
+      <motion.div variants={itemVariants} className="hidden 3xl:block">
+        <Image
+          src="/herosection.png"
+          alt="Hero Image"
+          width={800}
+          height={618}
+        />
+      </motion.div>
 
-      <Image
-        src="/herosection.png"
-        alt="Hero Image"
-        width={470}
-        height={418}
+      <motion.div
+        variants={itemVariants}
         className="hidden lg:block 3xl:!hidden"
-      />
-    </section>
+      >
+        <Image
+          src="/herosection.png"
+          alt="Hero Image"
+          width={600}
+          height={418}
+        />
+      </motion.div>
+    </motion.section>
   );
 };
 
