@@ -62,5 +62,6 @@
   "Track the cleanup status in real time directly on the map.": "Track the cleanup status in real time directly on the map.",
   "Support the Movement": "Support the Movement",
   "Share reports and cleanup results to raise community awareness.": "Share reports and cleanup results to raise community awareness.",
-  "callToAction": "Act Today for a <1/> <0>Greener Tomorrow</0>"
+  "callToAction": "Act Today for a <1/> <0>Greener Tomorrow</0>",
+  "agreeSignUp": "By signing up, you agree to the <0>Terms of Service</0> and <0>Privacy Policy</0>, including <0>cookie use</0>."
 }

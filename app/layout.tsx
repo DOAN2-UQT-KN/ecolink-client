@@ -46,9 +46,7 @@ export default function RootLayout({
         <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
       </head>
       <body className="antialiased">
-        <Header />
         <I18nProvider>{children}</I18nProvider>
-        <Footer />
       </body>
     </html>
   );
