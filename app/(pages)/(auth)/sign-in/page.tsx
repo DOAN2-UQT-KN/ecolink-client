@@ -2,24 +2,20 @@
 
 import { Button } from "@/components/shared/Button";
 import Image from "next/image";
-import { Trans, useTranslation } from "react-i18next";
+import { useTranslation } from "react-i18next";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
-import { Checkbox } from "@/components/ui/checkbox";
 
 type FormValues = {
-  fullName: string;
   email: string;
   password: string;
 };
 
-export default function SignUp() {
+export default function SignIn() {
   const { t } = useTranslation();
   const router = useRouter();
-  const [isAgreed, setIsAgreed] = useState(false);
 
   const {
     register,
@@ -32,7 +28,7 @@ export default function SignUp() {
 
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
-    alert(t("Sign up success (mock)"));
+    alert(t("Sign in success (mock)"));
     router.push("/dashboard");
   };
 
@@ -40,41 +36,17 @@ export default function SignUp() {
     <div className="lg:w-2/5 w-full flex flex-col items-center bg-white min-h-screen">
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col justify-center lg:justify-between gap-[20px] px-[20px] lg:px-[70px] lg:py-[30px] h-full"
+        className="flex flex-col justify-center lg:justify-between gap-[30px] px-[20px] lg:px-[70px] lg:py-[100px] h-full"
       >
         {/* TITLE */}
-        <div className="flex flex-col text-center lg:text-left gap-[8px]">
+        <div className="flex flex-col text-center lg:text-left gap-[10px]">
           <span className="font-display-7 lg:font-display-8 font-semibold text-background-quaternary">
-            {t("Create an account")}
+            {t("Sign in")}
           </span>
         </div>
 
         {/* FIELDS */}
-        <div className="flex flex-col gap-[15px]">
-          {/* FULL NAME */}
-          <Field>
-            <FieldLabel htmlFor="fullName">
-              {t("Full name")} <span className="text-destructive">*</span>
-            </FieldLabel>
-            <Input
-              id="fullName"
-              placeholder={t("Nguyen Van A")}
-              {...register("fullName", {
-                required: t("Full name is required"),
-                minLength: {
-                  value: 3,
-                  message: t("Name must be at least 3 characters"),
-                },
-              })}
-              aria-invalid={!!errors.fullName}
-            />
-            {errors.fullName && (
-              <span className="text-red-500 text-sm">
-                {errors.fullName.message}
-              </span>
-            )}
-          </Field>
-
+        <div className="flex flex-col gap-[20px]">
           {/* EMAIL */}
           <Field>
             <FieldLabel htmlFor="email">
@@ -129,29 +101,14 @@ export default function SignUp() {
 
         {/* ACTION */}
         <div className="flex flex-col items-center w-full lg:w-[373px] gap-[15px]">
-          <div className="flex flex-row gap-2 items-start justify-start">
-            <div className="pt-1">
-              <Checkbox
-                checked={isAgreed}
-                onCheckedChange={(checked) => setIsAgreed(checked as boolean)}
-              />
-            </div>
-            <span className="text-foreground-tertiary font-display-1 lg:font-display-2 text-justify">
-              <Trans
-                ns="common"
-                i18nKey="agreeSignUp"
-                components={[<span key="0" className="underline" />]}
-              />
-            </span>
-          </div>
           <Button
             type="submit"
             variant="green"
             className="w-full h-[60px]"
-            disabled={isSubmitting || !isAgreed}
+            disabled={isSubmitting}
           >
             <span className="!font-normal !font-display-3 px-2">
-              {isSubmitting ? t("Loading...") : t("Sign up")}
+              {isSubmitting ? t("Loading...") : t("Sign in")}
             </span>
           </Button>
 
@@ -167,22 +124,22 @@ export default function SignUp() {
             <div className="flex flex-row items-center gap-[10px]">
               <Image src="/google.png" alt="google" width={25} height={25} />
               <span className="!font-medium !font-display-3 px-2">
-                {t("Sign up with Google")}
+                {t("Sign in with Google")}
               </span>
             </div>
           </Button>
         </div>
 
         {/* FOOTER */}
-        <div className="flex flex-row justify-start items-center gap-[5px] w-full lg:w-[373px]">
+        <div className="flex flex-row justify-start items-start gap-[5px] w-full lg:w-[373px]">
           <span className="text-background-tertiary font-display-2 font-regular">
-            {t("Already have an account?")}
+            {t("Don't have an account?")}
           </span>
           <span
             className="text-background-tertiary font-display-2 font-regular underline cursor-pointer"
-            onClick={() => router.push("/sign-in")}
+            onClick={() => router.push("/sign-up")}
           >
-            {t("Sign in")}
+            {t("Sign up")}
           </span>
         </div>
       </form>

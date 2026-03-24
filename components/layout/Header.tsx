@@ -15,7 +15,7 @@ import { gsap } from "gsap";
 import { GoArrowUpRight } from "react-icons/go";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import Logo from "./Logo";
-import { ChevronDown } from "lucide-react";
+import LanguageSwitcher from "../shared/LanguageSwitcher";
 import SpotlightCard from "../shared/SpotlightCard";
 
 type CardNavLink = {
@@ -252,8 +252,7 @@ const Header: React.FC<CardNavProps> = ({ ease = "power3.out", menuColor }) => {
   };
 
   const isLarge = useMediaQuery("(min-width: 1024px)");
-  const { i18n, t } = useTranslation();
-  const currentLang = i18n.language === "en" ? "EN" : "VN";
+  const { t } = useTranslation();
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -290,7 +289,9 @@ const Header: React.FC<CardNavProps> = ({ ease = "power3.out", menuColor }) => {
 
   const renderHamburgerMenu = () => (
     <div
-      className={`hamburger-menu ${isHamburgerOpen ? "open" : ""} group h-full flex flex-col items-center justify-center cursor-pointer gap-[6px] order-2 md:order-none`}
+      className={`hamburger-menu ${
+        isHamburgerOpen ? "open" : ""
+      } group h-full flex flex-col items-center justify-center cursor-pointer gap-[6px] order-2 md:order-none`}
       onClick={toggleMenu}
       role="button"
       aria-label={isExpanded ? t("Close menu") : t("Open menu")}
@@ -318,32 +319,13 @@ const Header: React.FC<CardNavProps> = ({ ease = "power3.out", menuColor }) => {
 
   const renderUserActions = (isMobile?: boolean) => (
     <div
-      className={`card-nav-cta-button border-0 rounded-[calc(0.75rem-0.2rem)] items-center font-medium cursor-pointer transition-colors duration-300 ${
+      className={`card-nav-cta-button border-0 rounded-[calc(0.75rem-0.2rem)] items-center font-medium cursor-pointer transition-colors duration-300 gap-1 ${
         isMobile
           ? "flex md:hidden w-full justify-center gap-6 py-2 lg:py-4 bg-white/40 backdrop-blur-xl border border-white/50 text-black rounded-2xl md:mt-auto"
           : "hidden md:inline-flex h-full px-4"
       }`}
     >
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <div className="flex flex-row items-center gap-1 hover:bg-zinc-100 p-2 rounded-full transition-all duration-300 cursor-pointer">
-            {" "}
-            {currentLang}
-            <ChevronDown size={10} />
-          </div>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent>
-          {currentLang === "VN" ? (
-            <DropdownMenuItem onClick={() => i18n.changeLanguage("en")}>
-              EN
-            </DropdownMenuItem>
-          ) : (
-            <DropdownMenuItem onClick={() => i18n.changeLanguage("vi")}>
-              VN
-            </DropdownMenuItem>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <LanguageSwitcher />
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -418,7 +400,9 @@ const Header: React.FC<CardNavProps> = ({ ease = "power3.out", menuColor }) => {
       >
         <nav
           ref={navRef}
-          className={`card-nav ${isExpanded ? "open" : ""} block h-[60px] p-0 rounded-xl relative overflow-hidden will-change-[height] border border-1 border-black ${
+          className={`card-nav ${
+            isExpanded ? "open" : ""
+          } block h-[60px] p-0 rounded-xl relative overflow-hidden will-change-[height] border border-1 border-black ${
             isScrolled || isExpanded
               ? "bg-white/20 backdrop-blur-lg shadow-sm"
               : "bg-background-primary"

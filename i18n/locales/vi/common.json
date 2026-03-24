@@ -83,5 +83,30 @@
 
   "Join the movement to report, clean, and protect our environment.": "Tham gia ngay để cùng báo cáo, dọn dẹp và bảo vệ môi trường.",
   "Every small action you take creates a cleaner, more sustainable future.": "Chỉ một hành động nhỏ hôm nay cũng có thể tạo nên một tương lai xanh và bền vững hơn.",
-  "Join EcoLink": "Tham gia ngay"
+  "Join EcoLink": "Tham gia ngay",
+
+  "Create an account": "Tạo tài khoản",
+  "Full name": "Họ và tên",
+  "Nguyen Van A": "Nguyễn Văn A",
+  "Full name is required": "Vui lòng nhập họ và tên",
+  "Name must be at least 3 characters": "Tên phải có ít nhất 3 ký tự",
+  "example@email.com": "example@email.com",
+  "Email is required": "Vui lòng nhập email",
+  "Invalid email format": "Định dạng email không hợp lệ",
+  "Password": "Mật khẩu",
+  "Password is required": "Vui lòng nhập mật khẩu",
+  "Password must be at least 6 characters": "Mật khẩu phải có ít nhất 6 ký tự",
+  "Loading...": "Đang tải...",
+  "Sign up": "Đăng ký",
+  "or": "hoặc",
+  "Sign up with Google": "Đăng ký bằng Google",
+  "agreeSignUp": "Bằng việc đăng ký, bạn đồng ý với <0>Điều khoản dịch vụ</0> của chúng tôi",
+  "Already have an account?": "Đã có tài khoản?",
+  "Sign in": "Đăng nhập",
+  "Sign up success (mock)": "Đăng ký thành công (thử nghiệm)",
+  "Save our planet": "Hãy chung tay",
+  "Join us today": "Tham gia ngay",
+  "Sign up with phone": "Đăng ký bằng số điện thoại",
+  "Don't have an account?": "Chưa có tài khoản?",
+  "Sign in with Google": "Đăng nhập bằng Google"
 }

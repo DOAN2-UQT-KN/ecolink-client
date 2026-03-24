@@ -17,6 +17,8 @@
   --background-tertiary: #9cab84;
   --background-quaternary: #6d7b36;
 
+  --border-input: #7e7e7e;
+
   --button-accent: #665814;
   --button-accent-hover: #887a47;
 
@@ -61,7 +63,7 @@
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --ring: #9cab84;
   --chart-1: oklch(0.809 0.105 251.813);
   --chart-2: oklch(0.623 0.214 259.815);
   --chart-3: oklch(0.546 0.245 262.881);
