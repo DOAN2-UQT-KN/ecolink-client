@@ -5,7 +5,7 @@ import Image from "next/image";
 import { Trans, useTranslation } from "react-i18next";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { Checkbox } from "@/components/ui/checkbox";

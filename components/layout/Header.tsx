@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
 } from "../shared/DropdownMenu";
 import { useTranslation } from "react-i18next";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 
 import React, { useLayoutEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
