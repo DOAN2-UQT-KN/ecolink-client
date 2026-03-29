@@ -131,6 +131,15 @@ export default function SignIn() {
                 {errors.password.message}
               </span>
             )}
+
+            <div className="flex justify-end mt-2">
+              <span
+                className="text-background-tertiary font-display-2 font-regular underline cursor-pointer hover:text-background-quaternary transition-colors"
+                onClick={() => router.push("/request-reset-password")}
+              >
+                {t("Forgot password?")}
+              </span>
+            </div>
           </Field>
         </div>
 
