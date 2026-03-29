@@ -46,12 +46,12 @@ export default function Information() {
 
   const renderGeneralInformation = () => (
     <div className="flex flex-col gap-6">
-      <span className="font-semibold text-xl border-b border-white/10 pb-2">
+      <span className="font-display-6 !text-button-accent-hover ">
         {t("General Information")}
       </span>
 
       <Field>
-        <FieldLabel className="text-foreground-secondary font-medium">
+        <FieldLabel className="text-foreground-tertiary font-display-3">
           {t("Title")} <span className="text-destructive">*</span>
         </FieldLabel>
         <Input
@@ -63,7 +63,7 @@ export default function Information() {
       </Field>
 
       <Field>
-        <FieldLabel className="text-foreground-secondary font-medium">
+        <FieldLabel className="text-foreground-tertiary font-display-3">
           {t("Description")}
         </FieldLabel>
         <Input
@@ -78,13 +78,13 @@ export default function Information() {
 
   const renderDetailInformation = () => (
     <div className="flex flex-col gap-6">
-      <span className="font-semibold text-xl border-b border-white/10 pb-2">
+      <span className="font-display-6 !text-button-accent-hover ">
         {t("Detail Information")}
       </span>
 
       {/* Waste Type — multi-select */}
       <Field>
-        <FieldLabel className="text-foreground-secondary font-medium mb-1">
+        <FieldLabel className="text-foreground-tertiary font-display-3">
           {t("Waste type")}
         </FieldLabel>
         <Controller
@@ -108,7 +108,7 @@ export default function Information() {
 
       {/* Condition — single-select radio */}
       <Field>
-        <FieldLabel className="text-foreground-secondary font-medium mb-1">
+        <FieldLabel className="text-foreground-tertiary font-display-3">
           {t("Condition")}
         </FieldLabel>
         <Controller
@@ -147,7 +147,7 @@ export default function Information() {
 
       {/* Pollution Level — multi-select */}
       <Field>
-        <FieldLabel className="text-foreground-secondary font-medium mb-1">
+        <FieldLabel className="text-foreground-tertiary font-display-3">
           {t("Pollution level")}
         </FieldLabel>
         <Controller
@@ -171,7 +171,7 @@ export default function Information() {
 
       {/* Size — single-select radio */}
       <Field>
-        <FieldLabel className="text-foreground-secondary font-medium mb-1">
+        <FieldLabel className="text-foreground-tertiary font-display-3">
           {t("Size")}
         </FieldLabel>
         <Controller
@@ -198,7 +198,7 @@ export default function Information() {
                     value={option.value}
                     id={`size-${option.value}`}
                   />
-                  <span className="text-sm font-semibold">
+                  <span className="text-sm font-normal flex-1">
                     {t(option.label)}
                   </span>
                 </label>
@@ -212,21 +212,21 @@ export default function Information() {
 
   return (
     <div className="w-full h-full flex flex-col gap-[30px] px-[30px] py-[35px] border-1 border-[rgba(136,122,71,0.5)] rounded-[20px] bg-white/50 shadow-lg ring-1 ring-white/5 overflow-y-auto scrollbar-hide">
-      <span className="font-bold text-button-accent font-display-8 uppercase tracking-wider">
+      {/* <span className="font-bold text-button-accent font-display-8 uppercase tracking-wider">
         {t("New Report")}
-      </span>
+      </span> */}
 
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8">
         {renderGeneralInformation()}
         {renderDetailInformation()}
 
-        <button
+        {/* <button
           type="submit"
           disabled={isPending}
           className="mt-4 h-[55px] w-full rounded-xl bg-button-accent text-white font-bold text-lg hover:bg-button-accent/90 transition-all shadow-lg active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
         >
           {isPending ? t("Submitting...") : t("Create Report")}
-        </button>
+        </button> */}
       </form>
     </div>
   );
