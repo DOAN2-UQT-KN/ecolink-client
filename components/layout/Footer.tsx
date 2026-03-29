@@ -1,9 +1,9 @@
 "use client";
 
-import { useMediaQuery } from "@/hooks/use-media-query";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import Logo from "./Logo";
 import { useTranslation } from "react-i18next";
-import { FaInstagram, FaPaperPlane } from "react-icons/fa";
+import { FaInstagram } from "react-icons/fa";
 import { HiOutlinePhone, HiOutlineMail } from "react-icons/hi";
 
 const Footer = () => {
