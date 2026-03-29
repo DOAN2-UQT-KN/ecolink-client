@@ -5,7 +5,7 @@ import { Tag } from "@/components/shared/Tag";
 import FeatureCard from "@/components/shared/FeatureCard";
 import { Trans, useTranslation } from "react-i18next";
 import { useMemo } from "react";
-import { useMediaQuery } from "@/hooks/use-media-query";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { motion } from "framer-motion";
 
 const ForCitizens = () => {

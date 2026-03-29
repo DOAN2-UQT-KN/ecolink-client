@@ -7,6 +7,10 @@ import { useRouter } from "next/navigation";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
+import { useSignIn } from "@/apis/auth/signIn";
+import useAuthStore from "@/stores/useAuthStore";
+import { useState } from "react";
+import { HiEye, HiEyeOff } from "react-icons/hi";
 
 type FormValues = {
   email: string;
@@ -16,6 +20,7 @@ type FormValues = {
 export default function SignIn() {
   const { t } = useTranslation();
   const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -23,20 +28,33 @@ export default function SignIn() {
     formState: { errors, isSubmitting },
   } = useForm<FormValues>();
 
+  const { mutate, isPending } = useSignIn({
+    onSuccess: (res) => {
+      if (res.data) {
+        const { accessToken, refreshToken, user } = res.data;
+
+        // Set access token and user in store
+        useAuthStore
+          .getState()
+          .setLoginSuccess(accessToken, user, refreshToken);
+
+        // Set refresh token in cookie
+        document.cookie = `refresh_token=${refreshToken}; path=/; Max-Age=2592000; Secure; SameSite=Lax`;
+
+        router.push("/");
+      }
+    },
+  });
+
   const onSubmit = async (data: FormValues) => {
-    console.log("Form data:", data);
-
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    alert(t("Sign in success (mock)"));
-    router.push("/dashboard");
+    mutate(data);
   };
 
   return (
     <div className="lg:w-2/5 w-full flex flex-col items-center bg-white min-h-screen">
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col justify-center lg:justify-between gap-[30px] px-[20px] lg:px-[70px] lg:py-[100px] h-full"
+        className="flex flex-col justify-center lg:justify-center gap-[30px] px-[20px] lg:px-[70px] lg:py-[100px] h-full"
       >
         {/* TITLE */}
         <div className="flex flex-col text-center lg:text-left gap-[10px]">
@@ -77,19 +95,36 @@ export default function SignIn() {
             <FieldLabel htmlFor="password">
               {t("Password")} <span className="text-destructive">*</span>
             </FieldLabel>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              {...register("password", {
-                required: t("Password is required"),
-                minLength: {
-                  value: 6,
-                  message: t("Password must be at least 6 characters"),
-                },
-              })}
-              aria-invalid={!!errors.password}
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                {...register("password", {
+                  required: t("Password is required"),
+                  minLength: {
+                    value: 6,
+                    message: t("Password must be at least 6 characters"),
+                  },
+                })}
+                aria-invalid={!!errors.password}
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground-tertiary hover:text-foreground focus:outline-none  cursor-pointer transition-all duration-300"
+                aria-label={
+                  showPassword ? t("Hide password") : t("Show password")
+                }
+              >
+                {showPassword ? (
+                  <HiEyeOff className="h-5 w-5" />
+                ) : (
+                  <HiEye className="h-5 w-5" />
+                )}
+              </button>
+            </div>
 
             {errors.password && (
               <span className="text-red-500 text-sm mt-1">
@@ -105,10 +140,10 @@ export default function SignIn() {
             type="submit"
             variant="green"
             className="w-full h-[60px]"
-            disabled={isSubmitting}
+            disabled={isPending}
           >
             <span className="!font-normal !font-display-3 px-2">
-              {isSubmitting ? t("Loading...") : t("Sign in")}
+              {isPending ? t("Loading...") : t("Sign in")}
             </span>
           </Button>
 

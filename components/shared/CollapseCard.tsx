@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ReactNode, useState, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
 import clsx from "clsx";
-import { useMediaQuery } from "@/hooks/use-media-query";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 type CollapseCardProps = {
   title: ReactNode;

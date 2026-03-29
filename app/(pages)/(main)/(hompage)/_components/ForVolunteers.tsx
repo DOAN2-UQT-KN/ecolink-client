@@ -2,7 +2,7 @@
 
 import CollapseCard from "@/components/shared/CollapseCard";
 import { Tag } from "@/components/shared/Tag";
-import { useMediaQuery } from "@/hooks/use-media-query";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import Image from "next/image";
 import { useCallback } from "react";
 import { Trans, useTranslation } from "react-i18next";

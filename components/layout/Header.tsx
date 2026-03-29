@@ -13,10 +13,12 @@ import { useEffect, useMemo } from "react";
 import React, { useLayoutEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { GoArrowUpRight } from "react-icons/go";
-import { useMediaQuery } from "@/hooks/use-media-query";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import Logo from "./Logo";
 import LanguageSwitcher from "../shared/LanguageSwitcher";
 import SpotlightCard from "../shared/SpotlightCard";
+import useAuthStore from "@/stores/useAuthStore";
+import { useRouter } from "next/navigation";
 
 type CardNavLink = {
   label: string;
@@ -70,9 +72,9 @@ const items = [
         href: "/campaigns",
       },
       {
-        label: "Volunteer",
-        ariaLabel: "Become a Volunteer",
-        href: "/volunteer",
+        label: "Report Trash",
+        ariaLabel: "Report Trash",
+        href: "/report-trash",
       },
       {
         label: "Leaderboard",
@@ -133,6 +135,9 @@ const Header: React.FC<CardNavProps> = ({ ease = "power3.out", menuColor }) => {
   const navRef = useRef<HTMLDivElement | null>(null);
   const cardsRef = useRef<HTMLDivElement[]>([]);
   const tlRef = useRef<gsap.core.Timeline | null>(null);
+
+  const { is_authenticated } = useAuthStore();
+  const router = useRouter();
 
   const calculateHeight = () => {
     const navEl = navRef.current;
@@ -327,21 +332,32 @@ const Header: React.FC<CardNavProps> = ({ ease = "power3.out", menuColor }) => {
     >
       <LanguageSwitcher />
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Image
-            src="/profile.png"
-            alt="profile"
-            width={35}
-            height={30}
-            className="cursor-pointer"
-          />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent>
-          <DropdownMenuItem>{t("Profile")}</DropdownMenuItem>
-          <DropdownMenuItem>{t("Logout")}</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      {is_authenticated ? (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Image
+              src="/profile.png"
+              alt="profile"
+              width={35}
+              height={30}
+              className="cursor-pointer"
+            />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem>{t("Profile")}</DropdownMenuItem>
+            <DropdownMenuItem>{t("Logout")}</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : (
+        <Image
+          src="/profile.png"
+          alt="profile"
+          width={35}
+          height={30}
+          className="cursor-pointer"
+          onClick={() => router.push("/authenticate")}
+        />
+      )}
     </div>
   );
 
@@ -354,39 +370,42 @@ const Header: React.FC<CardNavProps> = ({ ease = "power3.out", menuColor }) => {
       } md:flex-row md:items-end md:gap-[12px] overflow-y-auto`}
       aria-hidden={!isExpanded}
     >
-      {(items || []).slice(0, 3).map((item, idx) => (
-        <SpotlightCard
-          key={idx}
-          spotlightColor="rgba(151, 175, 97, 0.3)"
-          className="nav-card select-none relative flex flex-col gap-2 p-[12px_12px] lg:p-[20px_16px] rounded-[calc(0.75rem-0.2rem)] min-w-0 flex-[1_1_auto] h-auto md:min-h-[60px] md:h-full md:min-h-0 md:flex-[1_1_0%] bg-white/40 rounded-2xl backdrop-blur-xl border border-white/50 text-black"
-        >
-          <div className="nav-card-label tracking-[-0.5px] text-[16px] md:text-[22px] font-display-5 font-semibold">
-            {t(item.label)}
-          </div>
-          <div className="nav-card-links mt-auto flex flex-col gap-0 md:gap-[4px]">
-            {item.links?.map((lnk, i) => (
-              <a
-                key={`${lnk.label}-${i}`}
-                className="
+      {(items || [])
+        .slice(0, 3)
+        .filter(() => is_authenticated)
+        .map((item, idx) => (
+          <SpotlightCard
+            key={idx}
+            spotlightColor="rgba(151, 175, 97, 0.3)"
+            className="nav-card select-none relative flex flex-col gap-2 p-[12px_12px] lg:p-[20px_16px] rounded-[calc(0.75rem-0.2rem)] min-w-0 flex-[1_1_auto] h-auto md:min-h-[60px] md:h-full md:min-h-0 md:flex-[1_1_0%] bg-white/40 rounded-2xl backdrop-blur-xl border border-white/50 text-black"
+          >
+            <div className="nav-card-label tracking-[-0.5px] text-[16px] md:text-[22px] font-display-5 font-semibold">
+              {t(item.label)}
+            </div>
+            <div className="nav-card-links mt-auto flex flex-col gap-0 md:gap-[4px]">
+              {item.links?.map((lnk, i) => (
+                <a
+                  key={`${lnk.label}-${i}`}
+                  className="
                   hover:text-button-accent transition-colors duration-300 relative
                   before:content-[''] before:absolute before:bottom-[-2px] before:left-0
                   before:w-0 before:h-[1px] before:bg-button-accent
                   before:transition-all before:duration-300
                   hover:before:w-full flex flex-row items-center gap-1 w-fit hover:cursor-pointer font-display-1 md:font-display-3
                 "
-                href={lnk.href}
-                aria-label={t(lnk.ariaLabel)}
-              >
-                <GoArrowUpRight
-                  className="nav-card-link-icon shrink-0"
-                  aria-hidden="true"
-                />
-                {t(lnk.label)}
-              </a>
-            ))}
-          </div>
-        </SpotlightCard>
-      ))}
+                  href={lnk.href}
+                  aria-label={t(lnk.ariaLabel)}
+                >
+                  <GoArrowUpRight
+                    className="nav-card-link-icon shrink-0"
+                    aria-hidden="true"
+                  />
+                  {t(lnk.label)}
+                </a>
+              ))}
+            </div>
+          </SpotlightCard>
+        ))}
       {renderUserActions(true)}
     </div>
   );

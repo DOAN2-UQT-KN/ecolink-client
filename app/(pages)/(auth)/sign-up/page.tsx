@@ -9,9 +9,11 @@ import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { Checkbox } from "@/components/ui/checkbox";
+import { HiEye, HiEyeOff } from "react-icons/hi";
+import { useSignUp } from "@/apis/auth/signUp";
 
 type FormValues = {
-  fullName: string;
+  name: string;
   email: string;
   password: string;
 };
@@ -20,6 +22,7 @@ export default function SignUp() {
   const { t } = useTranslation();
   const router = useRouter();
   const [isAgreed, setIsAgreed] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -27,20 +30,21 @@ export default function SignUp() {
     formState: { errors, isSubmitting },
   } = useForm<FormValues>();
 
+  const { mutate, isPending } = useSignUp({
+    onSuccess: () => {
+      router.push("/sign-in");
+    },
+  });
+
   const onSubmit = async (data: FormValues) => {
-    console.log("Form data:", data);
-
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    alert(t("Sign up success (mock)"));
-    router.push("/dashboard");
+    mutate(data);
   };
 
   return (
     <div className="lg:w-2/5 w-full flex flex-col items-center bg-white min-h-screen">
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col justify-center lg:justify-between gap-[20px] px-[20px] lg:px-[70px] lg:py-[30px] h-full"
+        className="flex flex-col justify-center lg:justify-center gap-[30px] px-[20px] lg:px-[70px] lg:py-[30px] h-full"
       >
         {/* TITLE */}
         <div className="flex flex-col text-center lg:text-left gap-[8px]">
@@ -59,18 +63,18 @@ export default function SignUp() {
             <Input
               id="fullName"
               placeholder={t("Nguyen Van A")}
-              {...register("fullName", {
+              {...register("name", {
                 required: t("Full name is required"),
                 minLength: {
                   value: 3,
                   message: t("Name must be at least 3 characters"),
                 },
               })}
-              aria-invalid={!!errors.fullName}
+              aria-invalid={!!errors.name}
             />
-            {errors.fullName && (
+            {errors.name && (
               <span className="text-red-500 text-sm">
-                {errors.fullName.message}
+                {errors.name.message}
               </span>
             )}
           </Field>
@@ -105,19 +109,36 @@ export default function SignUp() {
             <FieldLabel htmlFor="password">
               {t("Password")} <span className="text-destructive">*</span>
             </FieldLabel>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              {...register("password", {
-                required: t("Password is required"),
-                minLength: {
-                  value: 6,
-                  message: t("Password must be at least 6 characters"),
-                },
-              })}
-              aria-invalid={!!errors.password}
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                {...register("password", {
+                  required: t("Password is required"),
+                  minLength: {
+                    value: 6,
+                    message: t("Password must be at least 6 characters"),
+                  },
+                })}
+                aria-invalid={!!errors.password}
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground-tertiary hover:text-foreground focus:outline-none cursor-pointer transition-all duration-300"
+                aria-label={
+                  showPassword ? t("Hide password") : t("Show password")
+                }
+              >
+                {showPassword ? (
+                  <HiEyeOff className="h-5 w-5" />
+                ) : (
+                  <HiEye className="h-5 w-5" />
+                )}
+              </button>
+            </div>
 
             {errors.password && (
               <span className="text-red-500 text-sm mt-1">
@@ -148,10 +169,10 @@ export default function SignUp() {
             type="submit"
             variant="green"
             className="w-full h-[60px]"
-            disabled={isSubmitting || !isAgreed}
+            disabled={isPending || !isAgreed}
           >
             <span className="!font-normal !font-display-3 px-2">
-              {isSubmitting ? t("Loading...") : t("Sign up")}
+              {isPending ? t("Loading...") : t("Sign up")}
             </span>
           </Button>
 

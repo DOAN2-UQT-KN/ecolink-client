@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import I18nProvider from "@/components/providers/I18nProvider";
-import Header from "@/components/layout/Header";
+import ReactQueryProvider from "@/components/providers/ReactQueryProvider";
 import { Inter } from "next/font/google";
-import { cn } from "@/lib/utils";
-import Footer from "@/components/layout/Footer";
+import { cn } from "@/libs/utils";
+import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -46,7 +46,10 @@ export default function RootLayout({
         <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
       </head>
       <body className="antialiased">
-        <I18nProvider>{children}</I18nProvider>
+        <ReactQueryProvider>
+          <I18nProvider>{children}</I18nProvider>
+        </ReactQueryProvider>
+        <Toaster />
       </body>
     </html>
   );

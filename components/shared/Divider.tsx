@@ -1,5 +1,5 @@
 import React, { HTMLAttributes } from "react";
-import { useMediaQuery } from "@/hooks/use-media-query";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 export interface DividerProps extends HTMLAttributes<HTMLDivElement> {
   dashSize?: number;
