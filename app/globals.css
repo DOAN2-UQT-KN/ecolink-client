@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "tailwind-scrollbar-hide";
 
 @import "./_styles/typography.css";
 @import "./_styles/button.css";

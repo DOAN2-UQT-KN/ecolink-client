@@ -9,7 +9,7 @@ import CallToAction from "./_components/CallToAction";
 
 export default function Home() {
   return (
-    <div className="flex flex-col  items-center justify-center  bg-background-primary font-sans dark:bg-black py-[92px]">
+    <div className="flex flex-col  items-center justify-center  bg-background-primary font-sans dark:bg-black">
       <HeroSection />
 
       <Divider className="text-background-tertiary my-15" />

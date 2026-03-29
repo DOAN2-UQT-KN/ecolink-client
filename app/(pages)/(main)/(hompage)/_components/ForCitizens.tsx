@@ -59,7 +59,7 @@ const ForCitizens = () => {
   );
 
   return (
-    <div className="flex flex-col px-[10px] w-full lg:pl-[160px] lg:pr-[120px] lg:flex-row md:items-start md:justify-center md:gap-[50px] ">
+    <div className="flex flex-col w-full lg:flex-row md:items-start md:justify-center md:gap-[50px] ">
       <motion.div
         initial={{ opacity: 0, x: -50 }}
         whileInView={{ opacity: 1, x: 0 }}

@@ -13,7 +13,7 @@ const CallToAction = () => {
       whileInView={{ opacity: 1 }}
       viewport={{ once: true }}
       transition={{ duration: 1 }}
-      className="flex flex-col items-center justify-between gap-[30px]  px-[30px]"
+      className="flex flex-col items-center justify-between gap-[30px] "
     >
       <span className="font-title text-[30px] md:text-[60px] text-center">
         <Trans

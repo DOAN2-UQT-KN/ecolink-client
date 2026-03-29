@@ -9,7 +9,7 @@ export default function MainLayout({
   return (
     <>
       <Header />
-      <main>{children}</main>
+      <main className="py-[92px] px-[20px] lg:px-[160px]">{children}</main>
       <Footer />
     </>
   );
