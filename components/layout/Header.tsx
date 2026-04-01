@@ -300,6 +300,7 @@ const Header: React.FC<CardNavProps> = ({ ease = "power3.out", menuColor }) => {
       onClick={toggleMenu}
       role="button"
       aria-label={isExpanded ? t("Close menu") : t("Open menu")}
+      suppressHydrationWarning
       tabIndex={0}
       style={{ color: menuColor || "#000" }}
     >
@@ -372,7 +373,6 @@ const Header: React.FC<CardNavProps> = ({ ease = "power3.out", menuColor }) => {
     >
       {(items || [])
         .slice(0, 3)
-        .filter(() => is_authenticated)
         .map((item, idx) => (
           <SpotlightCard
             key={idx}

@@ -12,6 +12,7 @@ export interface IncidentFormValues {
   condition: string;
   pollutionLevels: string[];
   size: string;
+  imageString: string[];
 }
 
 interface IncidentContextType {
@@ -31,6 +32,7 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
       condition: "",
       pollutionLevels: [],
       size: "",
+      imageString: [],
     },
   });
 
