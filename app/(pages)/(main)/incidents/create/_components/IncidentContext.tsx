@@ -8,6 +8,9 @@ import { ICreateReportRequest } from "@/apis/incident/models/createReport";
 export interface IncidentFormValues {
   title: string;
   description: string;
+  city: string;
+  district: string;
+  detailAddress: string;
   wasteTypes: string[];
   condition: string;
   pollutionLevels: string[];
@@ -28,6 +31,9 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
     defaultValues: {
       title: "",
       description: "",
+      city: "",
+      district: "",
+      detailAddress: "",
       wasteTypes: [],
       condition: "",
       pollutionLevels: [],
