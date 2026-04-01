@@ -1,29 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import dynamic from "next/dynamic";
 import type { LatLngLiteral } from "leaflet";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { useIncidentContext } from "./IncidentContext";
+import LeafletAddressMap from "./LeafletAddressMap";
 
 type ReverseGeocodingAddress = {
   city?: string;
   district?: string;
   detailAddress?: string;
 };
-
-type LeafletAddressMapProps = {
-  position: LatLngLiteral | null;
-  setPosition: (position: LatLngLiteral) => void;
-  popupText: string;
-};
-
-const LeafletAddressMap = dynamic<LeafletAddressMapProps>(
-  () => import("./LeafletAddressMap"),
-  { ssr: false },
-);
 
 export default function Address() {
   const { form } = useIncidentContext();
