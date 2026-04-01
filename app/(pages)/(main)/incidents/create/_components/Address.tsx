@@ -1,36 +1,167 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
+import type { LatLngLiteral } from "leaflet";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { useIncidentContext } from "./IncidentContext";
+
+type ReverseGeocodingAddress = {
+  city?: string;
+  district?: string;
+  detailAddress?: string;
+};
+
+type LeafletAddressMapProps = {
+  position: LatLngLiteral | null;
+  setPosition: (position: LatLngLiteral) => void;
+  popupText: string;
+};
+
+const LeafletAddressMap = dynamic<LeafletAddressMapProps>(
+  () => import("./LeafletAddressMap"),
+  { ssr: false },
+);
 
 export default function Address() {
   const { form } = useIncidentContext();
   const {
     register,
     watch,
+    setValue,
     formState: { errors },
   } = form;
+  const [position, setPosition] = useState<LatLngLiteral | null>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cacheRef = useRef<Map<string, ReverseGeocodingAddress>>(new Map());
 
   const city = watch("city");
   const district = watch("district");
   const detailAddress = watch("detailAddress");
 
+  const parseAddress = useCallback((data: {
+    display_name?: string;
+    address?: Record<string, string | undefined>;
+  }): ReverseGeocodingAddress => {
+    const address = data.address ?? {};
+    const parsedCity =
+      address.city ??
+      address.town ??
+      address.state ??
+      address.province ??
+      address.municipality;
+    const parsedDistrict =
+      address.county ??
+      address.city_district ??
+      address.district ??
+      address.suburb ??
+      address.quarter;
+    const parsedDetail =
+      data.display_name ??
+      [address.road, address.house_number, parsedDistrict, parsedCity]
+        .filter(Boolean)
+        .join(", ");
+
+    return {
+      city: parsedCity,
+      district: parsedDistrict,
+      detailAddress: parsedDetail,
+    };
+  }, []);
+
+  const getAddressFromLatLng = useCallback(async (lat: number, lng: number) => {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
+      {
+        headers: {
+          Accept: "application/json",
+        },
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error("Reverse geocoding failed");
+    }
+
+    const data = (await response.json()) as {
+      display_name?: string;
+      address?: Record<string, string | undefined>;
+    };
+
+    return parseAddress(data);
+  }, [parseAddress]);
+
+  useEffect(() => {
+    if (!position) {
+      return;
+    }
+
+    const cacheKey = `${position.lat.toFixed(4)},${position.lng.toFixed(4)}`;
+    const cachedResult = cacheRef.current.get(cacheKey);
+
+    if (cachedResult) {
+      if (cachedResult.city) {
+        setValue("city", cachedResult.city, { shouldDirty: true, shouldValidate: true });
+      }
+      if (cachedResult.district) {
+        setValue("district", cachedResult.district, {
+          shouldDirty: true,
+          shouldValidate: true,
+        });
+      }
+      if (cachedResult.detailAddress) {
+        setValue("detailAddress", cachedResult.detailAddress, { shouldDirty: true });
+      }
+      return;
+    }
+
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(async () => {
+      try {
+        const parsedAddress = await getAddressFromLatLng(position.lat, position.lng);
+        cacheRef.current.set(cacheKey, parsedAddress);
+
+        if (parsedAddress.city) {
+          setValue("city", parsedAddress.city, { shouldDirty: true, shouldValidate: true });
+        }
+        if (parsedAddress.district) {
+          setValue("district", parsedAddress.district, {
+            shouldDirty: true,
+            shouldValidate: true,
+          });
+        }
+        if (parsedAddress.detailAddress) {
+          setValue("detailAddress", parsedAddress.detailAddress, { shouldDirty: true });
+        }
+      } catch {
+        // Keep manual form values untouched when reverse geocoding fails.
+      }
+    }, 400);
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [getAddressFromLatLng, position, setValue]);
+
   // Tạo query address
   const mapSrc = useMemo(() => {
     const address = [detailAddress, district, city].filter(Boolean).join(", ");
     const finalAddress = address || "Ho Chi Minh, Vietnam";
-  
+
     return `https://www.google.com/maps?q=${encodeURIComponent(
-      finalAddress
+      finalAddress,
     )}&output=embed`;
   }, [city, district, detailAddress]);
-  
+
   return (
-    <div className="w-full h-fit flex flex-col gap-[30px] px-[30px] py-[35px] border-1 border-[rgba(136,122,71,0.5)] rounded-[20px] bg-white/50 shadow-lg ring-1 ring-white/5 overflow-y-auto scrollbar-hide">
-      
+    <div className="w-full h-full flex flex-col gap-[30px] px-[30px] py-[35px] border-1 border-[rgba(136,122,71,0.5)] rounded-[20px] bg-white/50 shadow-lg ring-1 ring-white/5 overflow-y-auto scrollbar-hide">
       {/* Row 1 */}
       <div className="flex gap-3">
         <Field className="flex-1 gap-2">
@@ -58,30 +189,37 @@ export default function Address() {
         </Field>
       </div>
 
-      <div className="flex gap-3 h-full ">
+      <div className="flex gap-3 ">
+        {/* Detail */}
+        <Field className="w-full h-full gap-2">
+          <FieldLabel className="text-foreground-tertiary font-display-3">
+            Detail Address
+          </FieldLabel>
+          <Textarea
+            {...register("detailAddress")}
+            placeholder="Street, house number..."
+            className="border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50"
+          />
+        </Field>
 
-      {/* Detail */}
-      <Field className="w-1/2 h-full gap-2">
-        <FieldLabel className="text-foreground-tertiary font-display-3">
-          Detail Address
-        </FieldLabel>
-        <Textarea
-          {...register("detailAddress")}
-          placeholder="Street, house number..."
-          className="border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50"
-        />
-      </Field>
-
-      <div className="w-1/2 h-[250px] rounded-xl overflow-hidden border">
-        <iframe
-          title="Google Map"
-          width="100%"
-          height="100%"
-          loading="lazy"
-          src={mapSrc}
-        />
+        {/* <div className="w-1/2 h-[250px] rounded-xl overflow-hidden border">
+          <LeafletAddressMap
+            position={position}
+            setPosition={setPosition}
+            popupText={detailAddress || "Selected location"}
+          />
+        </div> */}
       </div>
-      </div>
+      <div className="w-full h-[700px] rounded-xl overflow-hidden border">
+          <LeafletAddressMap
+            position={position}
+            setPosition={setPosition}
+            popupText={detailAddress || "Selected location"}
+          />
+        </div>
+      {/* <div className="w-full h-[250px] rounded-xl overflow-hidden border">
+        <iframe title="Google Map" width="100%" height="100%" loading="lazy" src={mapSrc} />
+      </div> */}
     </div>
   );
 }
