@@ -106,7 +106,7 @@
   "Sign up success (mock)": "Đăng ký thành công (thử nghiệm)",
   "Save our planet": "Hãy chung tay",
   "Join us today": "Tham gia ngay",
-  "Sign up with phone": "Đăng ký bằng số điện thoại",
+  "Sign up with email": "Đăng ký bằng email",
   "Don't have an account?": "Chưa có tài khoản?",
   "Sign in with Google": "Đăng nhập bằng Google",
   "Report Trash": "Báo cáo sự cố",
@@ -155,5 +155,14 @@
   "Medium": "Trung bình",
   "Large": "Lớn",
   "Create Report": "Tạo báo cáo",
-  "Submitting...": "Đang gửi..."
+  "Submitting...": "Đang gửi...",
+  "Upload file": "Tải lên tệp",
+  "Choose a image and upload securely to proceed.": "Chọn ảnh và tải lên an toàn để tiếp tục.",
+  "Drag and drop your images": "Kéo và thả ảnh của bạn",
+  "JPEG, PNG, and WEBP formats, up to 50MB": "Định dạng JPEG, PNG và WEBP, tối đa 50MB",
+  "Select files": "Chọn tệp",
+  "Uploaded Images": "Ảnh đã tải lên",
+  "No images uploaded yet.": "Chưa có ảnh nào được tải lên.",
+  "Maximum 10 images allowed.": "Chỉ được phép tối đa 10 ảnh.",
+  "View": "Xem"
 }

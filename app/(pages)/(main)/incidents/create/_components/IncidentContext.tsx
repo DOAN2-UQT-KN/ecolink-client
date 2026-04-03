@@ -24,7 +24,9 @@ interface IncidentContextType {
   isPending: boolean;
 }
 
-const IncidentContext = createContext<IncidentContextType | undefined>(undefined);
+const IncidentContext = createContext<IncidentContextType | undefined>(
+  undefined,
+);
 
 export const IncidentProvider = ({ children }: { children: ReactNode }) => {
   const form = useForm<IncidentFormValues>({
@@ -49,7 +51,9 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
       title: data.title,
       description: data.description,
       wasteType: data.wasteTypes.join(", "),
-      // severityLevel could be mapped if needed
+      severityLevel: data.size ? Number(data.size) : undefined,
+      imageUrls: data.imageString,
+      // Do not pass address-related values (city, district, detailAddress,   )
     };
     mutate(apiData);
   };
@@ -64,7 +68,9 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
 export const useIncidentContext = () => {
   const context = useContext(IncidentContext);
   if (!context) {
-    throw new Error("useIncidentContext must be used within an IncidentProvider");
+    throw new Error(
+      "useIncidentContext must be used within an IncidentProvider",
+    );
   }
   return context;
 };

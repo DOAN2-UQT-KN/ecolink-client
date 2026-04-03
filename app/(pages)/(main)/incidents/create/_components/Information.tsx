@@ -29,9 +29,9 @@ const pollutionLevelOptions = [
 ];
 
 const sizeOptions = [
-  { label: "Small", value: "small" },
-  { label: "Medium", value: "medium" },
-  { label: "Large", value: "large" },
+  { label: "Small", value: "1" },
+  { label: "Medium", value: "2" },
+  { label: "Large", value: "3" },
 ];
 
 export default function Information() {
@@ -46,7 +46,7 @@ export default function Information() {
 
   const renderGeneralInformation = () => (
     <div className="flex flex-col gap-6">
-      <span className="font-display-6 !text-button-accent-hover ">
+      <span className="font-display-5 font-semibold !text-button-accent ">
         {t("General Information")}
       </span>
 
@@ -78,7 +78,7 @@ export default function Information() {
 
   const renderDetailInformation = () => (
     <div className="flex flex-col gap-6">
-      <span className="font-display-6 !text-button-accent-hover ">
+      <span className="font-display-5 font-semibold !text-button-accent ">
         {t("Detail Information")}
       </span>
 
@@ -211,7 +211,7 @@ export default function Information() {
   );
 
   return (
-    <div className="w-full h-full flex flex-col gap-[30px] px-[30px] py-[35px] border-1 border-[rgba(136,122,71,0.5)] rounded-[20px] bg-white/50 shadow-lg ring-1 ring-white/5 overflow-y-auto scrollbar-hide">
+    <div className="w-full h-full flex flex-col gap-[30px] px-[30px] py-[35px] border-1 border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5 overflow-y-auto scrollbar-hide">
       {/* <span className="font-bold text-button-accent font-display-8 uppercase tracking-wider">
         {t("New Report")}
       </span> */}

@@ -9,6 +9,8 @@ import {
 import showMessage, { MessageLevel, MessageType } from "@/utils/showMessage";
 import { IBaseResponse } from "@/types/BaseResponse";
 import { useTranslation } from "react-i18next";
+import useAuthStore from "@/stores/useAuthStore";
+import axiosClient from "@/libs/axiosClient";
 
 export const CACHE_TIME_DEFAULT = 5 * 60 * 1000;
 
@@ -79,6 +81,11 @@ export const usePost = <TResponse extends IBaseResponse, TRequest>(
     },
 
     onError(error, variables, onMutateResult, context) {
+      if (error.errors?.[0]?.extensions?.status_code === 401 || error.message?.includes("401")) {
+        useAuthStore.getState().setLogoutSuccess();
+        document.cookie = "refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+      }
+
       if (!silentError) {
         showMessage({
           type: MessageType.Toast,

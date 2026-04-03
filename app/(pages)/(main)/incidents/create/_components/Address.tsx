@@ -150,7 +150,7 @@ export default function Address() {
   }, [city, district, detailAddress]);
 
   return (
-    <div className="w-full h-full flex flex-col gap-[30px] px-[30px] py-[35px] border-1 border-[rgba(136,122,71,0.5)] rounded-[20px] bg-white/50 shadow-lg ring-1 ring-white/5 overflow-y-auto scrollbar-hide">
+    <div className="w-full h-full flex flex-col gap-[30px] px-[30px] py-[35px] border-1 border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5 overflow-y-auto scrollbar-hide">
       {/* Row 1 */}
       <div className="flex gap-3">
         <Field className="flex-1 gap-2">
@@ -158,7 +158,9 @@ export default function Address() {
             City <span className="text-destructive">*</span>
           </FieldLabel>
           <Input
-            {...register("city", { required: "City is required" })}
+            {...register("city"
+              // , { required: "City is required" }
+              )}
             placeholder="Enter city"
             className="border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50"
           />
@@ -170,7 +172,9 @@ export default function Address() {
             District <span className="text-destructive">*</span>
           </FieldLabel>
           <Input
-            {...register("district", { required: "District is required" })}
+            {...register("district"
+              // , { required: "District is required" }
+            )}
             placeholder="Enter district"
             className="border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50"
           />
@@ -199,7 +203,7 @@ export default function Address() {
           />
         </div> */}
       </div>
-      <div className="w-full h-[700px] rounded-xl overflow-hidden border">
+      <div className="w-full h-[575px] rounded-xl overflow-hidden border">
           <LeafletAddressMap
             position={position}
             setPosition={setPosition}

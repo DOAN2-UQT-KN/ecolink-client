@@ -104,5 +104,14 @@
   "Medium": "Medium",
   "Large": "Large",
   "Create Report": "Create Report",
-  "Submitting...": "Submitting..."
+  "Submitting...": "Submitting...",
+  "Upload file": "Upload file",
+  "Choose a image and upload securely to proceed.": "Choose images and upload securely to proceed.",
+  "Drag and drop your images": "Drag and drop your images",
+  "JPEG, PNG, and WEBP formats, up to 50MB": "JPEG, PNG, and WEBP formats, up to 50MB",
+  "Select files": "Select files",
+  "Uploaded Images": "Uploaded Images",
+  "No images uploaded yet.": "No images uploaded yet.",
+  "Maximum 10 images allowed.": "Maximum 10 images allowed.",
+  "View": "View"
 }

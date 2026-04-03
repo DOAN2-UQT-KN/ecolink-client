@@ -11,6 +11,7 @@ import { useSignIn } from "@/apis/auth/signIn";
 import useAuthStore from "@/stores/useAuthStore";
 import { useState } from "react";
 import { HiEye, HiEyeOff } from "react-icons/hi";
+import axiosClient from "@/libs/axiosClient";
 
 type FormValues = {
   email: string;
@@ -31,7 +32,11 @@ export default function SignIn() {
   const { mutate, isPending } = useSignIn({
     onSuccess: (res) => {
       if (res.data) {
-        const { accessToken, refreshToken, user } = res.data;
+        const {
+          access_token: accessToken,
+          refresh_token: refreshToken,
+          user,
+        } = res.data;
 
         // Set access token and user in store
         useAuthStore

@@ -7,55 +7,82 @@ import Address from "./_components/Address";
 import FileUpload from "./_components/FileUpload";
 import Information from "./_components/Information";
 
-import { IncidentProvider } from "./_components/IncidentContext";
+import { IncidentProvider, useIncidentContext } from "./_components/IncidentContext";
 import { Button } from "@/components/shared/Button";
 
-export default function CreateIncidentPage() {
-  const [isFullscreen, setIsFullscreen] = useState(false);
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { useTranslation } from "react-i18next";
 
-  const content = (
-    <div
-      className={
-        isFullscreen
-          ? "fixed inset-0 z-[9999] flex flex-col bg-white overflow-auto"
-          : "w-full"
-      }
-    >
-      {/* Fullscreen toggle button */}
-      <div className={`flex justify-end ${isFullscreen ? "p-4" : "mb-3"}`}>
-        <Button
-          onClick={() => setIsFullscreen((prev) => !prev)}
-          variant="outlined-brown"
-          className="w-10 h-10"
-        >
-          {isFullscreen ? (
-            <>
-              <HiArrowsPointingIn size={24} />
-            </>
-          ) : (
-            <>
-              <HiArrowsPointingOut size={24} />
-            </>
-          )}
-        </Button>
-      </div>
+function CreateIncidentContent() {
+  const { t } = useTranslation("common");
+  const { form, onSubmit, isPending } = useIncidentContext();
+
+  return (
+    <div className="w-full h-full">
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/" className="text-button-accent-hover">
+              {t("Home")}
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink
+              href="/components"
+              className="text-button-accent-hover"
+            >
+              {t("My incidents")}
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage className="text-button-accent">
+              {t("Create")}
+            </BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
 
       {/* Main panel */}
       <div
         className={`
-          flex flex-col md:grid md:grid-cols-2 gap-[30px]
-          isolate border-3 border-white rounded-[20px] bg-white/20 shadow-lg ring-1 ring-white/5
-          ${isFullscreen ? "flex-1 m-4 mt-0 p-[40px]" : "p-[40px]"}
+          flex flex-col gap-[30px] w-full h-full pt-5
         `}
       >
-        <Information />
-        <div className="flex flex-col gap-[30px]">
-          <FileUpload />
+        <div className="md:grid md:grid-cols-2 md:gap-[30px] w-full h-full">
+          <Information />
           <Address />
         </div>
+        <div className="w-full h-full">
+          <FileUpload />
+        </div>
+      </div>
+
+      <div className="flex justify-end pt-5">
+        <Button
+          variant="brown"
+          onClick={() => form.handleSubmit(onSubmit)()}
+          disabled={isPending}
+        >
+          {isPending ? t("Creating...") : t("Create")}
+        </Button>
       </div>
     </div>
   );
+}
 
-  return <IncidentProvider>{content}</IncidentProvider>;
+export default function CreateIncidentPage() {
+  return (
+    <IncidentProvider>
+      <CreateIncidentContent />
+    </IncidentProvider>
+  );
 }
