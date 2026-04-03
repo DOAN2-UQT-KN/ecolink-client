@@ -8,6 +8,7 @@ export interface ICreateReportRequest {
   severityLevel?: number;
   latitude?: number;
   longitude?: number;
+  detailAddress?: string;
   imageUrls?: string[];
 }
 

@@ -8,8 +8,8 @@ import { ICreateReportRequest } from "@/apis/incident/models/createReport";
 export interface IncidentFormValues {
   title: string;
   description: string;
-  city: string;
-  district: string;
+  latitude?: number;
+  longitude?: number;
   detailAddress: string;
   wasteTypes: string[];
   condition: string;
@@ -33,8 +33,8 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
     defaultValues: {
       title: "",
       description: "",
-      city: "",
-      district: "",
+      latitude: undefined,
+      longitude: undefined,
       detailAddress: "",
       wasteTypes: [],
       condition: "",
@@ -52,8 +52,10 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
       description: data.description,
       wasteType: data.wasteTypes.join(", "),
       severityLevel: data.size ? Number(data.size) : undefined,
+      latitude: data.latitude,
+      longitude: data.longitude,
+      detailAddress: data.detailAddress,
       imageUrls: data.imageString,
-      // Do not pass address-related values (city, district, detailAddress,   )
     };
     mutate(apiData);
   };

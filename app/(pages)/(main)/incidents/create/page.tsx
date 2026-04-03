@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-import { HiArrowsPointingOut, HiArrowsPointingIn } from "react-icons/hi2";
 
 import Address from "./_components/Address";
 import FileUpload from "./_components/FileUpload";

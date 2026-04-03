@@ -10,7 +10,6 @@ import showMessage, { MessageLevel, MessageType } from "@/utils/showMessage";
 import { IBaseResponse } from "@/types/BaseResponse";
 import { useTranslation } from "react-i18next";
 import useAuthStore from "@/stores/useAuthStore";
-import axiosClient from "@/libs/axiosClient";
 
 export const CACHE_TIME_DEFAULT = 5 * 60 * 1000;
 

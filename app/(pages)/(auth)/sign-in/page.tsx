@@ -11,7 +11,6 @@ import { useSignIn } from "@/apis/auth/signIn";
 import useAuthStore from "@/stores/useAuthStore";
 import { useState } from "react";
 import { HiEye, HiEyeOff } from "react-icons/hi";
-import axiosClient from "@/libs/axiosClient";
 
 type FormValues = {
   email: string;
