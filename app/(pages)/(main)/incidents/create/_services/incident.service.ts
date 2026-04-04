@@ -17,11 +17,11 @@ export const transformToApiData = (data: IncidentFormValues): ICreateReportReque
   return {
     title: data.title,
     description: data.description,
-    wasteType: data.wasteTypes.join(", "),
-    severityLevel: data.size ? Number(data.size) : undefined,
+    waste_type: data.wasteTypes.join(", "),
+    severity_level: data.size ? Number(data.size) : undefined,
     latitude: data.latitude,
     longitude: data.longitude,
-    detailAddress: data.detailAddress,
-    imageUrls: data.imageString,
+    detail_address: data.detailAddress,
+    image_urls: data.imageString,
   };
 };

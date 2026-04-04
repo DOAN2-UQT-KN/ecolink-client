@@ -4,8 +4,8 @@ import { IIncident } from "./incident";
 export interface IUpdateReportRequest {
   title: string;
   description: string;
-  wasteType: string;
-  severityLevel: number;
+  waste_type: string;
+  severity_level: number;
   latitude: number;
   longitude: number;
 }

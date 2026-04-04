@@ -3,21 +3,21 @@ export enum SortOrder {
   DESC = "desc",
 }
 
-export type SortBy = "createdAt" | "updatedAt" | "severityLevel" | "distance";
+export type SortBy = "created_at" | "updated_at" | "severity_level" | "distance";
 
 export interface IIncident {
   id: string;
-  userId: string | null;
+  user_id: string | null;
   title: string | null;
   description: string | null;
-  wasteType: string | null;
-  severityLevel: number | null;
+  waste_type: string | null;
+  severity_level: number | null;
   latitude: number | null;
   longitude: number | null;
   status: number | null;
-  aiVerified: boolean;
-  createdAt: string;
-  updatedAt: string;
+  ai_verified: boolean;
+  created_at: string;
+  updated_at: string;
   distance: number;
-  imageUrls?: string[];
+  image_urls?: string[];
 }

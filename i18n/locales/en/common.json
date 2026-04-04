@@ -113,5 +113,9 @@
   "Uploaded Images": "Uploaded Images",
   "No images uploaded yet.": "No images uploaded yet.",
   "Maximum 10 images allowed.": "Maximum 10 images allowed.",
-  "View": "View"
+  "View": "View",
+  "Created At": "Created At",
+  "DRAFT": "Draft",
+  "PENDING": "Pending",
+  "COMPLETED": "Completed"
 }
