@@ -1,6 +1,6 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useIncident } from "../_hooks/useIncident";
 import { Input } from "@/components/ui/input";
@@ -45,177 +45,220 @@ const Information = memo(function Information() {
     formState: { errors },
   } = form;
 
-  const renderGeneralInformation = () => (
-    <div className="flex flex-col gap-6">
-      <span className="font-display-5 font-semibold !text-button-accent ">
-        {t("General Information")}
-      </span>
-
-      <Field>
-        <FieldLabel className="text-foreground-tertiary font-display-3">
-          {t("Title")} <span className="text-destructive">*</span>
-        </FieldLabel>
-        <Input
-          {...register("title", { required: t("Title is required") })}
-          placeholder={t("Enter title...")}
-          className="border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50"
-        />
-        <FieldError errors={[errors.title]} />
-      </Field>
-
-      <Field>
-        <FieldLabel className="text-foreground-tertiary font-display-3">
-          {t("Description")}
-        </FieldLabel>
-        <Input
-          {...register("description")}
-          placeholder={t("Enter description...")}
-          className="border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50"
-        />
-        <FieldError errors={[errors.description]} />
-      </Field>
-    </div>
+  const translatedWasteTypeOptions = useMemo(
+    () =>
+      wasteTypeOptions.map((o) => ({
+        ...o,
+        label: t(o.label),
+      })),
+    [t],
   );
 
-  const renderDetailInformation = () => (
-    <div className="flex flex-col gap-6">
-      <span className="font-display-5 font-semibold !text-button-accent ">
-        {t("Detail Information")}
-      </span>
+  const translatedConditionOptions = useMemo(
+    () =>
+      conditionOptions.map((o) => ({
+        ...o,
+        label: t(o.label),
+      })),
+    [t],
+  );
 
-      {/* Waste Type — multi-select */}
-      <Field>
-        <FieldLabel className="text-foreground-tertiary font-display-3">
-          {t("Waste type")}
-        </FieldLabel>
-        <Controller
-          name="wasteTypes"
-          control={control}
-          defaultValue={[]}
-          render={({ field }) => (
-            <MultiSelect
-              options={wasteTypeOptions.map((o) => ({
-                ...o,
-                label: t(o.label),
-              }))}
-              value={field.value ?? []}
-              onChange={field.onChange}
-              placeholder={t("Select waste type...")}
-              triggerClassName="border-[rgba(136,122,71,0.5)] focus-visible:ring-[rgba(136,122,71,0.5)]/50 w-full"
-            />
-          )}
-        />
-      </Field>
+  const translatedPollutionLevelOptions = useMemo(
+    () =>
+      pollutionLevelOptions.map((o) => ({
+        ...o,
+        label: t(o.label),
+      })),
+    [t],
+  );
 
-      {/* Condition — single-select radio */}
-      <Field>
-        <FieldLabel className="text-foreground-tertiary font-display-3">
-          {t("Condition")}
-        </FieldLabel>
-        <Controller
-          name="condition"
-          control={control}
-          render={({ field }) => (
-            <RadioGroup
-              value={field.value}
-              onValueChange={field.onChange}
-              className="flex flex-col gap-1"
-            >
-              {conditionOptions.map((option) => (
-                <label
-                  key={option.value}
-                  htmlFor={`condition-${option.value}`}
-                  className={cn(
-                    "flex items-center gap-2 py-2.5 px-3 rounded-lg border transition-all cursor-pointer",
-                    field.value === option.value
-                      ? "bg-button-accent/10 border-button-accent"
-                      : "bg-white/5 border-white/10 hover:border-white/20",
-                  )}
-                >
-                  <RadioGroupItem
-                    value={option.value}
-                    id={`condition-${option.value}`}
-                  />
-                  <span className="text-sm font-normal flex-1">
-                    {t(option.label)}
-                  </span>
-                </label>
-              ))}
-            </RadioGroup>
-          )}
-        />
-      </Field>
+  const translatedSizeOptions = useMemo(
+    () =>
+      sizeOptions.map((o) => ({
+        ...o,
+        label: t(o.label),
+      })),
+    [t],
+  );
 
-      {/* Pollution Level — multi-select */}
-      <Field>
-        <FieldLabel className="text-foreground-tertiary font-display-3">
-          {t("Pollution level")}
-        </FieldLabel>
-        <Controller
-          name="pollutionLevels"
-          control={control}
-          defaultValue={[]}
-          render={({ field }) => (
-            <MultiSelect
-              options={pollutionLevelOptions.map((o) => ({
-                ...o,
-                label: t(o.label),
-              }))}
-              value={field.value ?? []}
-              onChange={field.onChange}
-              placeholder={t("Select pollution level...")}
-              triggerClassName="border-[rgba(136,122,71,0.5)] focus-visible:ring-[rgba(136,122,71,0.5)]/50 w-full"
-            />
-          )}
-        />
-      </Field>
+  const generalInformation = useMemo(
+    () => (
+      <div className="flex flex-col gap-6">
+        <span className="font-display-5 font-semibold !text-button-accent ">
+          {t("General Information")}
+        </span>
 
-      {/* Size — single-select radio */}
-      <Field>
-        <FieldLabel className="text-foreground-tertiary font-display-3">
-          {t("Size")}
-        </FieldLabel>
-        <Controller
-          name="size"
-          control={control}
-          render={({ field }) => (
-            <RadioGroup
-              value={field.value}
-              onValueChange={field.onChange}
-              className="flex flex-row gap-4"
-            >
-              {sizeOptions.map((option) => (
-                <label
-                  key={option.value}
-                  htmlFor={`size-${option.value}`}
-                  className={cn(
-                    "flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer flex-1 justify-center",
-                    field.value === option.value
-                      ? "bg-button-accent/10 border-button-accent"
-                      : "bg-white/5 border-white/10 hover:border-white/20",
-                  )}
-                >
-                  <RadioGroupItem
-                    value={option.value}
-                    id={`size-${option.value}`}
-                  />
-                  <span className="text-sm font-normal flex-1">
-                    {t(option.label)}
-                  </span>
-                </label>
-              ))}
-            </RadioGroup>
-          )}
-        />
-      </Field>
-    </div>
+        <Field>
+          <FieldLabel className="text-foreground-tertiary font-display-3">
+            {t("Title")} <span className="text-destructive">*</span>
+          </FieldLabel>
+          <Input
+            {...register("title", { required: t("Title is required") })}
+            placeholder={t("Enter title...")}
+            className="border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50"
+          />
+          <FieldError errors={[errors.title]} />
+        </Field>
+
+        <Field>
+          <FieldLabel className="text-foreground-tertiary font-display-3">
+            {t("Description")}
+          </FieldLabel>
+          <Input
+            {...register("description")}
+            placeholder={t("Enter description...")}
+            className="border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50"
+          />
+          <FieldError errors={[errors.description]} />
+        </Field>
+      </div>
+    ),
+    [errors.description, errors.title, register, t],
+  );
+
+  const detailInformation = useMemo(
+    () => (
+      <div className="flex flex-col gap-6">
+        <span className="font-display-5 font-semibold !text-button-accent ">
+          {t("Detail Information")}
+        </span>
+
+        {/* Waste Type — multi-select */}
+        <Field>
+          <FieldLabel className="text-foreground-tertiary font-display-3">
+            {t("Waste type")}
+          </FieldLabel>
+          <Controller
+            name="wasteTypes"
+            control={control}
+            defaultValue={[]}
+            render={({ field }) => (
+              <MultiSelect
+                options={translatedWasteTypeOptions}
+                value={field.value ?? []}
+                onChange={field.onChange}
+                placeholder={t("Select waste type...")}
+                triggerClassName="border-[rgba(136,122,71,0.5)] focus-visible:ring-[rgba(136,122,71,0.5)]/50 w-full"
+              />
+            )}
+          />
+        </Field>
+
+        {/* Condition — single-select radio */}
+        <Field>
+          <FieldLabel className="text-foreground-tertiary font-display-3">
+            {t("Condition")}
+          </FieldLabel>
+          <Controller
+            name="condition"
+            control={control}
+            render={({ field }) => (
+              <RadioGroup
+                value={field.value}
+                onValueChange={field.onChange}
+                className="flex flex-col gap-1"
+              >
+                {translatedConditionOptions.map((option) => (
+                  <label
+                    key={option.value}
+                    htmlFor={`condition-${option.value}`}
+                    className={cn(
+                      "flex items-center gap-2 py-2.5 px-3 rounded-lg border transition-all cursor-pointer",
+                      field.value === option.value
+                        ? "bg-button-accent/10 border-button-accent"
+                        : "bg-white/5 border-white/10 hover:border-white/20",
+                    )}
+                  >
+                    <RadioGroupItem
+                      value={option.value}
+                      id={`condition-${option.value}`}
+                    />
+                    <span className="text-sm font-normal flex-1">
+                      {option.label}
+                    </span>
+                  </label>
+                ))}
+              </RadioGroup>
+            )}
+          />
+        </Field>
+
+        {/* Pollution Level — multi-select */}
+        <Field>
+          <FieldLabel className="text-foreground-tertiary font-display-3">
+            {t("Pollution level")}
+          </FieldLabel>
+          <Controller
+            name="pollutionLevels"
+            control={control}
+            defaultValue={[]}
+            render={({ field }) => (
+              <MultiSelect
+                options={translatedPollutionLevelOptions}
+                value={field.value ?? []}
+                onChange={field.onChange}
+                placeholder={t("Select pollution level...")}
+                triggerClassName="border-[rgba(136,122,71,0.5)] focus-visible:ring-[rgba(136,122,71,0.5)]/50 w-full"
+              />
+            )}
+          />
+        </Field>
+
+        {/* Size — single-select radio */}
+        <Field>
+          <FieldLabel className="text-foreground-tertiary font-display-3">
+            {t("Size")}
+          </FieldLabel>
+          <Controller
+            name="size"
+            control={control}
+            render={({ field }) => (
+              <RadioGroup
+                value={field.value}
+                onValueChange={field.onChange}
+                className="flex flex-row gap-4"
+              >
+                {translatedSizeOptions.map((option) => (
+                  <label
+                    key={option.value}
+                    htmlFor={`size-${option.value}`}
+                    className={cn(
+                      "flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer flex-1 justify-center",
+                      field.value === option.value
+                        ? "bg-button-accent/10 border-button-accent"
+                        : "bg-white/5 border-white/10 hover:border-white/20",
+                    )}
+                  >
+                    <RadioGroupItem
+                      value={option.value}
+                      id={`size-${option.value}`}
+                    />
+                    <span className="text-sm font-normal flex-1">
+                      {option.label}
+                    </span>
+                  </label>
+                ))}
+              </RadioGroup>
+            )}
+          />
+        </Field>
+      </div>
+    ),
+    [
+      control,
+      t,
+      translatedConditionOptions,
+      translatedPollutionLevelOptions,
+      translatedSizeOptions,
+      translatedWasteTypeOptions,
+    ],
   );
 
   return (
     <div className="w-full h-full flex flex-col gap-[30px] px-[30px] py-[35px] border-1 border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5 overflow-y-auto scrollbar-hide">
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8">
-        {renderGeneralInformation()}
-        {renderDetailInformation()}
+        {generalInformation}
+        {detailInformation}
       </form>
     </div>
   );

@@ -13,6 +13,7 @@ import {
   BreadcrumbItemProps,
 } from "@/components/shared/Breadcrumbs";
 import { useTranslation } from "react-i18next";
+import { useCallback } from "react";
 
 const breadcrumbs: BreadcrumbItemProps[] = [
   { label: "Home", path: "/", type: "link" },
@@ -23,6 +24,10 @@ const breadcrumbs: BreadcrumbItemProps[] = [
 function CreateIncidentContent() {
   const { t } = useTranslation("common");
   const { form, onSubmit, isPending } = useIncident();
+
+  const handleCreate = useCallback(() => {
+    form.handleSubmit(onSubmit)();
+  }, [form, onSubmit]);
 
   return (
     <div className="w-full h-full">
@@ -43,11 +48,7 @@ function CreateIncidentContent() {
       </div>
 
       <div className="flex justify-end pt-5">
-        <Button
-          variant="brown"
-          onClick={() => form.handleSubmit(onSubmit)()}
-          disabled={isPending}
-        >
+        <Button variant="brown" onClick={handleCreate} disabled={isPending}>
           {isPending ? t("Creating...") : t("Create")}
         </Button>
       </div>

@@ -1,4 +1,4 @@
-import { memo, useContext } from "react";
+import { memo, useContext, useMemo } from "react";
 import StatsCard from "@/components/shared/StatsCard";
 import {
   HiOutlineDocumentText,
@@ -6,24 +6,17 @@ import {
   HiOutlineClock,
 } from "react-icons/hi";
 import { IncidentMeContext } from "../_context/IncidentMeContext";
-import { STATUS } from "@/constants/status";
 import { useTranslation } from "react-i18next";
+import { calculateIncidentStats } from "../_services/stats.service";
 
 const StatsCards = memo(function StatsCards() {
   const { t } = useTranslation();
   const context = useContext(IncidentMeContext);
   const reports = context?.reports || [];
 
-  const totalIncidents = reports.length;
+  const stats = useMemo(() => calculateIncidentStats(reports), [reports]);
 
-  const resolvedCount = reports.filter(
-    (report) =>
-      report.status === STATUS.COMPLETED ||
-      report.status === STATUS.APPROVED ||
-      report.status === STATUS.CLOSED,
-  ).length;
-
-  const pendingCount = totalIncidents - resolvedCount;
+  const { total: totalIncidents, resolved: resolvedCount, pending: pendingCount } = stats;
 
   return (
     <div className="flex flex-col lg:flex-row items-center justify-between w-full gap-5">

@@ -5,7 +5,7 @@ import { BiTrash, BiPlus } from "react-icons/bi";
 import { useFormContext } from "react-hook-form";
 import { IncidentFormValues } from "../_services/incident.service";
 import { Image as AntdImage } from "antd";
-import { memo, useRef, useState } from "react";
+import { memo, useRef, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { FaEye } from "react-icons/fa";
 import {
@@ -14,6 +14,46 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+const compressImage = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let width = img.width;
+        let height = img.height;
+
+        const MAX_DIMENSION = 1280;
+        if (width > height) {
+          if (width > MAX_DIMENSION) {
+            height *= MAX_DIMENSION / width;
+            width = MAX_DIMENSION;
+          }
+        } else {
+          if (height > MAX_DIMENSION) {
+            width *= MAX_DIMENSION / height;
+            height = MAX_DIMENSION;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(img, 0, 0, width, height);
+
+        // We use image/jpeg and 0.5 quality for good compression
+        const compressedBase64 = canvas.toDataURL("image/jpeg", 0.5);
+        resolve(compressedBase64);
+      };
+      img.onerror = (err) => reject(err);
+    };
+    reader.onerror = (err) => reject(err);
+  });
+};
+
 const FileUpload = memo(function FileUpload() {
   const { t } = useTranslation();
   const { watch, setValue } = useFormContext<IncidentFormValues>();
@@ -21,88 +61,58 @@ const FileUpload = memo(function FileUpload() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [compressing, setCompressing] = useState(false);
 
-  const compressImage = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = (event) => {
-        const img = new Image();
-        img.src = event.target?.result as string;
-        img.onload = () => {
-          const canvas = document.createElement("canvas");
-          let width = img.width;
-          let height = img.height;
+  const handleFileChange = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
 
-          const MAX_DIMENSION = 1280;
-          if (width > height) {
-            if (width > MAX_DIMENSION) {
-              height *= MAX_DIMENSION / width;
-              width = MAX_DIMENSION;
-            }
-          } else {
-            if (height > MAX_DIMENSION) {
-              width *= MAX_DIMENSION / height;
-              height = MAX_DIMENSION;
-            }
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext("2d");
-          ctx?.drawImage(img, 0, 0, width, height);
-
-          // We use image/jpeg and 0.7 quality for good compression
-          const compressedBase64 = canvas.toDataURL("image/jpeg", 0.5);
-          resolve(compressedBase64);
-        };
-        img.onerror = (err) => reject(err);
-      };
-      reader.onerror = (err) => reject(err);
-    });
-  };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    const remainingSlots = 10 - imageString.length;
-    if (remainingSlots <= 0) {
-      toast.error(t("Maximum 10 images allowed."));
-      return;
-    }
-
-    const filesToProcess = Array.from(files).slice(0, remainingSlots);
-    if (files.length > remainingSlots) {
-      toast.warning(
-        t("Only {{count}} images were added because of the limit.", {
-          count: remainingSlots,
-        }),
-      );
-    }
-
-    setCompressing(true);
-    const compressionPromises = filesToProcess.map((file) =>
-      compressImage(file),
-    );
-
-    try {
-      const newImages = await Promise.all(compressionPromises);
-      setValue("imageString", [...imageString, ...newImages]);
-    } catch (error) {
-      console.error("Error compressing files:", error);
-      toast.error(t("Failed to compress some images."));
-    } finally {
-      setCompressing(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
+      const remainingSlots = 10 - imageString.length;
+      if (remainingSlots <= 0) {
+        toast.error(t("Maximum 10 images allowed."));
+        return;
       }
-    }
-  };
 
-  const removeImage = (index: number) => {
-    const updatedImages = imageString.filter((_, i) => i !== index);
-    setValue("imageString", updatedImages);
-  };
+      const filesToProcess = Array.from(files).slice(0, remainingSlots);
+      if (files.length > remainingSlots) {
+        toast.warning(
+          t("Only {{count}} images were added because of the limit.", {
+            count: remainingSlots,
+          }),
+        );
+      }
+
+      setCompressing(true);
+      const compressionPromises = filesToProcess.map((file) =>
+        compressImage(file),
+      );
+
+      try {
+        const newImages = await Promise.all(compressionPromises);
+        setValue("imageString", [...imageString, ...newImages]);
+      } catch (error) {
+        console.error("Error compressing files:", error);
+        toast.error(t("Failed to compress some images."));
+      } finally {
+        setCompressing(false);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+      }
+    },
+    [imageString, setValue, t],
+  );
+
+  const removeImage = useCallback(
+    (index: number) => {
+      const updatedImages = imageString.filter((_, i) => i !== index);
+      setValue("imageString", updatedImages);
+    },
+    [imageString, setValue],
+  );
+
+  const clearAll = useCallback(() => {
+    setValue("imageString", []);
+  }, [setValue]);
 
   return (
     <div className="w-full h-full flex flex-col gap-[30px] px-[30px] py-[35px] border-1 border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5 overflow-y-auto scrollbar-hide">
@@ -161,7 +171,7 @@ const FileUpload = memo(function FileUpload() {
             {/* <div className="flex items-center gap-2"> */}
             <button
               type="button"
-              onClick={() => setValue("imageString", [])}
+              onClick={clearAll}
               className="text-xs font-semibold text-red-500 hover:text-red-600 transition-colors bg-red-50 px-2.5 py-1 rounded-full border border-red-100"
             >
               {t("Clear all")}

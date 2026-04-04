@@ -1,12 +1,13 @@
 "use client";
 
-import React, { createContext, ReactNode } from "react";
+import React, { createContext, ReactNode, useCallback, useMemo } from "react";
 import { useForm, FormProvider, UseFormReturn } from "react-hook-form";
 import { useCreateReport } from "@/apis/incident/createReport";
 import {
   IncidentFormValues,
   transformToApiData,
 } from "../_services/incident.service";
+import { useRouter } from "next/navigation";
 
 interface IncidentContextType {
   form: UseFormReturn<IncidentFormValues>;
@@ -19,6 +20,8 @@ export const IncidentContext = createContext<IncidentContextType | undefined>(
 );
 
 export const IncidentProvider = ({ children }: { children: ReactNode }) => {
+  const router = useRouter();
+
   const form = useForm<IncidentFormValues>({
     defaultValues: {
       title: "",
@@ -36,17 +39,26 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
 
   const { mutate: createIncident, isPending } = useCreateReport({
     onSuccess: () => {
-      // router.push("/incidents/me");
+      router.push("/incidents/me");
     },
   });
 
-  const onSubmit = (data: IncidentFormValues) => {
-    const apiData = transformToApiData(data);
-    createIncident(apiData);
-  };
+  const onSubmit = useCallback(
+    (data: IncidentFormValues) => {
+      const apiData = transformToApiData(data);
+      createIncident(apiData);
+    },
+    [createIncident],
+  );
+
+  const contextValue = useMemo(() => ({ form, onSubmit, isPending }), [
+    form,
+    onSubmit,
+    isPending,
+  ]);
 
   return (
-    <IncidentContext.Provider value={{ form, onSubmit, isPending }}>
+    <IncidentContext.Provider value={contextValue}>
       <FormProvider {...form}>{children}</FormProvider>
     </IncidentContext.Provider>
   );

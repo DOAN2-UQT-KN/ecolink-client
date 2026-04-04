@@ -50,28 +50,50 @@ export const IncidentMeProvider = ({ children }: { children: ReactNode }) => {
     setPagination((prev) => ({ ...prev, current: 1 }));
   }, []);
 
+  const handleSetPagination = useCallback(
+    (newPagination: { current: number; pageSize: number }) => {
+      setPagination(newPagination);
+    },
+    [],
+  );
+
   const { data, isLoading, refetch } = useGetMyReports({
     page: pagination.current,
     limit: pagination.pageSize,
     ...filters,
   });
 
-  const reports = data?.data?.reports || [];
-  const total = (data as any)?.data?.total || reports.length;
+  const reports = React.useMemo(() => data?.data?.reports || [], [data]);
+  const total = React.useMemo(
+    () => (data as any)?.data?.total || reports.length,
+    [data, reports.length],
+  );
+
+  const contextValue = React.useMemo(
+    () => ({
+      reports,
+      isLoading,
+      total,
+      pagination,
+      setPagination: handleSetPagination,
+      filters,
+      setFilters,
+      refetch,
+    }),
+    [
+      reports,
+      isLoading,
+      total,
+      pagination,
+      handleSetPagination,
+      filters,
+      setFilters,
+      refetch,
+    ],
+  );
 
   return (
-    <IncidentMeContext.Provider
-      value={{
-        reports,
-        isLoading,
-        total,
-        pagination,
-        setPagination,
-        filters,
-        setFilters,
-        refetch,
-      }}
-    >
+    <IncidentMeContext.Provider value={contextValue}>
       {children}
     </IncidentMeContext.Provider>
   );

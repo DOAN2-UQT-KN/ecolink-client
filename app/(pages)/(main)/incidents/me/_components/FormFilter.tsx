@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useContext, useState, useEffect } from "react";
+import { memo, useContext, useState, useEffect, useCallback } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -46,18 +46,21 @@ const FormFilter = memo(function FormFilter() {
     setSearchValue(filters.search || "");
   }, [filters.search]);
 
-  const handleStatusChange = (value: string) => {
-    const status = value === "all" ? undefined : Number(value);
-    setFilters({ status });
+  const handleStatusChange = useCallback(
+    (value: string) => {
+      const status = value === "all" ? undefined : Number(value);
+      setFilters({ status });
 
-    const params = new URLSearchParams(searchParams.toString());
-    if (status !== undefined) {
-      params.set("status", status.toString());
-    } else {
-      params.delete("status");
-    }
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  };
+      const params = new URLSearchParams(searchParams.toString());
+      if (status !== undefined) {
+        params.set("status", status.toString());
+      } else {
+        params.delete("status");
+      }
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    },
+    [pathname, router, searchParams, setFilters],
+  );
 
   const renderStatusFilter = () => {
     return (

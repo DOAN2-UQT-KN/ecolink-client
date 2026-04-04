@@ -1,4 +1,5 @@
 "use client";
+import React from "react";
 import DataTable from "./_components/DataTable";
 import StatsCards from "./_components/StatsCards";
 import {
@@ -12,13 +13,19 @@ import { useRouter } from "next/navigation";
 
 function MyIncidentsPage() {
   const { t } = useTranslation();
-
-  const breadcrumbs: BreadcrumbItemProps[] = [
-    { label: t("Home"), path: "/", type: "link" },
-    { label: t("My incidents"), path: "/incidents/me", type: "page" },
-  ];
-
   const router = useRouter();
+
+  const breadcrumbs: BreadcrumbItemProps[] = React.useMemo(
+    () => [
+      { label: t("Home"), path: "/", type: "link" },
+      { label: t("My incidents"), path: "/incidents/me", type: "page" },
+    ],
+    [t],
+  );
+
+  const handleCreateReport = React.useCallback(() => {
+    router.push("/incidents/create");
+  }, [router]);
 
   return (
     <IncidentMeProvider>
@@ -30,9 +37,7 @@ function MyIncidentsPage() {
             variant="brown"
             size="medium"
             className="h-[45px]"
-            onClick={() => {
-              router.push("/incidents/create");
-            }}
+            onClick={handleCreateReport}
           >
             {t("Add Report")}
           </Button>
