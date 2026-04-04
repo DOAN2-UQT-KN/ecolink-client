@@ -2,10 +2,15 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { LatLngLiteral } from "leaflet";
+import dynamic from "next/dynamic";
 import { Textarea } from "@/components/ui/textarea";
 import { Field, FieldLabel } from "@/components/ui/field";
-import { useIncidentContext } from "./IncidentContext";
-import LeafletAddressMap from "./LeafletAddressMap";
+import { useIncident } from "../_hooks/useIncident";
+
+const LeafletAddressMap = dynamic(() => import("./LeafletAddressMap"), {
+  ssr: false,
+  loading: () => <div className="h-full w-full bg-slate-100 animate-pulse rounded-xl" />,
+});
 
 type ReverseGeocodingAddress = {
   city?: string;
@@ -14,7 +19,7 @@ type ReverseGeocodingAddress = {
 };
 
 export default function Address() {
-  const { form } = useIncidentContext();
+  const { form } = useIncident();
   const {
     register,
     watch,

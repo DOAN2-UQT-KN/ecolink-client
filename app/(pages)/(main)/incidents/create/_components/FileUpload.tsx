@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { IoDocumentAttachOutline } from "react-icons/io5";
 import { BiTrash, BiPlus } from "react-icons/bi";
 import { useFormContext } from "react-hook-form";
-import { IncidentFormValues } from "./IncidentContext";
+import { IncidentFormValues } from "../_services/incident.service";
 import { Image as AntdImage } from "antd";
 import { useRef, useState } from "react";
 import { toast } from "sonner";

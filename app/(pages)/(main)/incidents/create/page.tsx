@@ -5,7 +5,8 @@ import Address from "./_components/Address";
 import FileUpload from "./_components/FileUpload";
 import Information from "./_components/Information";
 
-import { IncidentProvider, useIncidentContext } from "./_components/IncidentContext";
+import { IncidentProvider } from "./_context/IncidentContext";
+import { useIncident } from "./_hooks/useIncident";
 import { Button } from "@/components/shared/Button";
 
 import {
@@ -20,7 +21,7 @@ import { useTranslation } from "react-i18next";
 
 function CreateIncidentContent() {
   const { t } = useTranslation("common");
-  const { form, onSubmit, isPending } = useIncidentContext();
+  const { form, onSubmit, isPending } = useIncident();
 
   return (
     <div className="w-full h-full">

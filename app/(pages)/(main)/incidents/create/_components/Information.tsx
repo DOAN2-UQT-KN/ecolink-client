@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslation } from "react-i18next";
-import { useIncidentContext } from "./IncidentContext";
+import { useIncident } from "../_hooks/useIncident";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Field, FieldLabel, FieldError } from "@/components/ui/field";
@@ -36,7 +36,7 @@ const sizeOptions = [
 
 export default function Information() {
   const { t } = useTranslation();
-  const { form, onSubmit, isPending } = useIncidentContext();
+  const { form, onSubmit, isPending } = useIncident();
   const {
     register,
     control,
