@@ -27,8 +27,6 @@ export default function Home() {
       <Divider className="text-background-tertiary my-15" />
 
       <CallToAction />
-
-      <Divider className="text-background-tertiary mt-15" />
     </div>
   );
 }

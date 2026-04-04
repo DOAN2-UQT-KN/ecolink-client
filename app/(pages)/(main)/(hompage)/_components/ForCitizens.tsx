@@ -60,7 +60,7 @@ const ForCitizens = () => {
   const [primaryCard, ...secondaryCards] = forCitizensItems;
 
   return (
-    <div className="flex flex-col w-full lg:flex-row md:items-start md:justify-center md:gap-[50px] ">
+    <section className="flex flex-col w-full lg:flex-row md:items-start md:justify-center md:gap-[50px] ">
       <motion.div
         initial={{ opacity: 0, x: -50 }}
         whileInView={{ opacity: 1, x: 0 }}
@@ -98,10 +98,11 @@ const ForCitizens = () => {
         transition={{ duration: 0.6 }}
         className="flex flex-col lg:flex-row items-center lg:items-stretch justify-between w-full gap-[30px] px-[20px] py-[10px] lg:w-3/4 w-full"
       >
-        {primaryCard && (() => {
-          const { key, ...primaryCardProps } = primaryCard;
-          return <FeatureCard key={key} {...primaryCardProps} />;
-        })()}
+        {primaryCard &&
+          (() => {
+            const { key, ...primaryCardProps } = primaryCard;
+            return <FeatureCard key={key} {...primaryCardProps} />;
+          })()}
         <div className="flex flex-col gap-[30px] w-full">
           {secondaryCards.map((item) => {
             const { key, ...itemProps } = item;
@@ -109,7 +110,7 @@ const ForCitizens = () => {
           })}
         </div>
       </motion.div>
-    </div>
+    </section>
   );
 };
 

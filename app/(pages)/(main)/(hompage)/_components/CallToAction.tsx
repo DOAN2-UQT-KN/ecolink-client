@@ -8,7 +8,7 @@ const CallToAction = () => {
   const { t } = useTranslation("common");
 
   return (
-    <motion.div
+    <motion.section
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       viewport={{ once: true }}
@@ -43,7 +43,7 @@ const CallToAction = () => {
       </p>
 
       <Button variant="green">{t("Join EcoLink")}</Button>
-    </motion.div>
+    </motion.section>
   );
 };
 

@@ -9,60 +9,24 @@ import { useIncident } from "./_hooks/useIncident";
 import { Button } from "@/components/shared/Button";
 
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { useRouter } from "next/navigation";
+  Breadcrumbs,
+  BreadcrumbItemProps,
+} from "@/components/shared/Breadcrumbs";
 import { useTranslation } from "react-i18next";
-import React, { Fragment, useCallback } from "react";
 
-const breadcrumbs = [
+const breadcrumbs: BreadcrumbItemProps[] = [
   { label: "Home", path: "/", type: "link" },
   { label: "My incidents", path: "/incidents/me", type: "link" },
   { label: "Create", path: "/incidents/create", type: "page" },
 ];
 
 function CreateIncidentContent() {
-  const router = useRouter();
   const { t } = useTranslation("common");
   const { form, onSubmit, isPending } = useIncident();
 
-  const renderBreadcrums = useCallback(
-    () => (
-      <Breadcrumb>
-        <BreadcrumbList>
-          {breadcrumbs.map((item, index) => (
-            <Fragment key={item.path}>
-              <BreadcrumbItem>
-                {item.type === "link" ? (
-                  <BreadcrumbLink
-                    className="text-button-accent-hover cursor-pointer"
-                    onClick={() => router.push(item.path)}
-                  >
-                    {t(item.label)}
-                  </BreadcrumbLink>
-                ) : (
-                  <BreadcrumbPage className="text-button-accent">
-                    {t(item.label)}
-                  </BreadcrumbPage>
-                )}
-              </BreadcrumbItem>
-              {index < breadcrumbs.length - 1 && <BreadcrumbSeparator />}
-            </Fragment>
-          ))}
-        </BreadcrumbList>
-      </Breadcrumb>
-    ),
-    [t],
-  );
-
   return (
     <div className="w-full h-full">
-      {renderBreadcrums()}
+      <Breadcrumbs breadcrumbs={breadcrumbs} />
       {/* Main panel */}
       <div
         className={`
