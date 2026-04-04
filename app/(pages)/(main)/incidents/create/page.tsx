@@ -23,7 +23,7 @@ const breadcrumbs: BreadcrumbItemProps[] = [
 
 function CreateIncidentContent() {
   const { t } = useTranslation("common");
-  const { form, onSubmit, isPending } = useIncident();
+  const { form, onSubmit, isPending, isUploading } = useIncident();
 
   const handleCreate = useCallback(() => {
     form.handleSubmit(onSubmit)();
@@ -48,8 +48,12 @@ function CreateIncidentContent() {
       </div>
 
       <div className="flex justify-end pt-5">
-        <Button variant="brown" onClick={handleCreate} disabled={isPending}>
-          {isPending ? t("Creating...") : t("Create")}
+        <Button
+          variant="brown"
+          onClick={handleCreate}
+          disabled={isPending || isUploading}
+        >
+          {isUploading ? t("Uploading...") : isPending ? t("Creating...") : t("Create")}
         </Button>
       </div>
     </div>

@@ -5,7 +5,7 @@ import { BiTrash, BiPlus } from "react-icons/bi";
 import { useFormContext } from "react-hook-form";
 import { IncidentFormValues } from "../_services/incident.service";
 import { Image as AntdImage } from "antd";
-import { memo, useRef, useState, useCallback } from "react";
+import { memo, useRef, useState, useCallback, useMemo, useEffect } from "react";
 import { toast } from "sonner";
 import { FaEye } from "react-icons/fa";
 import {
@@ -14,7 +14,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-const compressImage = (file: File): Promise<string> => {
+const compressImage = (file: File): Promise<Blob> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -44,9 +44,18 @@ const compressImage = (file: File): Promise<string> => {
         const ctx = canvas.getContext("2d");
         ctx?.drawImage(img, 0, 0, width, height);
 
-        // We use image/jpeg and 0.5 quality for good compression
-        const compressedBase64 = canvas.toDataURL("image/jpeg", 0.5);
-        resolve(compressedBase64);
+        // Convert to Blob instead of base64
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              reject(new Error("Failed to compress image"));
+            }
+          },
+          "image/jpeg",
+          0.5,
+        );
       };
       img.onerror = (err) => reject(err);
     };
@@ -54,10 +63,73 @@ const compressImage = (file: File): Promise<string> => {
   });
 };
 
+const ImagePreviewItem = memo(function ImagePreviewItem({
+  image,
+  index,
+  onRemove,
+}: {
+  image: string | File | Blob;
+  index: number;
+  onRemove: (index: number) => void;
+}) {
+  const [previewUrl, setPreviewUrl] = useState<string>("");
+
+  useEffect(() => {
+    let url = "";
+    if (typeof image === "string") {
+      url = image;
+    } else {
+      url = URL.createObjectURL(image);
+    }
+    setPreviewUrl(url);
+
+    return () => {
+      if (typeof image !== "string" && url) {
+        URL.revokeObjectURL(url);
+      }
+    };
+  }, [image]);
+
+  if (!previewUrl) {
+    return (
+      <div className="w-[150px] h-[150px] rounded-[35px] bg-slate-100 animate-pulse border-1 border-[rgba(136,122,71,0.5)]" />
+    );
+  }
+
+  return (
+    <div className="relative w-[150px] h-[150px] rounded-[35px] group shadow-md overflow-hidden ring-1 ring-black/5">
+      <AntdImage
+        src={previewUrl}
+        alt={`Uploaded ${index}`}
+        width={150}
+        height={150}
+        className="object-cover transition-transform duration-300 w-full h-full"
+        preview={{
+          cover: (
+            <div className="absolute inset-0 bg-black/20 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <FaEye size={30} />
+            </div>
+          ),
+        }}
+      />
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onRemove(index);
+        }}
+        className="absolute -top-5 -right-2 p-1.5 text-red-500 bg-red-100 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-md hover:bg-red-200 cursor-pointer z-10"
+      >
+        <BiTrash size={18} />
+      </button>
+    </div>
+  );
+});
+
 const FileUpload = memo(function FileUpload() {
   const { t } = useTranslation();
   const { watch, setValue } = useFormContext<IncidentFormValues>();
-  const imageString = watch("imageString") || [];
+  const imageStrings = watch("imageStrings") || [];
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [compressing, setCompressing] = useState(false);
 
@@ -66,7 +138,7 @@ const FileUpload = memo(function FileUpload() {
       const files = e.target.files;
       if (!files || files.length === 0) return;
 
-      const remainingSlots = 10 - imageString.length;
+      const remainingSlots = 10 - imageStrings.length;
       if (remainingSlots <= 0) {
         toast.error(t("Maximum 10 images allowed."));
         return;
@@ -88,7 +160,7 @@ const FileUpload = memo(function FileUpload() {
 
       try {
         const newImages = await Promise.all(compressionPromises);
-        setValue("imageString", [...imageString, ...newImages]);
+        setValue("imageStrings", [...imageStrings, ...newImages]);
       } catch (error) {
         console.error("Error compressing files:", error);
         toast.error(t("Failed to compress some images."));
@@ -99,19 +171,19 @@ const FileUpload = memo(function FileUpload() {
         }
       }
     },
-    [imageString, setValue, t],
+    [imageStrings, setValue, t],
   );
 
   const removeImage = useCallback(
     (index: number) => {
-      const updatedImages = imageString.filter((_, i) => i !== index);
-      setValue("imageString", updatedImages);
+      const updatedImages = imageStrings.filter((_, i) => i !== index);
+      setValue("imageStrings", updatedImages);
     },
-    [imageString, setValue],
+    [imageStrings, setValue],
   );
 
   const clearAll = useCallback(() => {
-    setValue("imageString", []);
+    setValue("imageStrings", []);
   }, [setValue]);
 
   return (
@@ -125,7 +197,7 @@ const FileUpload = memo(function FileUpload() {
         className="hidden"
       />
 
-      {imageString.length === 0 && (
+      {imageStrings.length === 0 && (
         <>
           <div className="flex flex-col gap-[8px]">
             <span className="font-display-5 font-semibold text-button-accent">
@@ -160,7 +232,7 @@ const FileUpload = memo(function FileUpload() {
         </>
       )}
 
-      {imageString.length > 0 && (
+      {imageStrings.length > 0 && (
         <div className="flex flex-col gap-5">
           <div className="flex items-center justify-between">
             <span className="font-display-3 font-semibold text-button-accent">
@@ -180,39 +252,16 @@ const FileUpload = memo(function FileUpload() {
           </div>
           <div className="flex flex-wrap gap-4">
             <AntdImage.PreviewGroup>
-              {imageString.map((image, index) => (
-                <div
+              {imageStrings.map((image, index) => (
+                <ImagePreviewItem
                   key={index}
-                  className="relative w-[150px] h-[150px] rounded-[35px]  group shadow-md"
-                >
-                  <AntdImage
-                    src={image}
-                    alt={`Uploaded ${index}`}
-                    width={150}
-                    height={150}
-                    className="object-cover transition-transform duration-300 "
-                    preview={{
-                      mask: (
-                        <div className="absolute inset-0 bg-black/20 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                          <FaEye size={30} />
-                        </div>
-                      ),
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeImage(index);
-                    }}
-                    className="absolute -top-5 -right-2 p-1.5 text-red-500 bg-red-100 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-md hover:bg-red-200 cursor-pointer z-10"
-                  >
-                    <BiTrash size={18} />
-                  </button>
-                </div>
+                  image={image}
+                  index={index}
+                  onRemove={removeImage}
+                />
               ))}
             </AntdImage.PreviewGroup>
-            {imageString.length < 10 && (
+            {imageStrings.length < 10 && (
               <Tooltip>
                 <TooltipTrigger>
                   <div
@@ -233,7 +282,7 @@ const FileUpload = memo(function FileUpload() {
             )}
           </div>
           <span className="text-sm text-button-accent-hover font-medium">
-            {imageString.length}/10
+            {imageStrings.length}/10
           </span>
         </div>
       )}

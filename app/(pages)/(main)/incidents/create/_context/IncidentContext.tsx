@@ -7,12 +7,14 @@ import {
   IncidentFormValues,
   transformToApiData,
 } from "../_services/incident.service";
+import { uploadMultipleImages } from "../_services/upload.service";
 import { useRouter } from "next/navigation";
 
 interface IncidentContextType {
   form: UseFormReturn<IncidentFormValues>;
   onSubmit: (data: IncidentFormValues) => void;
   isPending: boolean;
+  isUploading: boolean;
 }
 
 export const IncidentContext = createContext<IncidentContextType | undefined>(
@@ -21,6 +23,8 @@ export const IncidentContext = createContext<IncidentContextType | undefined>(
 
 export const IncidentProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
+
+  const [isUploading, setIsUploading] = React.useState(false);
 
   const form = useForm<IncidentFormValues>({
     defaultValues: {
@@ -33,28 +37,46 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
       condition: "",
       pollutionLevels: [],
       size: "",
-      imageString: [],
+      imageStrings: [],
     },
   });
 
   const { mutate: createIncident, isPending } = useCreateReport({
     onSuccess: () => {
+      form.reset();
       router.push("/incidents/me");
     },
   });
 
   const onSubmit = useCallback(
-    (data: IncidentFormValues) => {
-      const apiData = transformToApiData(data);
-      createIncident(apiData);
+    async (data: IncidentFormValues) => {
+      try {
+        setIsUploading(true);
+        // Step 1: Upload images to Cloudinary
+        const imageUrls = await uploadMultipleImages(data.imageStrings);
+        
+        // Step 2: Prepare API data with URLs
+        const apiData = transformToApiData({
+          ...data,
+          imageStrings: imageUrls,
+        });
+
+        // Step 3: Create Incident
+        createIncident(apiData);
+      } catch (error) {
+        console.error("Submission failed:", error);
+      } finally {
+        setIsUploading(false);
+      }
     },
     [createIncident],
   );
 
-  const contextValue = useMemo(() => ({ form, onSubmit, isPending }), [
+  const contextValue = useMemo(() => ({ form, onSubmit, isPending, isUploading }), [
     form,
     onSubmit,
     isPending,
+    isUploading,
   ]);
 
   return (

@@ -10,7 +10,7 @@ export interface IncidentFormValues {
   condition: string;
   pollutionLevels: string[];
   size: string;
-  imageString: string[];
+  imageStrings: (string | File | Blob)[];
 }
 
 export const transformToApiData = (data: IncidentFormValues): ICreateReportRequest => {
@@ -22,6 +22,6 @@ export const transformToApiData = (data: IncidentFormValues): ICreateReportReque
     latitude: data.latitude,
     longitude: data.longitude,
     detail_address: data.detailAddress,
-    image_urls: data.imageString,
+    image_urls: data.imageStrings as string[],
   };
 };
