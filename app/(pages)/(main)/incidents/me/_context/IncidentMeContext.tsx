@@ -1,8 +1,10 @@
 "use client";
 
-import React, { createContext, ReactNode, useState } from "react";
+import React, { createContext, ReactNode, useState, useCallback, useEffect } from "react";
 import { useGetMyReports } from "@/apis/incident/getReport";
 import { IIncident } from "@/apis/incident/models/incident";
+import { IGetReportsRequest } from "@/apis/incident/models/getReport";
+import useGetParam from "@/hooks/useGetParam";
 
 interface IncidentMeContextType {
   reports: IIncident[];
@@ -13,6 +15,8 @@ interface IncidentMeContextType {
     pageSize: number;
   };
   setPagination: (pagination: { current: number; pageSize: number }) => void;
+  filters: Partial<IGetReportsRequest>;
+  setFilters: (filters: Partial<IGetReportsRequest>) => void;
   refetch: () => void;
 }
 
@@ -26,16 +30,33 @@ export const IncidentMeProvider = ({ children }: { children: ReactNode }) => {
     pageSize: 10,
   });
 
+  const urlSearch = useGetParam<string>("search", "string", "");
+  const urlStatus = useGetParam<number>("status", "number", undefined);
+
+  const [filters, setFiltersState] = useState<Partial<IGetReportsRequest>>({
+    search: urlSearch,
+    status: urlStatus,
+  });
+
+  useEffect(() => {
+    setFiltersState({
+      search: urlSearch,
+      status: urlStatus,
+    });
+  }, [urlSearch, urlStatus]);
+
+  const setFilters = useCallback((newFilters: Partial<IGetReportsRequest>) => {
+    setFiltersState((prev) => ({ ...prev, ...newFilters }));
+    setPagination((prev) => ({ ...prev, current: 1 }));
+  }, []);
+
   const { data, isLoading, refetch } = useGetMyReports({
     page: pagination.current,
     limit: pagination.pageSize,
+    ...filters,
   });
 
   const reports = data?.data?.reports || [];
-  // Since we don't have total in IBaseResponse currently based on what I saw (it was just IBaseResponse<T>),
-  // I'll see if I can find where total is.
-  // Wait, IBaseResponse might have it if it's paginated.
-  // Let me check IBaseResponse again carefully.
   const total = (data as any)?.data?.total || reports.length;
 
   return (
@@ -46,6 +67,8 @@ export const IncidentMeProvider = ({ children }: { children: ReactNode }) => {
         total,
         pagination,
         setPagination,
+        filters,
+        setFilters,
         refetch,
       }}
     >
@@ -53,3 +76,4 @@ export const IncidentMeProvider = ({ children }: { children: ReactNode }) => {
     </IncidentMeContext.Provider>
   );
 };
+

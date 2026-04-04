@@ -10,8 +10,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/libs/utils";
-import { ChevronLeft, ChevronRight, Loader2, Inbox } from "lucide-react";
+import { ChevronLeft, ChevronRight, Inbox } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 
 export interface ColumnType<T> {
   title: React.ReactNode;
@@ -88,7 +96,7 @@ export function DataTable<T>({
                   <TableHead
                     key={column.key}
                     className={cn(
-                      "h-12 px-4 display-1 font-semibold capitalize text-foreground-secondary",
+                      "h-12 px-4 display-1 font-semibold capitalize text-foreground-secondary font-display-1",
                       column.className,
                     )}
                     style={{ width: column.width }}
@@ -103,27 +111,39 @@ export function DataTable<T>({
 
             <TableBody className="border-b border-[#887A47]/50">
               {loading ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-72 text-center"
-                  >
-                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                      {t("Loading data...")}
-                    </div>
-                  </TableCell>
-                </TableRow>
+                Array.from({ length: 10 }).map((_, i) => (
+                  <TableRow key={i} className="border-t border-[#887A47]/50">
+                    {columns.map((column) => (
+                      <TableCell
+                        key={column.key}
+                        className={cn("px-4 py-3", column.className)}
+                      >
+                        <Skeleton className="h-4 w-full" />
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
               ) : dataSource.length === 0 ? (
                 <TableRow>
                   <TableCell
                     colSpan={columns.length}
                     className="h-72 text-center"
                   >
-                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                      <Inbox className="h-10 w-10 opacity-20" />
-                      {emptyText || t("No data found")}
-                    </div>
+                    <Empty className="border-none">
+                      <EmptyHeader>
+                        <EmptyMedia variant="icon">
+                          <Inbox className="h-6 w-6" />
+                        </EmptyMedia>
+                        <EmptyTitle className="!font-display-2 font-semibold text-foreground-secondary">
+                          {t("No data found")}
+                        </EmptyTitle>
+                        {emptyText && (
+                          <EmptyDescription className="!font-display-1">
+                            {emptyText}
+                          </EmptyDescription>
+                        )}
+                      </EmptyHeader>
+                    </Empty>
                   </TableCell>
                 </TableRow>
               ) : (

@@ -9,18 +9,18 @@ import { IncidentMeContext } from "../_context/IncidentMeContext";
 import { STATUS } from "@/constants/status";
 import { useTranslation } from "react-i18next";
 
-const InforCards = memo(function InforCards() {
+const StatsCards = memo(function StatsCards() {
   const { t } = useTranslation();
   const context = useContext(IncidentMeContext);
   const reports = context?.reports || [];
 
   const totalIncidents = reports.length;
-  
+
   const resolvedCount = reports.filter(
-    (report) => 
-      report.status === STATUS.COMPLETED || 
-      report.status === STATUS.APPROVED || 
-      report.status === STATUS.CLOSED
+    (report) =>
+      report.status === STATUS.COMPLETED ||
+      report.status === STATUS.APPROVED ||
+      report.status === STATUS.CLOSED,
   ).length;
 
   const pendingCount = totalIncidents - resolvedCount;
@@ -51,4 +51,4 @@ const InforCards = memo(function InforCards() {
   );
 });
 
-export default InforCards;
+export default StatsCards;

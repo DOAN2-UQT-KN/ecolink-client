@@ -20,6 +20,7 @@ import {
 import AddressDisplay from "./AddressDisplay";
 
 import { StatusTag } from "@/components/shared/StatusTag";
+import FormFilter from "./FormFilter";
 
 const DataTableComponent = memo(function DataTableComponent() {
   const { t, i18n } = useTranslation();
@@ -165,24 +166,12 @@ const DataTableComponent = memo(function DataTableComponent() {
         }}
         onChange={handleTableChange}
         emptyText={t("No incidents reported yet")}
-        filter={
-          <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-4 mb-4">
-            <h2 className="text-xl font-bold font-display-4 self-start">
-              {t("My Reported Incidents")}
-            </h2>
-            <div className="relative w-full sm:w-72 group">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
-              <Input
-                className="pl-10 h-10 bg-muted/20 border-border/50 focus:bg-background transition-all rounded-xl focus:ring-2 focus:ring-primary/20"
-                placeholder={t("Search by Title or Description...")}
-              />
-            </div>
-          </div>
-        }
+        filter={<FormFilter />}
       />
     </div>
   );
 });
+
 
 function cn(...inputs: any[]) {
   return inputs.filter(Boolean).join(" ");
