@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { LatLngLiteral } from "leaflet";
 import dynamic from "next/dynamic";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,20 +18,17 @@ type ReverseGeocodingAddress = {
   detailAddress?: string;
 };
 
-export default function Address() {
+const Address = memo(function Address() {
   const { form } = useIncident();
   const {
     register,
     watch,
     setValue,
-    formState: { errors },
   } = form;
   const [position, setPosition] = useState<LatLngLiteral | null>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cacheRef = useRef<Map<string, ReverseGeocodingAddress>>(new Map());
 
-  const latitude = watch("latitude");
-  const longitude = watch("longitude");
   const detailAddress = watch("detailAddress");
 
   const parseAddress = useCallback((data: {
@@ -154,7 +151,6 @@ export default function Address() {
 
   return (
     <div className="w-full h-full flex flex-col gap-[30px] px-[30px] py-[35px] border-1 border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5 overflow-y-auto scrollbar-hide">
-      {/* Row 1 REMOVED: City and District inputs */}
 
       <div className="flex gap-3 ">
         {/* Detail */}
@@ -169,13 +165,6 @@ export default function Address() {
           />
         </Field>
 
-        {/* <div className="w-1/2 h-[250px] rounded-xl overflow-hidden border">
-          <LeafletAddressMap
-            position={position}
-            setPosition={setPosition}
-            popupText={detailAddress || "Selected location"}
-          />
-        </div> */}
       </div>
       <div className="w-full h-[575px] rounded-xl overflow-hidden border">
           <LeafletAddressMap
@@ -184,9 +173,8 @@ export default function Address() {
             popupText={detailAddress || "Selected location"}
           />
         </div>
-      {/* <div className="w-full h-[250px] rounded-xl overflow-hidden border">
-        <iframe title="Google Map" width="100%" height="100%" loading="lazy" src={mapSrc} />
-      </div> */}
     </div>
   );
-}
+});
+
+export default Address;

@@ -5,7 +5,7 @@ import { BiTrash, BiPlus } from "react-icons/bi";
 import { useFormContext } from "react-hook-form";
 import { IncidentFormValues } from "../_services/incident.service";
 import { Image as AntdImage } from "antd";
-import { useRef, useState } from "react";
+import { memo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { FaEye } from "react-icons/fa";
 import {
@@ -14,7 +14,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-export default function FileUpload() {
+const FileUpload = memo(function FileUpload() {
   const { t } = useTranslation();
   const { watch, setValue } = useFormContext<IncidentFormValues>();
   const imageString = watch("imageString") || [];
@@ -229,4 +229,6 @@ export default function FileUpload() {
       )}
     </div>
   );
-}
+});
+
+export default FileUpload;

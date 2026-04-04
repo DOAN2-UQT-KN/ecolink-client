@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { memo, useEffect } from "react";
 import type { LatLngLiteral } from "leaflet";
 import L from "leaflet";
 import { MapContainer, Marker, Popup, TileLayer, useMapEvents } from "react-leaflet";
@@ -15,7 +15,7 @@ type LeafletAddressMapProps = {
   popupText: string;
 };
 
-function LocationMarker({ setPosition }: Pick<LeafletAddressMapProps, "setPosition">) {
+const LocationMarker = memo(function LocationMarker({ setPosition }: Pick<LeafletAddressMapProps, "setPosition">) {
   useMapEvents({
     click(e) {
       setPosition(e.latlng);
@@ -23,9 +23,9 @@ function LocationMarker({ setPosition }: Pick<LeafletAddressMapProps, "setPositi
   });
 
   return null;
-}
+});
 
-export default function LeafletAddressMap({
+const LeafletAddressMap = memo(function LeafletAddressMap({
   position,
   setPosition,
   popupText,
@@ -53,4 +53,6 @@ export default function LeafletAddressMap({
       )}
     </MapContainer>
   );
-}
+});
+
+export default LeafletAddressMap;

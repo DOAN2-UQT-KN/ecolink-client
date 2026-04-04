@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import { useIncident } from "../_hooks/useIncident";
 import { Input } from "@/components/ui/input";
@@ -34,7 +35,7 @@ const sizeOptions = [
   { label: "Large", value: "3" },
 ];
 
-export default function Information() {
+const Information = memo(function Information() {
   const { t } = useTranslation();
   const { form, onSubmit, isPending } = useIncident();
   const {
@@ -212,22 +213,12 @@ export default function Information() {
 
   return (
     <div className="w-full h-full flex flex-col gap-[30px] px-[30px] py-[35px] border-1 border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5 overflow-y-auto scrollbar-hide">
-      {/* <span className="font-bold text-button-accent font-display-8 uppercase tracking-wider">
-        {t("New Report")}
-      </span> */}
-
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8">
         {renderGeneralInformation()}
         {renderDetailInformation()}
-
-        {/* <button
-          type="submit"
-          disabled={isPending}
-          className="mt-4 h-[55px] w-full rounded-xl bg-button-accent text-white font-bold text-lg hover:bg-button-accent/90 transition-all shadow-lg active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
-        >
-          {isPending ? t("Submitting...") : t("Create Report")}
-        </button> */}
       </form>
     </div>
   );
-}
+});
+
+export default Information;

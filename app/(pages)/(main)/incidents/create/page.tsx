@@ -1,6 +1,5 @@
 "use client";
 
-
 import Address from "./_components/Address";
 import FileUpload from "./_components/FileUpload";
 import Information from "./_components/Information";
@@ -17,39 +16,53 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
+import React, { Fragment, useCallback } from "react";
+
+const breadcrumbs = [
+  { label: "Home", path: "/", type: "link" },
+  { label: "My incidents", path: "/incidents/me", type: "link" },
+  { label: "Create", path: "/incidents/create", type: "page" },
+];
 
 function CreateIncidentContent() {
+  const router = useRouter();
   const { t } = useTranslation("common");
   const { form, onSubmit, isPending } = useIncident();
 
-  return (
-    <div className="w-full h-full">
+  const renderBreadcrums = useCallback(
+    () => (
       <Breadcrumb>
         <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/" className="text-button-accent-hover">
-              {t("Home")}
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink
-              href="/components"
-              className="text-button-accent-hover"
-            >
-              {t("My incidents")}
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage className="text-button-accent">
-              {t("Create")}
-            </BreadcrumbPage>
-          </BreadcrumbItem>
+          {breadcrumbs.map((item, index) => (
+            <Fragment key={item.path}>
+              <BreadcrumbItem>
+                {item.type === "link" ? (
+                  <BreadcrumbLink
+                    className="text-button-accent-hover cursor-pointer"
+                    onClick={() => router.push(item.path)}
+                  >
+                    {t(item.label)}
+                  </BreadcrumbLink>
+                ) : (
+                  <BreadcrumbPage className="text-button-accent">
+                    {t(item.label)}
+                  </BreadcrumbPage>
+                )}
+              </BreadcrumbItem>
+              {index < breadcrumbs.length - 1 && <BreadcrumbSeparator />}
+            </Fragment>
+          ))}
         </BreadcrumbList>
       </Breadcrumb>
+    ),
+    [t],
+  );
 
+  return (
+    <div className="w-full h-full">
+      {renderBreadcrums()}
       {/* Main panel */}
       <div
         className={`
