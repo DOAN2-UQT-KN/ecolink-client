@@ -26,9 +26,8 @@ const onResponse = (response: AxiosResponse): AxiosResponse => {
     return response
 }
 
-const onResponseError = async (error: AxiosError): Promise<any> => {
+const onResponseError = async (error: any): Promise<any> => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
-    
     // Check for 401 and not a retry, and not the refresh-token URL itself
     if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url?.includes("/auth/refresh-token")) {
         originalRequest._retry = true
@@ -62,20 +61,25 @@ const onResponseError = async (error: AxiosError): Promise<any> => {
                 // If refresh fails, log out
                 useAuthStore.getState().setLogoutSuccess()
                 document.cookie = "refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+                if (typeof window !== "undefined") {
+                    const redirect = encodeURIComponent(window.location.pathname + window.location.search)
+                    window.location.href = `/sign-in?redirect=${redirect}`
+                }
                 return Promise.reject(refreshError)
             }
+        } else {
+            useAuthStore.getState().setLogoutSuccess()
+            if (typeof window !== "undefined") {
+                const redirect = encodeURIComponent(window.location.pathname + window.location.search)
+                window.location.href = `/sign-in?redirect=${redirect}`
+            }
         }
-    }
-
-    // Final 401 check (if refresh failed or wasn't even attempted)
-    if (error.response?.status === 401) {
-        useAuthStore.getState().setLogoutSuccess()
     }
 
     return Promise.reject(
         typeof error.response?.data === "object" &&
             error.response.status !== HttpStatusCode.NotFound
-            ? error.response.data
+            ? { ...error.response.data, status: error.response.status }
             : error
     )
 }
