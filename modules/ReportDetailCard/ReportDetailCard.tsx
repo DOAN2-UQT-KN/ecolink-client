@@ -31,7 +31,11 @@ const ReportDetailCard: React.FC<ReportDetailCardProps> = ({
       )}
     >
       <div className="p-4 md:p-5 flex flex-col h-full">
-        <ReportHeader user={incident.user} createdAt={incident.created_at} />
+        <ReportHeader
+          reportId={incident.id}
+          user={incident.user}
+          createdAt={incident.created_at}
+        />
 
         <ReportContent
           title={incident.title}

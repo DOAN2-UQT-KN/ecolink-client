@@ -24,15 +24,15 @@ export const ReportActions: React.FC<ReportActionsProps> = ({
   initialDownvotes = 0,
   initialVotePoint = 0,
 }) => {
-  const { votePoint, userVote, handleVote, isVoting } = useReportVotes(
+  const { userVote, handleVote, isVoting } = useReportVotes(
     reportId,
-    initialUpvotes,
-    initialDownvotes,
     initialVotePoint,
   );
 
+  const votePoint = initialVotePoint; // Use the prop directly as it reflects the refetched data
+
   return (
-    <div className="flex items-center justify-between mt-auto pt-4">
+    <div className="flex items-center justify-between">
       <div className="flex items-center h-10 px-4 bg-muted/60 dark:bg-accent/30 rounded-full transition-all">
         <button
           onClick={() => handleVote(1)}

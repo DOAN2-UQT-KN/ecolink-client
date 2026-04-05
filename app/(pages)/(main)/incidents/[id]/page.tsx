@@ -93,7 +93,7 @@ const IncidentDetailPage = () => {
     <div className="">
       <Breadcrumbs breadcrumbs={breadcrumbs} />
 
-      <div className="flex justify-center pt-10 animate-in fade-in zoom-in-95 duration-500">
+      <div className="flex justify-center pt-3 animate-in fade-in zoom-in-95 duration-500">
         <ReportDetailCard incident={incident} />
       </div>
     </div>
