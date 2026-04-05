@@ -1,78 +1,69 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 
-const cache = new Map<string, string>();
+interface AddressParts {
+  road?: string;
+  suburb?: string;
+  city_district?: string;
+  district?: string;
+  city?: string;
+  town?: string;
+  village?: string;
+  municipality?: string;
+}
 
-export const useReverseGeocode = (latitude: number | null, longitude: number | null) => {
-  const [address, setAddress] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const abortControllerRef = useRef<AbortController | null>(null);
+interface GeocodeResponse {
+  address?: AddressParts;
+  display_name?: string;
+  error?: string;
+}
 
-  const fetchAddress = useCallback(async (lat: number, lng: number) => {
-    const cacheKey = `${lat.toFixed(4)},${lng.toFixed(4)}`;
-    if (cache.has(cacheKey)) {
-      setAddress(cache.get(cacheKey)!);
-      return;
-    }
+export const useReverseGeocode = (
+  latitude: number | null,
+  longitude: number | null,
+) => {
+  const { data, isLoading, error } = useQuery<GeocodeResponse>({
+    queryKey: ["reverse-geocode", latitude, longitude],
+    queryFn: async () => {
+      if (latitude === null || longitude === null) return {};
 
-    setIsLoading(true);
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    abortControllerRef.current = new AbortController();
-
-    try {
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
-        {
-          headers: {
-            Accept: "application/json",
-          },
-          signal: abortControllerRef.current.signal,
-        },
+        `/api/reverse-geocode?lat=${latitude}&lon=${longitude}`,
       );
 
-      if (!response.ok) throw new Error("Failed to fetch address");
-
-      const data = await response.json();
-      const addr = data.address || {};
-
-      // Selectively build the address string up to city level
-      const parts = [
-        addr.road,
-        addr.suburb || addr.city_district || addr.district,
-        addr.city || addr.town || addr.village || addr.municipality,
-      ].filter(Boolean);
-
-      const displayAddress =
-        parts.length > 0
-          ? parts.join(", ")
-          : data.display_name?.split(",")[0] || "Unknown Location";
-
-      cache.set(cacheKey, displayAddress);
-      setAddress(displayAddress);
-    } catch (error: any) {
-      if (error?.name !== "AbortError") {
-        console.error("Error fetching address:", error);
-        setAddress("Location Unavailable");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to fetch address");
       }
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
 
-  useEffect(() => {
-    if (latitude !== null && longitude !== null) {
-      fetchAddress(latitude, longitude);
-    } else {
-      setAddress(null);
+      return response.json();
+    },
+    enabled: latitude !== null && longitude !== null,
+    staleTime: 1000 * 60 * 60, // 1 hour cache
+    gcTime: 1000 * 60 * 60 * 24, // Keep in garbage collection for 24 hours
+    retry: 1,
+  });
+
+  const formatAddress = (result: GeocodeResponse): string => {
+    if (!result || result.error) return "Location Unavailable";
+    
+    const addr = result.address || {};
+    const parts = [
+      addr.road,
+      addr.suburb || addr.city_district || addr.district,
+      addr.city || addr.town || addr.village || addr.municipality,
+    ].filter(Boolean);
+
+    if (parts.length > 0) {
+      return parts.join(", ");
     }
 
-    return () => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-    };
-  }, [latitude, longitude, fetchAddress]);
+    return result.display_name?.split(",")[0] || "Unknown Location";
+  };
 
-  return { address, isLoading };
+  const address = data ? formatAddress(data) : (isLoading ? "Fetching address..." : null);
+
+  return { 
+    address: error ? "Location Unavailable" : address, 
+    isLoading 
+  };
 };

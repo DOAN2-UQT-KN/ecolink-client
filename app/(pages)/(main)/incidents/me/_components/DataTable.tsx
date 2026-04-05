@@ -36,7 +36,7 @@ const DataTableComponent = memo(function DataTableComponent() {
           <div className="flex items-center gap-3 py-1">
             <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-border/50 bg-muted">
               <Image
-                src={record.image_urls?.[0] || ""}
+                src={record.media_files?.[0]?.url || ""}
                 alt={record.title || t("Untitled Incident")}
                 fill
                 className="object-cover"

@@ -3,7 +3,20 @@ export enum SortOrder {
   DESC = "desc",
 }
 
-export type SortBy = "created_at" | "updated_at" | "severity_level" | "distance";
+export type SortBy =
+  | "created_at"
+  | "updated_at"
+  | "severity_level"
+  | "distance";
+
+export interface IMediaFiles {
+  id: string;
+  media_id: string;
+  url: string;
+  ai_analysis_url: string | null;
+  uploaded_by: string;
+  created_at: string;
+}
 
 export interface IIncident {
   id: string;
@@ -20,4 +33,5 @@ export interface IIncident {
   updated_at: string;
   distance: number;
   image_urls?: string[];
+  media_files?: IMediaFiles[];
 }

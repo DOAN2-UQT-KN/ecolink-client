@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
   experimental: {
     cacheComponents: true,
   },
+  images: {
+    domains: ["res.cloudinary.com"],
+  },
 };
 
 export default nextConfig;

@@ -43,14 +43,14 @@ const onResponseError = async (error: any): Promise<any> => {
                 )
                 
                 if (response.data?.data) {
-                    const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response.data.data
+                    const { access_token: newAccessToken, refresh_token: newRefreshToken } = response.data.data
                     
                     // Update store
                     useAuthStore.getState().setAccessToken(newAccessToken)
-                    useAuthStore.getState().setRefreshToken(newRefreshToken)
+                    useAuthStore.getState().setRefreshToken(newRefreshToken || refreshTokenVal)
                     
                     // Update cookie
-                    document.cookie = `refresh_token=${newRefreshToken}; path=/; Max-Age=2592000; Secure; SameSite=Lax`
+                    document.cookie = `refresh_token=${newRefreshToken || refreshTokenVal}; path=/; Max-Age=2592000; Secure; SameSite=Lax`
                     
                     // Update current request and retry
                     originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
