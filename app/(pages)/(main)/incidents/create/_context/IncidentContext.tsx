@@ -9,6 +9,7 @@ import {
 } from "../_services/incident.service";
 import { uploadMultipleImages } from "../_services/upload.service";
 import { useRouter } from "next/navigation";
+import { queryClient } from "@/libs/queryClient";
 
 interface IncidentContextType {
   form: UseFormReturn<IncidentFormValues>;
@@ -45,6 +46,7 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
     onSuccess: () => {
       form.reset();
       router.push("/incidents/me");
+      queryClient.invalidateQueries({ queryKey: ["incidents"] });
     },
   });
 
@@ -54,7 +56,7 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
         setIsUploading(true);
         // Step 1: Upload images to Cloudinary
         const imageUrls = await uploadMultipleImages(data.imageStrings);
-        
+
         // Step 2: Prepare API data with URLs
         const apiData = transformToApiData({
           ...data,
@@ -72,12 +74,10 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
     [createIncident],
   );
 
-  const contextValue = useMemo(() => ({ form, onSubmit, isPending, isUploading }), [
-    form,
-    onSubmit,
-    isPending,
-    isUploading,
-  ]);
+  const contextValue = useMemo(
+    () => ({ form, onSubmit, isPending, isUploading }),
+    [form, onSubmit, isPending, isUploading],
+  );
 
   return (
     <IncidentContext.Provider value={contextValue}>

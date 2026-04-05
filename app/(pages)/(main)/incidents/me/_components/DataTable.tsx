@@ -7,6 +7,7 @@ import { IncidentMeContext } from "../_context/IncidentMeContext";
 import { IIncident } from "@/apis/incident/models/incident";
 import { STATUS } from "@/constants/status";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,6 +23,7 @@ import FormFilter from "./FormFilter";
 const DataTableComponent = memo(function DataTableComponent() {
   const { t, i18n } = useTranslation();
   const context = useContext(IncidentMeContext);
+  const router = useRouter();
 
   if (!context) return null;
 
@@ -55,6 +57,7 @@ const DataTableComponent = memo(function DataTableComponent() {
                   <AddressDisplay
                     latitude={record.latitude}
                     longitude={record.longitude}
+                    address={record.detail_address}
                   />
                 </div>
               </div>
@@ -157,6 +160,13 @@ const DataTableComponent = memo(function DataTableComponent() {
     [setPagination],
   );
 
+  const handleRowClick = useCallback(
+    (record: IIncident) => {
+      router.push(`/incidents/${record.id}`);
+    },
+    [router],
+  );
+
   return (
     <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
       <DataTable
@@ -170,6 +180,7 @@ const DataTableComponent = memo(function DataTableComponent() {
         onChange={handleTableChange}
         emptyText={t("No incidents reported yet")}
         filter={<FormFilter />}
+        onRowClick={handleRowClick}
       />
     </div>
   );

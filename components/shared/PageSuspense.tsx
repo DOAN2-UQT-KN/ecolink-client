@@ -19,7 +19,7 @@ const PageSuspense = ({ pageName }: PageSuspenseProps) => {
         }}
         className="text-center"
       >
-        <span className="text-display-1 font-title font-medium tracking-tight text-background-quaternary lowercase italic">
+        <span className="text-display-1 font-title font-medium tracking-tight text-background-quaternary lowercase">
           [{pageName}]
         </span>
       </motion.div>

@@ -8,14 +8,12 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { useSignIn } from "@/apis/auth/signIn";
-import useAuthStore from "@/stores/useAuthStore";
 import { Suspense, useState } from "react";
 import { HiEye, HiEyeOff } from "react-icons/hi";
-
-type FormValues = {
-  email: string;
-  password: string;
-};
+import {
+  ISignInFormValues,
+  handleSignInSuccess,
+} from "./_services/auth.service";
 
 export default function SignIn() {
   return (
@@ -36,31 +34,15 @@ function SignInForm() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<FormValues>();
+  } = useForm<ISignInFormValues>();
 
   const { mutate, isPending } = useSignIn({
     onSuccess: (res) => {
-      if (res.data) {
-        const {
-          access_token: accessToken,
-          refresh_token: refreshToken,
-          user,
-        } = res.data;
-
-        // Set access token and user in store
-        useAuthStore
-          .getState()
-          .setLoginSuccess(accessToken, user, refreshToken);
-
-        // Set refresh token in cookie
-        document.cookie = `refresh_token=${refreshToken}; path=/; Max-Age=2592000; Secure; SameSite=Lax`;
-
-        router.push(redirect);
-      }
+      handleSignInSuccess(res, router, redirect);
     },
   });
 
-  const onSubmit = async (data: FormValues) => {
+  const onSubmit = async (data: ISignInFormValues) => {
     mutate(data);
   };
 

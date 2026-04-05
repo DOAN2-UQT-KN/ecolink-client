@@ -1,3 +1,5 @@
+import { IUser } from "@/apis/auth/models/user";
+
 export enum SortOrder {
   ASC = "asc",
   DESC = "desc",
@@ -29,9 +31,14 @@ export interface IIncident {
   longitude: number | null;
   status: number | null;
   ai_verified: boolean;
+  size?: string;
+  condition?: string;
   created_at: string;
   updated_at: string;
   distance: number;
   image_urls?: string[];
   media_files?: IMediaFiles[];
+  user?: IUser;
+  detail_address?: string;
+  vote_point?: number;
 }

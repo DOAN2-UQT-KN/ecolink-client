@@ -8,9 +8,7 @@ import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { useRequestPasswordReset } from "@/apis/auth/requestPasswordReset";
 
-type FormValues = {
-  email: string;
-};
+import { IRequestResetPasswordFormValues } from "./_services/auth.service";
 
 export default function RequestResetPassword() {
   const { t } = useTranslation();
@@ -20,7 +18,7 @@ export default function RequestResetPassword() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<FormValues>();
+  } = useForm<IRequestResetPasswordFormValues>();
 
   const { mutate, isPending } = useRequestPasswordReset({
     onSuccess: () => {
@@ -29,7 +27,7 @@ export default function RequestResetPassword() {
     },
   });
 
-  const onSubmit = async (data: FormValues) => {
+  const onSubmit = async (data: IRequestResetPasswordFormValues) => {
     mutate(data);
   };
 

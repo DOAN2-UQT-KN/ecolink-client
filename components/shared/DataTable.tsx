@@ -46,6 +46,7 @@ export interface DataTableProps<T> {
   className?: string;
   rowKey?: keyof T | ((record: T) => string | number);
   emptyText?: string;
+  onRowClick?: (record: T) => void;
 }
 
 export function DataTable<T>({
@@ -58,6 +59,7 @@ export function DataTable<T>({
   className,
   rowKey,
   emptyText,
+  onRowClick,
 }: DataTableProps<T>) {
   const { t } = useTranslation();
 
@@ -150,7 +152,8 @@ export function DataTable<T>({
                 dataSource.map((record, index) => (
                   <TableRow
                     key={getRowKey(record, index)}
-                    className="hover:bg-[#887A47]/5 border-t border-[#887A47]/50"
+                    className="hover:bg-[#887A47]/5 border-t border-[#887A47]/50  cursor-pointer"
+                    onClick={() => onRowClick?.(record)}
                   >
                     {columns.map((column) => (
                       <TableCell
@@ -179,7 +182,7 @@ export function DataTable<T>({
 
         {/* 🔹 PAGINATION (FOOTER) */}
         {pagination && pagination.total > 0 && (
-          <div className="flex items-center justify-between gap-4 px-6 py-4 border-t border-[#887A47]/30 bg-white">
+          <div className="flex items-center justify-between gap-4 px-6 py-3 border-t border-[#887A47]/30 bg-white">
             <button
               onClick={() => handlePageChange(pagination.current - 1)}
               disabled={pagination.current <= 1 || loading}
@@ -215,7 +218,7 @@ export function DataTable<T>({
                       <button
                         onClick={() => handlePageChange(page)}
                         className={cn(
-                          "px-3 py-2 text-sm font-medium transition-all duration-200",
+                          "px-3  py-2 text-sm font-medium transition-all duration-200",
                           !isLast && "border-r border-[#887A47]/50",
                           pagination.current === page
                             ? "bg-[#887A47] text-white"
