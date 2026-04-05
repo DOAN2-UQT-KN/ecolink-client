@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, ReactNode, useState, useCallback, useEffect } from "react";
+import React, {
+  createContext,
+  ReactNode,
+  useState,
+  useCallback,
+  useEffect,
+} from "react";
 import { useGetMyReports } from "@/apis/incident/getReport";
 import { IIncident } from "@/apis/incident/models/incident";
 import { IGetReportsRequest } from "@/apis/incident/models/getReport";
@@ -98,4 +104,3 @@ export const IncidentMeProvider = ({ children }: { children: ReactNode }) => {
     </IncidentMeContext.Provider>
   );
 };
-

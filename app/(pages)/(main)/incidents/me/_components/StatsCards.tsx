@@ -1,22 +1,36 @@
-import { memo, useContext, useMemo } from "react";
+import { memo } from "react";
 import StatsCard from "@/components/shared/StatsCard";
 import {
   HiOutlineDocumentText,
   HiOutlineCheckCircle,
   HiOutlineClock,
+  HiOutlinePencil,
 } from "react-icons/hi";
-import { IncidentMeContext } from "../_context/IncidentMeContext";
 import { useTranslation } from "react-i18next";
-import { calculateIncidentStats } from "../_services/stats.service";
+import { useGetMyReports } from "@/apis/incident/getReport";
+import { STATUS } from "@/constants/status";
 
 const StatsCards = memo(function StatsCards() {
   const { t } = useTranslation();
-  const context = useContext(IncidentMeContext);
-  const reports = context?.reports || [];
 
-  const stats = useMemo(() => calculateIncidentStats(reports), [reports]);
+  const { data: totalData } = useGetMyReports({ limit: 1 });
+  const { data: resolvedData } = useGetMyReports({
+    limit: 1,
+    status: STATUS.COMPLETED,
+  });
+  const { data: pendingData } = useGetMyReports({
+    limit: 1,
+    status: STATUS.PENDING,
+  });
+  // const { data: draftData } = useGetMyReports({
+  //   limit: 1,
+  //   status: STATUS.DRAFT,
+  // });
 
-  const { total: totalIncidents, resolved: resolvedCount, pending: pendingCount } = stats;
+  const totalIncidents = totalData?.data?.total || 0;
+  const resolvedCount = resolvedData?.data?.total || 0;
+  const pendingCount = pendingData?.data?.total || 0;
+  // const draftCount = draftData?.data?.total || 0;
 
   return (
     <div className="flex flex-col lg:flex-row items-center justify-between w-full gap-5">
@@ -34,6 +48,12 @@ const StatsCards = memo(function StatsCards() {
         description={t("Incidents marked as resolved")}
         icon={<HiOutlineCheckCircle size={22} className="text-button-accent" />}
       />
+      {/* <StatsCard
+        title={t("Draft")}
+        value={draftCount}
+        description={t("Incidents in draft")}
+        icon={<HiOutlinePencil size={22} className="text-button-accent" />}
+      /> */}
       <StatsCard
         title={t("Pending")}
         value={pendingCount}

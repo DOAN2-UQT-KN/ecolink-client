@@ -1,6 +1,7 @@
 import { IBaseResponse } from "@/types/BaseResponse";
 import { IIncident } from "./incident";
 import { SortBy, SortOrder } from "./incident";
+import { IPaginationResponse } from "@/types/PaginationResponse";
 
 export interface IGetReportsRequest {
   search?: string;
@@ -16,6 +17,4 @@ export interface IGetReportsRequest {
   limit?: number;
 }
 
-export type IGetReportsResponse = IBaseResponse<{
-  reports: IIncident[];
-}>;
+export type IGetReportsResponse = IPaginationResponse<IIncident[], "reports">;
