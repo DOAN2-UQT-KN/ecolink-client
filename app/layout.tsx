@@ -5,6 +5,7 @@ import ReactQueryProvider from "@/components/providers/ReactQueryProvider";
 import { Inter } from "next/font/google";
 import { cn } from "@/libs/utils";
 import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -47,7 +48,9 @@ export default function RootLayout({
       </head>
       <body className="antialiased">
         <ReactQueryProvider>
-          <I18nProvider>{children}</I18nProvider>
+          <TooltipProvider>
+            <I18nProvider>{children}</I18nProvider>
+          </TooltipProvider>
         </ReactQueryProvider>
         <Toaster />
       </body>

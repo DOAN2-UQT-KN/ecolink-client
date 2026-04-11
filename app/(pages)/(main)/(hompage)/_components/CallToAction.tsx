@@ -8,12 +8,12 @@ const CallToAction = () => {
   const { t } = useTranslation("common");
 
   return (
-    <motion.div
+    <motion.section
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       viewport={{ once: true }}
       transition={{ duration: 1 }}
-      className="flex flex-col items-center justify-between gap-[30px]  px-[30px]"
+      className="flex flex-col items-center justify-between gap-[30px] "
     >
       <span className="font-title text-[30px] md:text-[60px] text-center">
         <Trans
@@ -43,7 +43,7 @@ const CallToAction = () => {
       </p>
 
       <Button variant="green">{t("Join EcoLink")}</Button>
-    </motion.div>
+    </motion.section>
   );
 };
 

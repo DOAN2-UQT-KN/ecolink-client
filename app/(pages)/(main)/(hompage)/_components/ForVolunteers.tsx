@@ -50,7 +50,7 @@ const ForVolunteer = () => {
   }, [t]);
 
   return (
-    <div className="flex flex-col px-[10px] w-full lg:px-[120px] ">
+    <section className="flex flex-col w-full  ">
       <motion.div
         initial={{ opacity: 0, y: -50 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -100,7 +100,7 @@ const ForVolunteer = () => {
           {renderVolunteerItems()}
         </motion.div>
       </div>
-    </div>
+    </section>
   );
 };
 

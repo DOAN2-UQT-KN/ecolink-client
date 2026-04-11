@@ -12,11 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { HiEye, HiEyeOff } from "react-icons/hi";
 import { useSignUp } from "@/apis/auth/signUp";
 
-type FormValues = {
-  name: string;
-  email: string;
-  password: string;
-};
+import { ISignUpFormValues } from "./_services/auth.service";
 
 export default function SignUp() {
   const { t } = useTranslation();
@@ -28,7 +24,7 @@ export default function SignUp() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<FormValues>();
+  } = useForm<ISignUpFormValues>();
 
   const { mutate, isPending } = useSignUp({
     onSuccess: () => {
@@ -36,7 +32,7 @@ export default function SignUp() {
     },
   });
 
-  const onSubmit = async (data: FormValues) => {
+  const onSubmit = async (data: ISignUpFormValues) => {
     mutate(data);
   };
 

@@ -3,50 +3,46 @@
 import { Button } from "@/components/shared/Button";
 import Image from "next/image";
 import { useTranslation } from "react-i18next";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { useSignIn } from "@/apis/auth/signIn";
-import useAuthStore from "@/stores/useAuthStore";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { HiEye, HiEyeOff } from "react-icons/hi";
-
-type FormValues = {
-  email: string;
-  password: string;
-};
+import {
+  ISignInFormValues,
+  handleSignInSuccess,
+} from "./_services/auth.service";
 
 export default function SignIn() {
+  return (
+    <Suspense fallback={null}>
+      <SignInForm />
+    </Suspense>
+  );
+}
+
+function SignInForm() {
   const { t } = useTranslation();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get("redirect") || "/";
   const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<FormValues>();
+  } = useForm<ISignInFormValues>();
 
   const { mutate, isPending } = useSignIn({
     onSuccess: (res) => {
-      if (res.data) {
-        const { accessToken, refreshToken, user } = res.data;
-
-        // Set access token and user in store
-        useAuthStore
-          .getState()
-          .setLoginSuccess(accessToken, user, refreshToken);
-
-        // Set refresh token in cookie
-        document.cookie = `refresh_token=${refreshToken}; path=/; Max-Age=2592000; Secure; SameSite=Lax`;
-
-        router.push("/");
-      }
+      handleSignInSuccess(res, router, redirect);
     },
   });
 
-  const onSubmit = async (data: FormValues) => {
+  const onSubmit = async (data: ISignInFormValues) => {
     mutate(data);
   };
 

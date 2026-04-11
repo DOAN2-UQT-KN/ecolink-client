@@ -9,10 +9,7 @@ import { useForm } from "react-hook-form";
 import { useResetPassword } from "@/apis/auth/resetPassword";
 import { useState, Suspense } from "react";
 import { HiEye, HiEyeOff } from "react-icons/hi";
-
-type FormValues = {
-  newPassword: string;
-};
+import { IResetPasswordFormValues } from "./_services/auth.service";
 
 function ResetPasswordContent() {
   const { t } = useTranslation();
@@ -26,7 +23,7 @@ function ResetPasswordContent() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<FormValues>();
+  } = useForm<IResetPasswordFormValues>();
 
   const { mutate, isPending } = useResetPassword({
     onSuccess: () => {
@@ -34,7 +31,7 @@ function ResetPasswordContent() {
     },
   });
 
-  const onSubmit = async (data: FormValues) => {
+  const onSubmit = async (data: IResetPasswordFormValues) => {
     if (!resetToken) {
       return;
     }

@@ -42,7 +42,11 @@ const containerVariants = {
 
 const itemVariants = {
   hidden: { opacity: 0, y: 50 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" as const } },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, ease: "easeOut" as const },
+  },
 };
 
 const ProblemAndSolution = () => {
@@ -50,7 +54,11 @@ const ProblemAndSolution = () => {
 
   const renderSolutionItem = useCallback(() => {
     return solutionItems.map((item) => (
-      <motion.div key={item.key} variants={itemVariants} className="h-full w-full flex justify-center">
+      <motion.div
+        key={item.key}
+        variants={itemVariants}
+        className="h-full w-full flex justify-center"
+      >
         <ContentCard
           title={item.title}
           description={item.description}
@@ -62,7 +70,7 @@ const ProblemAndSolution = () => {
   }, [t]);
 
   return (
-    <div className="flex flex-col items-center justify-between py-[40px] px-[10px] lg:px-[120px] gap-10 w-full overflow-hidden">
+    <section className="flex flex-col items-center justify-between py-[40px] px-[10px] lg:px-[120px] gap-10 w-full overflow-hidden">
       <motion.div
         initial={{ opacity: 0, y: -30 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -96,7 +104,7 @@ const ProblemAndSolution = () => {
       >
         {renderSolutionItem()}
       </motion.div>
-    </div>
+    </section>
   );
 };
 

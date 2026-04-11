@@ -1,12 +1,18 @@
 "use client";
 
 import { QueryClient, QueryCache, MutationCache } from "@tanstack/react-query";
-import useAuthStore from "@/stores/useAuthStore";
 
 function handleGlobalError(error: any) {
-  if (error?.status === 401) {
-    useAuthStore.getState().setLogoutSuccess();
-  }
+  // // const status = error?.status || error?.response?.status || error?.statusCode;
+  // if (status === 401) {
+  //   useAuthStore.getState().setLogoutSuccess();
+  //   if (typeof window !== "undefined") {
+  //     const redirect = encodeURIComponent(
+  //       window.location.pathname + window.location.search,
+  //     );
+  //     window.location.href = `/sign-in?redirect=${redirect}`;
+  //   }
+  // }
 }
 
 export const queryClient = new QueryClient({

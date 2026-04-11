@@ -45,7 +45,7 @@ export default function Authenticate() {
             onClick={() => router.push("/sign-up")}
           >
             <span className="!font-normal !font-display-3 px-2">
-              {t("Sign up with phone")}
+              {t("Sign up with email")}
             </span>
           </Button>
 

@@ -5,6 +5,7 @@ import Logo from "./Logo";
 import { useTranslation } from "react-i18next";
 import { FaInstagram } from "react-icons/fa";
 import { HiOutlinePhone, HiOutlineMail } from "react-icons/hi";
+import { Divider } from "../shared/Divider";
 
 const Footer = () => {
   const isMedium = useMediaQuery("(min-width: 768px)");
@@ -12,6 +13,7 @@ const Footer = () => {
 
   return (
     <footer className="flex flex-col items-center justify-center gap-[15px] pb-[70px]">
+      <Divider className="text-background-tertiary mb-15" />
       {isMedium ? <Logo size="medium" /> : <Logo size="small" />}
       <span className="font-display text-[12px]  text-foreground-secondary">
         {t("Link for a Cleaner Tomorrow")}

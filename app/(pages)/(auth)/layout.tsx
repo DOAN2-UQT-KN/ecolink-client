@@ -9,7 +9,7 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-row  overflow-auto relative">
+    <div className="flex flex-row  overflow-auto relative min-h-screen">
       <div className="hidden lg:block w-3/5 relative">
         <Image
           src="/auth-bg.jpeg"

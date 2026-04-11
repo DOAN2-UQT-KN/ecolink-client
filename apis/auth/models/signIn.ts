@@ -7,8 +7,8 @@ export interface ISignInRequest {
 }
 
 export interface ISignInDataResponse {
-  accessToken: string;
-  refreshToken: string;
+  access_token: string;
+  refresh_token: string;
   user: IUser;
 }
 

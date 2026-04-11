@@ -300,6 +300,7 @@ const Header: React.FC<CardNavProps> = ({ ease = "power3.out", menuColor }) => {
       onClick={toggleMenu}
       role="button"
       aria-label={isExpanded ? t("Close menu") : t("Open menu")}
+      suppressHydrationWarning
       tabIndex={0}
       style={{ color: menuColor || "#000" }}
     >
@@ -370,52 +371,49 @@ const Header: React.FC<CardNavProps> = ({ ease = "power3.out", menuColor }) => {
       } md:flex-row md:items-end md:gap-[12px] overflow-y-auto`}
       aria-hidden={!isExpanded}
     >
-      {(items || [])
-        .slice(0, 3)
-        .filter(() => is_authenticated)
-        .map((item, idx) => (
-          <SpotlightCard
-            key={idx}
-            spotlightColor="rgba(151, 175, 97, 0.3)"
-            className="nav-card select-none relative flex flex-col gap-2 p-[12px_12px] lg:p-[20px_16px] rounded-[calc(0.75rem-0.2rem)] min-w-0 flex-[1_1_auto] h-auto md:min-h-[60px] md:h-full md:min-h-0 md:flex-[1_1_0%] bg-white/40 rounded-2xl backdrop-blur-xl border border-white/50 text-black"
-          >
-            <div className="nav-card-label tracking-[-0.5px] text-[16px] md:text-[22px] font-display-5 font-semibold">
-              {t(item.label)}
-            </div>
-            <div className="nav-card-links mt-auto flex flex-col gap-0 md:gap-[4px]">
-              {item.links?.map((lnk, i) => (
-                <a
-                  key={`${lnk.label}-${i}`}
-                  className="
+      {(items || []).slice(0, 3).map((item, idx) => (
+        <SpotlightCard
+          key={idx}
+          spotlightColor="rgba(151, 175, 97, 0.3)"
+          className="nav-card select-none relative flex flex-col gap-2 p-[12px_12px] lg:p-[20px_16px] rounded-[calc(0.75rem-0.2rem)] min-w-0 flex-[1_1_auto] h-auto md:min-h-[60px] md:h-full md:min-h-0 md:flex-[1_1_0%] bg-white/40 rounded-2xl backdrop-blur-xl border border-white/50 text-black"
+        >
+          <div className="nav-card-label tracking-[-0.5px] text-[16px] md:text-[22px] font-display-5 font-semibold">
+            {t(item.label)}
+          </div>
+          <div className="nav-card-links mt-auto flex flex-col gap-0 md:gap-[4px]">
+            {item.links?.map((lnk, i) => (
+              <a
+                key={`${lnk.label}-${i}`}
+                className="
                   hover:text-button-accent transition-colors duration-300 relative
                   before:content-[''] before:absolute before:bottom-[-2px] before:left-0
                   before:w-0 before:h-[1px] before:bg-button-accent
                   before:transition-all before:duration-300
                   hover:before:w-full flex flex-row items-center gap-1 w-fit hover:cursor-pointer font-display-1 md:font-display-3
                 "
-                  href={lnk.href}
-                  aria-label={t(lnk.ariaLabel)}
-                >
-                  <GoArrowUpRight
-                    className="nav-card-link-icon shrink-0"
-                    aria-hidden="true"
-                  />
-                  {t(lnk.label)}
-                </a>
-              ))}
-            </div>
-          </SpotlightCard>
-        ))}
+                href={lnk.href}
+                aria-label={t(lnk.ariaLabel)}
+              >
+                <GoArrowUpRight
+                  className="nav-card-link-icon shrink-0"
+                  aria-hidden="true"
+                />
+                {t(lnk.label)}
+              </a>
+            ))}
+          </div>
+        </SpotlightCard>
+      ))}
       {renderUserActions(true)}
     </div>
   );
 
   return (
     <header
-      className={`sticky top-0 z-50 flex flex-row justify-between items-center py-[10px] lg:py-[16px] px-4 lg:px-[70px] mx-auto`}
+      className={`sticky top-0 z-50 flex flex-row justify-between items-center py-[10px] lg:py-[5px] px-4 lg:px-[70px] mx-auto`}
     >
       <div
-        className={`card-nav-container absolute left-1/2 -translate-x-1/2 w-[80%] z-[99] top-[1.2em] md:top-[2em] bg-transparent `}
+        className={`card-nav-container absolute left-1/2 -translate-x-1/2 w-[80%] z-[99] top-[1.2em] md:top-[1em] bg-transparent `}
       >
         <nav
           ref={navRef}

@@ -26,46 +26,60 @@ const onResponse = (response: AxiosResponse): AxiosResponse => {
     return response
 }
 
-const onResponseError = async (error: AxiosError): Promise<any> => {
+const onResponseError = async (error: any): Promise<any> => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
-    
+    // Check for 401 and not a retry, and not the refresh-token URL itself
     if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url?.includes("/auth/refresh-token")) {
         originalRequest._retry = true
         
-        const refreshToken = useAuthStore.getState().refreshToken
+        const refreshTokenVal = useAuthStore.getState().refreshToken
         
-        if (refreshToken) {
+        if (refreshTokenVal) {
             try {
+                // Call refresh token API directly with raw axios to avoid interceptor loop
                 const response = await axios.post(
                     (process.env.NEXT_PUBLIC_API_URL || window.location.origin) + "/auth/refresh-token",
-                    { refreshToken }
+                    { refreshToken: refreshTokenVal }
                 )
                 
-                const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response.data.data
-                
-                useAuthStore.getState().setAccessToken(newAccessToken)
-                useAuthStore.getState().setRefreshToken(newRefreshToken)
-                
-                document.cookie = `refresh_token=${newRefreshToken}; path=/; Max-Age=2592000; Secure; SameSite=Lax`
-                
-                originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
-                return axiosClient(originalRequest)
+                if (response.data?.data) {
+                    const { access_token: newAccessToken, refresh_token: newRefreshToken } = response.data.data
+                    
+                    // Update store
+                    useAuthStore.getState().setAccessToken(newAccessToken)
+                    useAuthStore.getState().setRefreshToken(newRefreshToken || refreshTokenVal)
+                    
+                    // Update cookie
+                    document.cookie = `refresh_token=${newRefreshToken || refreshTokenVal}; path=/; Max-Age=2592000; Secure; SameSite=Lax`
+                    
+                    // Update current request and retry
+                    originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
+                    
+                    return axiosClient(originalRequest)
+                }
             } catch (refreshError) {
+                // If refresh fails, log out
                 useAuthStore.getState().setLogoutSuccess()
                 document.cookie = "refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+                if (typeof window !== "undefined") {
+                    const redirect = encodeURIComponent(window.location.pathname + window.location.search)
+                    window.location.href = `/sign-in?redirect=${redirect}`
+                }
                 return Promise.reject(refreshError)
             }
+        } else {
+            useAuthStore.getState().setLogoutSuccess()
+            if (typeof window !== "undefined") {
+                const redirect = encodeURIComponent(window.location.pathname + window.location.search)
+                window.location.href = `/sign-in?redirect=${redirect}`
+            }
         }
-    }
-
-    if (error.response?.status === 401) {
-        useAuthStore.getState().setLogoutSuccess()
     }
 
     return Promise.reject(
         typeof error.response?.data === "object" &&
             error.response.status !== HttpStatusCode.NotFound
-            ? error.response.data
+            ? { ...error.response.data, status: error.response.status }
             : error
     )
 }

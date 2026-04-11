@@ -30,7 +30,7 @@ const HeroSection = () => {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="flex flex-col lg:flex-row items-center justify-between w-full px-[20px] lg:px-[160px] "
+      className="flex flex-col lg:flex-row items-center justify-between w-full "
     >
       <motion.div variants={itemVariants} className="lg:hidden">
         <Image

@@ -9,6 +9,7 @@ import {
 import showMessage, { MessageLevel, MessageType } from "@/utils/showMessage";
 import { IBaseResponse } from "@/types/BaseResponse";
 import { useTranslation } from "react-i18next";
+import useAuthStore from "@/stores/useAuthStore";
 
 export const CACHE_TIME_DEFAULT = 5 * 60 * 1000;
 
@@ -79,6 +80,11 @@ export const usePost = <TResponse extends IBaseResponse, TRequest>(
     },
 
     onError(error, variables, onMutateResult, context) {
+      if (error.errors?.[0]?.extensions?.status_code === 401 || error.message?.includes("401")) {
+        useAuthStore.getState().setLogoutSuccess();
+        document.cookie = "refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+      }
+
       if (!silentError) {
         showMessage({
           type: MessageType.Toast,
@@ -100,5 +106,32 @@ export const usePost = <TResponse extends IBaseResponse, TRequest>(
 
       onSettled?.(data, error, variables, onMutateResult, context);
     },
+  });
+};
+
+import { UseQueryOptions, useQuery, UseQueryResult } from "@tanstack/react-query";
+
+export interface UseGetOptions<TResponse, TError = QueryError>
+  extends Omit<UseQueryOptions<TResponse, TError>, "queryKey" | "queryFn"> {
+  queryKey: QueryKey;
+  queryFn: () => Promise<TResponse>;
+  silentError?: boolean;
+  messageError?: Message;
+}
+
+export const useGet = <TResponse extends IBaseResponse>(
+  options: UseGetOptions<TResponse>,
+): UseQueryResult<TResponse, QueryError> => {
+  const { queryKey, queryFn, silentError, messageError, ...rest } = options;
+  const { t } = useTranslation();
+
+  return useQuery<TResponse, QueryError>({
+    queryKey,
+    queryFn,
+    ...rest,
+    // Note: useQuery doesn't have a direct onError callback in v5 as it used to.
+    // However, for consistency with usePost, we can handle errors in a side effect if needed,
+    // but usually in v5, global error handling is preferred or using the error state in the component.
+    // The current queryClient has a global onError handler.
   });
 };
