@@ -36,10 +36,14 @@ export const useReportVotes = (
         if (response.success) {
           const newVal = response.data.vote.value;
           setUserVote(newVal === 0 ? null : (newVal as 1 | -1));
-          
+
           // Refetch report details to get updated vote counts
           await queryClient.invalidateQueries({
             queryKey: ["report-detail", reportId],
+          });
+
+          await queryClient.invalidateQueries({
+            queryKey: ["reports"],
           });
         }
       } catch (error) {

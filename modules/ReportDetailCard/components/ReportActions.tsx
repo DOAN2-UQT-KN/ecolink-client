@@ -39,7 +39,10 @@ export const ReportActions: React.FC<ReportActionsProps> = ({
     <div className="flex items-center justify-between">
       <div className="flex items-center h-10 px-4 bg-muted/60 dark:bg-accent/30 rounded-full transition-all">
         <button
-          onClick={() => handleVote(1)}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleVote(1);
+          }}
           disabled={isVoting}
           className={cn(
             "p-1 rounded-full transition-colors hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer",
@@ -59,7 +62,10 @@ export const ReportActions: React.FC<ReportActionsProps> = ({
         </span>
 
         <button
-          onClick={() => handleVote(-1)}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleVote(-1);
+          }}
           disabled={isVoting}
           className={cn(
             "p-1 rounded-full transition-colors hover:bg-black/5 dark:hover:bg-white/10  cursor-pointer",
@@ -75,7 +81,10 @@ export const ReportActions: React.FC<ReportActionsProps> = ({
         </button>
       </div>
 
-      <button className="p-2.5 rounded-full hover:bg-muted/80 text-foreground-secondary transition-colors group">
+      <button
+        className="p-2.5 rounded-full hover:bg-muted/80 text-foreground-secondary transition-colors group"
+        onClick={(e) => e.stopPropagation()}
+      >
         <PiShareNetwork
           size={22}
           className="group-hover:scale-110 transition-transform"

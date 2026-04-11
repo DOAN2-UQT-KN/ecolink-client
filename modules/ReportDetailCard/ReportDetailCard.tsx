@@ -45,6 +45,7 @@ const ReportDetailCard: React.FC<ReportDetailCardProps> = ({
           reportId={incident.id}
           user={incident.user}
           createdAt={incident.created_at}
+          isSaved={incident.saved}
         />
 
         <ReportContent

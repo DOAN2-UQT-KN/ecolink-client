@@ -8,30 +8,35 @@ import { useTranslation } from "react-i18next";
 import { useSaveResource } from "@/apis/saved-resource";
 import { useState } from "react";
 import { TbBookmark, TbBookmarkFilled } from "react-icons/tb";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ReportHeaderProps {
   reportId: string;
   user?: IUser;
   createdAt: string;
+  isSaved?: boolean;
 }
 
 export const ReportHeader: React.FC<ReportHeaderProps> = ({
   reportId,
   user,
   createdAt,
+  isSaved = false,
 }) => {
   const { t, i18n } = useTranslation();
-  const [isSaved, setIsSaved] = useState(false);
+  const queryClient = useQueryClient();
   const userName = user?.name || t("Anonymous");
   const userAvatar = user?.avatar || "/default-avatar.png"; // Fallback path
 
   const { mutate: saveResource, isPending } = useSaveResource({
     onSuccess: () => {
-      setIsSaved(!isSaved);
+      queryClient.invalidateQueries({ queryKey: ["reports"] });
+      queryClient.invalidateQueries({ queryKey: ["reports", reportId] });
     },
   });
 
-  const handleSave = () => {
+  const handleSave = (e: React.MouseEvent) => {
+    e.stopPropagation();
     saveResource({
       resource_id: reportId,
       resource_type: "report",

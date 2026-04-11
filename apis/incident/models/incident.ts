@@ -45,4 +45,5 @@ export interface IIncident {
     my_vote?: number;
     upvote_count?: number;
   };
+  saved?: boolean;
 }
