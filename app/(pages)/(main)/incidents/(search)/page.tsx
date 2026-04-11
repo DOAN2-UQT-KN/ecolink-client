@@ -37,7 +37,7 @@ const IncidentSearchPage = () => {
         {/* Breadcrumbs Section - Sticky with dynamic padding to cover transparent header gap only when scrolling */}
         <div
           className={cn(
-            "sticky top-0 z-[45] bg-background-primary pb-4 -mx-4 px-4 lg:-mx-20 lg:px-20 mb-8",
+            "sticky top-0 z-[45] bg-background-primary pb-4 -mx-4 px-4 lg:-mx-20 lg:px-20 mb-8g",
             isScrolled ? "pt-[100px]" : "pt-0",
           )}
         >

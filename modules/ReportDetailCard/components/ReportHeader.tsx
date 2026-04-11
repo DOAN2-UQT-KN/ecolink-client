@@ -2,12 +2,12 @@
 
 import React from "react";
 import Image from "next/image";
-import { HiOutlineBookmark, HiBookmark } from "react-icons/hi"; // Added HiBookmark for active state
 import { getRelativeTime } from "../utils/time";
 import { IUser } from "@/apis/auth/models/user";
 import { useTranslation } from "react-i18next";
 import { useSaveResource } from "@/apis/saved-resource";
 import { useState } from "react";
+import { TbBookmark, TbBookmarkFilled } from "react-icons/tb";
 
 interface ReportHeaderProps {
   reportId: string;
@@ -61,15 +61,15 @@ export const ReportHeader: React.FC<ReportHeaderProps> = ({
 
       <button
         type="button"
-        className="p-2.5 hover:bg-accent rounded-full transition-all duration-200 text-foreground-secondary hover:text-primary active:scale-90 disabled:opacity-50"
+        className="cursor-pointer p-2.5 hover:bg-accent rounded-full transition-all duration-200 text-foreground-secondary hover:text-primary active:scale-90 disabled:opacity-50"
         onClick={handleSave}
         disabled={isPending}
         title={t("Save report")}
       >
         {isSaved ? (
-          <HiBookmark size={24} className="text-primary" />
+          <TbBookmarkFilled size={24} className="text-yellow-500" />
         ) : (
-          <HiOutlineBookmark size={24} />
+          <TbBookmark size={24} />
         )}
       </button>
     </div>

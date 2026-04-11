@@ -1,13 +1,14 @@
 "use client";
 
 import React from "react";
+import { PiShareNetwork } from "react-icons/pi";
 import {
-  PiArrowFatUp,
-  PiArrowFatUpFill,
-  PiArrowFatDown,
-  PiArrowFatDownFill,
-  PiShareNetwork,
-} from "react-icons/pi";
+  TbArrowBigDown,
+  TbArrowBigDownFilled,
+  TbArrowBigUp,
+  TbArrowBigUpFilled,
+} from "react-icons/tb";
+
 import { useReportVotes } from "../hooks/useReportVotes";
 import { cn } from "@/libs/utils";
 
@@ -16,6 +17,7 @@ interface ReportActionsProps {
   initialUpvotes?: number;
   initialDownvotes?: number;
   initialVotePoint?: number;
+  initialUserVote?: number | null;
 }
 
 export const ReportActions: React.FC<ReportActionsProps> = ({
@@ -23,10 +25,12 @@ export const ReportActions: React.FC<ReportActionsProps> = ({
   initialUpvotes = 0,
   initialDownvotes = 0,
   initialVotePoint = 0,
+  initialUserVote = null,
 }) => {
   const { userVote, handleVote, isVoting } = useReportVotes(
     reportId,
     initialVotePoint,
+    initialUserVote,
   );
 
   const votePoint = initialVotePoint; // Use the prop directly as it reflects the refetched data
@@ -38,19 +42,19 @@ export const ReportActions: React.FC<ReportActionsProps> = ({
           onClick={() => handleVote(1)}
           disabled={isVoting}
           className={cn(
-            "p-1 rounded-full transition-colors hover:bg-black/5 dark:hover:bg-white/10",
+            "p-1 rounded-full transition-colors hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer",
             userVote === 1 ? "text-emerald-600" : "text-foreground-secondary",
           )}
           aria-label="Upvote"
         >
           {userVote === 1 ? (
-            <PiArrowFatUpFill size={20} />
+            <TbArrowBigUpFilled size={20} />
           ) : (
-            <PiArrowFatUp size={20} />
+            <TbArrowBigUp size={20} />
           )}
         </button>
 
-        <span className="mx-3 text-[15px] font-semibold text-foreground min-w-[20px] text-center">
+        <span className="mx-2 font-display-2 font-semibold text-foreground min-w-[20px] text-center">
           {votePoint}
         </span>
 
@@ -58,15 +62,15 @@ export const ReportActions: React.FC<ReportActionsProps> = ({
           onClick={() => handleVote(-1)}
           disabled={isVoting}
           className={cn(
-            "p-1 rounded-full transition-colors hover:bg-black/5 dark:hover:bg-white/10",
+            "p-1 rounded-full transition-colors hover:bg-black/5 dark:hover:bg-white/10  cursor-pointer",
             userVote === -1 ? "text-rose-600" : "text-foreground-secondary",
           )}
           aria-label="Downvote"
         >
           {userVote === -1 ? (
-            <PiArrowFatDownFill size={20} />
+            <TbArrowBigDownFilled size={20} />
           ) : (
-            <PiArrowFatDown size={20} />
+            <TbArrowBigDown size={20} />
           )}
         </button>
       </div>

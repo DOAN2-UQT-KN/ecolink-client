@@ -53,7 +53,11 @@ const ReportDetailCard: React.FC<ReportDetailCardProps> = ({
 
         <ReportActions
           reportId={incident.id}
-          initialVotePoint={incident.vote_point || 0}
+          initialVotePoint={
+            (incident.votes?.upvote_count || 0) -
+            (incident.votes?.downvote_count || 0)
+          }
+          initialUserVote={incident.votes?.my_vote || null}
         />
       </div>
     </article>

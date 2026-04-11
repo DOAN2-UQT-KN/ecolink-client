@@ -40,5 +40,9 @@ export interface IIncident {
   media_files?: IMediaFiles[];
   user?: IUser;
   detail_address?: string;
-  vote_point?: number;
+  votes?: {
+    downvote_count?: number;
+    my_vote?: number;
+    upvote_count?: number;
+  };
 }

@@ -5,9 +5,10 @@ import { useQueryClient } from "@tanstack/react-query";
 export const useReportVotes = (
   reportId: string,
   initialVotePoint: number = 0,
+  initialUserVote: number | null = null,
 ) => {
   const queryClient = useQueryClient();
-  const [userVote, setUserVote] = useState<number | null>(null);
+  const [userVote, setUserVote] = useState<number | null>(initialUserVote);
   const [isVoting, setIsVoting] = useState(false);
 
   const { mutateAsync: upvote } = useUpvote();
