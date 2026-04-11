@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { memo, useMemo } from "react";
 import {
   PiTrash,
   PiArrowsOutSimple,
@@ -18,37 +18,40 @@ interface ReportFooterProps {
   isExpanded?: boolean;
 }
 
-export const ReportFooter: React.FC<ReportFooterProps> = ({
+export const ReportFooter = memo(function ReportFooter({
   wasteType,
   size,
   condition,
   pollutionLevel,
   isExpanded = false,
-}) => {
+}: ReportFooterProps) {
   const { t } = useTranslation();
 
-  const items = [
-    {
-      icon: <PiTrash size={18} />,
-      label: t("Waste Type"),
-      value: wasteType || t("N/A"),
-    },
-    {
-      icon: <PiArrowsOutSimple size={18} />,
-      label: t("Size"),
-      value: size || t("N/A"),
-    },
-    {
-      icon: <PiSealWarningLight size={18} />,
-      label: t("Condition"),
-      value: condition || t("N/A"),
-    },
-    {
-      icon: <PiSkullLight size={18} />,
-      label: t("Pollution Level"),
-      value: pollutionLevel || t("N/A"),
-    },
-  ];
+  const items = useMemo(
+    () => [
+      {
+        icon: <PiTrash size={18} />,
+        label: t("Waste Type"),
+        value: wasteType || t("N/A"),
+      },
+      {
+        icon: <PiArrowsOutSimple size={18} />,
+        label: t("Size"),
+        value: size || t("N/A"),
+      },
+      {
+        icon: <PiSealWarningLight size={18} />,
+        label: t("Condition"),
+        value: condition || t("N/A"),
+      },
+      {
+        icon: <PiSkullLight size={18} />,
+        label: t("Pollution Level"),
+        value: pollutionLevel || t("N/A"),
+      },
+    ],
+    [t, wasteType, size, condition, pollutionLevel],
+  );
 
   return (
     <div
@@ -72,4 +75,5 @@ export const ReportFooter: React.FC<ReportFooterProps> = ({
       ))}
     </div>
   );
-};
+});
+

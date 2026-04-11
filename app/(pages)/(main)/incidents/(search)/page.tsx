@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, memo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Breadcrumbs,
@@ -11,9 +11,10 @@ import { SearchSidebar } from "./_components/SearchSidebar";
 import { IncidentList } from "./_components/IncidentList";
 import { cn } from "@/libs/utils";
 
-const IncidentSearchPage = () => {
+const IncidentSearchPage = memo(function IncidentSearchPage() {
   const { t } = useTranslation();
   const [isScrolled, setIsScrolled] = useState(false);
+
 
   useEffect(() => {
     const handleScroll = () => {
@@ -54,6 +55,7 @@ const IncidentSearchPage = () => {
       </div>
     </IncidentSearchProvider>
   );
-};
+});
 
 export default IncidentSearchPage;
+

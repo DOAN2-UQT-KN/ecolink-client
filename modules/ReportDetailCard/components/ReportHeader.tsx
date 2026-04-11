@@ -1,12 +1,11 @@
 "use client";
 
-import React from "react";
+import React, { memo, useCallback, useMemo } from "react";
 import Image from "next/image";
 import { getRelativeTime } from "../utils/time";
 import { IUser } from "@/apis/auth/models/user";
 import { useTranslation } from "react-i18next";
 import { useSaveResource } from "@/apis/saved-resource";
-import { useState } from "react";
 import { TbBookmark, TbBookmarkFilled } from "react-icons/tb";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -17,16 +16,18 @@ interface ReportHeaderProps {
   isSaved?: boolean;
 }
 
-export const ReportHeader: React.FC<ReportHeaderProps> = ({
+export const ReportHeader = memo(function ReportHeader({
   reportId,
   user,
   createdAt,
   isSaved = false,
-}) => {
+}: ReportHeaderProps) {
   const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
-  const userName = user?.name || t("Anonymous");
-  const userAvatar = user?.avatar || "/default-avatar.png"; // Fallback path
+  const userName = useMemo(() => user?.name || t("Anonymous"), [user, t]);
+  const userAvatar = useMemo(() => user?.avatar || "/default-avatar.png", [
+    user,
+  ]);
 
   const { mutate: saveResource, isPending } = useSaveResource({
     onSuccess: () => {
@@ -35,13 +36,16 @@ export const ReportHeader: React.FC<ReportHeaderProps> = ({
     },
   });
 
-  const handleSave = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    saveResource({
-      resource_id: reportId,
-      resource_type: "report",
-    });
-  };
+  const handleSave = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      saveResource({
+        resource_id: reportId,
+        resource_type: "report",
+      });
+    },
+    [reportId, saveResource],
+  );
 
   return (
     <div className="flex items-center justify-between gap-3 mb-4">
@@ -79,4 +83,4 @@ export const ReportHeader: React.FC<ReportHeaderProps> = ({
       </button>
     </div>
   );
-};
+});

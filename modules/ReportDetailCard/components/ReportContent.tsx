@@ -1,8 +1,7 @@
 "use client";
 
-import React from "react";
+import React, { memo, useCallback } from "react";
 import { Image as AntdImage } from "antd";
-import { useTranslation } from "react-i18next";
 import { HiMapPin } from "react-icons/hi2";
 import { cn } from "@/libs/utils";
 
@@ -14,16 +13,14 @@ interface ReportContentProps {
   isExpanded?: boolean;
 }
 
-export const ReportContent: React.FC<ReportContentProps> = ({
+export const ReportContent = memo(function ReportContent({
   title,
   address,
   description,
   images = [],
   isExpanded = false,
-}) => {
-  const { t } = useTranslation();
-
-  const renderImageGrid = () => {
+}: ReportContentProps) {
+  const renderImageGrid = useCallback(() => {
     if (images.length === 0) return null;
 
     if (isExpanded) {
@@ -132,7 +129,8 @@ export const ReportContent: React.FC<ReportContentProps> = ({
         )}
       </AntdImage.PreviewGroup>
     );
-  };
+  }, [images, isExpanded, title]);
+
 
   return (
     <div className={cn("flex flex-col gap-4", isExpanded && "gap-6")}>
@@ -160,4 +158,4 @@ export const ReportContent: React.FC<ReportContentProps> = ({
       {renderImageGrid()}
     </div>
   );
-};
+});

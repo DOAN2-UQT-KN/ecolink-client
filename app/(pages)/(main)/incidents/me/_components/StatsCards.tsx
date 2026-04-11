@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import StatsCard from "@/components/shared/StatsCard";
 import {
   HiOutlineDocumentText,
@@ -21,15 +21,16 @@ const StatsCards = memo(function StatsCards() {
     limit: 1,
     status: STATUS.PENDING,
   });
-  // const { data: draftData } = useGetMyReports({
-  //   limit: 1,
-  //   status: STATUS.DRAFT,
-  // });
 
-  const totalIncidents = totalData?.data?.total || 0;
-  const resolvedCount = resolvedData?.data?.total || 0;
-  const pendingCount = pendingData?.data?.total || 0;
-  // const draftCount = draftData?.data?.total || 0;
+  const totalIncidents = useMemo(() => totalData?.data?.total || 0, [
+    totalData,
+  ]);
+  const resolvedCount = useMemo(() => resolvedData?.data?.total || 0, [
+    resolvedData,
+  ]);
+  const pendingCount = useMemo(() => pendingData?.data?.total || 0, [
+    pendingData,
+  ]);
 
   return (
     <div className="flex flex-col lg:flex-row items-center justify-between w-full gap-5">
@@ -47,12 +48,6 @@ const StatsCards = memo(function StatsCards() {
         description={t("Incidents marked as resolved")}
         icon={<HiOutlineCheckCircle size={22} className="text-button-accent" />}
       />
-      {/* <StatsCard
-        title={t("Draft")}
-        value={draftCount}
-        description={t("Incidents in draft")}
-        icon={<HiOutlinePencil size={22} className="text-button-accent" />}
-      /> */}
       <StatsCard
         title={t("Pending")}
         value={pendingCount}

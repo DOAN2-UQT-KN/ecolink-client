@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { memo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useIncidentSearch } from "../_context/IncidentSearchContext";
 import ReportDetailCard from "@/modules/ReportDetailCard/ReportDetailCard";
@@ -15,7 +15,7 @@ import {
 import { Inbox } from "lucide-react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-export const IncidentList = () => {
+export const IncidentList = memo(function IncidentList() {
   const { t } = useTranslation();
   const {
     reports,
@@ -25,12 +25,16 @@ export const IncidentList = () => {
     setPagination,
   } = useIncidentSearch();
 
-  const handlePageChange = (newPage: number) => {
-    setPagination({ ...pagination, current: newPage });
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  const handlePageChange = useCallback(
+    (newPage: number) => {
+      setPagination({ ...pagination, current: newPage });
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    },
+    [pagination, setPagination],
+  );
 
   const totalPages = Math.ceil(total / pagination.pageSize);
+
 
   if (isLoading) {
     return (
@@ -115,4 +119,5 @@ export const IncidentList = () => {
       )}
     </div>
   );
-};
+});
+

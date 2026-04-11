@@ -22,8 +22,6 @@ interface ReportActionsProps {
 
 export const ReportActions: React.FC<ReportActionsProps> = ({
   reportId,
-  initialUpvotes = 0,
-  initialDownvotes = 0,
   initialVotePoint = 0,
   initialUserVote = null,
 }) => {
@@ -33,7 +31,7 @@ export const ReportActions: React.FC<ReportActionsProps> = ({
     initialUserVote,
   );
 
-  const votePoint = initialVotePoint; // Use the prop directly as it reflects the refetched data
+  const votePoint = initialVotePoint;
 
   return (
     <div className="flex items-center justify-between">

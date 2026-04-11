@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, memo } from "react";
+
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "react-i18next";
 import { useIncidentSearch } from "../_context/IncidentSearchContext";
@@ -39,9 +40,10 @@ const statusOptions = [
   { label: "Completed", value: STATUS.COMPLETED.toString() },
 ];
 
-export const SearchSidebar = () => {
+export const SearchSidebar = memo(function SearchSidebar() {
   const { t } = useTranslation();
   const {
+
     filters,
     setFilters,
     resetFilters: resetContextFilters,
@@ -231,4 +233,5 @@ export const SearchSidebar = () => {
       {renderFormFields()}
     </aside>
   );
-};
+});
+

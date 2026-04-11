@@ -62,7 +62,7 @@ const FormFilter = memo(function FormFilter() {
     [pathname, router, searchParams, setFilters],
   );
 
-  const renderStatusFilter = () => {
+  const renderStatusFilter = useCallback(() => {
     return (
       <Tabs
         value={filters.status?.toString() || "all"}
@@ -97,9 +97,9 @@ const FormFilter = memo(function FormFilter() {
         </TabsList>
       </Tabs>
     );
-  };
+  }, [filters.status, handleStatusChange, t]);
 
-  const renderSearchFilter = () => {
+  const renderSearchFilter = useCallback(() => {
     return (
       <div className="relative w-full sm:w-72 group">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
@@ -111,7 +111,7 @@ const FormFilter = memo(function FormFilter() {
         />
       </div>
     );
-  };
+  }, [searchValue, t]);
 
   return (
     <div className="flex flex-col lg:flex-row items-center justify-between w-full gap-4 ">
@@ -122,5 +122,6 @@ const FormFilter = memo(function FormFilter() {
     </div>
   );
 });
+
 
 export default FormFilter;

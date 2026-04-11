@@ -1,6 +1,6 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { useReverseGeocode } from "../_hooks/useReverseGeocode";
 
 interface AddressDisplayProps {
@@ -19,7 +19,10 @@ const AddressDisplay = memo(function AddressDisplay({
     providedAddress ? null : longitude,
   );
 
-  const displayAddress = providedAddress || geocodedAddress;
+  const displayAddress = useMemo(() => providedAddress || geocodedAddress, [
+    providedAddress,
+    geocodedAddress,
+  ]);
 
   if (!providedAddress && (!latitude || !longitude)) return null;
 
