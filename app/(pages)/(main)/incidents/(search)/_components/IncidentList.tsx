@@ -13,9 +13,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Inbox } from "lucide-react";
-import { DataTableProps, PaginationProps } from "@/components/shared/DataTable";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { cn } from "@/libs/utils";
 
 export const IncidentList = () => {
   const { t } = useTranslation();

@@ -1,4 +1,3 @@
-import { IBaseResponse } from "@/types/BaseResponse";
 import { IIncident } from "./incident";
 import { SortBy, SortOrder } from "./incident";
 import { IPaginationResponse } from "@/types/PaginationResponse";

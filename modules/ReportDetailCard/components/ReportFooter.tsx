@@ -8,12 +8,14 @@ import {
   PiSkullLight,
 } from "react-icons/pi";
 import { useTranslation } from "react-i18next";
+import { cn } from "@/libs/utils";
 
 interface ReportFooterProps {
   wasteType?: string | null;
   size?: string | number | null;
   condition?: string | null;
   pollutionLevel?: string | number | null;
+  isExpanded?: boolean;
 }
 
 export const ReportFooter: React.FC<ReportFooterProps> = ({
@@ -21,6 +23,7 @@ export const ReportFooter: React.FC<ReportFooterProps> = ({
   size,
   condition,
   pollutionLevel,
+  isExpanded = false,
 }) => {
   const { t } = useTranslation();
 
@@ -48,7 +51,12 @@ export const ReportFooter: React.FC<ReportFooterProps> = ({
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-3 py-4 border-y border-border/50 my-4">
+    <div
+      className={cn(
+        "grid gap-3 py-4 border-y border-border/50 my-4",
+        isExpanded ? "grid-cols-2 md:grid-cols-4" : "grid-cols-2",
+      )}
+    >
       {items.map((item, idx) => (
         <div key={idx} className="flex items-center gap-2.5">
           <div className={`p-2 rounded-lg`}>{item.icon}</div>

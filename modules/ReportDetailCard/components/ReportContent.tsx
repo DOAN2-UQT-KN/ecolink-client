@@ -4,12 +4,14 @@ import React from "react";
 import { Image as AntdImage } from "antd";
 import { useTranslation } from "react-i18next";
 import { HiMapPin } from "react-icons/hi2";
+import { cn } from "@/libs/utils";
 
 interface ReportContentProps {
   title: string | null;
   address: string | null;
   description: string | null;
   images?: string[];
+  isExpanded?: boolean;
 }
 
 export const ReportContent: React.FC<ReportContentProps> = ({
@@ -17,11 +19,35 @@ export const ReportContent: React.FC<ReportContentProps> = ({
   address,
   description,
   images = [],
+  isExpanded = false,
 }) => {
   const { t } = useTranslation();
 
   const renderImageGrid = () => {
     if (images.length === 0) return null;
+
+    if (isExpanded) {
+      return (
+        <AntdImage.PreviewGroup>
+          <div className="flex flex-row gap-4 overflow-x-auto pb-2 scrollbar-hide h-[200px]">
+            {images.slice(0, 4).map((img, idx) => (
+              <div
+                key={idx}
+                className="relative flex-shrink-0 w-64 aspect-video overflow-hidden rounded-lg bg-muted group cursor-pointer"
+              >
+                <AntdImage
+                  src={img}
+                  alt={title || ""}
+                  className="object-cover transition-transform duration-300 group-hover:scale-105 w-full h-full"
+                  width="100%"
+                  height="100%"
+                />
+              </div>
+            ))}
+          </div>
+        </AntdImage.PreviewGroup>
+      );
+    }
 
     return (
       <AntdImage.PreviewGroup>
@@ -109,7 +135,7 @@ export const ReportContent: React.FC<ReportContentProps> = ({
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className={cn("flex flex-col gap-4", isExpanded && "gap-6")}>
       <div className="space-y-1">
         <h2 className="font-display-4 font-semibold text-black leading-tight">
           {title}
@@ -122,7 +148,12 @@ export const ReportContent: React.FC<ReportContentProps> = ({
         )}
       </div>
       {description && (
-        <p className="font-display-2 text-foreground-secondary leading-relaxed line-clamp-3 hover:line-clamp-none transition-[line-clamp] duration-300">
+        <p
+          className={cn(
+            "font-display-2 text-foreground-secondary leading-relaxed transition-all duration-300",
+            !isExpanded && "line-clamp-3 hover:line-clamp-none",
+          )}
+        >
           {description}
         </p>
       )}

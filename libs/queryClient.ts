@@ -1,7 +1,6 @@
 "use client";
 
 import { QueryClient, QueryCache, MutationCache } from "@tanstack/react-query";
-import useAuthStore from "@/stores/useAuthStore";
 
 function handleGlobalError(error: any) {
   // // const status = error?.status || error?.response?.status || error?.statusCode;

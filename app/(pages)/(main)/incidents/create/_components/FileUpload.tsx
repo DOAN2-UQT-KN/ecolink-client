@@ -5,7 +5,7 @@ import { BiTrash, BiPlus } from "react-icons/bi";
 import { useFormContext } from "react-hook-form";
 import { IncidentFormValues } from "../_services/incident.service";
 import { Image as AntdImage } from "antd";
-import { memo, useRef, useState, useCallback, useMemo, useEffect } from "react";
+import { memo, useRef, useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { FaEye } from "react-icons/fa";
 import {
