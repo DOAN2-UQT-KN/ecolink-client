@@ -87,6 +87,8 @@ export const OrganizationList = memo(function OrganizationList() {
             className="h-full"
             listingMode
             organizationId={org.id}
+            requestStatus={org.request_status}
+            joinRequestId={org.join_request_id}
             ownerId={org.owner_id}
           />
         ))}

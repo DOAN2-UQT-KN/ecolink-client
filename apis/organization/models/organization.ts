@@ -10,4 +10,7 @@ export interface IOrganization {
   owner_id: string;
   created_at: string;
   updated_at: string;
+  request_status?: number;
+  /** Present when the current user has a join request; required to cancel while pending. */
+  join_request_id?: string;
 }

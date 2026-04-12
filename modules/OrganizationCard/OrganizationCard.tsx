@@ -2,16 +2,26 @@
 
 import React, { memo, useCallback, useMemo, useRef, useState } from "react";
 import { cn } from "@/libs/utils";
-import { AlignLeft } from "lucide-react";
+import { AlignLeft, X } from "lucide-react";
 import { HiMail } from "react-icons/hi";
 import { BiGroup } from "react-icons/bi";
 import { Button } from "@/components/ui/button";
 import { Button as SharedButton } from "@/components/shared/Button";
 import type { OrganizationCardSavePayload } from "./types/OrganizationCard.types";
 import { useOrganizationCardEdit } from "./hooks/useOrganizationCardEdit";
-import { useCreateOrganizationJoinRequest } from "@/apis/organization/joinRequest";
+import {
+  useCancelJoinRequest,
+  useCreateOrganizationJoinRequest,
+} from "@/apis/organization/joinRequest";
 import useAuthStore from "@/stores/useAuthStore";
 import { useTranslation } from "react-i18next";
+import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
+import { invalidateOrganizationListsQuery } from "./services/invalidateOrganizationLists";
+import {
+  joinListingShowsCancelButton,
+  joinListingShowsJoinButton,
+} from "./utils/joinRequestListingUi";
 
 export { useOrganizationCardEdit } from "./hooks/useOrganizationCardEdit";
 
@@ -30,6 +40,10 @@ export interface OrganizationCardProps {
   listingMode?: boolean;
   /** Organization id; required for listing Join to call POST .../organizations/{id}/join-requests. */
   organizationId?: string;
+  /** Current user's join request state for this org from the listing API (0 = none, 12 = pending). */
+  requestStatus?: number;
+  /** Join request id when pending; used by cancel. */
+  joinRequestId?: string;
   /** When set and equal to the signed-in user id, a "Your group" tag is shown next to the name. */
   ownerId?: string;
   onSave?: (payload: OrganizationCardSavePayload) => void | Promise<void>;
@@ -46,11 +60,15 @@ export const OrganizationCard = memo(function OrganizationCard({
   editMode = false,
   listingMode = false,
   organizationId,
+  requestStatus,
+  joinRequestId,
   ownerId,
   onSave,
   saveLabel = "Save",
 }: OrganizationCardProps) {
   const { t } = useTranslation();
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const currentUserId = useAuthStore((s) => s.user?.id);
   const showYourGroupTag =
     ownerId != null &&
@@ -61,8 +79,19 @@ export const OrganizationCard = memo(function OrganizationCard({
   const backgroundInputRef = useRef<HTMLInputElement>(null);
   const [isSaving, setIsSaving] = useState(false);
 
+  const invalidateOrganizationLists = useCallback(() => {
+    invalidateOrganizationListsQuery(queryClient);
+  }, [queryClient]);
+
   const { mutate: requestJoin, isPending: isJoinPending } =
-    useCreateOrganizationJoinRequest();
+    useCreateOrganizationJoinRequest({
+      onSettled: invalidateOrganizationLists,
+    });
+
+  const { mutate: cancelJoin, isPending: isCancelPending } =
+    useCancelJoinRequest({
+      onSettled: invalidateOrganizationLists,
+    });
 
   const draft = useOrganizationCardEdit({
     enabled: editMode,
@@ -153,6 +182,19 @@ export const OrganizationCard = memo(function OrganizationCard({
     requestJoin(organizationId);
   }, [organizationId, requestJoin]);
 
+  const handleCancelJoinClick = useCallback(() => {
+    if (!joinRequestId) return;
+    cancelJoin({ request_id: joinRequestId });
+  }, [joinRequestId, cancelJoin]);
+
+  const handleViewMoreClick = useCallback(() => {
+    if (!organizationId) return;
+    router.push(`/organizations/${organizationId}`);
+  }, [organizationId, router]);
+
+  const showJoinButton = joinListingShowsJoinButton(requestStatus);
+  const showCancelButton = joinListingShowsCancelButton(requestStatus);
+
   return (
     <article
       className={cn(
@@ -206,7 +248,7 @@ export const OrganizationCard = memo(function OrganizationCard({
           <button
             type="button"
             className={cn(
-              "relative z-10 size-20 sm:size-24 rounded-full border-2 border-white/90 bg-white shadow-md overflow-hidden flex items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-button-accent/50",
+              "relative z-10 size-20 sm:size-30 rounded-full border-2 border-white/90 bg-white shadow-md overflow-hidden flex items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-button-accent/50",
               !logoDisplayUrl && "bg-muted",
               editMode &&
                 "cursor-pointer hover:ring-2 hover:ring-button-accent/30",
@@ -286,18 +328,42 @@ export const OrganizationCard = memo(function OrganizationCard({
         </div>
 
         {listingMode && !editMode ? (
-          <div className="pt-1 flex items-center justify-center">
+          <div className="pt-1 flex items-center justify-center gap-2 w-full">
+            {showCancelButton ? (
+              <SharedButton
+                variant="brown"
+                size="medium"
+                className="flex-1 min-w-0"
+                iconLeft={<X className="size-4" aria-hidden />}
+                isLoading={isCancelPending}
+                isDisabled={!organizationId || !joinRequestId}
+                onClick={handleCancelJoinClick}
+              >
+                {t("Cancel")}
+              </SharedButton>
+            ) : showJoinButton ? (
+              <SharedButton
+                variant="brown"
+                size="medium"
+                className="flex-1 min-w-0"
+                iconLeft={<BiGroup className="size-4" aria-hidden />}
+                isLoading={isJoinPending}
+                isDisabled={!organizationId}
+                onClick={handleJoinClick}
+              >
+                Join
+              </SharedButton>
+            ) : null}
             <SharedButton
-              variant="brown"
+              variant="outlined-brown"
               size="medium"
-              className="w-1/2"
-              iconLeft={<BiGroup className="size-4" aria-hidden />}
-              isLoading={isJoinPending}
+              className="flex-1 min-w-0"
               isDisabled={!organizationId}
-              onClick={handleJoinClick}
+              onClick={handleViewMoreClick}
             >
-              Join
+              {t("View more")}
             </SharedButton>
+
           </div>
         ) : (
           <div className="flex items-start justify-center gap-2 rounded-lg border border-[rgba(136,122,71,0.35)] bg-white/40 px-3 py-2.5">

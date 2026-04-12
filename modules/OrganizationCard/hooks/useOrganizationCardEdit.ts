@@ -6,13 +6,9 @@ import {
   useRef,
   useState,
 } from "react";
+import { buildOrganizationCardSavePayload } from "../services/buildOrganizationCardSavePayload";
 import type { OrganizationCardSavePayload } from "../types/OrganizationCard.types";
-
-function revokeIfBlob(url: string | null) {
-  if (url?.startsWith("blob:")) {
-    URL.revokeObjectURL(url);
-  }
-}
+import { revokeBlobObjectUrl } from "../utils/blobUrls";
 
 type LogoState =
   | { kind: "url"; displayUrl: string }
@@ -57,14 +53,14 @@ export function useOrganizationCardEdit({
   });
 
   const replaceLogoBlob = useCallback((next: LogoState) => {
-    revokeIfBlob(prevBlobRef.current.logo);
+    revokeBlobObjectUrl(prevBlobRef.current.logo);
     prevBlobRef.current.logo =
       next.kind === "file" ? next.displayUrl : null;
     setLogo(next);
   }, []);
 
   const replaceBackgroundBlob = useCallback((next: BackgroundState) => {
-    revokeIfBlob(prevBlobRef.current.bg);
+    revokeBlobObjectUrl(prevBlobRef.current.bg);
     prevBlobRef.current.bg =
       next.kind === "file" ? next.displayUrl : null;
     setBackground(next);
@@ -93,8 +89,8 @@ export function useOrganizationCardEdit({
 
   useEffect(() => {
     return () => {
-      revokeIfBlob(prevBlobRef.current.logo);
-      revokeIfBlob(prevBlobRef.current.bg);
+      revokeBlobObjectUrl(prevBlobRef.current.logo);
+      revokeBlobObjectUrl(prevBlobRef.current.bg);
     };
   }, []);
 
@@ -111,16 +107,15 @@ export function useOrganizationCardEdit({
   }, [replaceBackgroundBlob]);
 
   const buildSavePayload = useCallback((): OrganizationCardSavePayload => {
-    return {
-      name: name.trim(),
-      description: description.trim(),
-      contactEmail: contactEmail.trim(),
-      logo: logo.kind === "file" ? { file: logo.file } : { unchanged: true },
-      background:
-        background.kind === "file"
-          ? { file: background.file }
-          : { unchanged: true },
-    };
+    return buildOrganizationCardSavePayload(
+      name,
+      description,
+      contactEmail,
+      logo.kind === "file" ? { file: logo.file } : { unchanged: true },
+      background.kind === "file"
+        ? { file: background.file }
+        : { unchanged: true },
+    );
   }, [name, description, contactEmail, logo, background]);
 
   return {
