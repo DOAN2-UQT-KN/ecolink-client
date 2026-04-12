@@ -39,29 +39,42 @@ const SmallOrganizationImagePreview = memo(
     image,
     alt,
     onRemove,
+    variant,
   }: {
     image: string | File | Blob;
     alt: string;
     onRemove: () => void;
+    variant: "logo" | "background";
   }) {
     const { t } = useTranslation();
     const previewUrl = useImagePreviewSrc(image);
+    const isWide = variant === "background";
+
+    const frameClass = isWide
+      ? "relative w-full max-w-[min(100%,280px)] aspect-video shrink-0 group"
+      : "relative h-[150px] w-[150px] shrink-0 group";
 
     if (!previewUrl) {
       return (
-        <div className="w-[150px] h-[150px] rounded-[35px] bg-slate-100 animate-pulse border-1 border-[rgba(136,122,71,0.5)]" />
+        <div
+          className={
+            isWide
+              ? "w-full max-w-[min(100%,280px)] aspect-video rounded-[35px] bg-slate-100 animate-pulse border-1 border-[rgba(136,122,71,0.5)]"
+              : "w-[150px] h-[150px] rounded-[35px] bg-slate-100 animate-pulse border-1 border-[rgba(136,122,71,0.5)]"
+          }
+        />
       );
     }
 
     return (
-      <div className="relative h-[150px] w-[150px] shrink-0 group">
+      <div className={frameClass}>
         <div className="absolute inset-0 overflow-hidden rounded-[35px] shadow-md ring-1 ring-black/5">
           {/* eslint-disable-next-line @next/next/no-img-element -- blob: and arbitrary user URLs */}
           <img
             src={previewUrl}
             alt={alt}
-            width={150}
-            height={150}
+            width={isWide ? 280 : 150}
+            height={isWide ? 158 : 150}
             className="h-full w-full object-cover transition-transform duration-300"
           />
         </div>
@@ -230,6 +243,9 @@ export const OrganizationImageField = memo(function OrganizationImageField({
                   </div>
                 ) : (
                   <SmallOrganizationImagePreview
+                    variant={
+                      name === "backgroundUrl" ? "background" : "logo"
+                    }
                     image={value as string | File | Blob}
                     alt={label}
                     onRemove={() => onChange("")}
