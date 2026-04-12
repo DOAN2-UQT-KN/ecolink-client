@@ -2,11 +2,12 @@ export interface IOrganization {
   id: string;
   name: string;
   description: string | null;
-  logoUrl: string | null;
-  contactEmail: string | null;
-  isEmailVerified: boolean;
+  logo_url: string | null;
+  background_url: string | null;
+  contact_email: string | null;
+  is_email_verified: boolean;
   status: number;
-  ownerId: string;
-  createdAt: string;
-  updatedAt: string;
+  owner_id: string;
+  created_at: string;
+  updated_at: string;
 }

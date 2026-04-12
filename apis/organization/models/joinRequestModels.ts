@@ -2,33 +2,33 @@ import { IBaseResponse } from "@/types/BaseResponse";
 import { IJoinRequest } from "./joinRequest";
 
 export interface IGetMyJoinRequestsRequest {
-  organizationId?: string;
+  organization_id?: string;
   status?: number;
   page?: number;
   limit?: number;
-  sortBy?: "createdAt" | "updatedAt";
-  sortOrder?: "asc" | "desc";
+  sort_by?: "created_at" | "updated_at";
+  sort_order?: "asc" | "desc";
 }
 
 export type IGetMyJoinRequestsResponse = IBaseResponse<{
-  joinRequests: IJoinRequest[];
+  join_requests: IJoinRequest[];
   total: number;
   page: number;
   limit: number;
-  totalPages: number;
+  total_pages: number;
 }>;
 
 export interface IProcessJoinRequestRequest {
-  requestId: string;
+  request_id: string;
   approved: boolean;
 }
 
 export type IProcessJoinRequestResponse = IBaseResponse<{
-  joinRequest: IJoinRequest;
+  join_request: IJoinRequest;
 }>;
 
 export interface ICancelJoinRequestRequest {
-  requestId: string;
+  request_id: string;
 }
 
-export type ICancelJoinRequestResponse = IBaseResponse<any>;
+export type ICancelJoinRequestResponse = IBaseResponse<unknown>;

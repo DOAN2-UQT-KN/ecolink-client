@@ -2,22 +2,22 @@ import { IBaseResponse } from "@/types/BaseResponse";
 import { IJoinRequest } from "./joinRequest";
 
 export type ICreateJoinRequestResponse = IBaseResponse<{
-  joinRequest: IJoinRequest;
+  join_request: IJoinRequest;
 }>;
 
 export interface IGetJoinRequestsByOrgRequest {
   status?: number;
-  requesterId?: string;
+  requester_id?: string;
   page?: number;
   limit?: number;
-  sortBy?: "createdAt" | "updatedAt";
-  sortOrder?: "asc" | "desc";
+  sort_by?: "created_at" | "updated_at";
+  sort_order?: "asc" | "desc";
 }
 
 export type IGetJoinRequestsByOrgResponse = IBaseResponse<{
-  joinRequests: IJoinRequest[];
+  join_requests: IJoinRequest[];
   total: number;
   page: number;
   limit: number;
-  totalPages: number;
+  total_pages: number;
 }>;

@@ -2,10 +2,10 @@ import { IOrganization } from "./organization";
 
 export interface IJoinRequest {
   id: string;
-  organizationId: string;
-  requesterId: string;
+  organization_id: string;
+  requester_id: string;
   status: number;
-  createdAt: string;
-  updatedAt: string;
-  organization?: Pick<IOrganization, "id" | "name" | "ownerId">;
+  created_at: string;
+  updated_at: string;
+  organization?: Pick<IOrganization, "id" | "name" | "owner_id">;
 }

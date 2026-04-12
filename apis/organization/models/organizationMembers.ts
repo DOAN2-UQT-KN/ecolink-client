@@ -1,17 +1,17 @@
 import { IBaseResponse } from "@/types/BaseResponse";
 
 export interface IMember {
-  organizationId: string;
-  userId: string;
-  createdAt: string;
+  organization_id: string;
+  user_id: string;
+  created_at: string;
 }
 
 export interface IGetMembersRequest {
-  userId?: string;
+  user_id?: string;
   page?: number;
   limit?: number;
-  sortBy?: "createdAt" | "updatedAt";
-  sortOrder?: "asc" | "desc";
+  sort_by?: "created_at" | "updated_at";
+  sort_order?: "asc" | "desc";
 }
 
 export type IGetMembersResponse = IBaseResponse<{
@@ -19,5 +19,5 @@ export type IGetMembersResponse = IBaseResponse<{
   total: number;
   page: number;
   limit: number;
-  totalPages: number;
+  total_pages: number;
 }>;

@@ -4,8 +4,9 @@ import { IOrganization } from "./organization";
 export interface IUpdateOrganizationRequest {
   name?: string;
   description?: string;
-  logoUrl?: string;
-  contactEmail?: string;
+  logo_url?: string;
+  background_url?: string;
+  contact_email?: string;
 }
 
 export type IGetOrganizationByIdResponse = IBaseResponse<{

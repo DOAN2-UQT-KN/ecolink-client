@@ -5,8 +5,8 @@ export interface IGetOrganizationsRequest {
   search?: string;
   page?: number;
   limit?: number;
-  sortBy?: "createdAt" | "updatedAt" | "name";
-  sortOrder?: "asc" | "desc";
+  sort_by?: "created_at" | "updated_at" | "name";
+  sort_order?: "asc" | "desc";
 }
 
 export type IGetOrganizationsResponse = IBaseResponse<{
@@ -14,5 +14,5 @@ export type IGetOrganizationsResponse = IBaseResponse<{
   total: number;
   page: number;
   limit: number;
-  totalPages: number;
+  total_pages: number;
 }>;
