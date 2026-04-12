@@ -4,9 +4,14 @@ import React, { memo, useCallback, useMemo, useRef, useState } from "react";
 import { cn } from "@/libs/utils";
 import { AlignLeft } from "lucide-react";
 import { HiMail } from "react-icons/hi";
+import { BiGroup } from "react-icons/bi";
 import { Button } from "@/components/ui/button";
+import { Button as SharedButton } from "@/components/shared/Button";
 import type { OrganizationCardSavePayload } from "./types/OrganizationCard.types";
 import { useOrganizationCardEdit } from "./hooks/useOrganizationCardEdit";
+import { useCreateOrganizationJoinRequest } from "@/apis/organization/joinRequest";
+import useAuthStore from "@/stores/useAuthStore";
+import { useTranslation } from "react-i18next";
 
 export { useOrganizationCardEdit } from "./hooks/useOrganizationCardEdit";
 
@@ -21,6 +26,12 @@ export interface OrganizationCardProps {
   className?: string;
   /** When true, fields become editable and a save action is shown. */
   editMode?: boolean;
+  /** When true, description is hidden and a Join action is shown (e.g. explore listing). */
+  listingMode?: boolean;
+  /** Organization id; required for listing Join to call POST .../organizations/{id}/join-requests. */
+  organizationId?: string;
+  /** When set and equal to the signed-in user id, a "Your group" tag is shown next to the name. */
+  ownerId?: string;
   onSave?: (payload: OrganizationCardSavePayload) => void | Promise<void>;
   saveLabel?: string;
 }
@@ -33,12 +44,25 @@ export const OrganizationCard = memo(function OrganizationCard({
   contactEmail,
   className,
   editMode = false,
+  listingMode = false,
+  organizationId,
+  ownerId,
   onSave,
   saveLabel = "Save",
 }: OrganizationCardProps) {
+  const { t } = useTranslation();
+  const currentUserId = useAuthStore((s) => s.user?.id);
+  const showYourGroupTag =
+    ownerId != null &&
+    currentUserId != null &&
+    ownerId === currentUserId;
+
   const logoInputRef = useRef<HTMLInputElement>(null);
   const backgroundInputRef = useRef<HTMLInputElement>(null);
   const [isSaving, setIsSaving] = useState(false);
+
+  const { mutate: requestJoin, isPending: isJoinPending } =
+    useCreateOrganizationJoinRequest();
 
   const draft = useOrganizationCardEdit({
     enabled: editMode,
@@ -124,6 +148,11 @@ export const OrganizationCard = memo(function OrganizationCard({
     }
   }, [draft, onSave]);
 
+  const handleJoinClick = useCallback(() => {
+    if (!organizationId) return;
+    requestJoin(organizationId);
+  }, [organizationId, requestJoin]);
+
   return (
     <article
       className={cn(
@@ -203,19 +232,29 @@ export const OrganizationCard = memo(function OrganizationCard({
         </div>
 
         <div className="text-center space-y-1 pt-1">
-          {editMode ? (
-            <input
-              type="text"
-              value={draft.name}
-              onChange={(e) => draft.setName(e.target.value)}
-              className="w-full max-w-md mx-auto block text-center font-display-5 font-semibold text-foreground bg-transparent border-b border-dashed border-foreground/25 outline-none focus-visible:border-button-accent"
-              aria-label="Organization name"
-            />
-          ) : (
-            <h2 className="font-display-5 font-semibold text-foreground break-words">
-              {displayName}
-            </h2>
-          )}
+          <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 w-full">
+            {editMode ? (
+              <input
+                type="text"
+                value={draft.name}
+                onChange={(e) => draft.setName(e.target.value)}
+                className="w-full max-w-md min-w-0 flex-1 basis-56 sm:basis-64 text-center font-display-5 font-semibold text-foreground bg-transparent border-b border-dashed border-foreground/25 outline-none focus-visible:border-button-accent"
+                aria-label="Organization name"
+              />
+            ) : (
+              <h2 className="font-display-5 font-semibold text-foreground break-words text-center max-w-full">
+                {displayName}
+              </h2>
+            )}
+            {showYourGroupTag ? (
+              <span
+                className="shrink-0 inline-flex items-center rounded-sm border border-[rgba(136,122,71,0.45)] bg-button-accent/10 px-2.5 py-0.5 text-xs font-semibold text-button-accent"
+                aria-label={t("Your group")}
+              >
+                {t("Your group")}
+              </span>
+            ) : null}
+          </div>
 
           <div className="flex items-center justify-center gap-2 text-sm text-foreground-secondary break-words min-w-0">
             <HiMail
@@ -246,27 +285,43 @@ export const OrganizationCard = memo(function OrganizationCard({
           </div>
         </div>
 
-        <div className="flex items-start justify-center gap-2 rounded-lg border border-[rgba(136,122,71,0.35)] bg-white/40 px-3 py-2.5">
-          <AlignLeft className="size-4 shrink-0 text-button-accent mt-0.5" />
-          <div className="min-w-0 text-left w-full">
-            <p className="text-xs font-medium text-foreground-tertiary">
-              Description
-            </p>
-            {editMode ? (
-              <textarea
-                value={draft.description}
-                onChange={(e) => draft.setDescription(e.target.value)}
-                rows={3}
-                className="mt-1 w-full resize-y rounded-md border border-input bg-background px-2 py-1.5 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-                aria-label="Organization description"
-              />
-            ) : (
-              <p className="text-sm text-foreground whitespace-pre-wrap break-words">
-                {displayDescription}
-              </p>
-            )}
+        {listingMode && !editMode ? (
+          <div className="pt-1 flex items-center justify-center">
+            <SharedButton
+              variant="brown"
+              size="medium"
+              className="w-1/2"
+              iconLeft={<BiGroup className="size-4" aria-hidden />}
+              isLoading={isJoinPending}
+              isDisabled={!organizationId}
+              onClick={handleJoinClick}
+            >
+              Join
+            </SharedButton>
           </div>
-        </div>
+        ) : (
+          <div className="flex items-start justify-center gap-2 rounded-lg border border-[rgba(136,122,71,0.35)] bg-white/40 px-3 py-2.5">
+            <AlignLeft className="size-4 shrink-0 text-button-accent mt-0.5" />
+            <div className="min-w-0 text-left w-full">
+              <p className="text-xs font-medium text-foreground-tertiary">
+                Description
+              </p>
+              {editMode ? (
+                <textarea
+                  value={draft.description}
+                  onChange={(e) => draft.setDescription(e.target.value)}
+                  rows={3}
+                  className="mt-1 w-full resize-y rounded-md border border-input bg-background px-2 py-1.5 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                  aria-label="Organization description"
+                />
+              ) : (
+                <p className="text-sm text-foreground whitespace-pre-wrap break-words">
+                  {displayDescription}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
 
         {editMode ? (
           <div className="flex justify-center pt-1">

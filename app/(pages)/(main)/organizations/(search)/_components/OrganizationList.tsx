@@ -85,6 +85,9 @@ export const OrganizationList = memo(function OrganizationList() {
             backgroundUrl={org.background_url ?? ""}
             contactEmail={org.contact_email ?? ""}
             className="h-full"
+            listingMode
+            organizationId={org.id}
+            ownerId={org.owner_id}
           />
         ))}
       </div>

@@ -6,6 +6,7 @@ import {
   IProcessJoinRequestResponse,
   ICancelJoinRequestRequest,
   ICancelJoinRequestResponse,
+  ICreateOrganizationJoinRequestResponse,
 } from "./models/joinRequestModels";
 import {
   useGet,
@@ -17,6 +18,37 @@ import { useTranslation } from "react-i18next";
 import { MessageType } from "@/utils/showMessage";
 
 const baseUrl = "/organizations/join-requests";
+
+/** POST /organizations/{id}/join-requests */
+export const createOrganizationJoinRequest = async (
+  organizationId: string,
+): Promise<ICreateOrganizationJoinRequestResponse> => {
+  return await requestApi.post<ICreateOrganizationJoinRequestResponse>(
+    `/organizations/${organizationId}/join-requests`,
+    {},
+  );
+};
+
+export const useCreateOrganizationJoinRequest = (
+  options?: UsePostOptions<
+    ICreateOrganizationJoinRequestResponse,
+    string
+  >,
+) => {
+  const { t } = useTranslation();
+  return usePost({
+    mutationFn: createOrganizationJoinRequest,
+    queryKey: ["my-join-requests"],
+    messageSuccess: {
+      content: t("Join request submitted successfully"),
+      type: MessageType.Toast,
+    },
+    messageError: {
+      type: MessageType.Toast,
+    },
+    ...options,
+  });
+};
 
 // Get my join requests
 export const getMyJoinRequests = async (

@@ -32,3 +32,17 @@ export interface ICancelJoinRequestRequest {
 }
 
 export type ICancelJoinRequestResponse = IBaseResponse<unknown>;
+
+/** Nested `joinRequest` from POST /organizations/:id/join-requests (camelCase). */
+export interface IOrganizationJoinRequestCreated {
+  id: string;
+  organizationId: string;
+  requesterId: string;
+  status: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type ICreateOrganizationJoinRequestResponse = IBaseResponse<{
+  joinRequest: IOrganizationJoinRequestCreated;
+}>;
