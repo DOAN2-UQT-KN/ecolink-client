@@ -1,45 +1,13 @@
 "use client";
 
-import {
-  memo,
-  useMemo,
-  useState,
-  useCallback,
-  useEffect,
-} from "react";
+import { memo, useMemo, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useFormContext, useWatch } from "react-hook-form";
 import OrganizationCard from "@/modules/OrganizationCard/OrganizationCard";
 import { OrganizationFormValues } from "../_services/organization.service";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/libs/utils";
-
-/** useWatch uses DeepPartial; narrow at runtime for Blob/File previews. */
-function usePreviewImageUrl(source: unknown) {
-  const [url, setUrl] = useState("");
-
-  useEffect(() => {
-    if (source === "" || source == null) {
-      setUrl("");
-      return;
-    }
-    if (typeof source === "string") {
-      setUrl(source);
-      return;
-    }
-    if (source instanceof Blob) {
-      const objectUrl = URL.createObjectURL(source);
-      setUrl(objectUrl);
-      return () => {
-        URL.revokeObjectURL(objectUrl);
-      };
-    }
-    setUrl("");
-    return;
-  }, [source]);
-
-  return url;
-}
+import { useImagePreviewSrc } from "@/libs/useImagePreviewSrc";
 
 export const Preview = memo(function Preview() {
   const { t } = useTranslation();
@@ -48,8 +16,8 @@ export const Preview = memo(function Preview() {
 
   const watched = useWatch({ control });
 
-  const logoUrl = usePreviewImageUrl(watched?.logoUrl);
-  const backgroundUrl = usePreviewImageUrl(watched?.backgroundUrl);
+  const logoUrl = useImagePreviewSrc(watched?.logoUrl);
+  const backgroundUrl = useImagePreviewSrc(watched?.backgroundUrl);
 
   const cardProps = useMemo(
     () => ({

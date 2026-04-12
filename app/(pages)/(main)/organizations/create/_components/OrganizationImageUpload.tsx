@@ -1,12 +1,14 @@
 "use client";
 
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Control,
   Controller,
   type FieldError as RhfFieldError,
 } from "react-hook-form";
+import Cropper, { type Area } from "react-easy-crop";
+import "react-easy-crop/react-easy-crop.css";
 import { Field, FieldLabel, FieldError } from "@/components/ui/field";
 import {
   OrganizationFormValues,
@@ -14,10 +16,18 @@ import {
 } from "../_services/organization.service";
 import { IoDocumentAttachOutline } from "react-icons/io5";
 import { BiTrash } from "react-icons/bi";
-import { Image as AntdImage } from "antd";
-import { FaEye } from "react-icons/fa";
 import { toast } from "sonner";
 import { compressImage } from "@/libs/compressImage";
+import { getCroppedImageBlob } from "@/libs/getCroppedImage";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/shared/Button";
+import { useImagePreviewSrc } from "@/libs/useImagePreviewSrc";
 
 function isImageSelected(value: OrganizationImageSource): boolean {
   if (value === "" || value == null) return false;
@@ -35,23 +45,7 @@ const SmallOrganizationImagePreview = memo(
     onRemove: () => void;
   }) {
     const { t } = useTranslation();
-    const [previewUrl, setPreviewUrl] = useState<string>("");
-
-    useEffect(() => {
-      let url = "";
-      if (typeof image === "string") {
-        url = image;
-      } else {
-        url = URL.createObjectURL(image);
-      }
-      setPreviewUrl(url);
-
-      return () => {
-        if (typeof image !== "string" && url) {
-          URL.revokeObjectURL(url);
-        }
-      };
-    }, [image]);
+    const previewUrl = useImagePreviewSrc(image);
 
     if (!previewUrl) {
       return (
@@ -61,20 +55,14 @@ const SmallOrganizationImagePreview = memo(
 
     return (
       <div className="relative h-[150px] w-[150px] shrink-0 group">
-        <div className="absolute inset-0  rounded-[35px] shadow-md ring-1 ring-black/5">
-          <AntdImage
+        <div className="absolute inset-0 overflow-hidden rounded-[35px] shadow-md ring-1 ring-black/5">
+          {/* eslint-disable-next-line @next/next/no-img-element -- blob: and arbitrary user URLs */}
+          <img
             src={previewUrl}
             alt={alt}
             width={150}
             height={150}
-            className="object-cover transition-transform duration-300 h-full w-full"
-            preview={{
-              cover: (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/20 text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                  <FaEye size={30} />
-                </div>
-              ),
-            }}
+            className="h-full w-full object-cover transition-transform duration-300"
           />
         </div>
         <button
@@ -99,89 +87,224 @@ export const OrganizationImageField = memo(function OrganizationImageField({
   control,
   label,
   error,
+  cropAspect,
+  required = false,
+  requiredMessage,
 }: {
   name: "logoUrl" | "backgroundUrl";
   control: Control<OrganizationFormValues>;
   label: string;
   error?: RhfFieldError;
+  cropAspect: number;
+  required?: boolean;
+  requiredMessage?: string;
 }) {
   const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
-  const [compressing, setCompressing] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [cropOpen, setCropOpen] = useState(false);
+  const [cropSrc, setCropSrc] = useState("");
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+
+  const revokeCropSrc = useCallback(() => {
+    setCropSrc((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return "";
+    });
+  }, []);
+
+  const resetCropState = useCallback(() => {
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
+    setCroppedAreaPixels(null);
+  }, []);
 
   const openPicker = useCallback(() => {
     inputRef.current?.click();
   }, []);
 
+  const onCropDialogOpenChange = useCallback(
+    (open: boolean) => {
+      if (!open) {
+        setCropOpen(false);
+        revokeCropSrc();
+        resetCropState();
+      }
+    },
+    [resetCropState, revokeCropSrc],
+  );
+
+  const onCropComplete = useCallback(
+    (_croppedArea: Area, croppedPixels: Area) => {
+      setCroppedAreaPixels(croppedPixels);
+    },
+    [],
+  );
+
   return (
     <Field>
       <FieldLabel className="text-foreground-tertiary font-display-3">
         {label}
+        {required ? <span className="text-destructive"> *</span> : null}
       </FieldLabel>
       <Controller
         name={name}
         control={control}
-        render={({ field: { value, onChange } }) => (
-          <div className="flex flex-col gap-3">
-            <input
-              ref={inputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={async (e) => {
-                const file = e.target.files?.[0];
-                if (!file) return;
-                setCompressing(true);
-                try {
-                  const blob = await compressImage(file);
-                  onChange(blob);
-                } catch (err) {
-                  console.error(err);
-                  toast.error(t("Failed to compress image."));
-                } finally {
-                  setCompressing(false);
-                  e.target.value = "";
-                }
-              }}
-            />
+        rules={
+          required && requiredMessage
+            ? {
+                validate: (value: OrganizationImageSource) =>
+                  isImageSelected(value) || requiredMessage,
+              }
+            : undefined
+        }
+        render={({ field: { value, onChange } }) => {
+          const applyCroppedImage = async () => {
+            if (!cropSrc || !croppedAreaPixels) {
+              toast.error(t("Failed to crop image."));
+              return;
+            }
+            setBusy(true);
+            try {
+              const raw = await getCroppedImageBlob(cropSrc, croppedAreaPixels);
+              const blob = await compressImage(raw);
+              onChange(blob);
+              setCropOpen(false);
+              revokeCropSrc();
+              resetCropState();
+            } catch (err) {
+              console.error(err);
+              toast.error(t("Failed to compress image."));
+            } finally {
+              setBusy(false);
+            }
+          };
 
-            {!isImageSelected(value) ? (
-              <div
-                className="py-5 px-4 flex flex-col gap-3 items-center justify-center border-1 border-dashed border-button-accent-hover rounded-xl cursor-pointer hover:bg-button-accent/5 transition-colors max-w-xs"
-                onClick={() => !compressing && openPicker()}
-                onKeyDown={(ev) => {
-                  if (ev.key === "Enter" || ev.key === " ") {
-                    ev.preventDefault();
-                    if (!compressing) openPicker();
-                  }
-                }}
-                role="button"
-                tabIndex={0}
-              >
-                <IoDocumentAttachOutline
-                  size={28}
-                  className="text-button-accent"
+          return (
+            <>
+              <div className="flex flex-col gap-3">
+                <input
+                  ref={inputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    e.target.value = "";
+                    if (!file) return;
+                    revokeCropSrc();
+                    resetCropState();
+                    const url = URL.createObjectURL(file);
+                    setCropSrc(url);
+                    setCropOpen(true);
+                  }}
                 />
-                <div className="flex flex-col gap-1 items-center justify-center text-center">
-                  <span className="font-display-3 text-sm font-semibold text-button-accent">
-                    {t("Drag and drop your images")}
-                  </span>
-                  <span className="font-display-2 text-xs text-button-accent-hover">
-                    {t("JPEG, PNG, and WEBP formats, up to 50MB")}
-                  </span>
-                </div>
+
+                {!isImageSelected(value) ? (
+                  <div
+                    className="py-5 px-4 flex flex-col gap-3 items-center justify-center border-1 border-dashed border-button-accent-hover rounded-xl cursor-pointer hover:bg-button-accent/5 transition-colors max-w-xs"
+                    onClick={() => !busy && openPicker()}
+                    onKeyDown={(ev) => {
+                      if (ev.key === "Enter" || ev.key === " ") {
+                        ev.preventDefault();
+                        if (!busy) openPicker();
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    <IoDocumentAttachOutline
+                      size={28}
+                      className="text-button-accent"
+                    />
+                    <div className="flex flex-col gap-1 items-center justify-center text-center">
+                      <span className="font-display-3 text-sm font-semibold text-button-accent">
+                        {t("Drag and drop your images")}
+                      </span>
+                      <span className="font-display-2 text-xs text-button-accent-hover">
+                        {t("JPEG, PNG, and WEBP formats, up to 50MB")}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <SmallOrganizationImagePreview
+                    image={value as string | File | Blob}
+                    alt={label}
+                    onRemove={() => onChange("")}
+                  />
+                )}
               </div>
-            ) : (
-              <AntdImage.PreviewGroup>
-                <SmallOrganizationImagePreview
-                  image={value as string | File | Blob}
-                  alt={label}
-                  onRemove={() => onChange("")}
-                />
-              </AntdImage.PreviewGroup>
-            )}
-          </div>
-        )}
+
+              <Dialog open={cropOpen} onOpenChange={onCropDialogOpenChange}>
+                <DialogContent
+                  className="max-w-lg gap-4 sm:max-w-xl"
+                  showCloseButton={!busy}
+                  onPointerDownOutside={(ev) => {
+                    if (busy) ev.preventDefault();
+                  }}
+                  onEscapeKeyDown={(ev) => {
+                    if (busy) ev.preventDefault();
+                  }}
+                >
+                  <DialogHeader>
+                    <DialogTitle>{t("Crop image")}</DialogTitle>
+                  </DialogHeader>
+                  {cropSrc ? (
+                    <>
+                      <div className="relative h-[min(50vh,360px)] w-full overflow-hidden rounded-lg bg-black">
+                        <Cropper
+                          image={cropSrc}
+                          crop={crop}
+                          zoom={zoom}
+                          aspect={cropAspect}
+                          onCropChange={setCrop}
+                          onZoomChange={setZoom}
+                          onCropComplete={onCropComplete}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs text-muted-foreground">
+                          {t("Zoom")}
+                        </span>
+                        <input
+                          type="range"
+                          min={1}
+                          max={3}
+                          step={0.01}
+                          value={zoom}
+                          onChange={(ev) =>
+                            setZoom(Number(ev.target.value))
+                          }
+                          className="w-full"
+                          style={{ accentColor: "var(--button-accent)" }}
+                          disabled={busy}
+                        />
+                      </div>
+                    </>
+                  ) : null}
+                  <DialogFooter className="gap-2 sm:gap-2">
+                    <Button
+                      variant="outlined-brown"
+                      isDisabled={busy}
+                      onClick={() => onCropDialogOpenChange(false)}
+                    >
+                      {t("Cancel")}
+                    </Button>
+                    <Button
+                      variant="brown"
+                      isDisabled={busy || !cropSrc}
+                      onClick={() => void applyCroppedImage()}
+                    >
+                      {busy ? t("Loading...") : t("Confirm")}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </>
+          );
+        }}
       />
       <FieldError errors={[error]} />
     </Field>

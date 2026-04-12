@@ -117,5 +117,10 @@
   "Created At": "Created At",
   "DRAFT": "Draft",
   "PENDING": "Pending",
-  "COMPLETED": "Completed"
+  "COMPLETED": "Completed",
+  "Logo is required": "Logo is required",
+  "Background is required": "Background image is required",
+  "Crop image": "Crop image",
+  "Zoom": "Zoom",
+  "Failed to crop image.": "Failed to crop image."
 }

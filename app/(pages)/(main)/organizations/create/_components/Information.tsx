@@ -70,6 +70,9 @@ export const Information = memo(function Information() {
           control={control}
           label={t("Logo")}
           error={errors.logoUrl}
+          cropAspect={1}
+          required
+          requiredMessage={t("Logo is required")}
         />
 
         <OrganizationImageField
@@ -77,6 +80,9 @@ export const Information = memo(function Information() {
           control={control}
           label={t("Background")}
           error={errors.backgroundUrl}
+          cropAspect={16 / 9}
+          required
+          requiredMessage={t("Background is required")}
         />
 
         <Field>

@@ -1,5 +1,5 @@
 /** Resize & JPEG-compress for upload (same pipeline as incident FileUpload). */
-export const compressImage = (file: File): Promise<Blob> => {
+export const compressImage = (file: Blob): Promise<Blob> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
