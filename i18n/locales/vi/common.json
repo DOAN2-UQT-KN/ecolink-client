@@ -194,5 +194,38 @@
   "New": "Mới",
   "In progress": "Đang xử lý",
   "In review": "Đang xem xét",
-  "Draft": "Bản nháp"
+  "Draft": "Bản nháp",
+
+  "My organizations": "Tổ chức của tôi",
+  "Create": "Tạo",
+  "Uploading...": "Đang tải lên...",
+  "Creating...": "Đang tạo...",
+
+  "Name": "Tên",
+  "Name is required": "Vui lòng nhập tên",
+  "Enter organization name...": "Nhập tên tổ chức...",
+  "Brand & contact": "Thương hiệu & liên hệ",
+  "Logo": "Logo",
+  "Background": "Hình nền",
+  "Contact email": "Email liên hệ",
+  "Contact email is required": "Vui lòng nhập email liên hệ",
+  "Invalid email address": "Địa chỉ email không hợp lệ",
+  "contact@example.com": "contact@example.com",
+
+  "Preview": "Xem trước",
+  "See how your organization card looks on different screens.": "Xem thẻ tổ chức của bạn hiển thị trên các màn hình khác nhau.",
+  "Device": "Thiết bị",
+  "Mobile device": "Thiết bị di động",
+  "Laptop device": "Máy tính xách tay",
+
+  "Remove": "Xóa",
+  "Failed to compress image.": "Không thể nén ảnh.",
+
+  "Organization created successfully": "Tạo tổ chức thành công",
+  "Organization verified successfully": "Xác minh tổ chức thành công",
+  "Organization updated successfully": "Cập nhật tổ chức thành công",
+  "Contact email resent successfully": "Đã gửi lại email liên hệ thành công",
+  "Join request sent successfully": "Gửi yêu cầu tham gia thành công",
+  "Join request processed successfully": "Xử lý yêu cầu tham gia thành công",
+  "Join request cancelled successfully": "Hủy yêu cầu tham gia thành công"
 }

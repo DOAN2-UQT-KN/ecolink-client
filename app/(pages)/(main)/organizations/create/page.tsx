@@ -16,8 +16,9 @@ import { useCallback } from "react";
 
 const breadcrumbs: BreadcrumbItemProps[] = [
   { label: "Home", path: "/", type: "link" },
+  { label: "My organizations", path: "/organizations/me", type: "link" },
   {
-    label: "Create organization",
+    label: "Create",
     path: "/organizations/create",
     type: "page",
   },
@@ -39,9 +40,12 @@ function CreateOrganizationContent() {
           flex flex-col gap-[30px] w-full h-full pt-5
         `}
       >
-        <div className="md:grid md:grid-cols-2 md:gap-[30px] w-full h-full md:items-start">
+        <div className="md:grid md:grid-cols-3 md:gap-[30px] w-full h-full md:items-start">
+          <div className="md:col-span-1 h-full">
           <Information />
-          <Preview />
+          </div>
+          <div className="md:col-span-2 h-full">
+          <Preview /></div>
         </div>
       </div>
 
