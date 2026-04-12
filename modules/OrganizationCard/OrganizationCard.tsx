@@ -357,7 +357,7 @@ export const OrganizationCard = memo(function OrganizationCard({
             <SharedButton
               variant="outlined-brown"
               size="medium"
-              className="flex-1 min-w-0"
+              className="flex-1 min-w-0 "
               isDisabled={!organizationId}
               onClick={handleViewMoreClick}
             >

@@ -2,22 +2,105 @@
 
 import { useState, useEffect, useCallback, memo } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
+import { HiOutlineSortAscending, HiOutlineSortDescending } from "react-icons/hi";
 import { TbZoom, TbZoomReset } from "react-icons/tb";
 
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Button } from "@/components/shared/Button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { useDebounce } from "@/hooks/useDebounce";
 import { cn } from "@/libs/utils";
+import type { IGetOrganizationsRequest } from "@/apis/organization/models/getOrganizations";
 import { useOrganizationSearch } from "../_context/OrganizationSearchContext";
+
+type SortOptionProps = {
+  active: boolean;
+  icon: typeof HiOutlineSortAscending | typeof HiOutlineSortDescending;
+  ariaLabel: string;
+  onClick: () => void;
+};
+
+const SortOptionButton = memo(function SortOptionButton({
+  active,
+  icon: Icon,
+  ariaLabel,
+  onClick,
+}: SortOptionProps) {
+  return (
+    <button
+      type="button"
+      className={cn(
+        "inline-flex items-center gap-2 rounded-md px-1 py-1 -mx-1 text-sm font-medium transition-colors",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+        active ? "text-primary" : "text-foreground-secondary hover:text-foreground",
+      )}
+      aria-label={ariaLabel}
+      aria-pressed={active}
+      onClick={onClick}
+    >
+      <Icon className="h-5 w-5 shrink-0" aria-hidden />
+    </button>
+  );
+});
+
+const SortFieldRow = memo(function SortFieldRow({
+  sortBy,
+  fieldLabel,
+  filters,
+  handleSort,
+  t,
+}: {
+  sortBy: "created_at" | "updated_at";
+  fieldLabel: string;
+  filters: Pick<IGetOrganizationsRequest, "sort_by" | "sort_order">;
+  handleSort: (
+    sb: "created_at" | "updated_at",
+    so: "asc" | "desc",
+  ) => void;
+  t: TFunction;
+}) {
+  const sortOrder = filters.sort_order ?? "desc";
+  const active = filters.sort_by === sortBy;
+  const displayOrder = active ? sortOrder : "desc";
+  const Icon =
+    displayOrder === "asc"
+      ? HiOutlineSortAscending
+      : HiOutlineSortDescending;
+  const ariaLabel =
+    sortBy === "created_at"
+      ? displayOrder === "asc"
+        ? t("Created at, ascending")
+        : t("Created at, descending")
+      : displayOrder === "asc"
+        ? t("Updated at, ascending")
+        : t("Updated at, descending");
+
+  return (
+    <div
+      className="inline-flex flex-wrap items-center gap-x-2 gap-y-1"
+      role="group"
+      aria-label={fieldLabel}
+    >
+      <SortOptionButton
+        active={active}
+        icon={Icon}
+        ariaLabel={ariaLabel}
+        onClick={() => {
+          if (active) {
+            handleSort(sortBy, sortOrder === "asc" ? "desc" : "asc");
+          } else {
+            handleSort(sortBy, "desc");
+          }
+        }}
+      />
+      <span className="text-sm font-medium shrink-0 text-foreground-secondary">
+        {fieldLabel}
+      </span>
+    </div>
+  );
+});
 
 /** Matches incidents SearchSidebar card chrome */
 const FILTER_PANEL_CLASS =
@@ -28,11 +111,6 @@ const FILTER_CONTROL_H = "!h-11";
 
 const SEARCH_INPUT_CLASS = cn(
   "pl-10 border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50 bg-white/50 focus-visible:bg-white transition-all",
-  FILTER_CONTROL_H,
-);
-
-const SELECT_TRIGGER_CLASS = cn(
-  "w-full min-w-[140px] border-1 border-[rgba(136,122,71,0.5)] focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50 bg-white/50",
   FILTER_CONTROL_H,
 );
 
@@ -82,20 +160,10 @@ export const OrganizationSearchFilters = memo(
       }
     }, [debouncedSearchValue, filters.search, setFilters, updateURL]);
 
-    const handleSortByChange = useCallback(
-      (value: string) => {
-        const sort_by = value as "created_at" | "updated_at";
-        setFilters({ sort_by });
-        updateURL({ sort_by });
-      },
-      [setFilters, updateURL],
-    );
-
-    const handleSortOrderChange = useCallback(
-      (value: string) => {
-        const sort_order = value as "asc" | "desc";
-        setFilters({ sort_order });
-        updateURL({ sort_order });
+    const handleSort = useCallback(
+      (sort_by: "created_at" | "updated_at", sort_order: "asc" | "desc") => {
+        setFilters({ sort_by, sort_order });
+        updateURL({ sort_by, sort_order });
       },
       [setFilters, updateURL],
     );
@@ -123,40 +191,26 @@ export const OrganizationSearchFilters = memo(
             </div>
           </Field>
 
-          <Field className="w-full lg:w-auto lg:min-w-[200px]">
+          <Field className="w-full lg:w-auto lg:min-w-0">
             <FieldLabel className="text-foreground-tertiary font-display-3">
-              {t("Sort by")}
+              {t("Sort")}
             </FieldLabel>
-            <Select
-              value={filters.sort_by ?? "created_at"}
-              onValueChange={handleSortByChange}
-            >
-              <SelectTrigger className={SELECT_TRIGGER_CLASS}>
-                <SelectValue placeholder={t("Sort by")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="created_at">{t("Created at")}</SelectItem>
-                <SelectItem value="updated_at">{t("Updated at")}</SelectItem>
-              </SelectContent>
-            </Select>
-          </Field>
-
-          <Field className="w-full lg:w-auto lg:min-w-[160px]">
-            <FieldLabel className="text-foreground-tertiary font-display-3">
-              {t("Order")}
-            </FieldLabel>
-            <Select
-              value={filters.sort_order ?? "desc"}
-              onValueChange={handleSortOrderChange}
-            >
-              <SelectTrigger className={SELECT_TRIGGER_CLASS}>
-                <SelectValue placeholder={t("Order")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="asc">{t("Ascending")}</SelectItem>
-                <SelectItem value="desc">{t("Descending")}</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-6 sm:gap-y-2">
+              <SortFieldRow
+                sortBy="created_at"
+                fieldLabel={t("Created at")}
+                filters={filters}
+                handleSort={handleSort}
+                t={t}
+              />
+              <SortFieldRow
+                sortBy="updated_at"
+                fieldLabel={t("Updated at")}
+                filters={filters}
+                handleSort={handleSort}
+                t={t}
+              />
+            </div>
           </Field>
 
           <Button
@@ -167,7 +221,7 @@ export const OrganizationSearchFilters = memo(
           >
             <span className="flex flex-row items-center justify-center gap-2">
               <TbZoomReset size={16} />
-              {t("Reset Filters")}
+              {t("Reset")}
             </span>
           </Button>
         </div>

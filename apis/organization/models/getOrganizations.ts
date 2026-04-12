@@ -7,6 +7,9 @@ export interface IGetOrganizationsRequest {
   limit?: number;
   sort_by?: "created_at" | "updated_at" | "name";
   sort_order?: "asc" | "desc";
+  is_email_verified?: boolean;
+  status?: number;
+  request_status?: number;
 }
 
 export type IGetOrganizationsResponse = IBaseResponse<{

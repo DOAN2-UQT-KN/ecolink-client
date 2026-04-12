@@ -11,6 +11,7 @@ import React, {
 import { useGetOrganizations } from "@/apis/organization/getOrganizations";
 import type { IOrganization } from "@/apis/organization/models/organization";
 import type { IGetOrganizationsRequest } from "@/apis/organization/models/getOrganizations";
+import { STATUS } from "@/constants/status";
 import useGetParam from "@/hooks/useGetParam";
 
 function parseSortBy(
@@ -117,6 +118,9 @@ export const OrganizationSearchProvider = ({
     search: filters.search?.trim() || undefined,
     sort_by: filters.sort_by,
     sort_order: filters.sort_order,
+    is_email_verified: true,
+    status: STATUS.APPROVED,
+    request_status: 0,
   });
 
   const organizations = React.useMemo(
