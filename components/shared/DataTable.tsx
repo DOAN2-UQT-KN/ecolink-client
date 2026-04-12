@@ -218,7 +218,7 @@ export function DataTable<T>({
                       <button
                         onClick={() => handlePageChange(page)}
                         className={cn(
-                          "px-3  py-2 text-sm font-medium transition-all duration-200",
+                          "px-3  py-2 text-sm font-medium transition-all duration-200 cursor-pointer",
                           !isLast && "border-r border-[#887A47]/50",
                           pagination.current === page
                             ? "bg-[#887A47] text-white"
@@ -236,7 +236,7 @@ export function DataTable<T>({
               onClick={() => handlePageChange(pagination.current + 1)}
               disabled={pagination.current >= totalPages || loading}
               className={cn(
-                "flex items-center gap-2 px-4 py-2 text-sm font-medium t-ransition-all duration-200 rounded-[10px] border border-[#887A47]/30 text-button-accent hover:bg-[#887A47]/5 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer",
+                "flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all duration-200 rounded-[10px] border border-[#887A47]/30 text-button-accent hover:bg-[#887A47]/5 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer",
               )}
             >
               {t("Next")}
