@@ -16,13 +16,30 @@ import {
 import { Button } from "@/components/shared/Button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { useDebounce } from "@/hooks/useDebounce";
+import { cn } from "@/libs/utils";
 import { useOrganizationSearch } from "../_context/OrganizationSearchContext";
 
-const SEARCH_INPUT_CLASS =
-  "pl-10 h-11 border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50 bg-white/50 focus-visible:bg-white transition-all";
+/** Matches incidents SearchSidebar card chrome */
+const FILTER_PANEL_CLASS =
+  "w-full space-y-2 p-6 border-1 border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5 h-fit";
 
-const SELECT_TRIGGER_CLASS =
-  "w-full min-w-[140px] border-1 border-[rgba(136,122,71,0.5)] focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50 bg-white/50";
+/** Same visual height for input, selects, and button (SelectTrigger defaults to !h-[50px]) */
+const FILTER_CONTROL_H = "!h-11";
+
+const SEARCH_INPUT_CLASS = cn(
+  "pl-10 border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50 bg-white/50 focus-visible:bg-white transition-all",
+  FILTER_CONTROL_H,
+);
+
+const SELECT_TRIGGER_CLASS = cn(
+  "w-full min-w-[140px] border-1 border-[rgba(136,122,71,0.5)] focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50 bg-white/50",
+  FILTER_CONTROL_H,
+);
+
+const RESET_BUTTON_CLASS = cn(
+  "w-full lg:w-auto border-dashed border-2 hover:border-primary hover:text-primary transition-all gap-2 shrink-0",
+  FILTER_CONTROL_H,
+);
 
 export const OrganizationSearchFilters = memo(
   function OrganizationSearchFilters() {
@@ -89,7 +106,7 @@ export const OrganizationSearchFilters = memo(
     }, [pathname, resetFilters, router]);
 
     return (
-      <div className="w-full space-y-4 pt-2 border-b border-[rgba(136,122,71,0.25)] pb-6">
+      <div className={FILTER_PANEL_CLASS}>
         <div className="flex flex-col gap-4 lg:flex-row lg:flex-wrap lg:items-end lg:gap-6">
           <Field className="flex-1 min-w-[200px]">
             <FieldLabel className="text-foreground-tertiary font-display-3">
@@ -145,7 +162,7 @@ export const OrganizationSearchFilters = memo(
           <Button
             type="button"
             variant="outlined-brown"
-            className="w-full lg:w-auto h-11 border-dashed border-2 hover:border-primary hover:text-primary transition-all gap-2 shrink-0"
+            className={RESET_BUTTON_CLASS}
             onClick={onReset}
           >
             <span className="flex flex-row items-center justify-center gap-2">

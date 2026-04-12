@@ -47,7 +47,9 @@ const OrganizationsExplorePage = memo(function OrganizationsExplorePage() {
           )}
         >
           <Breadcrumbs breadcrumbs={breadcrumbs} />
-          <OrganizationSearchFilters />
+          <div className="mt-4">
+            <OrganizationSearchFilters />
+          </div>
         </div>
 
         <OrganizationList />
