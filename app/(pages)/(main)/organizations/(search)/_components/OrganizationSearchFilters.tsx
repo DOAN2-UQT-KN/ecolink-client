@@ -10,6 +10,7 @@ import { TbZoom, TbZoomReset } from "react-icons/tb";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/shared/Button";
 import { Field, FieldLabel } from "@/components/ui/field";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDebounce } from "@/hooks/useDebounce";
 import { cn } from "@/libs/utils";
 import type { IGetOrganizationsRequest } from "@/apis/organization/models/getOrganizations";
@@ -122,7 +123,8 @@ const RESET_BUTTON_CLASS = cn(
 export const OrganizationSearchFilters = memo(
   function OrganizationSearchFilters() {
     const { t } = useTranslation();
-    const { filters, setFilters, resetFilters } = useOrganizationSearch();
+    const { filters, setFilters, resetFilters, viewMode, setViewMode } =
+      useOrganizationSearch();
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
@@ -170,11 +172,29 @@ export const OrganizationSearchFilters = memo(
 
     const onReset = useCallback(() => {
       resetFilters();
-      router.replace(pathname, { scroll: false });
-    }, [pathname, resetFilters, router]);
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("search");
+      params.delete("sort_by");
+      params.delete("sort_order");
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    }, [pathname, resetFilters, router, searchParams]);
 
     return (
-      <div className={FILTER_PANEL_CLASS}>
+      <div className="space-y-4">
+        <Tabs
+          value={viewMode}
+          onValueChange={(v) =>
+            setViewMode(v === "mine" ? "mine" : "explore")
+          }
+        >
+          <TabsList className="w-full sm:w-auto border border-[rgba(136,122,71,0.5)] rounded-[8px] bg-background-primary/10">
+            <TabsTrigger value="explore" className="rounded-[8px] px-4 py-2 h-full data-active:bg-background data-active:shadow-sm transition-all !font-display-1">{t("Explore")}</TabsTrigger>
+            <TabsTrigger value="mine" className="rounded-[8px] px-4 py-2 h-full data-active:bg-background data-active:shadow-sm transition-all !font-display-1">{t("Mine")}</TabsTrigger>
+          </TabsList>
+        </Tabs>
+
+        <div className={FILTER_PANEL_CLASS}>
         <div className="flex flex-col gap-4 lg:flex-row lg:flex-wrap lg:items-end lg:gap-6">
           <Field className="flex-1 min-w-[200px]">
             <FieldLabel className="text-foreground-tertiary font-display-3">
@@ -224,6 +244,7 @@ export const OrganizationSearchFilters = memo(
               {t("Reset")}
             </span>
           </Button>
+        </div>
         </div>
       </div>
     );

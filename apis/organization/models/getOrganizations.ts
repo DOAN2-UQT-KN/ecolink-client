@@ -9,7 +9,8 @@ export interface IGetOrganizationsRequest {
   sort_order?: "asc" | "desc";
   is_email_verified?: boolean;
   status?: number;
-  request_status?: number;
+  /** Single value or multiple (serialized as comma-separated query) */
+  request_status?: number | number[];
 }
 
 export type IGetOrganizationsResponse = IBaseResponse<{

@@ -8,6 +8,7 @@ import React, {
   useEffect,
   useContext,
 } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useGetOrganizations } from "@/apis/organization/getOrganizations";
 import type { IOrganization } from "@/apis/organization/models/organization";
 import type { IGetOrganizationsRequest } from "@/apis/organization/models/getOrganizations";
@@ -28,6 +29,8 @@ function parseSortOrder(
   return "desc";
 }
 
+export type OrganizationSearchViewMode = "explore" | "mine";
+
 interface OrganizationSearchContextType {
   organizations: IOrganization[];
   isLoading: boolean;
@@ -37,6 +40,8 @@ interface OrganizationSearchContextType {
     pageSize: number;
   };
   setPagination: (pagination: { current: number; pageSize: number }) => void;
+  viewMode: OrganizationSearchViewMode;
+  setViewMode: (mode: OrganizationSearchViewMode) => void;
   filters: Pick<
     IGetOrganizationsRequest,
     "search" | "sort_by" | "sort_order"
@@ -59,10 +64,33 @@ export const OrganizationSearchProvider = ({
 }: {
   children: ReactNode;
 }) => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 12,
   });
+
+  const urlTab = useGetParam<string>("tab", "string", undefined);
+  const viewMode: OrganizationSearchViewMode =
+    urlTab === "mine" ? "mine" : "explore";
+
+  const setViewMode = useCallback(
+    (mode: OrganizationSearchViewMode) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (mode === "mine") {
+        params.set("tab", "mine");
+      } else {
+        params.delete("tab");
+      }
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+      setPagination((prev) => ({ ...prev, current: 1 }));
+    },
+    [pathname, router, searchParams],
+  );
 
   const urlSearch = useGetParam<string>("search", "string", "");
   const urlSortBy = useGetParam<string>("sort_by", "string", undefined);
@@ -112,16 +140,27 @@ export const OrganizationSearchProvider = ({
     [],
   );
 
-  const { data, isLoading, refetch } = useGetOrganizations({
-    page: pagination.current,
-    limit: pagination.pageSize,
-    search: filters.search?.trim() || undefined,
-    sort_by: filters.sort_by,
-    sort_order: filters.sort_order,
-    is_email_verified: true,
-    status: STATUS.APPROVED,
-    request_status: 0,
-  });
+  const listRequest: IGetOrganizationsRequest =
+    viewMode === "explore"
+      ? {
+          page: pagination.current,
+          limit: pagination.pageSize,
+          search: filters.search?.trim() || undefined,
+          sort_by: filters.sort_by,
+          sort_order: filters.sort_order,          
+          is_email_verified: true,          
+          status: STATUS.APPROVED,
+        }
+      : {
+          page: pagination.current,
+          limit: pagination.pageSize,
+          search: filters.search?.trim() || undefined,
+          sort_by: filters.sort_by,
+          sort_order: filters.sort_order,
+          request_status: [STATUS.PENDING, STATUS.APPROVED],
+        };
+
+  const { data, isLoading, refetch } = useGetOrganizations(listRequest);
 
   const organizations = React.useMemo(
     () => data?.data?.organizations ?? [],
@@ -137,6 +176,8 @@ export const OrganizationSearchProvider = ({
       total,
       pagination,
       setPagination: handleSetPagination,
+      viewMode,
+      setViewMode,
       filters,
       setFilters,
       resetFilters,
@@ -148,6 +189,8 @@ export const OrganizationSearchProvider = ({
       total,
       pagination,
       handleSetPagination,
+      viewMode,
+      setViewMode,
       filters,
       setFilters,
       resetFilters,
