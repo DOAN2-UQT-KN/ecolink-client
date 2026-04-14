@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/shared/Button";
+import { Button } from "@/components/client/shared/Button";
 import { useTranslation } from "react-i18next";
 import { useRouter } from "next/navigation";
 import { Field, FieldLabel } from "@/components/ui/field";

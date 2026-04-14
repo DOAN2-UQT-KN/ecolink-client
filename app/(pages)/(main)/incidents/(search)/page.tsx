@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import {
   Breadcrumbs,
   BreadcrumbItemProps,
-} from "@/components/shared/Breadcrumbs";
+} from "@/components/client/shared/Breadcrumbs";
 import { IncidentSearchProvider } from "./_context/IncidentSearchContext";
 import { SearchSidebar } from "./_components/SearchSidebar";
 import { IncidentList } from "./_components/IncidentList";
@@ -14,7 +14,6 @@ import { cn } from "@/libs/utils";
 const IncidentSearchPage = memo(function IncidentSearchPage() {
   const { t } = useTranslation();
   const [isScrolled, setIsScrolled] = useState(false);
-
 
   useEffect(() => {
     const handleScroll = () => {
@@ -58,4 +57,3 @@ const IncidentSearchPage = memo(function IncidentSearchPage() {
 });
 
 export default IncidentSearchPage;
-

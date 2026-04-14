@@ -1,8 +1,8 @@
 "use client";
 
-import { Button } from "@/components/shared/Button";
-import { Tag } from "@/components/shared/Tag";
-import FeatureCard from "@/components/shared/FeatureCard";
+import { Button } from "@/components/client/shared/Button";
+import { Tag } from "@/components/client/shared/Tag";
+import FeatureCard from "@/components/client/shared/FeatureCard";
 import { Trans, useTranslation } from "react-i18next";
 import { useMemo } from "react";
 import { useMediaQuery } from "@/hooks/useMediaQuery";

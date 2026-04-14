@@ -1,4 +1,4 @@
-import { Button } from "@/components/shared/Button";
+import { Button } from "@/components/client/shared/Button";
 import { useTranslation } from "react-i18next";
 import { IoDocumentAttachOutline } from "react-icons/io5";
 import { BiTrash, BiPlus } from "react-icons/bi";

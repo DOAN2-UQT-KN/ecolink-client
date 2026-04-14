@@ -7,7 +7,7 @@ import ReportDetailCard from "@/modules/ReportDetailCard/ReportDetailCard";
 import {
   Breadcrumbs,
   BreadcrumbItemProps,
-} from "@/components/shared/Breadcrumbs";
+} from "@/components/client/shared/Breadcrumbs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from "react-i18next";
 import { Inbox } from "lucide-react";

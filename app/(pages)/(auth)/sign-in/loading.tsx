@@ -1,4 +1,4 @@
-import PageSuspense from "@/components/shared/PageSuspense";
+import PageSuspense from "@/components/client/shared/PageSuspense";
 
 export default function Loading() {
   return <PageSuspense pageName="sign in" />;

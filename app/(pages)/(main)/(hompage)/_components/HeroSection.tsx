@@ -1,8 +1,8 @@
 "use client";
 
-import { Button } from "@/components/shared/Button";
-import { Divider } from "@/components/shared/Divider";
-import { Tag } from "@/components/shared/Tag";
+import { Button } from "@/components/client/shared/Button";
+import { Divider } from "@/components/client/shared/Divider";
+import { Tag } from "@/components/client/shared/Tag";
 import Image from "next/image";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";

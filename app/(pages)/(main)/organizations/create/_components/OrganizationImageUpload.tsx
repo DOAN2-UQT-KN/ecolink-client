@@ -26,7 +26,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/shared/Button";
+import { Button } from "@/components/client/shared/Button";
 import { useImagePreviewSrc } from "@/libs/useImagePreviewSrc";
 
 function isImageSelected(value: OrganizationImageSource): boolean {

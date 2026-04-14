@@ -8,7 +8,7 @@ import { HiOutlineSortAscending, HiOutlineSortDescending } from "react-icons/hi"
 import { TbZoom, TbZoomReset } from "react-icons/tb";
 
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/shared/Button";
+import { Button } from "@/components/client/shared/Button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDebounce } from "@/hooks/useDebounce";

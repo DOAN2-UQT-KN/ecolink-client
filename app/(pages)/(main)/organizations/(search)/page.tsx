@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import {
   Breadcrumbs,
   BreadcrumbItemProps,
-} from "@/components/shared/Breadcrumbs";
+} from "@/components/client/shared/Breadcrumbs";
 import { cn } from "@/libs/utils";
 
 import { OrganizationSearchProvider } from "./_context/OrganizationSearchContext";

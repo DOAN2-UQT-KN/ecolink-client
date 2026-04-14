@@ -7,7 +7,7 @@ import { HiMail } from "react-icons/hi";
 import { BiGroup } from "react-icons/bi";
 import { HiOutlineUserRemove } from "react-icons/hi";
 import { Button } from "@/components/ui/button";
-import { Button as SharedButton } from "@/components/shared/Button";
+import { Button as SharedButton } from "@/components/client/shared/Button";
 import type { OrganizationCardSavePayload } from "./types/OrganizationCard.types";
 import { useOrganizationCardEdit } from "./hooks/useOrganizationCardEdit";
 import {

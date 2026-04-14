@@ -1,8 +1,8 @@
 import { memo, useContext, useMemo, useCallback } from "react";
 
-import { DataTable, ColumnType } from "@/components/shared/DataTable";
+import { DataTable, ColumnType } from "@/components/client/shared/DataTable";
 import { MoreHorizontal, User } from "lucide-react";
-import { Button } from "@/components/shared/Button";
+import { Button } from "@/components/client/shared/Button";
 import { useTranslation } from "react-i18next";
 import { IncidentMeContext } from "../_context/IncidentMeContext";
 import { IIncident } from "@/apis/incident/models/incident";
@@ -14,11 +14,11 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/shared/DropdownMenu";
+} from "@/components/client/shared/DropdownMenu";
 
 import AddressDisplay from "./AddressDisplay";
 
-import { StatusTag } from "@/components/shared/StatusTag";
+import { StatusTag } from "@/components/client/shared/StatusTag";
 import FormFilter from "./FormFilter";
 
 const DataTableComponent = memo(function DataTableComponent() {

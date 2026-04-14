@@ -5,12 +5,12 @@ import Preview from "./_components/Preview";
 
 import { OrganizationProvider } from "./_context/OrganizationContext";
 import { useOrganization } from "./_hooks/useOrganization";
-import { Button } from "@/components/shared/Button";
+import { Button } from "@/components/client/shared/Button";
 
 import {
   Breadcrumbs,
   BreadcrumbItemProps,
-} from "@/components/shared/Breadcrumbs";
+} from "@/components/client/shared/Breadcrumbs";
 import { useTranslation } from "react-i18next";
 import { useCallback } from "react";
 
@@ -42,10 +42,11 @@ function CreateOrganizationContent() {
       >
         <div className="md:grid md:grid-cols-3 md:gap-[30px] w-full h-full md:items-start">
           <div className="md:col-span-1 h-full">
-          <Information />
+            <Information />
           </div>
           <div className="md:col-span-2 h-full">
-          <Preview /></div>
+            <Preview />
+          </div>
         </div>
       </div>
 
@@ -58,8 +59,8 @@ function CreateOrganizationContent() {
           {isUploading
             ? t("Uploading...")
             : isPending
-              ? t("Creating...")
-              : t("Create")}
+            ? t("Creating...")
+            : t("Create")}
         </Button>
       </div>
     </div>

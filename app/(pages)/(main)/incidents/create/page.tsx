@@ -6,12 +6,12 @@ import Information from "./_components/Information";
 
 import { IncidentProvider } from "./_context/IncidentContext";
 import { useIncident } from "./_hooks/useIncident";
-import { Button } from "@/components/shared/Button";
+import { Button } from "@/components/client/shared/Button";
 
 import {
   Breadcrumbs,
   BreadcrumbItemProps,
-} from "@/components/shared/Breadcrumbs";
+} from "@/components/client/shared/Breadcrumbs";
 import { useTranslation } from "react-i18next";
 import { useCallback } from "react";
 
@@ -53,7 +53,11 @@ function CreateIncidentContent() {
           onClick={handleCreate}
           disabled={isPending || isUploading}
         >
-          {isUploading ? t("Uploading...") : isPending ? t("Creating...") : t("Create")}
+          {isUploading
+            ? t("Uploading...")
+            : isPending
+            ? t("Creating...")
+            : t("Create")}
         </Button>
       </div>
     </div>

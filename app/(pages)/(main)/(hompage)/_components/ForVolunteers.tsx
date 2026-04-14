@@ -1,7 +1,7 @@
 "use client";
 
-import CollapseCard from "@/components/shared/CollapseCard";
-import { Tag } from "@/components/shared/Tag";
+import CollapseCard from "@/components/client/shared/CollapseCard";
+import { Tag } from "@/components/client/shared/Tag";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import Image from "next/image";
 import { useCallback } from "react";
