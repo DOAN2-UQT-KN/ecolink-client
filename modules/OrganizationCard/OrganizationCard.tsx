@@ -5,6 +5,7 @@ import { cn } from "@/libs/utils";
 import { AlignLeft, X } from "lucide-react";
 import { HiMail } from "react-icons/hi";
 import { BiGroup } from "react-icons/bi";
+import { HiOutlineUserRemove } from "react-icons/hi";
 import { Button } from "@/components/ui/button";
 import { Button as SharedButton } from "@/components/shared/Button";
 import type { OrganizationCardSavePayload } from "./types/OrganizationCard.types";
@@ -13,11 +14,13 @@ import {
   useCancelJoinRequest,
   useCreateOrganizationJoinRequest,
 } from "@/apis/organization/joinRequest";
+import { useLeaveOrganization } from "../../apis/organization/leaveOrganization";
 import useAuthStore from "@/stores/useAuthStore";
 import { useTranslation } from "react-i18next";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { invalidateOrganizationListsQuery } from "./services/invalidateOrganizationLists";
+import { STATUS } from "@/constants/status";
 import {
   joinListingShowsCancelButton,
   joinListingShowsJoinButton,
@@ -78,6 +81,7 @@ export const OrganizationCard = memo(function OrganizationCard({
   const logoInputRef = useRef<HTMLInputElement>(null);
   const backgroundInputRef = useRef<HTMLInputElement>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLeaveConfirmOpen, setIsLeaveConfirmOpen] = useState(false);
 
   const invalidateOrganizationLists = useCallback(() => {
     invalidateOrganizationListsQuery(queryClient);
@@ -90,6 +94,11 @@ export const OrganizationCard = memo(function OrganizationCard({
 
   const { mutate: cancelJoin, isPending: isCancelPending } =
     useCancelJoinRequest({
+      onSettled: invalidateOrganizationLists,
+    });
+
+  const { mutate: leaveOrganization, isPending: isLeavePending } =
+    useLeaveOrganization({
       onSettled: invalidateOrganizationLists,
     });
 
@@ -192,8 +201,21 @@ export const OrganizationCard = memo(function OrganizationCard({
     router.push(`/organizations/${organizationId}`);
   }, [organizationId, router]);
 
-  const showJoinButton = joinListingShowsJoinButton(requestStatus);
+  const handleLeaveClick = useCallback(() => {
+    setIsLeaveConfirmOpen((prev) => !prev);
+  }, []);
+
+  const handleConfirmLeave = useCallback(() => {
+    if (!organizationId) return;
+    leaveOrganization({ id: organizationId });
+    setIsLeaveConfirmOpen(false);
+  }, [organizationId, leaveOrganization]);
+
+  const showJoinButton =
+    !showYourGroupTag && joinListingShowsJoinButton(requestStatus);
   const showCancelButton = joinListingShowsCancelButton(requestStatus);
+  const showLeaveButton =
+    !showYourGroupTag && requestStatus === STATUS.APPROVED;
 
   return (
     <article
@@ -341,6 +363,47 @@ export const OrganizationCard = memo(function OrganizationCard({
               >
                 {t("Cancel")}
               </SharedButton>
+            ) : showLeaveButton ? (
+              <div className="relative flex-1 min-w-0">
+                <SharedButton
+                  variant="brown"
+                  size="medium"
+                  className="w-full"
+                  iconLeft={<HiOutlineUserRemove className="size-4" aria-hidden />}
+                  isLoading={isLeavePending}
+                  isDisabled={!organizationId}
+                  onClick={handleLeaveClick}
+                >
+                  {t("Leave")}
+                </SharedButton>
+                {isLeaveConfirmOpen ? (
+                  <div className="absolute top-[calc(100%+8px)] left-0 z-10 w-full rounded-md border border-[rgba(136,122,71,0.45)] bg-white p-3 shadow-md">
+                    <p className="text-sm text-foreground text-center">
+                      {t("Are you sure?")}
+                    </p>
+                    <div className="mt-3 flex items-center gap-2">
+                      <SharedButton
+                        variant="outlined-brown"
+                        size="small"
+                        className="flex-1"
+                        onClick={() => setIsLeaveConfirmOpen(false)}
+                      >
+                        {t("Cancel")}
+                      </SharedButton>
+                      <SharedButton
+                        variant="brown"
+                        size="small"
+                        className="flex-1"
+                        isLoading={isLeavePending}
+                        isDisabled={!organizationId}
+                        onClick={handleConfirmLeave}
+                      >
+                        {t("Confirm")}
+                      </SharedButton>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
             ) : showJoinButton ? (
               <SharedButton
                 variant="brown"

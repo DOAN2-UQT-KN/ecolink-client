@@ -10,8 +10,10 @@ import React, {
 } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useGetOrganizations } from "@/apis/organization/getOrganizations";
+import { useGetMyOrganizations } from "@/apis/organization/getMyOrganizations";
 import type { IOrganization } from "@/apis/organization/models/organization";
 import type { IGetOrganizationsRequest } from "@/apis/organization/models/getOrganizations";
+import type { IGetMyOrganizationsRequest } from "@/apis/organization/models/getMyOrganizations";
 import { STATUS } from "@/constants/status";
 import useGetParam from "@/hooks/useGetParam";
 
@@ -141,26 +143,34 @@ export const OrganizationSearchProvider = ({
   );
 
   const listRequest: IGetOrganizationsRequest =
-    viewMode === "explore"
-      ? {
-          page: pagination.current,
-          limit: pagination.pageSize,
-          search: filters.search?.trim() || undefined,
-          sort_by: filters.sort_by,
-          sort_order: filters.sort_order,          
-          is_email_verified: true,          
-          status: STATUS.APPROVED,
-        }
-      : {
-          page: pagination.current,
-          limit: pagination.pageSize,
-          search: filters.search?.trim() || undefined,
-          sort_by: filters.sort_by,
-          sort_order: filters.sort_order,
-          request_status: [STATUS.PENDING, STATUS.APPROVED],
-        };
+    {
+      page: pagination.current,
+      limit: pagination.pageSize,
+      search: filters.search?.trim() || undefined,
+      sort_by: filters.sort_by,
+      sort_order: filters.sort_order,
+      is_email_verified: true,
+      status: STATUS.APPROVED,
+    };
 
-  const { data, isLoading, refetch } = useGetOrganizations(listRequest);
+  const myListRequest: IGetMyOrganizationsRequest = {
+    page: pagination.current,
+    limit: pagination.pageSize,
+    search: filters.search?.trim() || undefined,
+    sort_by: filters.sort_by,
+    sort_order: filters.sort_order,
+  };
+
+  const exploreQuery = useGetOrganizations(listRequest, {
+    enabled: viewMode === "explore",
+  });
+  const myQuery = useGetMyOrganizations(myListRequest, {
+    enabled: viewMode === "mine",
+  });
+
+  const data = viewMode === "mine" ? myQuery.data : exploreQuery.data;
+  const isLoading = viewMode === "mine" ? myQuery.isLoading : exploreQuery.isLoading;
+  const refetch = viewMode === "mine" ? myQuery.refetch : exploreQuery.refetch;
 
   const organizations = React.useMemo(
     () => data?.data?.organizations ?? [],
