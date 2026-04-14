@@ -433,21 +433,32 @@ export function DataTable<T>({
           <div className="flex flex-wrap items-center justify-between gap-2 border-t border-zinc-700/60 p-3">
             <div className="flex items-center gap-2 text-sm text-zinc-300">
               <span className="text-zinc-400">Page size</span>
-              <Select
-                value={String(pagination.pageSize)}
-                onValueChange={(value) => pagination.onPageSizeChange?.(Number(value))}
-              >
-                <SelectTrigger className="h-8 w-[90px] bg-zinc-800 border-zinc-700 text-zinc-100">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
+              {pagination.onPageSizeChange ? (
+                <select
+                  className={cn(
+                    "h-8 w-[90px] rounded-md border border-zinc-700 bg-zinc-800 px-2 text-sm text-zinc-100",
+                    "outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50",
+                  )}
+                  value={String(
+                    pageSizes.includes(pagination.pageSize) ? pagination.pageSize : pageSizes[0],
+                  )}
+                  onChange={(e) => {
+                    const next = Number(e.target.value);
+                    if (!Number.isFinite(next) || next === pagination.pageSize) return;
+                    pagination.onPageSizeChange?.(next);
+                  }}
+                >
                   {pageSizes.map((size) => (
-                    <SelectItem key={size} value={String(size)}>
+                    <option key={size} value={String(size)}>
                       {size}
-                    </SelectItem>
+                    </option>
                   ))}
-                </SelectContent>
-              </Select>
+                </select>
+              ) : (
+                <span className="inline-flex h-8 min-w-[90px] items-center rounded-md border border-zinc-700 bg-zinc-800 px-2 tabular-nums text-zinc-100">
+                  {pagination.pageSize}
+                </span>
+              )}
             </div>
 
             {pagination.mode === "cursor" ? (

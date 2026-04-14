@@ -38,7 +38,8 @@ function toOwnerLabel(ownerId?: string | null) {
 }
 
 export function DataTable() {
-  const { organizations, loading, pagination, total, onPageChange } = useOrganizationContext();
+  const { organizations, loading, pagination, total, onPageChange, onPageSizeChange } =
+    useOrganizationContext();
 
   const columns: DataTableColumn<IOrganization>[] = useMemo(
     () => [
@@ -145,6 +146,7 @@ export function DataTable() {
         pageSize: pagination.pageSize,
         total,
         onPageChange,
+        onPageSizeChange,
       }}
     />
   );

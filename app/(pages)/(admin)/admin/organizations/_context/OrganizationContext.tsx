@@ -1,6 +1,14 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { useGetOrganizations } from "@/apis/organization/getOrganizations";
@@ -29,6 +37,7 @@ type OrganizationContextType = {
   onFilterChange: (next: Partial<FormFilterValues>) => void;
   onResetFilters: () => void;
   onPageChange: (nextPage: number) => void;
+  onPageSizeChange: (pageSize: number) => void;
 };
 
 const OrganizationContext = createContext<OrganizationContextType | undefined>(undefined);
@@ -47,10 +56,20 @@ function parseSortOrder(value: string | undefined): FormFilterValues["sortOrder"
   return "desc";
 }
 
+/** Must match shared DataTable default page size options so the table Select stays in sync. */
+const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const;
+
+function normalizePageSize(limit: number): number {
+  if (!Number.isFinite(limit) || limit < 1) return 10;
+  return PAGE_SIZE_OPTIONS.includes(limit as (typeof PAGE_SIZE_OPTIONS)[number]) ? limit : 10;
+}
+
 export function OrganizationProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const searchParamsRef = useRef(searchParams);
+  searchParamsRef.current = searchParams;
 
   const urlSearch = useGetParam<string>("search", "string", "");
   const urlStatus = useGetParam<string>("status", "string", "all");
@@ -68,25 +87,43 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
 
   const [pagination, setPagination] = useState<PaginationState>({
     current: Math.max(1, urlPage ?? 1),
-    pageSize: Math.max(1, urlLimit ?? 10),
+    pageSize: normalizePageSize(Math.max(1, urlLimit ?? 10)),
   });
 
   useEffect(() => {
-    setFilters({
+    const nextFilters: FormFilterValues = {
       search: urlSearch ?? "",
       status: urlStatus ?? "all",
       sortBy: parseSortBy(urlSortBy),
       sortOrder: parseSortOrder(urlSortOrder),
+    };
+    setFilters((prev) => {
+      if (
+        prev.search === nextFilters.search &&
+        prev.status === nextFilters.status &&
+        prev.sortBy === nextFilters.sortBy &&
+        prev.sortOrder === nextFilters.sortOrder
+      ) {
+        return prev;
+      }
+      return nextFilters;
     });
-    setPagination({
+
+    const nextPagination: PaginationState = {
       current: Math.max(1, urlPage ?? 1),
-      pageSize: Math.max(1, urlLimit ?? 10),
+      pageSize: normalizePageSize(Math.max(1, urlLimit ?? 10)),
+    };
+    setPagination((prev) => {
+      if (prev.current === nextPagination.current && prev.pageSize === nextPagination.pageSize) {
+        return prev;
+      }
+      return nextPagination;
     });
   }, [urlLimit, urlPage, urlSearch, urlSortBy, urlSortOrder, urlStatus]);
 
   const setParams = useCallback(
     (updates: Record<string, string | undefined>) => {
-      const params = new URLSearchParams(searchParams.toString());
+      const params = new URLSearchParams(searchParamsRef.current.toString());
       Object.entries(updates).forEach(([key, value]) => {
         if (value && value.length > 0) {
           params.set(key, value);
@@ -98,7 +135,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
       const next = params.toString();
       router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
     },
-    [pathname, router, searchParams],
+    [pathname, router],
   );
 
   const request: IGetOrganizationsRequest = useMemo(
@@ -122,15 +159,16 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     (next: Partial<FormFilterValues>) => {
       setFilters((prev) => {
         const merged = { ...prev, ...next };
+        const search = merged.search.trim();
         setPagination((prevPagination) => ({ ...prevPagination, current: 1 }));
         setParams({
-          search: merged.search.trim() || undefined,
+          search: search || undefined,
           status: merged.status === "all" ? undefined : merged.status,
           sort_by: merged.sortBy,
           sort_order: merged.sortOrder,
           page: "1",
         });
-        return merged;
+        return { ...merged, search };
       });
     },
     [setParams],
@@ -162,6 +200,15 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     [pagination.pageSize, setParams],
   );
 
+  const onPageSizeChange = useCallback(
+    (nextSize: number) => {
+      const pageSize = Math.max(1, Math.floor(nextSize));
+      setPagination((prev) => ({ ...prev, pageSize, current: 1 }));
+      setParams({ limit: String(pageSize), page: "1" });
+    },
+    [setParams],
+  );
+
   const value = useMemo(
     () => ({
       filters,
@@ -172,6 +219,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
       onFilterChange,
       onResetFilters,
       onPageChange,
+      onPageSizeChange,
     }),
     [
       filters,
@@ -182,6 +230,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
       onFilterChange,
       onResetFilters,
       onPageChange,
+      onPageSizeChange,
     ],
   );
 

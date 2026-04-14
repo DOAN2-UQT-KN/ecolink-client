@@ -56,8 +56,9 @@ export function FormFilter() {
   }, [values.search]);
 
   useEffect(() => {
-    if (debouncedSearch !== values.search) {
-      onFilterChange({ search: debouncedSearch });
+    const next = debouncedSearch.trim();
+    if (next !== values.search) {
+      onFilterChange({ search: next });
     }
   }, [debouncedSearch, onFilterChange, values.search]);
 
