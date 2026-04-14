@@ -21,6 +21,7 @@ type Props<T> = {
   onToggleAll: (checked: boolean) => void;
   onSortChange?: (key: string, order: SortOrder) => void;
   stickyHeader?: boolean;
+  theme?: "light" | "dark";
 };
 
 export function DataTableHeader<T>({
@@ -34,10 +35,26 @@ export function DataTableHeader<T>({
   onToggleAll,
   onSortChange,
   stickyHeader,
+  theme = "dark",
 }: Props<T>) {
+  const isDark = theme === "dark";
+
   return (
-    <BaseTableHeader className={cn(stickyHeader && "sticky top-0 z-10 bg-zinc-950/95 backdrop-blur-sm border-b border-zinc-700/60")}>
-      <TableRow className="bg-zinc-900 hover:bg-zinc-900 border-b border-zinc-700/60">
+    <BaseTableHeader
+      className={cn(
+        stickyHeader && "sticky top-0 z-10 backdrop-blur-sm",
+        stickyHeader && isDark
+          ? "bg-zinc-950/95 border-b border-zinc-700/60"
+          : stickyHeader && "bg-zinc-100 border-b border-gray-200",
+      )}
+    >
+      <TableRow
+        className={cn(
+          isDark
+            ? "bg-zinc-900 hover:bg-zinc-900 border-b border-zinc-700/60"
+            : "bg-zinc-200 hover:bg-zinc-200 border-b border-gray-200",
+        )}
+      >
         {showSelection && (
           <TableHead className="w-12 px-3">
             <Checkbox
@@ -56,14 +73,23 @@ export function DataTableHeader<T>({
           return (
             <TableHead
               key={column.key}
-              className={cn("px-3 py-2.5 font-semibold text-zinc-300 text-xs uppercase tracking-wide", column.className)}
+              className={cn(
+                "px-3 py-2.5 font-semibold text-xs uppercase tracking-wide",
+                isDark ? "text-zinc-300" : "text-zinc-700",
+                column.className,
+              )}
               style={{ width: column.width }}
             >
               {column.sortable ? (
                 <button
                   type="button"
                   onClick={() => onSortChange?.(column.key, nextOrder)}
-                  className="inline-flex items-center gap-1 hover:text-zinc-100 transition-colors cursor-pointer text-zinc-300"
+                  className={cn(
+                    "inline-flex items-center gap-1 transition-colors cursor-pointer",
+                    isDark
+                      ? "text-zinc-300 hover:text-zinc-100"
+                      : "text-black",
+                  )}
                 >
                   {column.title}
                   {active ? (
@@ -75,7 +101,7 @@ export function DataTableHeader<T>({
                       <ArrowUpDown className="h-4 w-4" />
                     )
                   ) : (
-                    <ArrowUpDown className="h-4 w-4 text-zinc-600" />
+                    <ArrowUpDown className={cn("h-4 w-4", isDark ? "text-zinc-600" : "text-black")} />
                   )}
                 </button>
               ) : (

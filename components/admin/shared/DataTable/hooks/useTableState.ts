@@ -12,6 +12,14 @@ type UseTableStateParams = {
   onFilterChange?: (values: FilterState) => void;
 };
 
+function parseFilterState(snapshot: string): FilterState {
+  try {
+    return JSON.parse(snapshot) as FilterState;
+  } catch {
+    return {};
+  }
+}
+
 export const useTableState = ({
   externalSearch,
   onSearchChange,
@@ -19,6 +27,11 @@ export const useTableState = ({
   initialFilters,
   onFilterChange,
 }: UseTableStateParams) => {
+  const initialFiltersSnapshot = useMemo(
+    () => JSON.stringify(initialFilters),
+    [initialFilters],
+  );
+
   const [localSearch, setLocalSearch] = useState(externalSearch ?? "");
   const [localFilters, setLocalFilters] = useState<FilterState>(initialFilters);
 
@@ -27,8 +40,11 @@ export const useTableState = ({
   }, [externalSearch]);
 
   useEffect(() => {
-    setLocalFilters(initialFilters);
-  }, [initialFilters]);
+    const next = parseFilterState(initialFiltersSnapshot);
+    setLocalFilters((prev) =>
+      JSON.stringify(prev) === initialFiltersSnapshot ? prev : next,
+    );
+  }, [initialFiltersSnapshot]);
 
   const emitSearchChange = useMemo(
     () =>

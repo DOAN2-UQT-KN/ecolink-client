@@ -20,6 +20,22 @@ import type {
   RowKey,
 } from "./types";
 
+// Graceful fallback – the hook throws when used outside its provider, so we
+// catch that and fall back to "dark" (the previous default).
+function useAdminThemeSafe(): "light" | "dark" {
+  try {
+    // Dynamically import to avoid a hard coupling when rendering outside admin.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { useAdminLayout } = require("@/app/(pages)/(admin)/_context/AdminLayoutContext") as {
+      useAdminLayout: () => { theme: "light" | "dark" };
+    };
+    // This will throw if not inside the provider.
+    return useAdminLayout().theme;
+  } catch {
+    return "dark";
+  }
+}
+
 const DEFAULT_PAGE_SIZES = [10, 20, 50, 100];
 
 function normalizeText(value: unknown) {
@@ -71,7 +87,13 @@ export function DataTable<T>({
   virtualization,
   infiniteScroll,
   onRowClick,
+  theme: themeProp,
 }: DataTableProps<T>) {
+  // Use the passed-in theme, or auto-detect from the admin layout context.
+  const contextTheme = useAdminThemeSafe();
+  const theme = themeProp ?? contextTheme;
+  const isDark = theme === "dark";
+
   const bodyContainerRef = useRef<HTMLDivElement>(null);
   const [virtualScrollTop, setVirtualScrollTop] = useState(0);
 
@@ -209,7 +231,12 @@ export function DataTable<T>({
         <Input
           value={String(value ?? "")}
           onChange={(event) => updateFilters({ ...filterValues, [key]: event.target.value })}
-          className="h-9"
+          className={cn(
+            "h-9",
+            isDark
+              ? "bg-zinc-800/80 border-zinc-700 text-zinc-100 placeholder:text-zinc-500"
+              : "bg-white border-zinc-300 text-zinc-900 placeholder:text-zinc-400",
+          )}
         />
       );
     }
@@ -227,13 +254,23 @@ export function DataTable<T>({
           type="date"
           value={dateValue.from ?? ""}
           onChange={(event) => updateFilters({ ...filterValues, [key]: { ...dateValue, from: event.target.value } })}
-          className="h-9"
+          className={cn(
+            "h-9",
+            isDark
+              ? "bg-zinc-800/80 border-zinc-700 text-zinc-100"
+              : "bg-white border-zinc-300 text-zinc-900",
+          )}
         />
         <Input
           type="date"
           value={dateValue.to ?? ""}
           onChange={(event) => updateFilters({ ...filterValues, [key]: { ...dateValue, to: event.target.value } })}
-          className="h-9"
+          className={cn(
+            "h-9",
+            isDark
+              ? "bg-zinc-800/80 border-zinc-700 text-zinc-100"
+              : "bg-white border-zinc-300 text-zinc-900",
+          )}
         />
       </div>
     );
@@ -256,20 +293,39 @@ export function DataTable<T>({
   return (
     <div className={cn("space-y-3", className)}>
       {(search || filters) && (
-        <div className="rounded-md border border-zinc-700/60 p-3 space-y-3 bg-zinc-900/50 backdrop-blur-sm">
+        <div
+          className={cn(
+            "rounded-md border p-3 space-y-3 backdrop-blur-sm",
+            isDark
+              ? "border-zinc-700/60 bg-zinc-900/50"
+              : "border-zinc-200 bg-zinc-100",
+          )}
+        >
           {search && (
             <Input
               value={searchValue}
               onChange={(event) => updateSearch(event.target.value)}
               placeholder={search.placeholder ?? "Search..."}
-              className="h-10 bg-zinc-800/80 border-zinc-700 placeholder:text-zinc-500 text-zinc-100 focus-visible:ring-zinc-500"
+              className={cn(
+                "h-10",
+                isDark
+                  ? "bg-zinc-800/80 border-zinc-700 placeholder:text-zinc-500 text-zinc-100 focus-visible:ring-zinc-500"
+                  : "bg-white border-zinc-300 placeholder:text-zinc-400 text-zinc-900 focus-visible:ring-zinc-400",
+              )}
             />
           )}
           {filterConfig?.length ? (
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               {filterConfig.map((filterConfig) => (
                 <div key={filterConfig.key} className="space-y-1">
-                  <p className="text-xs font-medium text-zinc-400 uppercase tracking-wide">{filterConfig.label}</p>
+                  <p
+                    className={cn(
+                      "text-xs font-medium uppercase tracking-wide",
+                      isDark ? "text-zinc-400" : "text-zinc-600",
+                    )}
+                  >
+                    {filterConfig.label}
+                  </p>
                   {filterConfig.type === "select" ? (
                     <Select
                       value={String(filterValues[filterConfig.key] ?? "")}
@@ -280,7 +336,14 @@ export function DataTable<T>({
                         })
                       }
                     >
-                      <SelectTrigger className="h-9 w-full bg-zinc-800/80 border-zinc-700 text-zinc-100">
+                      <SelectTrigger
+                        className={cn(
+                          "h-9 w-full",
+                          isDark
+                            ? "bg-zinc-800/80 border-zinc-700 text-zinc-100"
+                            : "bg-white border-zinc-300 text-zinc-900",
+                        )}
+                      >
                         <SelectValue placeholder={filterConfig.placeholder ?? "Select value"} />
                       </SelectTrigger>
                       <SelectContent>
@@ -307,10 +370,24 @@ export function DataTable<T>({
       )}
 
       {rowSelection && rowSelection.selectedRowKeys.length > 0 && rowSelection.bulkActions && (
-        <div className="rounded-md border border-zinc-600 bg-zinc-800/70 p-3 backdrop-blur-sm">{rowSelection.bulkActions}</div>
+        <div
+          className={cn(
+            "rounded-md border p-3 backdrop-blur-sm",
+            isDark
+              ? "border-zinc-600 bg-zinc-800/70"
+              : "border-zinc-300 bg-zinc-200",
+          )}
+        >
+          {rowSelection.bulkActions}
+        </div>
       )}
 
-      <div className="rounded-md border border-zinc-700/70 bg-zinc-900 overflow-hidden">
+      <div
+        className={cn(
+          "rounded-md border overflow-hidden",
+          isDark ? "border-zinc-700/70 bg-zinc-900" : "border-zinc-200 bg-white",
+        )}
+      >
         <div
           ref={bodyContainerRef}
           className={cn("w-full overflow-auto", virtualization?.enabled && "max-h-[420px]")}
@@ -328,13 +405,16 @@ export function DataTable<T>({
               onSortChange={sorting?.onSortChange}
               onToggleAll={onToggleAll}
               stickyHeader={stickyHeader}
+              theme={theme}
             />
             <TableBody>
               {loading ? (
                 Array.from({ length: loadingRowCount }).map((_, index) => (
                   <TableRow key={`loading-${index}`}>
                     <TableCell colSpan={columns.length + (rowSelection ? 1 : 0)}>
-                      <Skeleton className="h-7 w-full bg-zinc-800" />
+                      <Skeleton
+                        className={cn("h-7 w-full", isDark ? "bg-zinc-800" : "bg-zinc-200")}
+                      />
                     </TableCell>
                   </TableRow>
                 ))
@@ -342,12 +422,28 @@ export function DataTable<T>({
                 <TableRow>
                   <TableCell colSpan={columns.length + (rowSelection ? 1 : 0)} className="h-56">
                     <div className="flex flex-col items-center justify-center gap-3 text-center">
-                      <div className="rounded-full bg-zinc-800 p-3">
+                      <div
+                        className={cn(
+                          "rounded-full p-3",
+                          isDark ? "bg-zinc-800" : "bg-red-100",
+                        )}
+                      >
                         <AlertCircle className="h-6 w-6 text-red-400" />
                       </div>
-                      <p className="text-sm font-medium text-zinc-300">{error}</p>
+                      <p className={cn("text-sm font-medium", isDark ? "text-zinc-300" : "text-zinc-900")}>
+                        {error}
+                      </p>
                       {onRetry && (
-                        <Button variant="outline" size="sm" onClick={onRetry} className="border-zinc-700 text-zinc-300 hover:bg-zinc-800">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={onRetry}
+                          className={cn(
+                            isDark
+                              ? "border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+                              : "border-zinc-300 text-zinc-900 hover:bg-zinc-100",
+                          )}
+                        >
                           Retry
                         </Button>
                       )}
@@ -358,11 +454,29 @@ export function DataTable<T>({
                 <TableRow>
                   <TableCell colSpan={columns.length + (rowSelection ? 1 : 0)} className="h-56">
                     <div className="flex flex-col items-center justify-center gap-3 text-center">
-                      <div className="rounded-full bg-zinc-800 p-3">
-                        <Inbox className="h-6 w-6 text-zinc-500" />
+                      <div
+                        className={cn(
+                          "rounded-full p-3",
+                          isDark ? "bg-zinc-800" : "bg-zinc-100",
+                        )}
+                      >
+                        <Inbox
+                          className={cn("h-6 w-6", isDark ? "text-zinc-500" : "text-zinc-400")}
+                        />
                       </div>
-                      <p className="text-sm font-semibold text-zinc-300">{emptyTitle}</p>
-                      {emptyDescription && <p className="text-sm text-zinc-500">{emptyDescription}</p>}
+                      <p
+                        className={cn(
+                          "text-sm font-semibold",
+                          isDark ? "text-zinc-300" : "text-zinc-900",
+                        )}
+                      >
+                        {emptyTitle}
+                      </p>
+                      {emptyDescription && (
+                        <p className={cn("text-sm", isDark ? "text-zinc-500" : "text-zinc-500")}>
+                          {emptyDescription}
+                        </p>
+                      )}
                       {emptyAction}
                     </div>
                   </TableCell>
@@ -405,6 +519,7 @@ export function DataTable<T>({
                           rowSelection.onChange(nextKeys, selectedRows);
                         }}
                         onRowClick={onRowClick}
+                        theme={theme}
                       />
                     );
                   })}
@@ -423,21 +538,41 @@ export function DataTable<T>({
         </div>
 
         {infiniteScroll?.enabled && infiniteScroll.loadingMore && (
-          <div className="flex items-center justify-center gap-2 border-t border-zinc-700/60 py-3 text-sm text-zinc-400">
+          <div
+            className={cn(
+              "flex items-center justify-center gap-2 border-t py-3 text-sm",
+              isDark
+                ? "border-zinc-700/60 text-zinc-400"
+                : "border-zinc-200 text-zinc-600",
+            )}
+          >
             <Loader2 className="h-4 w-4 animate-spin" />
             Loading more...
           </div>
         )}
 
         {pagination && (
-          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-zinc-700/60 p-3">
-            <div className="flex items-center gap-2 text-sm text-zinc-300">
-              <span className="text-zinc-400">Page size</span>
+          <div
+            className={cn(
+              "flex flex-wrap items-center justify-between gap-2 border-t p-3",
+              isDark ? "border-zinc-700/60" : "border-zinc-200",
+            )}
+          >
+            <div
+              className={cn(
+                "flex items-center gap-2 text-sm",
+                isDark ? "text-zinc-300" : "text-zinc-900",
+              )}
+            >
+              <span className={isDark ? "text-zinc-400" : "text-zinc-600"}>Page size</span>
               {pagination.onPageSizeChange ? (
                 <select
                   className={cn(
-                    "h-8 w-[90px] rounded-md border border-zinc-700 bg-zinc-800 px-2 text-sm text-zinc-100",
+                    "h-8 w-[90px] rounded-md border px-2 text-sm",
                     "outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50",
+                    isDark
+                      ? "border-zinc-700 bg-zinc-800 text-zinc-100"
+                      : "border-zinc-300 bg-white text-zinc-900",
                   )}
                   value={String(
                     pageSizes.includes(pagination.pageSize) ? pagination.pageSize : pageSizes[0],
@@ -455,7 +590,14 @@ export function DataTable<T>({
                   ))}
                 </select>
               ) : (
-                <span className="inline-flex h-8 min-w-[90px] items-center rounded-md border border-zinc-700 bg-zinc-800 px-2 tabular-nums text-zinc-100">
+                <span
+                  className={cn(
+                    "inline-flex h-8 min-w-[90px] items-center rounded-md border px-2 tabular-nums",
+                    isDark
+                      ? "border-zinc-700 bg-zinc-800 text-zinc-100"
+                      : "border-zinc-300 bg-white text-zinc-900",
+                  )}
+                >
                   {pagination.pageSize}
                 </span>
               )}
@@ -468,7 +610,12 @@ export function DataTable<T>({
                   variant="outline"
                   onClick={() => pagination.onPrevPage?.()}
                   disabled={!pagination.hasPrevPage || loading}
-                  className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 disabled:opacity-40"
+                  className={cn(
+                    "disabled:opacity-40",
+                    isDark
+                      ? "border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
+                      : "border-zinc-300 text-zinc-900 hover:bg-zinc-100",
+                  )}
                 >
                   Previous
                 </Button>
@@ -477,7 +624,12 @@ export function DataTable<T>({
                   variant="outline"
                   onClick={() => pagination.onNextPage?.()}
                   disabled={!pagination.hasNextPage || loading}
-                  className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 disabled:opacity-40"
+                  className={cn(
+                    "disabled:opacity-40",
+                    isDark
+                      ? "border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
+                      : "border-zinc-300 text-zinc-900 hover:bg-zinc-100",
+                  )}
                 >
                   Next
                 </Button>
@@ -489,11 +641,16 @@ export function DataTable<T>({
                   variant="outline"
                   onClick={() => pagination.onPageChange?.(Math.max(1, pagination.page - 1))}
                   disabled={pagination.page <= 1 || loading}
-                  className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 disabled:opacity-40"
+                  className={cn(
+                    "disabled:opacity-40",
+                    isDark
+                      ? "border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
+                      : "border-zinc-300 text-zinc-900 hover:bg-zinc-100",
+                  )}
                 >
                   Previous
                 </Button>
-                <span className="text-sm text-zinc-300">
+                <span className={cn("text-sm", isDark ? "text-zinc-300" : "text-zinc-900")}>
                   Page {pagination.page}
                   {typeof pagination.total === "number"
                     ? ` / ${Math.max(1, Math.ceil(pagination.total / pagination.pageSize))}`
@@ -508,7 +665,12 @@ export function DataTable<T>({
                     (typeof pagination.total === "number" &&
                       pagination.page >= Math.ceil(pagination.total / pagination.pageSize))
                   }
-                  className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 disabled:opacity-40"
+                  className={cn(
+                    "disabled:opacity-40",
+                    isDark
+                      ? "border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
+                      : "border-zinc-300 text-zinc-900 hover:bg-zinc-100",
+                  )}
                 >
                   Next
                 </Button>

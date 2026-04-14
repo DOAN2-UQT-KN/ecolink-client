@@ -26,6 +26,7 @@ type Props<T> = {
   inlineEdit?: DataTableInlineEdit<T>;
   onSelect: (checked: boolean) => void;
   onRowClick?: (row: T) => void;
+  theme?: "light" | "dark";
 };
 
 export function DataTableRow<T>({
@@ -40,9 +41,11 @@ export function DataTableRow<T>({
   inlineEdit,
   onSelect,
   onRowClick,
+  theme = "dark",
 }: Props<T>) {
   const [editingColumnKey, setEditingColumnKey] = useState<string | null>(null);
   const [draftValue, setDraftValue] = useState<unknown>(null);
+  const isDark = theme === "dark";
 
   const cellValues = useMemo(
     () =>
@@ -55,9 +58,14 @@ export function DataTableRow<T>({
   return (
     <BaseTableRow
       className={cn(
-        "border-b border-zinc-700/40 hover:bg-zinc-800/50 transition-colors",
+        "transition-colors",
+        isDark
+          ? "border-b border-zinc-700/40 hover:bg-zinc-800/50"
+          : "border-b border-zinc-200 hover:bg-zinc-100",
         onRowClick && "cursor-pointer",
-        selected && "bg-zinc-800 data-[state=selected]:bg-zinc-800",
+        selected && (isDark
+          ? "bg-zinc-800 data-[state=selected]:bg-zinc-800"
+          : "bg-zinc-200 data-[state=selected]:bg-zinc-200"),
       )}
       data-state={selected ? "selected" : undefined}
       onClick={() => onRowClick?.(record)}
@@ -105,7 +113,11 @@ export function DataTableRow<T>({
         return (
           <TableCell
             key={column.key}
-            className={cn("px-3 py-2.5 text-sm text-zinc-200", column.className)}
+            className={cn(
+              "px-3 py-2.5 text-sm",
+              isDark ? "text-zinc-200" : "text-zinc-900",
+              column.className,
+            )}
             onDoubleClick={(event) => {
               event.stopPropagation();
               startEdit();
@@ -129,7 +141,7 @@ export function DataTableRow<T>({
                     />
                     <button
                       type="button"
-                      className="text-xs text-emerald-400 hover:text-emerald-300 cursor-pointer font-medium transition-colors"
+                      className="text-xs text-emerald-500 hover:text-emerald-400 cursor-pointer font-medium transition-colors"
                       onClick={(event) => {
                         event.stopPropagation();
                         void save(draftValue);
@@ -139,7 +151,12 @@ export function DataTableRow<T>({
                     </button>
                     <button
                       type="button"
-                      className="text-xs text-zinc-500 hover:text-zinc-400 cursor-pointer transition-colors"
+                      className={cn(
+                        "text-xs cursor-pointer transition-colors",
+                        isDark
+                          ? "text-zinc-500 hover:text-zinc-400"
+                          : "text-zinc-500 hover:text-zinc-700",
+                      )}
                       onClick={(event) => {
                         event.stopPropagation();
                         cancelEdit();

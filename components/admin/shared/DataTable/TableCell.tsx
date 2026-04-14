@@ -9,16 +9,23 @@ type Props<T> = {
   column: DataTableColumn<T>;
   record: T;
   rowIndex: number;
+  theme?: "light" | "dark";
 };
 
-export function TableCell<T>({ column, record, rowIndex }: Props<T>) {
+export function TableCell<T>({ column, record, rowIndex, theme = "dark" }: Props<T>) {
   const value = useMemo(
     () => (column.dataIndex ? (record[column.dataIndex] as unknown) : record),
     [column.dataIndex, record],
   );
 
   return (
-    <BaseTableCell className={cn("px-3 py-2.5 text-sm text-zinc-200", column.className)}>
+    <BaseTableCell
+      className={cn(
+        "px-3 py-2.5 text-sm",
+        theme === "dark" ? "text-zinc-200" : "text-zinc-900",
+        column.className,
+      )}
+    >
       {column.render ? column.render(value, record, rowIndex) : (value as React.ReactNode)}
     </BaseTableCell>
   );

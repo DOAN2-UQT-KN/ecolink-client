@@ -113,6 +113,8 @@ export type DataTableProps<T> = {
   onRetry?: () => void;
   rowKey?: keyof T | ((record: T, index: number) => RowKey);
   className?: string;
+  /** Override the color theme. Defaults to the AdminLayoutContext theme ("dark" if not inside admin). */
+  theme?: "light" | "dark";
   emptyTitle?: string;
   emptyDescription?: string;
   emptyAction?: ReactNode;
