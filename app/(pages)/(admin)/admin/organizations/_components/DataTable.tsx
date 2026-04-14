@@ -4,7 +4,9 @@ import { useMemo } from "react";
 import Link from "next/link";
 
 import type { IOrganization } from "@/apis/organization/models/organization";
+import { useAdminLayout } from "@/app/(pages)/(admin)/_context/AdminLayoutContext";
 import { STATUS } from "@/constants/status";
+import { cn } from "@/libs/utils";
 import { useOrganizationContext } from "../_context/OrganizationContext";
 import { DataTable as SharedDataTable, type DataTableColumn } from "@/components/admin/shared/DataTable";
 
@@ -40,6 +42,8 @@ function toOwnerLabel(ownerId?: string | null) {
 export function DataTable() {
   const { organizations, loading, pagination, total, onPageChange, onPageSizeChange } =
     useOrganizationContext();
+  const { theme } = useAdminLayout();
+  const isDark = theme === "dark";
 
   const columns: DataTableColumn<IOrganization>[] = useMemo(
     () => [
@@ -53,14 +57,29 @@ export function DataTable() {
               <img
                 src={record.logo_url}
                 alt={record.name}
-                className="h-9 w-9 rounded-full object-cover ring-1 ring-zinc-600"
+                className={cn(
+                  "h-9 w-9 rounded-full object-cover ring-1",
+                  isDark ? "ring-zinc-600" : "ring-zinc-300",
+                )}
               />
             ) : (
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-zinc-800 text-xs font-semibold uppercase text-zinc-400">
+              <div
+                className={cn(
+                  "flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold uppercase",
+                  isDark ? "bg-zinc-800 text-zinc-400" : "bg-zinc-200 text-zinc-600",
+                )}
+              >
                 {record.name.slice(0, 2)}
               </div>
             )}
-            <div className="font-medium text-zinc-100">{record.name}</div>
+            <div
+              className={cn(
+                "font-medium",
+                isDark ? "text-zinc-100" : "text-zinc-900",
+              )}
+            >
+              {record.name}
+            </div>
           </div>
         ),
       },
@@ -70,8 +89,22 @@ export function DataTable() {
         className: "min-w-[180px]",
         render: (_, record) => (
           <div className="space-y-1">
-            <p className="text-sm text-zinc-200">{toDisplayDate(record.created_at)}</p>
-            <p className="text-xs text-zinc-500">Owner: {toOwnerLabel(record.owner_id)}</p>
+            <p
+              className={cn(
+                "text-sm",
+                isDark ? "text-zinc-200" : "text-zinc-800",
+              )}
+            >
+              {toDisplayDate(record.created_at)}
+            </p>
+            <p
+              className={cn(
+                "text-xs",
+                isDark ? "text-zinc-500" : "text-zinc-600",
+              )}
+            >
+              Owner: {toOwnerLabel(record.owner_id)}
+            </p>
           </div>
         ),
       },
@@ -82,7 +115,14 @@ export function DataTable() {
         render: (_, record) => {
           const label = STATUS_LABELS[record.status] ?? `Status ${record.status}`;
           return (
-            <span className="rounded-full bg-amber-900/30 px-2 py-1 text-xs font-medium text-amber-400">
+            <span
+              className={cn(
+                "rounded-full px-2 py-1 text-xs font-medium",
+                isDark
+                  ? "bg-amber-900/30 text-amber-400"
+                  : "bg-amber-100 text-amber-800",
+              )}
+            >
               {label}
             </span>
           );
@@ -94,7 +134,9 @@ export function DataTable() {
         dataIndex: "contact_email",
         className: "min-w-[220px]",
         render: (value) => (
-          <span className="text-zinc-300">{(value as string | null) || "-"}</span>
+          <span className={isDark ? "text-zinc-300" : "text-zinc-800"}>
+            {(value as string | null) || "-"}
+          </span>
         ),
       },
       {
@@ -103,7 +145,12 @@ export function DataTable() {
         dataIndex: "description",
         className: "min-w-[260px]",
         render: (value) => (
-          <p className="line-clamp-2 text-sm text-zinc-400">
+          <p
+            className={cn(
+              "line-clamp-2 text-sm",
+              isDark ? "text-zinc-400" : "text-zinc-600",
+            )}
+          >
             {(value as string | null) || "-"}
           </p>
         ),
@@ -116,13 +163,23 @@ export function DataTable() {
           <div className="flex items-center gap-2">
             <Link
               href={`/organizations/${record.id}`}
-              className="rounded-md border border-zinc-700 px-2 py-1 text-xs font-medium text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 transition-colors"
+              className={cn(
+                "rounded-md border px-2 py-1 text-xs font-medium transition-colors",
+                isDark
+                  ? "border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
+                  : "border-zinc-300 text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900",
+              )}
             >
               Preview
             </Link>
             <Link
               href={`/admin/organizations/${record.id}`}
-              className="rounded-md border border-zinc-700 px-2 py-1 text-xs font-medium text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 transition-colors"
+              className={cn(
+                "rounded-md border px-2 py-1 text-xs font-medium transition-colors",
+                isDark
+                  ? "border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
+                  : "border-zinc-300 text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900",
+              )}
             >
               Edit
             </Link>
@@ -130,7 +187,7 @@ export function DataTable() {
         ),
       },
     ],
-    [],
+    [isDark],
   );
 
   return (
