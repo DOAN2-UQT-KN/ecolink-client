@@ -55,9 +55,9 @@ export function DataTableRow<T>({
   return (
     <BaseTableRow
       className={cn(
-        "hover:bg-muted/50",
+        "border-b border-zinc-700/40 hover:bg-zinc-800/50 transition-colors",
         onRowClick && "cursor-pointer",
-        selected && "data-[state=selected]:bg-muted",
+        selected && "bg-zinc-800 data-[state=selected]:bg-zinc-800",
       )}
       data-state={selected ? "selected" : undefined}
       onClick={() => onRowClick?.(record)}
@@ -105,7 +105,7 @@ export function DataTableRow<T>({
         return (
           <TableCell
             key={column.key}
-            className={cn("px-3 py-2 text-sm", column.className)}
+            className={cn("px-3 py-2.5 text-sm text-zinc-200", column.className)}
             onDoubleClick={(event) => {
               event.stopPropagation();
               startEdit();
@@ -129,7 +129,7 @@ export function DataTableRow<T>({
                     />
                     <button
                       type="button"
-                      className="text-xs text-primary cursor-pointer"
+                      className="text-xs text-emerald-400 hover:text-emerald-300 cursor-pointer font-medium transition-colors"
                       onClick={(event) => {
                         event.stopPropagation();
                         void save(draftValue);
@@ -139,7 +139,7 @@ export function DataTableRow<T>({
                     </button>
                     <button
                       type="button"
-                      className="text-xs text-muted-foreground cursor-pointer"
+                      className="text-xs text-zinc-500 hover:text-zinc-400 cursor-pointer transition-colors"
                       onClick={(event) => {
                         event.stopPropagation();
                         cancelEdit();

@@ -256,20 +256,20 @@ export function DataTable<T>({
   return (
     <div className={cn("space-y-3", className)}>
       {(search || filters) && (
-        <div className="rounded-md border p-3 space-y-3 bg-card">
+        <div className="rounded-md border border-zinc-700/60 p-3 space-y-3 bg-zinc-900/50 backdrop-blur-sm">
           {search && (
             <Input
               value={searchValue}
               onChange={(event) => updateSearch(event.target.value)}
               placeholder={search.placeholder ?? "Search..."}
-              className="h-10"
+              className="h-10 bg-zinc-800/80 border-zinc-700 placeholder:text-zinc-500 text-zinc-100 focus-visible:ring-zinc-500"
             />
           )}
           {filterConfig?.length ? (
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               {filterConfig.map((filterConfig) => (
                 <div key={filterConfig.key} className="space-y-1">
-                  <p className="text-xs font-medium text-muted-foreground">{filterConfig.label}</p>
+                  <p className="text-xs font-medium text-zinc-400 uppercase tracking-wide">{filterConfig.label}</p>
                   {filterConfig.type === "select" ? (
                     <Select
                       value={String(filterValues[filterConfig.key] ?? "")}
@@ -280,7 +280,7 @@ export function DataTable<T>({
                         })
                       }
                     >
-                      <SelectTrigger className="h-9 w-full">
+                      <SelectTrigger className="h-9 w-full bg-zinc-800/80 border-zinc-700 text-zinc-100">
                         <SelectValue placeholder={filterConfig.placeholder ?? "Select value"} />
                       </SelectTrigger>
                       <SelectContent>
@@ -307,10 +307,10 @@ export function DataTable<T>({
       )}
 
       {rowSelection && rowSelection.selectedRowKeys.length > 0 && rowSelection.bulkActions && (
-        <div className="rounded-md border border-primary/20 bg-primary/5 p-3">{rowSelection.bulkActions}</div>
+        <div className="rounded-md border border-zinc-600 bg-zinc-800/70 p-3 backdrop-blur-sm">{rowSelection.bulkActions}</div>
       )}
 
-      <div className="rounded-md border bg-card">
+      <div className="rounded-md border border-zinc-700/70 bg-zinc-900 overflow-hidden">
         <div
           ref={bodyContainerRef}
           className={cn("w-full overflow-auto", virtualization?.enabled && "max-h-[420px]")}
@@ -334,18 +334,20 @@ export function DataTable<T>({
                 Array.from({ length: loadingRowCount }).map((_, index) => (
                   <TableRow key={`loading-${index}`}>
                     <TableCell colSpan={columns.length + (rowSelection ? 1 : 0)}>
-                      <Skeleton className="h-7 w-full" />
+                      <Skeleton className="h-7 w-full bg-zinc-800" />
                     </TableCell>
                   </TableRow>
                 ))
               ) : error ? (
                 <TableRow>
                   <TableCell colSpan={columns.length + (rowSelection ? 1 : 0)} className="h-56">
-                    <div className="flex flex-col items-center justify-center gap-2 text-center">
-                      <AlertCircle className="h-6 w-6 text-destructive" />
-                      <p className="text-sm font-medium">{error}</p>
+                    <div className="flex flex-col items-center justify-center gap-3 text-center">
+                      <div className="rounded-full bg-zinc-800 p-3">
+                        <AlertCircle className="h-6 w-6 text-red-400" />
+                      </div>
+                      <p className="text-sm font-medium text-zinc-300">{error}</p>
                       {onRetry && (
-                        <Button variant="outline" size="sm" onClick={onRetry}>
+                        <Button variant="outline" size="sm" onClick={onRetry} className="border-zinc-700 text-zinc-300 hover:bg-zinc-800">
                           Retry
                         </Button>
                       )}
@@ -355,10 +357,12 @@ export function DataTable<T>({
               ) : sortedData.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={columns.length + (rowSelection ? 1 : 0)} className="h-56">
-                    <div className="flex flex-col items-center justify-center gap-2 text-center">
-                      <Inbox className="h-6 w-6 text-muted-foreground" />
-                      <p className="text-sm font-semibold">{emptyTitle}</p>
-                      {emptyDescription && <p className="text-sm text-muted-foreground">{emptyDescription}</p>}
+                    <div className="flex flex-col items-center justify-center gap-3 text-center">
+                      <div className="rounded-full bg-zinc-800 p-3">
+                        <Inbox className="h-6 w-6 text-zinc-500" />
+                      </div>
+                      <p className="text-sm font-semibold text-zinc-300">{emptyTitle}</p>
+                      {emptyDescription && <p className="text-sm text-zinc-500">{emptyDescription}</p>}
                       {emptyAction}
                     </div>
                   </TableCell>
@@ -419,21 +423,21 @@ export function DataTable<T>({
         </div>
 
         {infiniteScroll?.enabled && infiniteScroll.loadingMore && (
-          <div className="flex items-center justify-center gap-2 border-t py-3 text-sm text-muted-foreground">
+          <div className="flex items-center justify-center gap-2 border-t border-zinc-700/60 py-3 text-sm text-zinc-400">
             <Loader2 className="h-4 w-4 animate-spin" />
             Loading more...
           </div>
         )}
 
         {pagination && (
-          <div className="flex flex-wrap items-center justify-between gap-2 border-t p-3">
-            <div className="flex items-center gap-2 text-sm">
-              <span>Page size</span>
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-zinc-700/60 p-3">
+            <div className="flex items-center gap-2 text-sm text-zinc-300">
+              <span className="text-zinc-400">Page size</span>
               <Select
                 value={String(pagination.pageSize)}
                 onValueChange={(value) => pagination.onPageSizeChange?.(Number(value))}
               >
-                <SelectTrigger className="h-8 w-[90px]">
+                <SelectTrigger className="h-8 w-[90px] bg-zinc-800 border-zinc-700 text-zinc-100">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -453,6 +457,7 @@ export function DataTable<T>({
                   variant="outline"
                   onClick={() => pagination.onPrevPage?.()}
                   disabled={!pagination.hasPrevPage || loading}
+                  className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 disabled:opacity-40"
                 >
                   Previous
                 </Button>
@@ -461,6 +466,7 @@ export function DataTable<T>({
                   variant="outline"
                   onClick={() => pagination.onNextPage?.()}
                   disabled={!pagination.hasNextPage || loading}
+                  className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 disabled:opacity-40"
                 >
                   Next
                 </Button>
@@ -472,10 +478,11 @@ export function DataTable<T>({
                   variant="outline"
                   onClick={() => pagination.onPageChange?.(Math.max(1, pagination.page - 1))}
                   disabled={pagination.page <= 1 || loading}
+                  className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 disabled:opacity-40"
                 >
                   Previous
                 </Button>
-                <span className="text-sm">
+                <span className="text-sm text-zinc-300">
                   Page {pagination.page}
                   {typeof pagination.total === "number"
                     ? ` / ${Math.max(1, Math.ceil(pagination.total / pagination.pageSize))}`
@@ -490,6 +497,7 @@ export function DataTable<T>({
                     (typeof pagination.total === "number" &&
                       pagination.page >= Math.ceil(pagination.total / pagination.pageSize))
                   }
+                  className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 disabled:opacity-40"
                 >
                   Next
                 </Button>

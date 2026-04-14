@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { PanelLeftClose, PanelLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/libs/utils";
-import { useAdminLayout } from "../_context/AdminLayoutContext";
+import { useAdminLayout } from "@/app/(pages)/(admin)/_context/AdminLayoutContext";
 import { AdminNavLinks } from "./AdminNavLinks";
 
 export function AdminSidebar() {

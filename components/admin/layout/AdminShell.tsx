@@ -1,7 +1,10 @@
 "use client";
 
 import { cn } from "@/libs/utils";
-import { AdminLayoutProvider, useAdminLayout } from "../_context/AdminLayoutContext";
+import {
+  AdminLayoutProvider,
+  useAdminLayout,
+} from "@/app/(pages)/(admin)/_context/AdminLayoutContext";
 import { AdminSidebar } from "./AdminSidebar";
 import { AdminMobileDrawer } from "./AdminMobileDrawer";
 import { AdminHeader } from "./AdminHeader";
@@ -26,7 +29,9 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
         style={{ marginLeft: mainMarginLeft }}
       >
         <AdminHeader />
-        <main className="min-h-0 flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
+        <main className="min-h-0 flex-1 overflow-y-auto p-4 md:p-6">
+          {children}
+        </main>
       </div>
     </div>
   );

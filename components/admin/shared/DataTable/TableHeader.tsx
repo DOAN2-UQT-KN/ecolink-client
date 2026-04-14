@@ -36,8 +36,8 @@ export function DataTableHeader<T>({
   stickyHeader,
 }: Props<T>) {
   return (
-    <BaseTableHeader className={cn(stickyHeader && "sticky top-0 z-10 bg-background")}>
-      <TableRow className="bg-muted/40">
+    <BaseTableHeader className={cn(stickyHeader && "sticky top-0 z-10 bg-zinc-950/95 backdrop-blur-sm border-b border-zinc-700/60")}>
+      <TableRow className="bg-zinc-900 hover:bg-zinc-900 border-b border-zinc-700/60">
         {showSelection && (
           <TableHead className="w-12 px-3">
             <Checkbox
@@ -56,14 +56,14 @@ export function DataTableHeader<T>({
           return (
             <TableHead
               key={column.key}
-              className={cn("px-3 py-2 font-semibold text-foreground", column.className)}
+              className={cn("px-3 py-2.5 font-semibold text-zinc-300 text-xs uppercase tracking-wide", column.className)}
               style={{ width: column.width }}
             >
               {column.sortable ? (
                 <button
                   type="button"
                   onClick={() => onSortChange?.(column.key, nextOrder)}
-                  className="inline-flex items-center gap-1 hover:text-primary cursor-pointer"
+                  className="inline-flex items-center gap-1 hover:text-zinc-100 transition-colors cursor-pointer text-zinc-300"
                 >
                   {column.title}
                   {active ? (
@@ -75,7 +75,7 @@ export function DataTableHeader<T>({
                       <ArrowUpDown className="h-4 w-4" />
                     )
                   ) : (
-                    <ArrowUpDown className="h-4 w-4 opacity-50" />
+                    <ArrowUpDown className="h-4 w-4 text-zinc-600" />
                   )}
                 </button>
               ) : (

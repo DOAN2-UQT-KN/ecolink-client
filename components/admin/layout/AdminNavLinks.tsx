@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/libs/utils";
-import { adminNavItems } from "../_config/adminNav";
+import { adminNavItems } from "@/app/(pages)/(admin)/_config/adminNav";
 
 function navItemActive(pathname: string, href: string) {
   if (href === "/admin") {

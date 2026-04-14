@@ -4,7 +4,7 @@ import { Menu, Moon, Sun } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import Logo from "@/components/client/layout/Logo";
-import { useAdminLayout } from "../_context/AdminLayoutContext";
+import { useAdminLayout } from "@/app/(pages)/(admin)/_context/AdminLayoutContext";
 
 export function AdminHeader() {
   const { isMobile, setMobileNavOpen, theme, toggleTheme } = useAdminLayout();

@@ -18,7 +18,7 @@ export function TableCell<T>({ column, record, rowIndex }: Props<T>) {
   );
 
   return (
-    <BaseTableCell className={cn("px-3 py-2 text-sm", column.className)}>
+    <BaseTableCell className={cn("px-3 py-2.5 text-sm text-zinc-200", column.className)}>
       {column.render ? column.render(value, record, rowIndex) : (value as React.ReactNode)}
     </BaseTableCell>
   );

@@ -6,7 +6,7 @@ import { X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/libs/utils";
-import { useAdminLayout } from "../_context/AdminLayoutContext";
+import { useAdminLayout } from "@/app/(pages)/(admin)/_context/AdminLayoutContext";
 import { AdminNavLinks } from "./AdminNavLinks";
 
 export function AdminMobileDrawer() {
@@ -59,7 +59,9 @@ export function AdminMobileDrawer() {
         aria-hidden={!mobileNavOpen}
       >
         <div className="flex h-14 shrink-0 items-center justify-between border-b border-sidebar-border px-3">
-          <span className="truncate text-sm font-semibold">{t("Admin dashboard")}</span>
+          <span className="truncate text-sm font-semibold">
+            {t("Admin dashboard")}
+          </span>
           <Button
             type="button"
             variant="ghost"
