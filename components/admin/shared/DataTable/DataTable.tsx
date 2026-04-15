@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AlertCircle, Inbox, Loader2 } from "lucide-react";
+import { AlertCircle, ChevronLeft, ChevronRight, Inbox, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -63,6 +63,25 @@ function matchesFilter(value: unknown, filterValue: FilterValue, type: DataTable
   return true;
 }
 
+/** Page numbers with ellipsis when there are many pages (1-based). */
+function getPaginationItems(current: number, totalPages: number): (number | "ellipsis")[] {
+  if (totalPages <= 9) {
+    return Array.from({ length: totalPages }, (_, i) => i + 1);
+  }
+  const items: (number | "ellipsis")[] = [];
+  const left = Math.max(2, current - 2);
+  const right = Math.min(totalPages - 1, current + 2);
+
+  items.push(1);
+  if (left > 2) items.push("ellipsis");
+  for (let i = left; i <= right; i++) {
+    items.push(i);
+  }
+  if (right < totalPages - 1) items.push("ellipsis");
+  items.push(totalPages);
+  return items;
+}
+
 export function DataTable<T>({
   columns,
   data,
@@ -93,6 +112,14 @@ export function DataTable<T>({
   const contextTheme = useAdminThemeSafe();
   const theme = themeProp ?? contextTheme;
   const isDark = theme === "dark";
+
+  /** Value shown in the page-size Select (must match a `pageSizes` item). */
+  const paginationPageSizeSelectValue =
+    pagination?.onPageSizeChange != null
+      ? pageSizes.includes(pagination.pageSize)
+        ? pagination.pageSize
+        : pageSizes[0]
+      : null;
 
   const bodyContainerRef = useRef<HTMLDivElement>(null);
   const [virtualScrollTop, setVirtualScrollTop] = useState(0);
@@ -565,30 +592,42 @@ export function DataTable<T>({
               )}
             >
               <span className={isDark ? "text-zinc-400" : "text-zinc-600"}>Page size</span>
-              {pagination.onPageSizeChange ? (
-                <select
-                  className={cn(
-                    "h-8 w-[90px] rounded-md border px-2 text-sm",
-                    "outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50",
-                    isDark
-                      ? "border-zinc-700 bg-zinc-800 text-zinc-100"
-                      : "border-zinc-300 bg-white text-zinc-900",
-                  )}
-                  value={String(
-                    pageSizes.includes(pagination.pageSize) ? pagination.pageSize : pageSizes[0],
-                  )}
-                  onChange={(e) => {
-                    const next = Number(e.target.value);
+              {pagination.onPageSizeChange && paginationPageSizeSelectValue != null ? (
+                <Select
+                  value={String(paginationPageSizeSelectValue)}
+                  onValueChange={(v) => {
+                    const next = Number(v);
                     if (!Number.isFinite(next) || next === pagination.pageSize) return;
                     pagination.onPageSizeChange?.(next);
                   }}
+                  disabled={loading}
                 >
-                  {pageSizes.map((size) => (
-                    <option key={size} value={String(size)}>
-                      {size}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger
+                    size="sm"
+                    className={cn(
+                      "!h-8 w-[90px] min-w-[90px] shrink-0",
+                      isDark
+                        ? "border-zinc-700 bg-zinc-800 text-zinc-100 hover:bg-zinc-800/90"
+                        : "border-zinc-300 bg-white text-zinc-900 hover:bg-zinc-50",
+                    )}
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent
+                    position="popper"
+                    align="start"
+                    className={cn(
+                      isDark &&
+                        "border-zinc-700 bg-zinc-900 text-zinc-100 [&_[data-slot=select-item]]:focus:bg-zinc-800 [&_[data-slot=select-item]]:focus:text-zinc-100",
+                    )}
+                  >
+                    {pageSizes.map((size) => (
+                      <SelectItem key={size} value={String(size)}>
+                        {size}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               ) : (
                 <span
                   className={cn(
@@ -604,76 +643,134 @@ export function DataTable<T>({
             </div>
 
             {pagination.mode === "cursor" ? (
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  aria-label="Previous page"
                   onClick={() => pagination.onPrevPage?.()}
                   disabled={!pagination.hasPrevPage || loading}
                   className={cn(
-                    "disabled:opacity-40",
+                    "inline-flex h-8 min-w-8 items-center justify-center rounded-md border text-sm transition-colors",
+                    "disabled:pointer-events-none disabled:opacity-40",
                     isDark
                       ? "border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
                       : "border-zinc-300 text-zinc-900 hover:bg-zinc-100",
                   )}
                 >
-                  Previous
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
+                  <ChevronLeft className="h-4 w-4" aria-hidden />
+                </button>
+                <span
+                  className={cn(
+                    "min-w-[2.25rem] px-1 text-center text-sm tabular-nums",
+                    isDark ? "text-zinc-300" : "text-zinc-900",
+                  )}
+                >
+                  {pagination.page}
+                </span>
+                <button
+                  type="button"
+                  aria-label="Next page"
                   onClick={() => pagination.onNextPage?.()}
                   disabled={!pagination.hasNextPage || loading}
                   className={cn(
-                    "disabled:opacity-40",
+                    "inline-flex h-8 min-w-8 items-center justify-center rounded-md border text-sm transition-colors",
+                    "disabled:pointer-events-none disabled:opacity-40",
                     isDark
                       ? "border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
                       : "border-zinc-300 text-zinc-900 hover:bg-zinc-100",
                   )}
                 >
-                  Next
-                </Button>
+                  <ChevronRight className="h-4 w-4" aria-hidden />
+                </button>
               </div>
+            ) : typeof pagination.total === "number" ? (
+              (() => {
+                const totalPages = Math.max(
+                  1,
+                  Math.ceil(pagination.total / Math.max(1, pagination.pageSize)),
+                );
+                const items = getPaginationItems(pagination.page, totalPages);
+                const pageBtnBase = cn(
+                  "inline-flex h-8 min-w-8 items-center justify-center rounded-md border px-2 text-sm font-medium tabular-nums transition-colors",
+                  "disabled:pointer-events-none disabled:opacity-40",
+                );
+                return (
+                  <div className="flex flex-wrap items-center justify-end gap-1">
+                    {items.map((item, idx) =>
+                      item === "ellipsis" ? (
+                        <span
+                          key={`ellipsis-${idx}`}
+                          className={cn("px-1 text-sm", isDark ? "text-zinc-500" : "text-zinc-500")}
+                          aria-hidden
+                        >
+                          …
+                        </span>
+                      ) : (
+                        <button
+                          key={item}
+                          type="button"
+                          aria-label={`Page ${item}`}
+                          aria-current={pagination.page === item ? "page" : undefined}
+                          disabled={loading}
+                          onClick={() => pagination.onPageChange?.(item)}
+                          className={cn(
+                            pageBtnBase,
+                            pagination.page === item
+                              ? isDark
+                                ? "border-zinc-600 bg-zinc-800 text-zinc-100"
+                                : "border-zinc-400 bg-zinc-200 text-zinc-900"
+                              : isDark
+                                ? "border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
+                                : "border-zinc-300 text-zinc-900 hover:bg-zinc-100",
+                          )}
+                        >
+                          {item}
+                        </button>
+                      ),
+                    )}
+                  </div>
+                );
+              })()
             ) : (
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  aria-label="Previous page"
                   onClick={() => pagination.onPageChange?.(Math.max(1, pagination.page - 1))}
                   disabled={pagination.page <= 1 || loading}
                   className={cn(
-                    "disabled:opacity-40",
+                    "inline-flex h-8 min-w-8 items-center justify-center rounded-md border text-sm transition-colors",
+                    "disabled:pointer-events-none disabled:opacity-40",
                     isDark
                       ? "border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
                       : "border-zinc-300 text-zinc-900 hover:bg-zinc-100",
                   )}
                 >
-                  Previous
-                </Button>
-                <span className={cn("text-sm", isDark ? "text-zinc-300" : "text-zinc-900")}>
-                  Page {pagination.page}
-                  {typeof pagination.total === "number"
-                    ? ` / ${Math.max(1, Math.ceil(pagination.total / pagination.pageSize))}`
-                    : ""}
-                </span>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => pagination.onPageChange?.(pagination.page + 1)}
-                  disabled={
-                    loading ||
-                    (typeof pagination.total === "number" &&
-                      pagination.page >= Math.ceil(pagination.total / pagination.pageSize))
-                  }
+                  <ChevronLeft className="h-4 w-4" aria-hidden />
+                </button>
+                <span
                   className={cn(
-                    "disabled:opacity-40",
+                    "min-w-[2.25rem] px-1 text-center text-sm tabular-nums",
+                    isDark ? "text-zinc-300" : "text-zinc-900",
+                  )}
+                >
+                  {pagination.page}
+                </span>
+                <button
+                  type="button"
+                  aria-label="Next page"
+                  onClick={() => pagination.onPageChange?.(pagination.page + 1)}
+                  disabled={loading}
+                  className={cn(
+                    "inline-flex h-8 min-w-8 items-center justify-center rounded-md border text-sm transition-colors",
+                    "disabled:pointer-events-none disabled:opacity-40",
                     isDark
                       ? "border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
                       : "border-zinc-300 text-zinc-900 hover:bg-zinc-100",
                   )}
                 >
-                  Next
-                </Button>
+                  <ChevronRight className="h-4 w-4" aria-hidden />
+                </button>
               </div>
             )}
           </div>
@@ -682,3 +779,6 @@ export function DataTable<T>({
     </div>
   );
 }
+
+export { PreviewIncidentPopover } from "./PreviewIncidentPopover";
+export type { PreviewIncidentPopoverProps } from "./PreviewIncidentPopover";

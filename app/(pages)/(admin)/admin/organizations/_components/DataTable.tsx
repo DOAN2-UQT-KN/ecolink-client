@@ -8,7 +8,11 @@ import { useAdminLayout } from "@/app/(pages)/(admin)/_context/AdminLayoutContex
 import { STATUS } from "@/constants/status";
 import { cn } from "@/libs/utils";
 import { useOrganizationContext } from "../_context/OrganizationContext";
-import { DataTable as SharedDataTable, type DataTableColumn } from "@/components/admin/shared/DataTable";
+import {
+  DataTable as SharedDataTable,
+  PreviewIncidentPopover,
+  type DataTableColumn,
+} from "@/components/admin/shared/DataTable";
 
 const COLUMN_KEYS = {
   NAME_LOGO: "name_logo",
@@ -161,17 +165,27 @@ export function DataTable() {
         className: "min-w-[160px]",
         render: (_, record) => (
           <div className="flex items-center gap-2">
-            <Link
-              href={`/organizations/${record.id}`}
-              className={cn(
-                "rounded-md border px-2 py-1 text-xs font-medium transition-colors",
-                isDark
-                  ? "border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
-                  : "border-zinc-300 text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900",
-              )}
-            >
-              Preview
-            </Link>
+            <PreviewIncidentPopover
+              name={record.name}
+              description={record.description ?? ""}
+              logoUrl={record.logo_url ?? ""}
+              backgroundUrl={record.background_url ?? ""}
+              contactEmail={record.contact_email ?? ""}
+              theme={isDark ? "dark" : "light"}
+              trigger={
+                <button
+                  type="button"
+                  className={cn(
+                    "rounded-md border px-2 py-1 text-xs font-medium transition-colors",
+                    isDark
+                      ? "border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
+                      : "border-zinc-300 text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900",
+                  )}
+                >
+                  Preview
+                </button>
+              }
+            />
             <Link
               href={`/admin/organizations/${record.id}`}
               className={cn(
