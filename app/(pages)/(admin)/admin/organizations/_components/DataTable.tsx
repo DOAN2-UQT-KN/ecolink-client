@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import Link from "next/link";
 
 import type { IOrganization } from "@/apis/organization/models/organization";
 import { useAdminLayout } from "@/app/(pages)/(admin)/_context/AdminLayoutContext";
@@ -13,6 +12,9 @@ import {
   PreviewIncidentPopover,
   type DataTableColumn,
 } from "@/components/admin/shared/DataTable";
+import { ApproveOrganizationConfirm } from "./ApproveOrganizationConfirm";
+import { TbScanEye  } from "react-icons/tb";
+
 
 const COLUMN_KEYS = {
   NAME_LOGO: "name_logo",
@@ -53,7 +55,7 @@ export function DataTable() {
     () => [
       {
         key: COLUMN_KEYS.NAME_LOGO,
-        title: "Name + Logo",
+        title: "Oranization",
         className: "sticky left-0 z-20 min-w-[220px]",
         render: (_, record) => (
           <div className="flex items-center gap-3">
@@ -69,7 +71,7 @@ export function DataTable() {
             ) : (
               <div
                 className={cn(
-                  "flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold uppercase",
+                  "flex h-9 w-9 items-center justify-center rounded-full font-display-1 uppercase",
                   isDark ? "bg-zinc-800 text-zinc-400" : "bg-zinc-200 text-zinc-600",
                 )}
               >
@@ -89,13 +91,13 @@ export function DataTable() {
       },
       {
         key: COLUMN_KEYS.CREATED,
-        title: "Created at + Owner",
+        title: "Owner",
         className: "min-w-[180px]",
         render: (_, record) => (
           <div className="space-y-1">
             <p
               className={cn(
-                "text-sm",
+                "font-display-1",
                 isDark ? "text-zinc-200" : "text-zinc-800",
               )}
             >
@@ -103,7 +105,7 @@ export function DataTable() {
             </p>
             <p
               className={cn(
-                "text-xs",
+                "font-display-1",
                 isDark ? "text-zinc-500" : "text-zinc-600",
               )}
             >
@@ -121,7 +123,7 @@ export function DataTable() {
           return (
             <span
               className={cn(
-                "rounded-full px-2 py-1 text-xs font-medium",
+                "rounded-full px-2 py-1 font-display-1",
                 isDark
                   ? "bg-amber-900/30 text-amber-400"
                   : "bg-amber-100 text-amber-800",
@@ -136,28 +138,28 @@ export function DataTable() {
         key: COLUMN_KEYS.CONTACT_EMAIL,
         title: "Contact Email",
         dataIndex: "contact_email",
-        className: "min-w-[220px]",
-        render: (value) => (
-          <span className={isDark ? "text-zinc-300" : "text-zinc-800"}>
-            {(value as string | null) || "-"}
-          </span>
-        ),
+        // className: "min-w-[220px] !font-display-1",
+        // render: (value) => (
+        //   <span className={isDark ? "text-zinc-300" : "text-zinc-800"}>
+        //     {(value as string | null) || "-"}
+        //   </span>
+        // ),
       },
       {
         key: COLUMN_KEYS.DESCRIPTION,
         title: "Description",
         dataIndex: "description",
         className: "min-w-[260px]",
-        render: (value) => (
-          <p
-            className={cn(
-              "line-clamp-2 text-sm",
-              isDark ? "text-zinc-400" : "text-zinc-600",
-            )}
-          >
-            {(value as string | null) || "-"}
-          </p>
-        ),
+        // render: (value) => (
+        //   <p
+        //     className={cn(
+        //       "line-clamp-2 text-sm",
+        //       isDark ? "text-zinc-400" : "text-zinc-600",
+        //     )}
+        //   >
+        //     {(value as string | null) || "-"}
+        //   </p>
+        // ),
       },
       {
         key: COLUMN_KEYS.ACTION,
@@ -176,27 +178,21 @@ export function DataTable() {
                 <button
                   type="button"
                   className={cn(
-                    "rounded-md border px-2 py-1 text-xs font-medium transition-colors",
+                    "rounded-md border px-1.5 py-1.5 text-xs font-medium transition-colors cursor-pointer duration-200",
                     isDark
-                      ? "border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
-                      : "border-zinc-300 text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900",
+                      ? "border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-blue-300"
+                      : "border-zinc-300 text-zinc-700 hover:bg-zinc-100 hover:text-blue-700",
                   )}
                 >
-                  Preview
+                  <TbScanEye className="size-5" />
                 </button>
               }
             />
-            <Link
-              href={`/admin/organizations/${record.id}`}
-              className={cn(
-                "rounded-md border px-2 py-1 text-xs font-medium transition-colors",
-                isDark
-                  ? "border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
-                  : "border-zinc-300 text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900",
-              )}
-            >
-              Edit
-            </Link>
+            <ApproveOrganizationConfirm
+              organizationId={record.id}
+              organizationName={record.name}
+              theme={isDark ? "dark" : "light"}
+            />
           </div>
         ),
       },

@@ -114,7 +114,7 @@ export function DataTableRow<T>({
           <TableCell
             key={column.key}
             className={cn(
-              "px-3 py-2.5 text-sm",
+              "px-3 py-2.5 font-display-1",
               isDark ? "text-zinc-200" : "text-zinc-900",
               column.className,
             )}

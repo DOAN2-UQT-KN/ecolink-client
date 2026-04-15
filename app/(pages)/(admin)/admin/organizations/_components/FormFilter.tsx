@@ -71,7 +71,7 @@ export function FormFilter() {
           <div className="relative">
             <TbZoom className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              className="h-11 pl-10"
+              className="h-10 pl-10 !border !border-zinc-300"
               placeholder="Name, email, description..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
@@ -87,7 +87,7 @@ export function FormFilter() {
             value={values.status}
             onValueChange={(value) => onFilterChange({ status: value })}
           >
-            <SelectTrigger className="!h-11 w-full">
+            <SelectTrigger className="!h-10 w-full !border !border-zinc-300">
               <SelectValue placeholder="Select status" />
             </SelectTrigger>
             <SelectContent>
@@ -100,58 +100,58 @@ export function FormFilter() {
           </Select>
         ),
       },
-      {
-        key: "sortBy",
-        label: "Sort by",
-        render: () => (
-          <Select
-            value={values.sortBy}
-            onValueChange={(value: FormFilterValues["sortBy"]) =>
-              onFilterChange({ sortBy: value })
-            }
-          >
-            <SelectTrigger className="!h-11 w-full">
-              <SelectValue placeholder="Select field" />
-            </SelectTrigger>
-            <SelectContent>
-              {SORT_BY_OPTIONS.map((item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        ),
-      },
-      {
-        key: "sortOrder",
-        label: "Sort order",
-        render: () => (
-          <Select
-            value={values.sortOrder}
-            onValueChange={(value: FormFilterValues["sortOrder"]) =>
-              onFilterChange({ sortOrder: value })
-            }
-          >
-            <SelectTrigger className="!h-11 w-full">
-              <SelectValue placeholder="Select order" />
-            </SelectTrigger>
-            <SelectContent>
-              {SORT_ORDER_OPTIONS.map((item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        ),
-      },
+      // {
+      //   key: "sortBy",
+      //   label: "Sort by",
+      //   render: () => (
+      //     <Select
+      //       value={values.sortBy}
+      //       onValueChange={(value: FormFilterValues["sortBy"]) =>
+      //         onFilterChange({ sortBy: value })
+      //       }
+      //     >
+      //       <SelectTrigger className="!h-11 w-full">
+      //         <SelectValue placeholder="Select field" />
+      //       </SelectTrigger>
+      //       <SelectContent>
+      //         {SORT_BY_OPTIONS.map((item) => (
+      //           <SelectItem key={item.value} value={item.value}>
+      //             {item.label}
+      //           </SelectItem>
+      //         ))}
+      //       </SelectContent>
+      //     </Select>
+      //   ),
+      // },
+      // {
+      //   key: "sortOrder",
+      //   label: "Sort order",
+      //   render: () => (
+      //     <Select
+      //       value={values.sortOrder}
+      //       onValueChange={(value: FormFilterValues["sortOrder"]) =>
+      //         onFilterChange({ sortOrder: value })
+      //       }
+      //     >
+      //       <SelectTrigger className="!h-11 w-full">
+      //         <SelectValue placeholder="Select order" />
+      //       </SelectTrigger>
+      //       <SelectContent>
+      //         {SORT_ORDER_OPTIONS.map((item) => (
+      //           <SelectItem key={item.value} value={item.value}>
+      //             {item.label}
+      //           </SelectItem>
+      //         ))}
+      //       </SelectContent>
+      //     </Select>
+      //   ),
+      // },
     ],
     [onFilterChange, searchInput, values.sortBy, values.sortOrder, values.status],
   );
 
   return (
-    <div className="space-y-4 rounded-[10px] border border-[#665814]/40 bg-card p-4">
+    <div className="space-y-4 rounded-[10px] border border-zinc-200 bg-card p-4">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         {formFields.map((field) => (
           <Field key={field.key}>
@@ -163,18 +163,7 @@ export function FormFilter() {
         ))}
       </div>
 
-      <div className="flex justify-end">
-        <Button
-          type="button"
-          variant="outlined-brown"
-          size="small"
-          className="h-10"
-          onClick={onResetFilters}
-          iconLeft={<TbZoomReset size={14} />}
-        >
-          Reset
-        </Button>
-      </div>
+     
     </div>
   );
 }

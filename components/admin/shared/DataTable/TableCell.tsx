@@ -21,7 +21,7 @@ export function TableCell<T>({ column, record, rowIndex, theme = "dark" }: Props
   return (
     <BaseTableCell
       className={cn(
-        "px-3 py-2.5 text-sm",
+        "px-3 py-2.5 font-display-1",
         theme === "dark" ? "text-zinc-100" : "text-zinc-900",
         column.className,
       )}

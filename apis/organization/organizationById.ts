@@ -49,6 +49,11 @@ export const verifyOrganization = async (
   );
 };
 
+/** Placeholder until the backend exposes a reject endpoint. */
+export async function rejectOrganizationMock(_id: string): Promise<void> {
+  await new Promise((r) => setTimeout(r, 280));
+}
+
 export const useVerifyOrganization = (
   options?: UsePostOptions<IVerifyOrganizationResponse, string>,
 ) => {
