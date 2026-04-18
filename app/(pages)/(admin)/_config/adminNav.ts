@@ -17,7 +17,7 @@ export type AdminNavItem = {
 
 export const adminNavItems: AdminNavItem[] = [
   { href: "/admin", labelKey: "Admin dashboard", icon: TbLayoutDashboard },
-  { href: "/incidents", labelKey: "Incidents", icon: TbMessageReport },
+  { href: "/admin/incidents", labelKey: "Incidents", icon: TbMessageReport },
   { href: "/admin/organizations", labelKey: "Organizations", icon: TbUsersGroup },
   { href: "/admin/settings", labelKey: "Settings", icon: TbSettings },
 ];

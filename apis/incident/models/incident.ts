@@ -9,7 +9,8 @@ export type SortBy =
   | "created_at"
   | "updated_at"
   | "severity_level"
-  | "distance";
+  | "distance"
+  | "name";
 
 export interface IMediaFiles {
   id: string;
