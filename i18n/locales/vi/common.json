@@ -273,5 +273,10 @@
   "Report banned successfully": "Sự cố đã bị cấm thành công",
   "Report verified successfully": "Sự cố đã được xác minh thành công",
   "No incidents found": "Không tìm thấy sự cố nào",
-  "No incidents available for the current filters.": "Không có sự cố nào có sẵn cho các bộ lọc hiện tại."
+  "No incidents available for the current filters.": "Không có sự cố nào có sẵn cho các bộ lọc hiện tại.",
+  "Your group": "Nhóm của bạn",
+  "Leave": "Rời khỏi",
+  "Are you sure?": "Bạn có chắc chắn?",
+  "Join": "Tham gia",
+  "View more": "Xem thêm"
 }

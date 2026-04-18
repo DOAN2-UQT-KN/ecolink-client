@@ -38,7 +38,7 @@ export const HeroSection = memo(function HeroSection() {
   const headerClassName = useMemo(
     () =>
       cn(
-        "relative h-40 sm:h-48 w-full overflow-hidden rounded-xl bg-gradient-to-br from-button-accent/30 via-white/10 to-white/5",
+        "relative h-44 sm:h-52 w-full overflow-hidden rounded-t-xl rounded-b-none bg-gradient-to-br from-button-accent/30 via-white/10 to-white/5",
         backgroundUrl && "bg-center bg-cover",
       ),
     [backgroundUrl],
@@ -64,11 +64,11 @@ export const HeroSection = memo(function HeroSection() {
         ) : null}
       </div>
 
-      <div className="relative px-4 pb-5 pt-0 flex flex-col items-center gap-3">
-        <div className="flex flex-col items-center -mt-12 sm:-mt-14">
+      <div className="relative rounded-b-xl px-4 pb-6 pt-2 sm:pt-6">
+        <div className="flex min-h-[5.5rem] sm:min-h-[6.5rem] items-center gap-4 sm:gap-5">
           <div
             className={cn(
-              "relative z-10 size-24 sm:size-28 rounded-full border-2 border-white/90 bg-white shadow-md overflow-hidden flex items-center justify-center",
+              "relative z-10 shrink-0 size-32 sm:size-40 -mt-[4.25rem] sm:-mt-[5.25rem] -translate-x-1 sm:-translate-x-1.5 rounded-full border-[3px] border-white/95 bg-white shadow-md overflow-hidden flex items-center justify-center",
               !logoUrl && "bg-muted",
             )}
           >
@@ -85,92 +85,92 @@ export const HeroSection = memo(function HeroSection() {
               </span>
             )}
           </div>
-        </div>
 
-        <div className="text-center space-y-1 pt-1 w-full max-w-2xl">
-          <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
-            <h1 className="font-display-5 font-semibold text-foreground break-words text-center max-w-full">
-              {name}
-            </h1>
-            {showYourGroupTag ? (
-              <span
-                className="shrink-0 inline-flex items-center rounded-sm border border-[rgba(136,122,71,0.45)] bg-button-accent/10 px-2.5 py-0.5 text-xs font-semibold text-button-accent"
-                aria-label={t("Your group")}
-              >
-                {t("Your group")}
-              </span>
-            ) : null}
-          </div>
-        </div>
-
-        <div className="pt-1 flex items-center justify-center gap-2 w-full max-w-md">
-          {showCancelButton ? (
-            <SharedButton
-              variant="brown"
-              size="medium"
-              className="flex-1 min-w-0"
-              iconLeft={<X className="size-4" aria-hidden />}
-              isLoading={isCancelPending}
-              onClick={handleCancelJoinClick}
-            >
-              {t("Cancel")}
-            </SharedButton>
-          ) : showLeaveButton ? (
-            <div className="relative flex-1 min-w-0">
-              <SharedButton
-                variant="brown"
-                size="medium"
-                className="w-full"
-                iconLeft={
-                  <HiOutlineUserRemove className="size-4" aria-hidden />
-                }
-                isLoading={isLeavePending}
-                isDisabled={!organizationId}
-                onClick={handleLeaveClick}
-              >
-                {t("Leave")}
-              </SharedButton>
-              {isLeaveConfirmOpen ? (
-                <div className="absolute top-[calc(100%+8px)] left-0 z-10 w-full rounded-md border border-[rgba(136,122,71,0.45)] bg-white p-3 shadow-md">
-                  <p className="text-sm text-foreground text-center">
-                    {t("Are you sure?")}
-                  </p>
-                  <div className="mt-3 flex items-center gap-2">
-                    <SharedButton
-                      variant="outlined-brown"
-                      size="small"
-                      className="flex-1"
-                      onClick={() => setIsLeaveConfirmOpen(false)}
-                    >
-                      {t("Cancel")}
-                    </SharedButton>
-                    <SharedButton
-                      variant="brown"
-                      size="small"
-                      className="flex-1"
-                      isLoading={isLeavePending}
-                      isDisabled={!organizationId}
-                      onClick={handleConfirmLeave}
-                    >
-                      {t("Confirm")}
-                    </SharedButton>
-                  </div>
-                </div>
+          <div className="min-w-0 flex-1 flex flex-col justify-start gap-3 -translate-y-3 sm:-translate-y-3.5">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <div className="font-display-8 font-title font-semibold text-foreground break-words text-left">
+                {name}
+              </div>
+              {showYourGroupTag ? (
+                <span
+                  className="shrink-0 inline-flex items-center rounded-sm border border-[rgba(136,122,71,0.45)] bg-button-accent/10 px-2.5 py-0.5 text-xs font-semibold text-button-accent"
+                  aria-label={t("Your group")}
+                >
+                  {t("Your group")}
+                </span>
               ) : null}
             </div>
-          ) : showJoinButton ? (
-            <SharedButton
-              variant="brown"
-              size="medium"
-              className="flex-1 min-w-0"
-              iconLeft={<BiGroup className="size-4" aria-hidden />}
-              isLoading={isJoinPending}
-              isDisabled={!organizationId}
-              onClick={handleJoinClick}
-            >
-              {t("Join")}
-            </SharedButton>
-          ) : null}
+
+            <div className="flex flex-wrap items-stretch gap-2 w-full max-w-md">
+              {showCancelButton ? (
+                <SharedButton
+                  variant="brown"
+                  size="medium"
+                  className="min-w-0 flex-1 sm:flex-none sm:min-w-[140px]"
+                  iconLeft={<X className="size-4" aria-hidden />}
+                  isLoading={isCancelPending}
+                  onClick={handleCancelJoinClick}
+                >
+                  {t("Cancel")}
+                </SharedButton>
+              ) : showLeaveButton ? (
+                <div className="relative w-full max-w-xs min-w-0">
+                  <SharedButton
+                    variant="brown"
+                    size="medium"
+                    className="w-full"
+                    iconLeft={
+                      <HiOutlineUserRemove className="size-4" aria-hidden />
+                    }
+                    isLoading={isLeavePending}
+                    isDisabled={!organizationId}
+                    onClick={handleLeaveClick}
+                  >
+                    {t("Leave")}
+                  </SharedButton>
+                  {isLeaveConfirmOpen ? (
+                    <div className="absolute top-[calc(100%+8px)] left-0 z-10 w-full min-w-[240px] max-w-sm rounded-md border border-[rgba(136,122,71,0.45)] bg-white p-3 shadow-md">
+                      <p className="text-sm text-foreground text-center">
+                        {t("Are you sure?")}
+                      </p>
+                      <div className="mt-3 flex items-center gap-2">
+                        <SharedButton
+                          variant="outlined-brown"
+                          size="small"
+                          className="flex-1"
+                          onClick={() => setIsLeaveConfirmOpen(false)}
+                        >
+                          {t("Cancel")}
+                        </SharedButton>
+                        <SharedButton
+                          variant="brown"
+                          size="small"
+                          className="flex-1"
+                          isLoading={isLeavePending}
+                          isDisabled={!organizationId}
+                          onClick={handleConfirmLeave}
+                        >
+                          {t("Confirm")}
+                        </SharedButton>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              ) : showJoinButton ? (
+                <SharedButton
+                  variant="brown"
+                  size="medium"
+                  className="min-w-0 flex-1 sm:flex-none sm:min-w-[140px]"
+                  iconLeft={<BiGroup className="size-4" aria-hidden />}
+                  isLoading={isJoinPending}
+                  isDisabled={!organizationId}
+                  onClick={handleJoinClick}
+                >
+                  {t("Join")}
+                </SharedButton>
+              ) : null}
+            </div>
+          </div>
         </div>
       </div>
     </section>
