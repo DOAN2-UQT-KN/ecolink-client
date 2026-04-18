@@ -1,12 +1,12 @@
 "use client";
 
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
+import { useBanReport } from "@/apis/incident/banReport";
 import { useVerifyReport } from "@/apis/incident/verifyReport";
 import { ConfirmPopover } from "@/components/admin/shared/ConfirmPopover";
 import { cn } from "@/libs/utils";
-import showMessage, { MessageLevel, MessageType } from "@/utils/showMessage";
 import { TbCheckbox } from "react-icons/tb";
 
 type Props = {
@@ -15,19 +15,18 @@ type Props = {
   theme: "light" | "dark";
 };
 
-async function banIncidentMock(_id: string): Promise<void> {
-  await new Promise((r) => setTimeout(r, 280));
-}
-
 export const VerifyIncidentConfirm = memo(function VerifyIncidentConfirm({
   incidentId,
   incidentTitle,
   theme,
 }: Props) {
   const { t } = useTranslation();
-  const [rejecting, setRejecting] = useState(false);
 
   const { mutateAsync: verifyAsync, isPending: approving } = useVerifyReport({
+    queryKey: ["incidents"],
+  });
+
+  const { mutateAsync: banAsync, isPending: banning } = useBanReport({
     queryKey: ["incidents"],
   });
 
@@ -36,18 +35,8 @@ export const VerifyIncidentConfirm = memo(function VerifyIncidentConfirm({
   }, [verifyAsync, incidentId]);
 
   const handleReject = useCallback(async () => {
-    setRejecting(true);
-    try {
-      await banIncidentMock(incidentId);
-      showMessage({
-        type: MessageType.Toast,
-        level: MessageLevel.Info,
-        title: t("Rejection is not connected to the API yet (mock)."),
-      });
-    } finally {
-      setRejecting(false);
-    }
-  }, [incidentId, t]);
+    await banAsync(incidentId);
+  }, [banAsync, incidentId]);
 
   const isDark = theme === "dark";
 
@@ -55,15 +44,15 @@ export const VerifyIncidentConfirm = memo(function VerifyIncidentConfirm({
     <ConfirmPopover
       theme={theme}
       title={t("Verify this incident?")}
-      description={t("You can verify {{name}} or reject it. Reject is currently a mock.", {
+      description={t("You can verify {{name}} or reject it.", {
         name: incidentTitle,
       })}
       confirmLabel={t("Verify")}
-      rejectLabel={t("Reject")}
+      rejectLabel={t("Ban")}
       onConfirm={handleVerify}
       onReject={handleReject}
       confirmPending={approving}
-      rejectPending={rejecting}
+      rejectPending={banning}
       trigger={
         <button
           type="button"

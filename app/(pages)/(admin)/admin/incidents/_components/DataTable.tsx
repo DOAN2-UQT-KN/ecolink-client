@@ -7,12 +7,9 @@ import { useTranslation } from "react-i18next";
 import type { IIncident } from "@/apis/incident/models/incident";
 import { useAdminLayout } from "@/app/(pages)/(admin)/_context/AdminLayoutContext";
 import AddressDisplay from "@/app/(pages)/(main)/incidents/me/_components/AddressDisplay";
-import {
-  DataTable as SharedDataTable,
-  PreviewIncidentPopover,
-  type DataTableColumn,
-} from "@/components/admin/shared/DataTable";
-import { STATUS } from "@/constants/status";
+import { DataTable as SharedDataTable, type DataTableColumn } from "@/components/admin/shared/DataTable";
+import { PreviewIncidentPopover } from "./PreviewIncidentPopover";
+import { StatusTag } from "@/components/ui/StatusTag";
 import { cn } from "@/libs/utils";
 import { useIncidentContext } from "../_context/IncidentContext";
 import { VerifyIncidentConfirm } from "./VerifyIncidentConfirm";
@@ -35,24 +32,6 @@ function toDisplayDate(value?: string | null) {
 function toUserLabel(userId?: string | null) {
   if (!userId) return "-";
   return userId.length > 12 ? `${userId.slice(0, 6)}...${userId.slice(-4)}` : userId;
-}
-
-function statusPillLabel(status: number | null | undefined, t: (k: string) => string) {
-  if (status == null) return t("Unknown");
-  const map: Record<number, string> = {
-    [STATUS.ACTIVE]: t("Active"),
-    [STATUS.INACTIVE]: t("Inactive"),
-    [STATUS.DRAFT]: t("Draft"),
-    [STATUS.PENDING]: t("Pending"),
-    [STATUS.APPROVED]: t("Approved"),
-    [STATUS.REJECTED]: t("Rejected"),
-    [STATUS.IN_PROGRESS]: t("In progress"),
-    [STATUS.COMPLETED]: t("Completed"),
-    [STATUS.VERIFIED]: t("Verified"),
-    [STATUS.CLOSED]: t("Closed"),
-    [STATUS.CANCELED]: t("Canceled"),
-  };
-  return map[status] ?? `${t("Status")} ${status}`;
 }
 
 export function DataTable() {
@@ -130,19 +109,9 @@ export function DataTable() {
         key: COLUMN_KEYS.STATUS,
         title: t("Status"),
         className: "min-w-[120px]",
-        render: (_, record) => {
-          const label = statusPillLabel(record.status, t);
-          return (
-            <span
-              className={cn(
-                "rounded-full px-2 py-1 font-display-1",
-                isDark ? "bg-amber-900/30 text-amber-400" : "bg-amber-100 text-amber-800",
-              )}
-            >
-              {label}
-            </span>
-          );
-        },
+        render: (_, record) => (
+          <StatusTag status={record.status} className="!mx-0 min-w-0 justify-center" />
+        ),
       },
       {
         key: COLUMN_KEYS.ACTION,

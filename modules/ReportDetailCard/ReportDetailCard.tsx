@@ -13,12 +13,15 @@ interface ReportDetailCardProps {
   incident: IIncident;
   className?: string;
   isExpanded?: boolean;
+  /** When false, omits vote/share footer and hides the save control in the header. */
+  showAction?: boolean;
 }
 
 const ReportDetailCard = memo(function ReportDetailCard({
   incident,
   className,
   isExpanded = false,
+  showAction = true,
 }: ReportDetailCardProps) {
   const images = useMemo(
     () => incident?.image_urls || incident?.media_files?.map((m) => m.url) || [],
@@ -50,6 +53,7 @@ const ReportDetailCard = memo(function ReportDetailCard({
             user={incident.user}
             createdAt={incident.created_at}
             isSaved={incident.saved}
+            showAction={showAction}
           />
 
           <ReportContent
@@ -68,18 +72,20 @@ const ReportDetailCard = memo(function ReportDetailCard({
             isExpanded={isExpanded}
           />
 
-          <ReportActions
-            reportId={incident.id}
-            initialVotePoint={
-              (incident.votes?.upvote_count || 0) -
-              (incident.votes?.downvote_count || 0)
-            }
-            initialUserVote={incident.votes?.my_vote || null}
-          />
+          {showAction ? (
+            <ReportActions
+              reportId={incident.id}
+              initialVotePoint={
+                (incident.votes?.upvote_count || 0) -
+                (incident.votes?.downvote_count || 0)
+              }
+              initialUserVote={incident.votes?.my_vote || null}
+            />
+          ) : null}
         </div>
       </article>
     ),
-    [className, images, incident, isExpanded],
+    [className, images, incident, isExpanded, showAction],
   );
 
 
@@ -91,7 +97,7 @@ const ReportDetailCard = memo(function ReportDetailCard({
     <Dialog>
       <DialogTrigger asChild>{content}</DialogTrigger>
       <DialogContent className="max-w-[95vw] md:max-w-5xl w-full h-[90vh] md:h-[85vh] p-0 overflow-hidden border-none bg-white/95 backdrop-blur-md">
-        <ReportDetailCard incident={incident} isExpanded={true} />
+        <ReportDetailCard incident={incident} isExpanded={true} showAction={showAction} />
       </DialogContent>
     </Dialog>
   );

@@ -5,14 +5,11 @@ import { useTranslation } from "react-i18next";
 
 import type { IOrganization } from "@/apis/organization/models/organization";
 import { useAdminLayout } from "@/app/(pages)/(admin)/_context/AdminLayoutContext";
-import { STATUS } from "@/constants/status";
+import { StatusTag } from "@/components/ui/StatusTag";
 import { cn } from "@/libs/utils";
 import { useOrganizationContext } from "../_context/OrganizationContext";
-import {
-  DataTable as SharedDataTable,
-  PreviewIncidentPopover,
-  type DataTableColumn,
-} from "@/components/admin/shared/DataTable";
+import { DataTable as SharedDataTable, type DataTableColumn } from "@/components/admin/shared/DataTable";
+import { PreviewOrganizationPopover } from "./PreviewOrganizationPopover";
 import { ApproveOrganizationConfirm } from "./ApproveOrganizationConfirm";
 import { TbScanEye  } from "react-icons/tb";
 
@@ -25,14 +22,6 @@ const COLUMN_KEYS = {
   DESCRIPTION: "description",
   ACTION: "action",
 } as const;
-
-const STATUS_LABELS: Record<number, string> = {
-  [STATUS.ACTIVE]: "Active",
-  [STATUS.INACTIVE]: "Inactive",
-  [STATUS.PENDING]: "Pending",
-  [STATUS.APPROVED]: "Approved",
-  [STATUS.REJECTED]: "Rejected",
-};
 
 function toDisplayDate(value?: string | null) {
   if (!value) return "-";
@@ -120,21 +109,9 @@ export function DataTable() {
         key: COLUMN_KEYS.STATUS,
         title: t("Status"),
         className: "min-w-[120px]",
-        render: (_, record) => {
-          const label = STATUS_LABELS[record.status] ?? `Status ${record.status}`;
-          return (
-            <span
-              className={cn(
-                "rounded-full px-2 py-1 font-display-1",
-                isDark
-                  ? "bg-amber-900/30 text-amber-400"
-                  : "bg-amber-100 text-amber-800",
-              )}
-            >
-              {label}
-            </span>
-          );
-        },
+        render: (_, record) => (
+          <StatusTag status={record.status} className="!mx-0 min-w-0 justify-center" />
+        ),
       },
       {
         key: COLUMN_KEYS.CONTACT_EMAIL,
@@ -153,7 +130,7 @@ export function DataTable() {
         className: "min-w-[160px]",
         render: (_, record) => (
           <div className="flex items-center gap-2">
-            <PreviewIncidentPopover
+            <PreviewOrganizationPopover
               name={record.name}
               description={record.description ?? ""}
               logoUrl={record.logo_url ?? ""}

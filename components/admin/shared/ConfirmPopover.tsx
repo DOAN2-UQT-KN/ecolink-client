@@ -102,6 +102,18 @@ export const ConfirmPopover = memo(function ConfirmPopover({
             {cancelLabel}
           </Button>
           ) : null}
+           <Button
+            type="button"
+            size="sm"
+            disabled={busy}
+            className="inline-flex items-center gap-1.5"
+            onClick={() => void runConfirm()}
+          >
+            {confirmPending ? (
+              <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden />
+            ) : null}
+            {confirmLabel}
+          </Button>
           {onReject && rejectLabel ? (
             <Button
               type="button"
@@ -117,18 +129,7 @@ export const ConfirmPopover = memo(function ConfirmPopover({
               {rejectLabel}
             </Button>
           ) : null}
-          <Button
-            type="button"
-            size="sm"
-            disabled={busy}
-            className="inline-flex items-center gap-1.5"
-            onClick={() => void runConfirm()}
-          >
-            {confirmPending ? (
-              <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden />
-            ) : null}
-            {confirmLabel}
-          </Button>
+         
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -780,6 +780,3 @@ export function DataTable<T>({
     </div>
   );
 }
-
-export { PreviewIncidentPopover } from "./PreviewIncidentPopover";
-export type { PreviewIncidentPopoverProps } from "./PreviewIncidentPopover";
