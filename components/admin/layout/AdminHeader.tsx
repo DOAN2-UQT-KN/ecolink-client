@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import Logo from "@/components/client/layout/Logo";
 import { useAdminLayout } from "@/app/(pages)/(admin)/_context/AdminLayoutContext";
+import LanguageSwitcher from "@/components/client/shared/LanguageSwitcher";
 
 export function AdminHeader() {
   const { isMobile, setMobileNavOpen, theme, toggleTheme } = useAdminLayout();
@@ -41,6 +42,10 @@ export function AdminHeader() {
           <Moon className="size-5" />
         )}
       </Button>
+
+
+      <LanguageSwitcher showName />
+        
     </header>
   );
 }

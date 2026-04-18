@@ -19,6 +19,7 @@ import type {
   FilterValue,
   RowKey,
 } from "./types";
+import { useTranslation } from "react-i18next";
 
 // Graceful fallback – the hook throws when used outside its provider, so we
 // catch that and fall back to "dark" (the previous default).
@@ -112,7 +113,7 @@ export function DataTable<T>({
   const contextTheme = useAdminThemeSafe();
   const theme = themeProp ?? contextTheme;
   const isDark = theme === "dark";
-
+  const { t } = useTranslation();
   /** Value shown in the page-size Select (must match a `pageSizes` item). */
   const paginationPageSizeSelectValue =
     pagination?.onPageSizeChange != null
@@ -591,7 +592,7 @@ export function DataTable<T>({
                 isDark ? "text-zinc-300" : "text-zinc-900",
               )}
             >
-              <span className={isDark ? "text-zinc-400" : "text-zinc-600"}>Page size</span>
+              <span className={isDark ? "text-zinc-400" : "text-zinc-600"}>{t("Page size")}</span>
               {pagination.onPageSizeChange && paginationPageSizeSelectValue != null ? (
                 <Select
                   value={String(paginationPageSizeSelectValue)}

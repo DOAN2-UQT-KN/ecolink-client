@@ -48,13 +48,11 @@ const SortOptionButton = memo(function SortOptionButton({
 
 const SortFieldRow = memo(function SortFieldRow({
   sortBy,
-  fieldLabel,
   filters,
   handleSort,
   t,
 }: {
   sortBy: "created_at" | "updated_at";
-  fieldLabel: string;
   filters: Pick<IGetOrganizationsRequest, "sort_by" | "sort_order">;
   handleSort: (
     sb: "created_at" | "updated_at",
@@ -65,6 +63,8 @@ const SortFieldRow = memo(function SortFieldRow({
   const sortOrder = filters.sort_order ?? "desc";
   const active = filters.sort_by === sortBy;
   const displayOrder = active ? sortOrder : "desc";
+  const fieldLabel =
+    sortBy === "created_at" ? t("Created at") : t("Updated at");
   const Icon =
     displayOrder === "asc"
       ? HiOutlineSortAscending
@@ -204,7 +204,7 @@ export const OrganizationSearchFilters = memo(
               <TbZoom className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
               <Input
                 className={SEARCH_INPUT_CLASS}
-                placeholder={t("Name, description...")}
+                placeholder={t("Organization name, description...")}
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
               />
@@ -218,14 +218,12 @@ export const OrganizationSearchFilters = memo(
             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-6 sm:gap-y-2">
               <SortFieldRow
                 sortBy="created_at"
-                fieldLabel={t("Created at")}
                 filters={filters}
                 handleSort={handleSort}
                 t={t}
               />
               <SortFieldRow
                 sortBy="updated_at"
-                fieldLabel={t("Updated at")}
                 filters={filters}
                 handleSort={handleSort}
                 t={t}

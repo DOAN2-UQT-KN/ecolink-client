@@ -199,7 +199,14 @@
   "Explore": "Khám phá",
   "Mine": "Của tôi",
   "Search": "Tìm kiếm",
+  "Name, email, description...": "Tên, email, mô tả...",
+  "Select status": "Chọn trạng thái",
+  "All": "Tất cả",
+  "Active": "Hoạt động",
+  "Inactive": "Không hoạt động",
+  "Rejected": "Từ chối",
   "Name, description...": "Tên, mô tả...",
+  "Organization name, description...": "Tên tổ chức, mô tả...",
   "Sort": "Sắp xếp",
   "Created at": "Ngày tạo",
   "Updated at": "Ngày cập nhật",
@@ -214,6 +221,8 @@
   "Creating...": "Đang tạo...",
 
   "Name": "Tên",
+  "Organization": "Tổ chức",
+  "Owner": "Chủ sở hữu",
   "Name is required": "Vui lòng nhập tên",
   "Enter organization name...": "Nhập tên tổ chức...",
   "Brand & contact": "Thương hiệu & liên hệ",
@@ -255,5 +264,6 @@
   "Collapse sidebar": "Thu gọn thanh bên",
   "Expand sidebar": "Mở rộng thanh bên",
 
-  "Join Organizations": "Tham gia tổ chức"
+  "Join Organizations": "Tham gia tổ chức",
+  "Page size": "Kích thước trang"
 }

@@ -91,18 +91,18 @@ export const PreviewIncidentPopover = memo(function PreviewIncidentPopover({
         )}
         showCloseButton
       >
-        {/* <DialogHeader> */}
-          {/* <DialogTitle
+        <DialogHeader>
+          <DialogTitle
             className={cn("font-semibold", isDark ? "text-zinc-100" : "text-zinc-900")}
           >
             {t("Preview")}
-          </DialogTitle> */}
+          </DialogTitle>
           {/* <DialogDescription
             className={cn("text-sm", isDark ? "text-zinc-400" : "text-zinc-600")}
           >
             {t("See how your organization card looks on different screens.")}
           </DialogDescription> */}
-        {/* </DialogHeader> */}
+        </DialogHeader>
 
         <div>
           <span

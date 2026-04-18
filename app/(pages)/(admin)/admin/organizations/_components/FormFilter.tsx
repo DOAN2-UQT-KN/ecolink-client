@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { TbZoom, TbZoomReset } from "react-icons/tb";
+import { useTranslation } from "react-i18next";
+import { TbZoom } from "react-icons/tb";
 
-import { Button } from "@/components/client/shared/Button";
 import { Input } from "@/components/ui/input";
 import { Field, FieldLabel } from "@/components/ui/field";
 import {
@@ -14,10 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useDebounce } from "@/hooks/useDebounce";
-import {
-  useOrganizationContext,
-  type FormFilterValues,
-} from "../_context/OrganizationContext";
+import { useOrganizationContext } from "../_context/OrganizationContext";
 
 type FormFieldConfig = {
   key: string;
@@ -25,28 +22,9 @@ type FormFieldConfig = {
   render: () => React.ReactNode;
 };
 
-const STATUS_OPTIONS = [
-  { label: "All", value: "all" },
-  { label: "Active", value: "1" },
-  { label: "Inactive", value: "2" },
-  { label: "Pending", value: "12" },
-  { label: "Approved", value: "14" },
-  { label: "Rejected", value: "18" },
-];
-
-const SORT_BY_OPTIONS: Array<{ label: string; value: FormFilterValues["sortBy"] }> = [
-  { label: "Created at", value: "created_at" },
-  { label: "Updated at", value: "updated_at" },
-  { label: "Name", value: "name" },
-];
-
-const SORT_ORDER_OPTIONS: Array<{ label: string; value: FormFilterValues["sortOrder"] }> = [
-  { label: "Descending", value: "desc" },
-  { label: "Ascending", value: "asc" },
-];
-
 export function FormFilter() {
-  const { filters, onFilterChange, onResetFilters } = useOrganizationContext();
+  const { t } = useTranslation();
+  const { filters, onFilterChange } = useOrganizationContext();
   const values = filters;
   const [searchInput, setSearchInput] = useState(values.search);
   const debouncedSearch = useDebounce(searchInput, 500);
@@ -62,17 +40,26 @@ export function FormFilter() {
     }
   }, [debouncedSearch, onFilterChange, values.search]);
 
-  const formFields: FormFieldConfig[] = useMemo(
-    () => [
+  const formFields: FormFieldConfig[] = useMemo(() => {
+    const statusOptions = [
+      { label: t("All"), value: "all" },
+      { label: t("Active"), value: "1" },
+      { label: t("Inactive"), value: "2" },
+      { label: t("Pending"), value: "12" },
+      { label: t("Approved"), value: "14" },
+      { label: t("Rejected"), value: "18" },
+    ];
+
+    return [
       {
         key: "search",
-        label: "Search",
+        label: t("Search"),
         render: () => (
           <div className="relative">
             <TbZoom className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               className="h-10 pl-10 !border !border-zinc-300"
-              placeholder="Name, email, description..."
+              placeholder={t("Name, email, description...")}
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
             />
@@ -81,17 +68,17 @@ export function FormFilter() {
       },
       {
         key: "status",
-        label: "Status",
+        label: t("Status"),
         render: () => (
           <Select
             value={values.status}
             onValueChange={(value) => onFilterChange({ status: value })}
           >
             <SelectTrigger className="!h-10 w-full !border !border-zinc-300">
-              <SelectValue placeholder="Select status" />
+              <SelectValue placeholder={t("Select status")} />
             </SelectTrigger>
             <SelectContent>
-              {STATUS_OPTIONS.map((item) => (
+              {statusOptions.map((item) => (
                 <SelectItem key={item.value} value={item.value}>
                   {item.label}
                 </SelectItem>
@@ -100,55 +87,8 @@ export function FormFilter() {
           </Select>
         ),
       },
-      // {
-      //   key: "sortBy",
-      //   label: "Sort by",
-      //   render: () => (
-      //     <Select
-      //       value={values.sortBy}
-      //       onValueChange={(value: FormFilterValues["sortBy"]) =>
-      //         onFilterChange({ sortBy: value })
-      //       }
-      //     >
-      //       <SelectTrigger className="!h-11 w-full">
-      //         <SelectValue placeholder="Select field" />
-      //       </SelectTrigger>
-      //       <SelectContent>
-      //         {SORT_BY_OPTIONS.map((item) => (
-      //           <SelectItem key={item.value} value={item.value}>
-      //             {item.label}
-      //           </SelectItem>
-      //         ))}
-      //       </SelectContent>
-      //     </Select>
-      //   ),
-      // },
-      // {
-      //   key: "sortOrder",
-      //   label: "Sort order",
-      //   render: () => (
-      //     <Select
-      //       value={values.sortOrder}
-      //       onValueChange={(value: FormFilterValues["sortOrder"]) =>
-      //         onFilterChange({ sortOrder: value })
-      //       }
-      //     >
-      //       <SelectTrigger className="!h-11 w-full">
-      //         <SelectValue placeholder="Select order" />
-      //       </SelectTrigger>
-      //       <SelectContent>
-      //         {SORT_ORDER_OPTIONS.map((item) => (
-      //           <SelectItem key={item.value} value={item.value}>
-      //             {item.label}
-      //           </SelectItem>
-      //         ))}
-      //       </SelectContent>
-      //     </Select>
-      //   ),
-      // },
-    ],
-    [onFilterChange, searchInput, values.sortBy, values.sortOrder, values.status],
-  );
+    ];
+  }, [onFilterChange, searchInput, t, values.status]);
 
   return (
     <div className="space-y-4 rounded-[10px] border border-zinc-200 bg-card p-4">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 import type { IOrganization } from "@/apis/organization/models/organization";
 import { useAdminLayout } from "@/app/(pages)/(admin)/_context/AdminLayoutContext";
@@ -46,6 +47,7 @@ function toOwnerLabel(ownerId?: string | null) {
 }
 
 export function DataTable() {
+  const { t } = useTranslation();
   const { organizations, loading, pagination, total, onPageChange, onPageSizeChange } =
     useOrganizationContext();
   const { theme } = useAdminLayout();
@@ -55,7 +57,7 @@ export function DataTable() {
     () => [
       {
         key: COLUMN_KEYS.NAME_LOGO,
-        title: "Oranization",
+        title: t("Organization"),
         className: "sticky left-0 z-20 min-w-[220px]",
         render: (_, record) => (
           <div className="flex items-center gap-3">
@@ -91,7 +93,7 @@ export function DataTable() {
       },
       {
         key: COLUMN_KEYS.CREATED,
-        title: "Owner",
+        title: t("Owner"),
         className: "min-w-[180px]",
         render: (_, record) => (
           <div className="space-y-1">
@@ -116,7 +118,7 @@ export function DataTable() {
       },
       {
         key: COLUMN_KEYS.STATUS,
-        title: "Status",
+        title: t("Status"),
         className: "min-w-[120px]",
         render: (_, record) => {
           const label = STATUS_LABELS[record.status] ?? `Status ${record.status}`;
@@ -136,34 +138,18 @@ export function DataTable() {
       },
       {
         key: COLUMN_KEYS.CONTACT_EMAIL,
-        title: "Contact Email",
+        title: t("Contact email"),
         dataIndex: "contact_email",
-        // className: "min-w-[220px] !font-display-1",
-        // render: (value) => (
-        //   <span className={isDark ? "text-zinc-300" : "text-zinc-800"}>
-        //     {(value as string | null) || "-"}
-        //   </span>
-        // ),
       },
       {
         key: COLUMN_KEYS.DESCRIPTION,
-        title: "Description",
+        title: t("Description"),
         dataIndex: "description",
         className: "min-w-[260px]",
-        // render: (value) => (
-        //   <p
-        //     className={cn(
-        //       "line-clamp-2 text-sm",
-        //       isDark ? "text-zinc-400" : "text-zinc-600",
-        //     )}
-        //   >
-        //     {(value as string | null) || "-"}
-        //   </p>
-        // ),
       },
       {
         key: COLUMN_KEYS.ACTION,
-        title: "Action",
+        title: t("Action"),
         className: "min-w-[160px]",
         render: (_, record) => (
           <div className="flex items-center gap-2">
@@ -197,7 +183,7 @@ export function DataTable() {
         ),
       },
     ],
-    [isDark],
+    [isDark, t],
   );
 
   return (
