@@ -1,7 +1,7 @@
 "use client";
 
 import HeroSection from "./_components/HeroSection";
-import { Divider } from "@/components/shared/Divider";
+import { Divider } from "@/components/client/shared/Divider";
 import ProblemAndSolution from "./_components/ProblemAndSolution";
 import ForVolunteers from "./_components/ForVolunteers";
 import ForCitizens from "./_components/ForCitizens";

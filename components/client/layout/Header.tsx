@@ -74,12 +74,12 @@ const items = [
       {
         label: "Report Trash",
         ariaLabel: "Report Trash",
-        href: "/report-trash",
+        href: "/incidents",
       },
       {
-        label: "Leaderboard",
-        ariaLabel: "Community Leaderboard",
-        href: "/leaderboard",
+        label: "Join Organizations",
+        ariaLabel: "Join Organizations",
+        href: "/organizations",
       },
     ],
   },

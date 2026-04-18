@@ -1,6 +1,6 @@
 "use client";
 
-import LanguageSwitcher from "@/components/shared/LanguageSwitcher";
+import LanguageSwitcher from "@/components/client/shared/LanguageSwitcher";
 import Image from "next/image";
 
 export default function AuthLayout({

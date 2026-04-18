@@ -1,4 +1,4 @@
-import { Button } from "@/components/shared/Button";
+import { Button } from "@/components/client/shared/Button";
 import { useTranslation } from "react-i18next";
 import { IoDocumentAttachOutline } from "react-icons/io5";
 import { BiTrash, BiPlus } from "react-icons/bi";
@@ -13,55 +13,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-
-const compressImage = (file: File): Promise<Blob> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = (event) => {
-      const img = new Image();
-      img.src = event.target?.result as string;
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        let width = img.width;
-        let height = img.height;
-
-        const MAX_DIMENSION = 1280;
-        if (width > height) {
-          if (width > MAX_DIMENSION) {
-            height *= MAX_DIMENSION / width;
-            width = MAX_DIMENSION;
-          }
-        } else {
-          if (height > MAX_DIMENSION) {
-            width *= MAX_DIMENSION / height;
-            height = MAX_DIMENSION;
-          }
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        ctx?.drawImage(img, 0, 0, width, height);
-
-        // Convert to Blob instead of base64
-        canvas.toBlob(
-          (blob) => {
-            if (blob) {
-              resolve(blob);
-            } else {
-              reject(new Error("Failed to compress image"));
-            }
-          },
-          "image/jpeg",
-          0.5,
-        );
-      };
-      img.onerror = (err) => reject(err);
-    };
-    reader.onerror = (err) => reject(err);
-  });
-};
+import { compressImage } from "@/libs/compressImage";
 
 const ImagePreviewItem = memo(function ImagePreviewItem({
   image,
@@ -97,13 +49,13 @@ const ImagePreviewItem = memo(function ImagePreviewItem({
   }
 
   return (
-    <div className="relative w-[150px] h-[150px] rounded-[35px] group shadow-md overflow-hidden ring-1 ring-black/5">
+    <div className="relative w-[150px] h-[150px] rounded-[35px] group shadow-md  ring-1 ring-black/5">
       <AntdImage
         src={previewUrl}
         alt={`Uploaded ${index}`}
         width={150}
         height={150}
-        className="object-cover transition-transform duration-300 w-full h-full"
+        className="object-cover transition-transform duration-300 w-full h-full rounded-[10px]"
         preview={{
           cover: (
             <div className="absolute inset-0 bg-black/20 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200">

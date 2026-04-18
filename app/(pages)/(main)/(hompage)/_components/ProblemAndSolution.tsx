@@ -1,8 +1,8 @@
 "use client";
 
-import { Tag } from "@/components/shared/Tag";
+import { Tag } from "@/components/client/shared/Tag";
 import { Trans, useTranslation } from "react-i18next";
-import ContentCard from "@/components/shared/ContentCard";
+import ContentCard from "@/components/client/shared/ContentCard";
 import { useCallback } from "react";
 import { motion } from "framer-motion";
 

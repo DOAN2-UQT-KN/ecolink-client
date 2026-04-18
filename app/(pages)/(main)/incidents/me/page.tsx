@@ -5,10 +5,10 @@ import StatsCards from "./_components/StatsCards";
 import {
   Breadcrumbs,
   BreadcrumbItemProps,
-} from "@/components/shared/Breadcrumbs";
+} from "@/components/client/shared/Breadcrumbs";
 import { useTranslation } from "react-i18next";
 import { IncidentMeProvider } from "./_context/IncidentMeContext";
-import { Button } from "@/components/shared/Button";
+import { Button } from "@/components/client/shared/Button";
 import { useRouter } from "next/navigation";
 
 function MyIncidentsPage() {

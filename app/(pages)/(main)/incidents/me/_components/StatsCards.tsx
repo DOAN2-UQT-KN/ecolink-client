@@ -1,5 +1,5 @@
 import { memo, useMemo } from "react";
-import StatsCard from "@/components/shared/StatsCard";
+import StatsCard from "@/components/client/shared/StatsCard";
 import {
   HiOutlineDocumentText,
   HiOutlineCheckCircle,

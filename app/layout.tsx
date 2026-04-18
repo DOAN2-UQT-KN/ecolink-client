@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import I18nProvider from "@/components/providers/I18nProvider";
-import ReactQueryProvider from "@/components/providers/ReactQueryProvider";
+import I18nProvider from "@/components/client/providers/I18nProvider";
+import ReactQueryProvider from "@/components/client/providers/ReactQueryProvider";
 import { Inter } from "next/font/google";
 import { cn } from "@/libs/utils";
 import { Toaster } from "@/components/ui/sonner";

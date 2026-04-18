@@ -15,7 +15,7 @@ import {
   SelectValue,
   MultiSelect,
 } from "@/components/ui/select";
-import { Button } from "@/components/shared/Button";
+import { Button } from "@/components/client/shared/Button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { TbZoomReset, TbZoom } from "react-icons/tb";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
@@ -43,7 +43,6 @@ const statusOptions = [
 export const SearchSidebar = memo(function SearchSidebar() {
   const { t } = useTranslation();
   const {
-
     filters,
     setFilters,
     resetFilters: resetContextFilters,
@@ -234,4 +233,3 @@ export const SearchSidebar = memo(function SearchSidebar() {
     </aside>
   );
 });
-
