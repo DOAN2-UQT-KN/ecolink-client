@@ -156,7 +156,7 @@ const DataTableComponent = memo(function DataTableComponent() {
                     className="h-8 w-8 p-0 border-none bg-transparent hover:bg-muted shadow-none group"
                     disabled={isLeavePending}
                   >
-                    <MoreHorizontal className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                    <MoreHorizontal className="h-4 w-4 text-muted-foreground group-hover:text-white transition-colors" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-[200px]">
