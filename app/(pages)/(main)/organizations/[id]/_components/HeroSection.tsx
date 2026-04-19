@@ -1,18 +1,22 @@
 "use client";
 
-import React, { memo, useMemo } from "react";
-import { X } from "lucide-react";
+import React, { memo, useCallback, useMemo, useState } from "react";
+import { Pencil, X } from "lucide-react";
 import { BiGroup } from "react-icons/bi";
 import { HiOutlineUserRemove } from "react-icons/hi";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
 import { Button as SharedButton } from "@/components/client/shared/Button";
 import { cn } from "@/libs/utils";
+import { UpdateOrganizationPopover } from "@/app/(pages)/(main)/organizations/me/_components/UpdateOrganizationPopover";
 
 import { useOrganizationDetail } from "../_hooks/useOrganizationDetail";
 
 export const HeroSection = memo(function HeroSection() {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const [isEditGroupOpen, setIsEditGroupOpen] = useState(false);
   const {
     organization,
     organizationId,
@@ -30,6 +34,15 @@ export const HeroSection = memo(function HeroSection() {
     handleLeaveClick,
     handleConfirmLeave,
   } = useOrganizationDetail();
+
+  const handleOrganizationUpdated = useCallback(() => {
+    void queryClient.invalidateQueries({
+      queryKey: ["organization", organizationId],
+    });
+    void queryClient.invalidateQueries({
+      queryKey: ["organization-join-requests", organizationId],
+    });
+  }, [queryClient, organizationId]);
 
   const backgroundUrl = organization?.background_url?.trim() ?? "";
   const logoUrl = organization?.logo_url?.trim() ?? "";
@@ -57,6 +70,7 @@ export const HeroSection = memo(function HeroSection() {
   }
 
   return (
+    <>
     <section className="w-full overflow-hidden rounded-xl border border-[rgba(136,122,71,0.5)] bg-white/80 shadow-sm ring-1 ring-white/5">
       <div className={headerClassName} style={headerStyle}>
         {backgroundUrl ? (
@@ -168,11 +182,28 @@ export const HeroSection = memo(function HeroSection() {
                 >
                   {t("Join")}
                 </SharedButton>
+              ) : showYourGroupTag ? (
+                <SharedButton
+                  variant="outlined-brown"
+                  size="medium"
+                  className="min-w-0 flex-1 sm:flex-none sm:min-w-[140px]"
+                  iconLeft={<Pencil className="size-4" aria-hidden />}
+                  onClick={() => setIsEditGroupOpen(true)}
+                >
+                  {t("Edit group")}
+                </SharedButton>
               ) : null}
             </div>
           </div>
         </div>
       </div>
     </section>
+    <UpdateOrganizationPopover
+      organization={organization}
+      open={isEditGroupOpen}
+      onOpenChange={setIsEditGroupOpen}
+      onUpdated={handleOrganizationUpdated}
+    />
+    </>
   );
 });

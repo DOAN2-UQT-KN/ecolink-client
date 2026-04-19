@@ -1,5 +1,6 @@
 import { IBaseResponse } from "@/types/BaseResponse";
 import { IJoinRequest } from "./joinRequest";
+import { IPaginationResponse } from "@/types/PaginationResponse";
 
 export interface IGetMyJoinRequestsRequest {
   organization_id?: string;
@@ -46,3 +47,16 @@ export interface IOrganizationJoinRequestCreated {
 export type ICreateOrganizationJoinRequestResponse = IBaseResponse<{
   joinRequest: IOrganizationJoinRequestCreated;
 }>;
+
+
+export interface IGetJoinRequestsRequest {
+  organization_id?: string;
+  status?: number;
+  requester_id?: string;
+  page?: number;
+  limit?: number;
+  sort_by?: "created_at" | "updated_at";
+  sort_order?: "asc" | "desc";
+}
+
+export type IGetJoinRequestsResponse = IPaginationResponse<IJoinRequest[], "join_requests">;

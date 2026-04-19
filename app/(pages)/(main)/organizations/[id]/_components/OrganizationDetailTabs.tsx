@@ -1,24 +1,39 @@
 "use client";
 
-import { memo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { CampaignList } from "./CampaignList";
+import { OrganizationJoinRequests } from "./OrganizationJoinRequests";
 import { OrganizationMembers } from "./OrganizationMembers";
+import { useOrganizationDetail } from "../_hooks/useOrganizationDetail";
 
-export const ORGANIZATION_DETAIL_TAB_ITEMS = [
+const ALL_ORGANIZATION_DETAIL_TAB_ITEMS = [
   { value: "campaign", labelKey: "Campaign" },
   { value: "members", labelKey: "Members" },
+  { value: "join-requests", labelKey: "Approval requests" },
 ] as const;
 
 export type OrganizationDetailTabValue =
-  (typeof ORGANIZATION_DETAIL_TAB_ITEMS)[number]["value"];
+  (typeof ALL_ORGANIZATION_DETAIL_TAB_ITEMS)[number]["value"];
+
+/** Tabs shown to visitors (group owner also sees these plus join-requests). */
+export const ORGANIZATION_DETAIL_TAB_ITEMS = ALL_ORGANIZATION_DETAIL_TAB_ITEMS.filter(
+  (item) => item.value !== "join-requests",
+);
 
 export const OrganizationDetailTabs = memo(function OrganizationDetailTabs() {
   const { t } = useTranslation();
+  const { showYourGroupTag } = useOrganizationDetail();
   const [tab, setTab] = useState<OrganizationDetailTabValue>("campaign");
+
+  const tabItems = useMemo(() => {
+    return showYourGroupTag
+      ? [...ALL_ORGANIZATION_DETAIL_TAB_ITEMS]
+      : [...ORGANIZATION_DETAIL_TAB_ITEMS];
+  }, [showYourGroupTag]);
 
   return (
     <Tabs
@@ -26,7 +41,7 @@ export const OrganizationDetailTabs = memo(function OrganizationDetailTabs() {
       onValueChange={(v) => setTab(v as OrganizationDetailTabValue)}
     >
       <TabsList className="w-full sm:w-auto border border-[rgba(136,122,71,0.5)] rounded-[8px] bg-background-primary/10 mb-4">
-        {ORGANIZATION_DETAIL_TAB_ITEMS.map((item) => (
+        {tabItems.map((item) => (
           <TabsTrigger
             key={item.value}
             value={item.value}
@@ -41,6 +56,9 @@ export const OrganizationDetailTabs = memo(function OrganizationDetailTabs() {
       </TabsContent>
       <TabsContent value="members" className="mt-0">
         <OrganizationMembers enabled={tab === "members"} />
+      </TabsContent>
+      <TabsContent value="join-requests" className="mt-0">
+        <OrganizationJoinRequests enabled={tab === "join-requests"} />
       </TabsContent>
     </Tabs>
   );
