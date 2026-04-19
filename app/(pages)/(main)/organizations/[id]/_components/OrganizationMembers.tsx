@@ -25,6 +25,8 @@ import { cn } from "@/libs/utils";
 import useAuthStore from "@/stores/useAuthStore";
 
 import { useOrganizationDetail } from "../_hooks/useOrganizationDetail";
+import Image from "next/image";
+import defaultAvatar from "@/public/default-avatar.png";
 
 const FILTER_PANEL_CLASS =
   "w-full space-y-2 p-6 border-1 border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5 h-fit";
@@ -203,27 +205,26 @@ export const OrganizationMembers = memo(function OrganizationMembers({
         <p className="text-xs font-medium text-foreground-tertiary uppercase tracking-wide">
           {t("Owner")}
         </p>
-        <div className="mt-3 flex items-start gap-3 min-w-0">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-full border border-[rgba(136,122,71,0.35)] bg-white/80">
+        <div className="mt-3 flex items-center gap-3 min-w-0 justify-center">
+          {/* <div className="flex size-10 shrink-0 items-center justify-center rounded-full border border-[rgba(136,122,71,0.35)] bg-white/80">
             <Crown className="size-5 text-button-accent" aria-hidden />
-          </div>
+          </div> */}
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <User className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+              {/* <User className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+               */}  
+              <Image src={organization?.owner?.avatar || defaultAvatar} alt={organization?.owner?.name} width={40} height={40} className="rounded-full" />
               <span className="text-sm font-medium text-foreground break-all">
-                {ownerId ? shortUserId(ownerId) : "—"}
+                {ownerId ? organization?.owner?.name : "—"}
               </span>
               {ownerId &&
               currentUserId != null &&
               ownerId === currentUserId ? (
-                <span className="text-xs font-medium text-primary">
+                <span className="text-xs font-medium text-button-accent bg-background-primary px-2 py-1 rounded-md">
                   {t("You")}
                 </span>
               ) : null}
             </div>
-            <p className="mt-1 text-xs text-foreground-secondary">
-              {t("User ID")}
-            </p>
           </div>
         </div>
       </div>
