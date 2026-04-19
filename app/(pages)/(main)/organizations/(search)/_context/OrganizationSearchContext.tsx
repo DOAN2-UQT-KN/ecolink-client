@@ -150,7 +150,7 @@ export const OrganizationSearchProvider = ({
       sort_by: filters.sort_by,
       sort_order: filters.sort_order,
       is_email_verified: true,
-      status: STATUS.APPROVED,
+      status: STATUS.ACTIVE,
     };
 
   const myListRequest: IGetMyOrganizationsRequest = {

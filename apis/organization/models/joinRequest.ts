@@ -1,3 +1,4 @@
+import { IUser } from "@/apis/auth/models/user";
 import { IOrganization } from "./organization";
 
 export interface IJoinRequest {
@@ -8,4 +9,6 @@ export interface IJoinRequest {
   created_at: string;
   updated_at: string;
   organization?: Pick<IOrganization, "id" | "name" | "owner_id">;
+  requester?: Pick<IUser, "id" | "name" | "email">;
 }
+

@@ -358,7 +358,7 @@ export const OrganizationCard = memo(function OrganizationCard({
                 className="flex-1 min-w-0"
                 iconLeft={<X className="size-4" aria-hidden />}
                 isLoading={isCancelPending}
-                isDisabled={!organizationId || !joinRequestId}
+                // isDisabled={!organizationId || !joinRequestId}
                 onClick={handleCancelJoinClick}
               >
                 {t("Cancel")}

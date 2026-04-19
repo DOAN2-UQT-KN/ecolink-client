@@ -1,5 +1,7 @@
 import { IBaseResponse } from "@/types/BaseResponse";
 import { IOrganization } from "./organization";
+import { IMember } from "./organizationMembers";
+import { IPaginationResponse } from "@/types/PaginationResponse";
 
 export interface IUpdateOrganizationRequest {
   name?: string;
@@ -24,3 +26,14 @@ export type IVerifyOrganizationResponse = IBaseResponse<{
 export type IResendContactEmailResponse = IBaseResponse<{
   organization: IOrganization;
 }>;
+
+
+export interface IGetMembersRequest {
+  organization_id: string;
+  page?: number;
+  limit?: number;
+  sort_by?: "created_at" | "updated_at";
+  sort_order?: "asc" | "desc";
+}
+
+export type IGetMembersResponse = IPaginationResponse<IMember[], "members">   

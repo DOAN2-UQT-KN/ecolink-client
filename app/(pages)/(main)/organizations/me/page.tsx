@@ -1,35 +1,39 @@
 "use client";
+
 import React from "react";
 import DataTable from "./_components/DataTable";
-import StatsCards from "./_components/StatsCards";
 import {
   Breadcrumbs,
   BreadcrumbItemProps,
 } from "@/components/client/shared/Breadcrumbs";
 import { useTranslation } from "react-i18next";
-import { IncidentMeProvider } from "./_context/IncidentMeContext";
+import { OrganizationMeProvider } from "./_context/OrganizationMeContext";
 import { Button } from "@/components/client/shared/Button";
 import { useRouter } from "next/navigation";
 import { HiOutlinePlusCircle } from "react-icons/hi";
 
-function MyIncidentsPage() {
+function MyOrganizationsPage() {
   const { t } = useTranslation();
   const router = useRouter();
 
   const breadcrumbs: BreadcrumbItemProps[] = React.useMemo(
     () => [
       { label: t("Home"), path: "/", type: "link" },
-      { label: t("My incidents"), path: "/incidents/me", type: "page" },
+      {
+        label: t("My organizations"),
+        path: "/organizations/me",
+        type: "page",
+      },
     ],
     [t],
   );
 
-  const handleCreateReport = React.useCallback(() => {
-    router.push("/incidents/create");
+  const handleCreateOrganization = React.useCallback(() => {
+    router.push("/organizations/create");
   }, [router]);
 
   return (
-    <IncidentMeProvider>
+    <OrganizationMeProvider>
       <div className="">
         <Breadcrumbs breadcrumbs={breadcrumbs} />
 
@@ -38,21 +42,20 @@ function MyIncidentsPage() {
             variant="brown"
             size="medium"
             className="h-[45px]"
-            onClick={handleCreateReport}
+            onClick={handleCreateOrganization}
           >
             <div className="flex items-center gap-2">
               <HiOutlinePlusCircle className="h-5 w-5" />
-              {t("Add Report")}
+              {t("Add Organization")}
             </div>
           </Button>
         </div>
         <div className="flex flex-col gap-8 items-start pt-8 animate-in fade-in slide-in-from-top-4 duration-500">
-          <StatsCards />
           <DataTable />
         </div>
       </div>
-    </IncidentMeProvider>
+    </OrganizationMeProvider>
   );
 }
 
-export default MyIncidentsPage;
+export default MyOrganizationsPage;
