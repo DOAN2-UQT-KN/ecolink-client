@@ -4,7 +4,7 @@ import { memo, useCallback, useMemo, useState } from "react";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { format, parseISO } from "date-fns";
-import { Crown, User } from "lucide-react";
+import { Crown, Inbox, User } from "lucide-react";
 import { HiOutlineSortAscending, HiOutlineSortDescending } from "react-icons/hi";
 import { TbZoom } from "react-icons/tb";
 
@@ -13,6 +13,13 @@ import type { IGetMembersRequest } from "@/apis/organization/models/organization
 import { Input } from "@/components/ui/input";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { useDebounce } from "@/hooks/useDebounce";
 import { cn } from "@/libs/utils";
 import useAuthStore from "@/stores/useAuthStore";
@@ -272,9 +279,21 @@ export const OrganizationMembers = memo(function OrganizationMembers({
             {t("Could not load members.")}
           </p>
         ) : membersList.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            {t("No members found.")}
-          </p>
+          <div className="flex justify-center pt-12 pb-20">
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Inbox className="h-12 w-12 text-muted-foreground" />
+                </EmptyMedia>
+                <EmptyTitle>{t("No members found.")}</EmptyTitle>
+                <EmptyDescription>
+                  {t(
+                    "Try adjusting your search or sort options to find members.",
+                  )}
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          </div>
         ) : (
           <ul className="divide-y divide-border/60">
             {membersList.map((m) => (
