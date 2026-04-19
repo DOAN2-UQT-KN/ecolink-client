@@ -7,11 +7,13 @@ export interface IMember {
 }
 
 export interface IGetMembersRequest {
-  user_id?: string;
+  organization_id: string;
+  search?: string;
   page?: number;
   limit?: number;
   sort_by?: "created_at" | "updated_at";
   sort_order?: "asc" | "desc";
+  name?: string;
 }
 
 export type IGetMembersResponse = IBaseResponse<{

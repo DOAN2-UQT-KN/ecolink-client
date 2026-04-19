@@ -15,6 +15,7 @@ import {
 } from "@/hooks/reactQuery";
 import { useTranslation } from "react-i18next";
 import { MessageType } from "@/utils/showMessage";
+import { IGetMembersRequest, IGetMembersResponse } from "./models/organizationMembers";
 
 const url = "/organizations";
 
@@ -155,6 +156,37 @@ export const useCreateJoinRequest = (
     messageError: {
       type: MessageType.Toast,
     },
+    ...options,
+  });
+};
+
+// GET /api/v1/organizations/{id}/members
+export const getMembersByOrg = async (
+  req: IGetMembersRequest,
+): Promise<IGetMembersResponse> => {
+  const { organization_id, ...rest } = req;
+  return await requestApi.get<IGetMembersResponse>(`${url}/${organization_id}/members`, rest);
+};
+
+export const useGetMembersByOrg = (
+  req: IGetMembersRequest,
+  options?: Omit<
+    UseGetOptions<IGetMembersResponse>,
+    "queryKey" | "queryFn"
+  >,
+) => {
+  return useGet({
+    queryKey: [
+      "organization-members",
+      req.organization_id,
+      req.page ?? 1,
+      req.limit ?? 20,
+      req.search ?? "",
+      req.name ?? "",
+      req.sort_by ?? null,
+      req.sort_order ?? null,
+    ],
+    queryFn: () => getMembersByOrg(req),
     ...options,
   });
 };

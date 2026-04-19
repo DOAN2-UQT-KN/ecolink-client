@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import { CampaignList } from "./_components/CampaignList";
+import { OrganizationDetailTabs } from "./_components/OrganizationDetailTabs";
 import { GeneralInformation } from "./_components/GeneralInformation";
 import { HeroSection } from "./_components/HeroSection";
 import { OrganizationDetailProvider } from "./_context/OrganizationDetailContext";
@@ -110,7 +110,7 @@ function OrganizationDetailBody() {
         <HeroSection />
         <div className="mt-6 flex flex-col lg:flex-row gap-6 items-start">
           <div className="w-full lg:w-[70%] lg:min-w-0">
-            <CampaignList />
+            <OrganizationDetailTabs />
           </div>
           <div className="w-full lg:w-[30%] lg:shrink-0">
             <GeneralInformation />

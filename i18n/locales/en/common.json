@@ -149,5 +149,13 @@
   "Dark mode": "Dark mode",
   "Open navigation": "Open navigation",
   "Collapse sidebar": "Collapse sidebar",
-  "Expand sidebar": "Expand sidebar"
+  "Expand sidebar": "Expand sidebar",
+  "Campaign": "Campaign",
+  "Members": "Members",
+  "User ID": "User ID",
+  "Search members by user ID": "Search members by user ID",
+  "Could not load members.": "Could not load members.",
+  "No members found.": "No members found.",
+  "You": "You",
+  "Owner": "Owner"
 }

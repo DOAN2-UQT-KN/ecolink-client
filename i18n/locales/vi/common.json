@@ -278,5 +278,12 @@
   "Leave": "Rời khỏi",
   "Are you sure?": "Bạn có chắc chắn?",
   "Join": "Tham gia",
-  "View more": "Xem thêm"
+  "View more": "Xem thêm",
+  "Campaign": "Chiến dịch",
+  "Members": "Thành viên",
+  "User ID": "ID người dùng",
+  "Search members by user name": "Tìm thành viên theo tên người dùng",
+  "Could not load members.": "Không tải được danh sách thành viên.",
+  "No members found.": "Không tìm thấy thành viên.",
+  "You": "Bạn"
 }
