@@ -11,6 +11,7 @@ export interface IGetMyOrganizationsRequest {
   status?: number;
   /** Single value or multiple (serialized as comma-separated query) */
   request_status?: number | number[];
+  is_owner?: boolean;
 }
 
 export type IGetMyOrganizationsResponse = IBaseResponse<{

@@ -158,5 +158,13 @@
   "No members found.": "No members found.",
   "Try adjusting your search or sort options to find members.": "Try adjusting your search or sort options to find members.",
   "You": "You",
-  "Owner": "Owner"
+  "Owner": "Owner",
+  "Member": "Member",
+  "Home": "Home",
+  "My organizations": "My organizations",
+  "Edit organization": "Edit organization",
+  "Leave group": "Leave group",
+  "No organizations yet": "No organizations yet",
+  "Search organizations...": "Search organizations...",
+  "Edit": "Edit"
 }
