@@ -7,7 +7,6 @@ import { Button } from "@/components/client/shared/Button";
 import { useTranslation } from "react-i18next";
 import { OrganizationMeContext } from "../_context/OrganizationMeContext";
 import { IOrganization } from "@/apis/organization/models/organization";
-import { STATUS } from "@/constants/status";
 import { useRouter } from "next/navigation";
 import {
   DropdownMenu,
@@ -15,7 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/client/shared/DropdownMenu";
-import { StatusTag } from "@/components/client/shared/StatusTag";
+import { StatusTag } from "@/components/ui/StatusTag";
 import FormFilter from "./FormFilter";
 import useAuthStore from "@/stores/useAuthStore";
 import { UpdateOrganizationPopover } from "./UpdateOrganizationPopover";
@@ -130,19 +129,10 @@ const DataTableComponent = memo(function DataTableComponent() {
         title: t("Status"),
         key: "status",
         render: (_, record) => {
-          const isCurrentUserOwner =
-            currentUserId != null && record.owner_id === currentUserId;
-
-          return (
-            <div className="flex flex-col gap-1 items-start">
-              <StatusTag status={record.status as STATUS} />
-              <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">
-                {isCurrentUserOwner ? t("Owner") : t("Member")}
-              </span>
-            </div>
-          );
+          return <StatusTag status={record.status} className="!mx-0 min-w-0 justify-center" />;
         },
         width: 140,
+        align: "center",
       },
       {
         title: t("Action"),
@@ -152,18 +142,24 @@ const DataTableComponent = memo(function DataTableComponent() {
             currentUserId != null && record.owner_id === currentUserId;
 
           return (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outlined-brown"
-                  size="small"
-                  className="h-8 w-8 p-0 border-none bg-transparent hover:bg-muted shadow-none group"
-                  disabled={isLeavePending}
-                >
-                  <MoreHorizontal className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-[200px]">
+            <div
+              className="flex justify-start"
+              onClick={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+              role="presentation"
+            >
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outlined-brown"
+                    size="small"
+                    className="h-8 w-8 p-0 border-none bg-transparent hover:bg-muted shadow-none group"
+                    disabled={isLeavePending}
+                  >
+                    <MoreHorizontal className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-[200px]">
                 {isCurrentUserOwner ? (
                   <DropdownMenuItem
                     className="text-xs cursor-pointer"
@@ -186,8 +182,9 @@ const DataTableComponent = memo(function DataTableComponent() {
                     {t("Leave group")}
                   </DropdownMenuItem>
                 )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           );
         },
         width: 80,

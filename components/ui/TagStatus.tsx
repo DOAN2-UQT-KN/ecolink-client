@@ -109,7 +109,7 @@ const TagStatus: React.FC<TagTicketProps> = ({ type, className, isBom }) => {
   return (
     <Tag
       className={cn(
-        "min-w-24 text-center rounded-md pb-0.5 mx-auto",
+        "min-w-24 text-center rounded-md pb-0.5 mx-auto ",
         className
       )}
       color={filterColorByType(type)}

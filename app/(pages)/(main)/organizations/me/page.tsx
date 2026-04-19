@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import { OrganizationMeProvider } from "./_context/OrganizationMeContext";
 import { Button } from "@/components/client/shared/Button";
 import { useRouter } from "next/navigation";
+import { HiOutlinePlusCircle } from "react-icons/hi";
 
 function MyOrganizationsPage() {
   const { t } = useTranslation();
@@ -43,7 +44,10 @@ function MyOrganizationsPage() {
             className="h-[45px]"
             onClick={handleCreateOrganization}
           >
-            {t("Create")}
+            <div className="flex items-center gap-2">
+              <HiOutlinePlusCircle className="h-5 w-5" />
+              {t("Add Organization")}
+            </div>
           </Button>
         </div>
         <div className="flex flex-col gap-8 items-start pt-8 animate-in fade-in slide-in-from-top-4 duration-500">

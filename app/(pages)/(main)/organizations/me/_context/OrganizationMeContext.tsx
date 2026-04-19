@@ -77,6 +77,7 @@ export const OrganizationMeProvider = ({
   const { data, isLoading, refetch } = useGetMyOrganizations({
     page: pagination.current,
     limit: pagination.pageSize,
+    is_owner: true,
     ...filters,
   });
 
