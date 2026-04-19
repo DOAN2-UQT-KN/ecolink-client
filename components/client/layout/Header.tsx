@@ -136,7 +136,7 @@ const Header: React.FC<CardNavProps> = ({ ease = "power3.out", menuColor }) => {
   const cardsRef = useRef<HTMLDivElement[]>([]);
   const tlRef = useRef<gsap.core.Timeline | null>(null);
 
-  const { is_authenticated } = useAuthStore();
+  const { user } = useAuthStore();
   const router = useRouter();
 
   const calculateHeight = () => {
@@ -333,7 +333,7 @@ const Header: React.FC<CardNavProps> = ({ ease = "power3.out", menuColor }) => {
     >
       <LanguageSwitcher />
 
-      {is_authenticated ? (
+      {user ? (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Image
