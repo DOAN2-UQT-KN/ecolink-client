@@ -1,10 +1,11 @@
+import type { LucideIcon } from "lucide-react";
 import {
-  TbUsersGroup,
-  TbMessageReport,
-  TbLayoutDashboard,
-  TbSettings,
-  TbGift,
-} from "react-icons/tb";
+  LayoutDashboard,
+  TriangleAlert,
+  Building2,
+  Settings,
+} from "lucide-react";
+import { TbUsersGroup, TbMessageReport, TbLayoutDashboard, TbSettings } from "react-icons/tb";
 import { IconType } from "react-icons";
 
 export type AdminNavItem = {
@@ -18,6 +19,5 @@ export const adminNavItems: AdminNavItem[] = [
   { href: "/admin", labelKey: "Admin dashboard", icon: TbLayoutDashboard },
   { href: "/admin/incidents", labelKey: "Incidents", icon: TbMessageReport },
   { href: "/admin/organizations", labelKey: "Organizations", icon: TbUsersGroup },
-  { href: "/admin/gifts", labelKey: "Gifts", icon: TbGift },
   { href: "/admin/settings", labelKey: "Settings", icon: TbSettings },
 ];
