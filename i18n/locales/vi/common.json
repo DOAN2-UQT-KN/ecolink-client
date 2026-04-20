@@ -330,5 +330,6 @@
   "Please choose an image file.": "Vui lòng chọn tệp ảnh.",
   "Current image will be kept unless you choose a new file.": "Ảnh hiện tại được giữ nếu bạn không chọn ảnh mới.",
   "Failed to upload image": "Tải ảnh lên thất bại",
-  "No image selected": "Chưa chọn ảnh"
+  "No image selected": "Chưa chọn ảnh",
+  "Join requests": "Yêu cầu tham gia"
 }

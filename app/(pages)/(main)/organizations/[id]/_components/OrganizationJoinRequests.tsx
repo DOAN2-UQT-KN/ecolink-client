@@ -79,6 +79,9 @@ export const OrganizationJoinRequests = memo(function OrganizationJoinRequests({
       void queryClient.invalidateQueries({
         queryKey: ["organization", organizationId],
       });
+      void queryClient.invalidateQueries({
+        queryKey: ["organization-members", organizationId],
+      });
     },
   });
 

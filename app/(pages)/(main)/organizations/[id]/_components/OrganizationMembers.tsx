@@ -303,8 +303,10 @@ export const OrganizationMembers = memo(function OrganizationMembers({
                 className="flex flex-col gap-1 py-3 first:pt-0 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="flex min-w-0 items-center gap-2">
+                  <Image src={m.user?.avatar || defaultAvatar} alt={m.user?.name} width={40} height={40} className="rounded-full" />
                   <span className="text-sm font-medium text-foreground break-all">
-                    {shortUserId(m.user_id)}
+                    {/* {shortUserId(m.user_id)} */}
+                    {m.user?.name}
                   </span>
                   {currentUserId != null && m.user_id === currentUserId ? (
                     <span className="text-xs font-medium text-primary shrink-0">
