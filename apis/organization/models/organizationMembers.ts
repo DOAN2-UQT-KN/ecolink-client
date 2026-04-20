@@ -1,8 +1,10 @@
+import { IUser } from "@/apis/auth/models/user";
 import { IBaseResponse } from "@/types/BaseResponse";
 
 export interface IMember {
   organization_id: string;
   user_id: string;
+  user: Pick<IUser, "id" | "name" | "email" | "avatar">;
   created_at: string;
 }
 

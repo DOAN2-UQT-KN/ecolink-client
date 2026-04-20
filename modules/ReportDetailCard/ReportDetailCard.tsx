@@ -1,6 +1,6 @@
 "use client";
 
-import React, { memo, useMemo } from "react";
+import React, { memo, useMemo, useState } from "react";
 import { IIncident } from "@/apis/incident/models/incident";
 import { ReportHeader } from "./components/ReportHeader";
 import { ReportContent } from "./components/ReportContent";
@@ -15,6 +15,8 @@ interface ReportDetailCardProps {
   isExpanded?: boolean;
   /** When false, omits vote/share footer and hides the save control in the header. */
   showAction?: boolean;
+  /** When the card is expanded inside a dialog, parent passes this so preview state syncs with the dialog shell. */
+  onPreviewOpenChange?: (open: boolean) => void;
 }
 
 const ReportDetailCard = memo(function ReportDetailCard({
@@ -22,7 +24,11 @@ const ReportDetailCard = memo(function ReportDetailCard({
   className,
   isExpanded = false,
   showAction = true,
+  onPreviewOpenChange,
 }: ReportDetailCardProps) {
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const handlePreviewOpenChange = onPreviewOpenChange ?? setIsPreviewOpen;
+
   const images = useMemo(
     () => incident?.image_urls || incident?.media_files?.map((m) => m.url) || [],
     [incident],
@@ -62,6 +68,7 @@ const ReportDetailCard = memo(function ReportDetailCard({
             description={incident.description}
             images={images}
             isExpanded={isExpanded}
+            onPreviewOpenChange={handlePreviewOpenChange}
           />
 
           <ReportFooter
@@ -85,19 +92,69 @@ const ReportDetailCard = memo(function ReportDetailCard({
         </div>
       </article>
     ),
-    [className, images, incident, isExpanded, showAction],
+    [className, handlePreviewOpenChange, images, incident, isExpanded, showAction],
   );
 
 
   if (isExpanded) {
     return content;
   }
-
+  // useEffect(() => {
+  //   const handler = (e: Event) => {
+  //     const target = e.target as HTMLElement;
+  
+  //     if (target.closest('.ant-image-preview-root')) {
+  //       console.log("clicked inside preview");
+  //       e.stopPropagation();
+  //     }
+  //   };
+  
+  //   document.addEventListener('pointerdown', handler, true);
+  
+  //   return () => {
+  //     document.removeEventListener('pointerdown', handler, true);
+  //   };
+  // }, []);
+  const [open, setOpen] = useState(false);
+  console.log("isPreviewOpen", isPreviewOpen);
   return (
-    <Dialog>
-      <DialogTrigger asChild>{content}</DialogTrigger>
-      <DialogContent className="max-w-[95vw] md:max-w-5xl w-full h-[90vh] md:h-[85vh] p-0 overflow-hidden border-none bg-white/95 backdrop-blur-md">
-        <ReportDetailCard incident={incident} isExpanded={true} showAction={showAction} />
+    <Dialog open={open}  
+      onOpenChange={(next) => {
+        if (isPreviewOpen) {
+          console.log("isPreviewOpen", isPreviewOpen);
+          console.log("next", next);
+          if (next == false) {
+            setOpen(true);
+          
+          }
+          else
+          return;
+        }
+        else {
+          setOpen(next);
+        }
+      }}>
+      <DialogTrigger asChild>
+        <div
+          // onClick={(e) => {
+          //   if (isPreviewOpen) {
+          //     e.preventDefault();
+          //     e.stopPropagation();
+          //   }
+          // }}
+        >
+          {content}
+        </div>
+      </DialogTrigger>
+      <DialogContent
+        className="max-w-[95vw] md:max-w-5xl w-full h-[90vh] md:h-[85vh] p-0 overflow-hidden border-none bg-white/95 backdrop-blur-md"
+      >
+        <ReportDetailCard
+          incident={incident}
+          isExpanded={true}
+          showAction={showAction}
+          onPreviewOpenChange={setIsPreviewOpen}
+        />
       </DialogContent>
     </Dialog>
   );

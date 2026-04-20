@@ -1,3 +1,5 @@
+import { IUser } from "@/apis/auth/models/user";
+
 export interface IOrganization {
   id: string;
   name: string;
@@ -13,4 +15,5 @@ export interface IOrganization {
   request_status?: number;
   /** Present when the current user has a join request; required to cancel while pending. */
   join_request_id?: string;
+  owner: Pick<IUser, "id" | "name" | "email" | "avatar">;
 }

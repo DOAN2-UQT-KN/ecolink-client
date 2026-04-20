@@ -22,7 +22,7 @@ function formatApprovalRequestBadgeCount(total: number): string {
 const ALL_ORGANIZATION_DETAIL_TAB_ITEMS = [
   { value: "campaign", labelKey: "Campaign" },
   { value: "members", labelKey: "Members" },
-  { value: "join-requests", labelKey: "Approval requests" },
+  { value: "join-requests", labelKey: "Join requests" },
 ] as const;
 
 export type OrganizationDetailTabValue =

@@ -1,188 +1,26 @@
-"use client";
+import SignInForm from "./_components/SignInForm";
 
-import { Button } from "@/components/client/shared/Button";
-import Image from "next/image";
-import { useTranslation } from "react-i18next";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Field, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { useForm } from "react-hook-form";
-import { useSignIn } from "@/apis/auth/signIn";
-import { Suspense, useState } from "react";
-import { HiEye, HiEyeOff } from "react-icons/hi";
-import {
-  ISignInFormValues,
-  handleSignInSuccess,
-} from "./_services/auth.service";
-
-export default function SignIn() {
-  return (
-    <Suspense fallback={null}>
-      <SignInForm />
-    </Suspense>
-  );
+function resolveRedirect(
+  raw: string | string[] | undefined,
+): string {
+  if (typeof raw === "string" && raw.length > 0) {
+    return raw;
+  }
+  if (Array.isArray(raw) && raw[0]) {
+    return raw[0];
+  }
+  return "/";
 }
 
-function SignInForm() {
-  const { t } = useTranslation();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect") || "/";
-  const [showPassword, setShowPassword] = useState(false);
+export default async function SignInPage({
+  searchParams,
+}: {
+  searchParams:
+    | Promise<Record<string, string | string[] | undefined>>
+    | Record<string, string | string[] | undefined>;
+}) {
+  const sp = await searchParams;
+  const redirect = resolveRedirect(sp.redirect);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<ISignInFormValues>();
-
-  const { mutate, isPending } = useSignIn({
-    onSuccess: (res) => {
-      handleSignInSuccess(res, router, redirect);
-    },
-  });
-
-  const onSubmit = async (data: ISignInFormValues) => {
-    mutate(data);
-  };
-
-  return (
-    <div className="lg:w-2/5 w-full flex flex-col items-center bg-white min-h-screen">
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col justify-center lg:justify-center gap-[30px] px-[20px] lg:px-[70px] lg:py-[100px] h-full"
-      >
-        {/* TITLE */}
-        <div className="flex flex-col text-center lg:text-left gap-[10px]">
-          <span className="font-display-7 lg:font-display-8 font-semibold text-background-quaternary">
-            {t("Sign in")}
-          </span>
-        </div>
-
-        {/* FIELDS */}
-        <div className="flex flex-col gap-[20px]">
-          {/* EMAIL */}
-          <Field>
-            <FieldLabel htmlFor="email">
-              {t("Email")} <span className="text-destructive">*</span>
-            </FieldLabel>
-            <Input
-              id="email"
-              type="email"
-              placeholder={t("example@email.com")}
-              {...register("email", {
-                required: t("Email is required"),
-                pattern: {
-                  value: /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/,
-                  message: t("Invalid email format"),
-                },
-              })}
-              aria-invalid={!!errors.email}
-            />
-            {errors.email && (
-              <span className="text-red-500 text-sm mt-1">
-                {errors.email.message}
-              </span>
-            )}
-          </Field>
-
-          {/* PASSWORD */}
-          <Field>
-            <FieldLabel htmlFor="password">
-              {t("Password")} <span className="text-destructive">*</span>
-            </FieldLabel>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="••••••••"
-                {...register("password", {
-                  required: t("Password is required"),
-                  minLength: {
-                    value: 6,
-                    message: t("Password must be at least 6 characters"),
-                  },
-                })}
-                aria-invalid={!!errors.password}
-                className="pr-10"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground-tertiary hover:text-foreground focus:outline-none  cursor-pointer transition-all duration-300"
-                aria-label={
-                  showPassword ? t("Hide password") : t("Show password")
-                }
-              >
-                {showPassword ? (
-                  <HiEyeOff className="h-5 w-5" />
-                ) : (
-                  <HiEye className="h-5 w-5" />
-                )}
-              </button>
-            </div>
-
-            {errors.password && (
-              <span className="text-red-500 text-sm mt-1">
-                {errors.password.message}
-              </span>
-            )}
-
-            <div className="flex justify-end mt-2">
-              <span
-                className="text-background-tertiary font-display-2 font-regular underline cursor-pointer hover:text-background-quaternary transition-colors"
-                onClick={() => router.push("/request-reset-password")}
-              >
-                {t("Forgot password?")}
-              </span>
-            </div>
-          </Field>
-        </div>
-
-        {/* ACTION */}
-        <div className="flex flex-col items-center w-full lg:w-[373px] gap-[15px]">
-          <Button
-            type="submit"
-            variant="green"
-            className="w-full h-[60px]"
-            disabled={isPending}
-          >
-            <span className="!font-normal !font-display-3 px-2">
-              {isPending ? t("Loading...") : t("Sign in")}
-            </span>
-          </Button>
-
-          <div className="flex flex-row items-center gap-[13px] text-background-tertiary">
-            <div className="flex-1 lg:w-[133px] h-[1px] bg-background-tertiary"></div>
-            <span className="uppercase font-display-4 font-normal text-background-tertiary">
-              {t("or")}
-            </span>
-            <div className="flex-1 lg:w-[133px] h-[1px] bg-background-tertiary"></div>
-          </div>
-
-          <Button variant="outlined-green" className="w-full h-[60px]">
-            <div className="flex flex-row items-center gap-[10px]">
-              <Image src="/google.png" alt="google" width={25} height={25} />
-              <span className="!font-medium !font-display-3 px-2">
-                {t("Sign in with Google")}
-              </span>
-            </div>
-          </Button>
-        </div>
-
-        {/* FOOTER */}
-        <div className="flex flex-row justify-start items-start gap-[5px] w-full lg:w-[373px]">
-          <span className="text-background-tertiary font-display-2 font-regular">
-            {t("Don't have an account?")}
-          </span>
-          <span
-            className="text-background-tertiary font-display-2 font-regular underline cursor-pointer"
-            onClick={() => router.push("/sign-up")}
-          >
-            {t("Sign up")}
-          </span>
-        </div>
-      </form>
-    </div>
-  );
+  return <SignInForm redirect={redirect} />;
 }
