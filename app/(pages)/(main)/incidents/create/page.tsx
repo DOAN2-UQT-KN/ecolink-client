@@ -13,7 +13,8 @@ import {
   BreadcrumbItemProps,
 } from "@/components/client/shared/Breadcrumbs";
 import { useTranslation } from "react-i18next";
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { cn } from "@/libs/utils";
 
 const breadcrumbs: BreadcrumbItemProps[] = [
   { label: "Home", path: "/", type: "link" },
@@ -24,6 +25,15 @@ const breadcrumbs: BreadcrumbItemProps[] = [
 function CreateIncidentContent() {
   const { t } = useTranslation("common");
   const { form, onSubmit, isPending, isUploading } = useIncident();
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const handleCreate = useCallback(() => {
     form.handleSubmit(onSubmit)();
@@ -31,7 +41,14 @@ function CreateIncidentContent() {
 
   return (
     <div className="w-full h-full">
-      <Breadcrumbs breadcrumbs={breadcrumbs} />
+      <div
+        className={cn(
+          "sticky top-0 z-[45] bg-background-primary pb-4 -mx-4 px-4 lg:-mx-20 lg:px-20",
+          isScrolled ? "pt-[100px]" : "pt-0",
+        )}
+      >
+        <Breadcrumbs breadcrumbs={breadcrumbs} />
+      </div>
       {/* Main panel */}
       <div
         className={`

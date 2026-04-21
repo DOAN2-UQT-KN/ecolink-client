@@ -5,7 +5,7 @@ import Image from "next/image";
 import { getRelativeTime } from "../utils/time";
 import { IUser } from "@/apis/auth/models/user";
 import { useTranslation } from "react-i18next";
-import { useSaveResource } from "@/apis/saved-resource";
+import { useSaveResource } from "@/apis/saved-resource/saveResource";
 import { TbBookmark, TbBookmarkFilled } from "react-icons/tb";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/libs/utils";
