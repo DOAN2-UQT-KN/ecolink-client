@@ -5,9 +5,9 @@ import { Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
 import { Input } from "@/components/ui/input";
+import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/libs/utils";
 import SelectListOrganization from "@/components/form/SelectListOrganization";
 
@@ -33,14 +33,8 @@ const GeneralInformation = memo(function GeneralInformation({
     [],
   );
 
-  const translatedDifficultyOptions = useMemo(
-    () =>
-      difficultyOptions.map((value) => ({
-        value: String(value),
-        label: `${t("Level")} ${value}`,
-      })),
-    [t],
-  );
+  const difficultyMin = difficultyOptions[0] ?? 1;
+  const difficultyMax = difficultyOptions[difficultyOptions.length - 1] ?? 5;
 
   return (
     <div className="w-full h-full flex flex-col gap-[30px] px-[30px] py-[35px] border-1 border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5 overflow-y-auto scrollbar-hide">
@@ -100,30 +94,23 @@ const GeneralInformation = memo(function GeneralInformation({
             name="difficulty"
             control={control}
             render={({ field }) => (
-              <RadioGroup
-                value={String(field.value)}
-                onValueChange={(value) => field.onChange(Number(value))}
-                className="flex flex-col gap-1"
-              >
-                {translatedDifficultyOptions.map((option) => (
-                  <label
-                    key={option.value}
-                    htmlFor={`difficulty-${option.value}`}
-                    className={cn(
-                      "flex items-center gap-2 py-2.5 px-3 rounded-lg border transition-all cursor-pointer",
-                      String(field.value) === option.value
-                        ? "bg-button-accent/10 border-button-accent"
-                        : "bg-white/5 border-white/10 hover:border-white/20",
-                    )}
-                  >
-                    <RadioGroupItem
-                      value={option.value}
-                      id={`difficulty-${option.value}`}
-                    />
-                    <span className="text-sm font-normal flex-1">{option.label}</span>
-                  </label>
-                ))}
-              </RadioGroup>
+              <div className="flex flex-col gap-3 rounded-lg border border-[rgba(136,122,71,0.5)] bg-white/5 px-4 py-3">
+                <div className="flex items-center justify-between text-sm text-foreground-tertiary">
+                  <span>{t("Level")}</span>
+                  <span className="font-medium text-foreground">
+                    {field.value ?? difficultyMin}
+                  </span>
+                </div>
+                <Slider
+                  min={difficultyMin}
+                  max={difficultyMax}
+                  step={1}
+                  value={[field.value ?? difficultyMin]}
+                  onValueChange={(value) => field.onChange(value[0] ?? difficultyMin)}
+                  aria-label={t("Difficulty")}
+                  className="[&_[data-slot=slider-range]]:bg-button-accent [&_[data-slot=slider-thumb]]:border-button-accent"
+                />
+              </div>
             )}
           />
           <FieldError errors={[errors.difficulty]} />

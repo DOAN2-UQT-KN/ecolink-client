@@ -5,7 +5,7 @@ import {
 } from "./models/organizationMembers";
 import { useGet, UseGetOptions } from "@/hooks/reactQuery";
 
-const url = "/organizations";
+const url = "/api/v1/organizations";
 
 // GET /api/v1/organizations/{id}/members
 export const getMembersByOrg = async (

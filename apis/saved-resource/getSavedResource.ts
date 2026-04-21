@@ -2,7 +2,7 @@ import requestApi from "@/utils/requestApi";
 import { useGet, UseGetOptions } from "@/hooks/reactQuery";
 import { IGetResourceRequest, IGetResourceResponse } from "./models/getResource";
 
-const url = "/saved-resources";
+const url = "/incident/saved-resources";
 
 export const getSavedResources = async (
   params: IGetResourceRequest,

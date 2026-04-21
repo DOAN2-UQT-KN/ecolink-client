@@ -18,7 +18,7 @@ import { MessageType } from "@/utils/showMessage";
 import { IGetMembersRequest, IGetMembersResponse } from "./models/organizationMembers";
 import { IGetJoinRequestsRequest, IGetJoinRequestsResponse } from "./models/joinRequestModels";
 
-const url = "/organizations";
+const url = "/api/v1/organizations";
 
 // GET /api/v1/organizations/{id}
 export const getOrganizationById = async (

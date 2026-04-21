@@ -2,7 +2,7 @@ import requestApi from "@/utils/requestApi";
 import { IGetOwnedOrganizationsResponse } from "./models/getOwnedOrganizations";
 import { useGet, UseGetOptions } from "@/hooks/reactQuery";
 
-const url = "/organizations/owned";
+const url = "/api/v1/organizations/owned";
 
 export const getOwnedOrganizations =
   async (): Promise<IGetOwnedOrganizationsResponse> => {

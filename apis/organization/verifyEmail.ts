@@ -5,7 +5,7 @@ import {
 } from "./models/verifyEmail";
 import { useGet, UseGetOptions } from "@/hooks/reactQuery";
 
-const url = "/organizations/verify-contact-email";
+const url = "/api/v1/organizations/verify-contact-email";
 
 export const verifyEmail = async (
   req: IVerifyEmailRequest,

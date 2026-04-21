@@ -2,7 +2,7 @@ import requestApi from "@/utils/requestApi";
 import type { IGetGiftsRequest, IGetGiftsResponse } from "@/apis/gift/models/gift";
 import { useGet, UseGetOptions } from "@/hooks/reactQuery";
 
-const url = "/gifts";
+const url = "/api/v1/gifts";
 
 export const getGifts = async (req: IGetGiftsRequest): Promise<IGetGiftsResponse> => {
   return await requestApi.get<IGetGiftsResponse>(url, req);

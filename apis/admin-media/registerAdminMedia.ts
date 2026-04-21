@@ -13,7 +13,7 @@ export type IRegisterAdminMediaResponse = IBaseResponse<{
   };
 }>;
 
-const url = "/admin/media";
+const url = "/api/v1/admin/media";
 
 export const registerAdminMedia = async (
   data: IRegisterAdminMediaRequest,

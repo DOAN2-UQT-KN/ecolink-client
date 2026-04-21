@@ -4,7 +4,7 @@ import { usePost, UsePostOptions } from "@/hooks/reactQuery";
 import { useTranslation } from "react-i18next";
 import { MessageType } from "@/utils/showMessage";
 
-const baseUrl = "/gifts";
+const baseurl = "/api/v1/gifts";
 
 export const updateGift = async ({
   id,

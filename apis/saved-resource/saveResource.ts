@@ -5,7 +5,7 @@ import {
   ISaveResourceResponse,
 } from "./models/savedResource";
 
-const saveUrl = "/incident/saved-resources/save";
+const saveUrl = "/saved-resources/save";
 
 export const postSaveResource = async (
   data: ISaveResourceRequest,
