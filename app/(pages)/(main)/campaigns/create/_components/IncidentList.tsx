@@ -76,13 +76,13 @@ const IncidentList = memo(function IncidentList() {
   return (
     <div className="w-full h-full flex flex-col gap-[20px] px-[24px] py-[24px] border-1 border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5">
       <span className="font-display-5 font-semibold !text-button-accent ">
-        {t("Select incidents")}
+        {t("Incidents")}
       </span>
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="bg-muted/60">
-          <TabsTrigger value="explore">{t("Explore")}</TabsTrigger>
-          <TabsTrigger value="saved">{t("Saved")}</TabsTrigger>
+        <TabsList className="w-full sm:w-auto border border-[rgba(136,122,71,0.5)] rounded-[8px] bg-background-primary/10">
+          <TabsTrigger value="explore" className="rounded-[8px] px-4 py-2 h-full data-active:bg-background data-active:shadow-sm transition-all !font-display-1">{t("Explore")}</TabsTrigger>
+          <TabsTrigger value="saved" className="rounded-[8px] px-4 py-2 h-full data-active:bg-background data-active:shadow-sm transition-all !font-display-1">{t("Saved")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="explore" className="mt-4">
@@ -141,21 +141,21 @@ const IncidentTabContent = memo(function IncidentTabContent({
 
   const loadingState = useMemo(
     () => (
-      <div className="space-y-4">
-        {Array.from({ length: 3 }).map((_, idx) => (
-          <Skeleton key={idx} className="h-40 w-full rounded-[10px]" />
+      <div className="space-y-4 flex flex-col sm:grid sm:grid-cols-2 gap-4">
+        {Array.from({ length: 6 }).map((_, idx) => (
+          <Skeleton key={idx} className="h-[320px] w-full rounded-[10px]" />
         ))}
-      </div>
+      </div>  
     ),
     [],
-  );
+  );  
 
   const content = useMemo(() => {
     if (isLoading) return loadingState;
     if (!reports.length) return emptyState;
 
     return (
-      <div className="flex flex-col gap-4 max-h-[60vh] overflow-y-auto pr-1">
+      <div className="flex flex-col sm:grid sm:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto pr-1 scrollbar-hide">
         {reports.map((incident) => (
           <ReportSummaryCard
             key={incident.id}

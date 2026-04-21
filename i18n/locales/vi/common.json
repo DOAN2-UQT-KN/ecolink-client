@@ -331,5 +331,7 @@
   "Current image will be kept unless you choose a new file.": "Ảnh hiện tại được giữ nếu bạn không chọn ảnh mới.",
   "Failed to upload image": "Tải ảnh lên thất bại",
   "No image selected": "Chưa chọn ảnh",
-  "Join requests": "Yêu cầu tham gia"
+  "Join requests": "Yêu cầu tham gia",
+  "Vote point": "Điểm bình chọn",
+  "Saved": "Đã lưu" 
 }

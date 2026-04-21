@@ -91,7 +91,7 @@ const OrganizationOption = memo(function OrganizationOption({
   );
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-3 justify-start">
       <div className="relative w-8 h-8 rounded-full overflow-hidden bg-muted shrink-0">
         {organization.logo_url ? (
           <Image
@@ -107,7 +107,7 @@ const OrganizationOption = memo(function OrganizationOption({
           </div>
         )}
       </div>
-      <div className="flex flex-col leading-tight">
+      <div className="flex flex-col leading-tight justify-center items-start">
         <span className="text-sm font-medium">{organization.name}</span>
         <span className="text-xs text-muted-foreground">
           {organization.contact_email || "-"}

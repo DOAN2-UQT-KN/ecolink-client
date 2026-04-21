@@ -2,7 +2,15 @@
 
 import { memo, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import Image from "next/image";
+import { HiMapPin } from "react-icons/hi2";
+import {
+  PiArrowsOutSimple,
+  PiSealWarningLight,
+  PiShareNetwork,
+  PiSkullLight,
+  PiTrash,
+} from "react-icons/pi";
+import { TbArrowBigDown, TbArrowBigUp } from "react-icons/tb";
 
 import { IIncident } from "@/apis/incident/models/incident";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -26,9 +34,41 @@ const ReportSummaryCard = memo(function ReportSummaryCard({
     [incident.id, selectedReports],
   );
 
-  const imageUrl = useMemo(
-    () => incident.image_urls?.[0] ?? incident.media_files?.[0]?.url ?? null,
-    [incident.image_urls, incident.media_files],
+  const votePoint = useMemo(
+    () => (incident.votes?.upvote_count || 0) - (incident.votes?.downvote_count || 0),
+    [incident.votes?.downvote_count, incident.votes?.upvote_count],
+  );
+
+  const footerItems = useMemo(
+    () => [
+      {
+        icon: <PiTrash size={18} />,
+        label: t("Waste Type"),
+        value: incident.waste_type || t("N/A"),
+      },
+      {
+        icon: <PiArrowsOutSimple size={18} />,
+        label: t("Size"),
+        value: incident.size || t("N/A"),
+      },
+      {
+        icon: <PiSealWarningLight size={18} />,
+        label: t("Condition"),
+        value: incident.condition || t("N/A"),
+      },
+      {
+        icon: <PiSkullLight size={18} />,
+        label: t("Pollution Level"),
+        value: incident.severity_level || t("N/A"),
+      },
+    ],
+    [
+      incident.condition,
+      incident.severity_level,
+      incident.size,
+      incident.waste_type,
+      t,
+    ],
   );
 
   const toggleSelected = useCallback(() => {
@@ -53,25 +93,45 @@ const ReportSummaryCard = memo(function ReportSummaryCard({
         <Checkbox checked={isChecked} onCheckedChange={toggleSelected} />
       </div>
       <div className="pl-7 flex flex-col gap-3">
-        <div className="flex items-start justify-between gap-3">
-          <h4 className="font-semibold text-foreground line-clamp-2">
+        <div className="space-y-1">
+          <h4 className="font-semibold text-black leading-tight line-clamp-2">
             {incident.title || t("Untitled report")}
           </h4>
+          {incident.detail_address && (
+            <div className="flex items-center gap-2 font-display-1 text-foreground-tertiary">
+              <HiMapPin size={14} />
+              <p className="line-clamp-1">{incident.detail_address}</p>
+            </div>
+          )}
         </div>
-        <p className="text-sm text-muted-foreground line-clamp-2">
+        <p className="font-display-2 text-foreground-secondary leading-relaxed line-clamp-2 max-h-[100px] overflow-y-auto scrollbar-hide">
           {incident.description || t("No description provided.")}
         </p>
-        {imageUrl ? (
-          <div className="relative w-full h-[150px] rounded-[8px] overflow-hidden">
-            <Image
-              src={imageUrl}
-              alt={incident.title || t("Report image")}
-              fill
-              unoptimized
-              className="object-cover"
-            />
+
+        <div className="grid grid-cols-2 grid-rows-2 gap-3 py-3 border-y border-border/50">
+          {footerItems.map((item) => (
+            <div key={item.label} className="flex items-center gap-2.5">
+              <div className="p-2 rounded-lg">{item.icon}</div>
+              <div className="flex flex-col min-w-0">
+                <span className="text-[10px] uppercase tracking-wider font-bold text-foreground-tertiary">
+                  {item.label}
+                </span>
+                <span className="font-display-1 truncate text-foreground-secondary capitalize">
+                  {item.value}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div className="flex items-center h-10 px-4 bg-muted/60 dark:bg-accent/30 rounded-full transition-all">
+            <span className="font-display-1 text-foreground-secondary">{t("Vote point")}</span>
+            <span className="mx-2 font-display-2 font-semibold text-foreground min-w-[20px] text-center">
+              {votePoint}
+            </span>
           </div>
-        ) : null}
+        </div>
       </div>
     </div>
   );
