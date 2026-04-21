@@ -3,7 +3,7 @@ import { usePost, UsePostOptions } from "@/hooks/reactQuery";
 import {
   ISaveResourceRequest,
   ISaveResourceResponse,
-} from "./models/saved-resource";
+} from "./models/savedResource";
 
 const saveUrl = "/incident/saved-resources/save";
 

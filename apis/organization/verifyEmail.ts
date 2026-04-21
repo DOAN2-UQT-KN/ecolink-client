@@ -4,8 +4,6 @@ import {
   IVerifyEmailResponse,
 } from "./models/verifyEmail";
 import { useGet, UseGetOptions } from "@/hooks/reactQuery";
-import { useTranslation } from "react-i18next";
-import { MessageType } from "@/utils/showMessage";
 
 const url = "/organizations/verify-contact-email";
 

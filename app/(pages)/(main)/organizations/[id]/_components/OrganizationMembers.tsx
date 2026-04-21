@@ -4,7 +4,7 @@ import { memo, useCallback, useMemo, useState } from "react";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { format, parseISO } from "date-fns";
-import { Crown, Inbox, User } from "lucide-react";
+import { Inbox } from "lucide-react";
 import { HiOutlineSortAscending, HiOutlineSortDescending } from "react-icons/hi";
 import { TbZoom } from "react-icons/tb";
 
