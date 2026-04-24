@@ -260,7 +260,7 @@ export const HeroSection = memo(function HeroSection() {
         className="hidden"
         preview={{
           visible: Boolean(previewImageSrc),
-          onVisibleChange: (visible) => {
+          onOpenChange: (visible) => {
             if (!visible) {
               setPreviewImageSrc(null);
             }

@@ -11,6 +11,7 @@ import { Button } from "@/components/client/shared/Button";
 
 import GeneralInformation from "./_components/GeneralInformation";
 import IncidentList from "./_components/IncidentList";
+import LeafletAddress from "./_components/LeafletAddress";
 import { CampaignProvider } from "./_context/CampaignContext";
 import { useCampaign } from "./_hooks/useCampaign";
 import { cn } from "@/libs/utils";
@@ -55,12 +56,13 @@ const CreateCampaignContent = memo(function CreateCampaignContent({
       >
         <Breadcrumbs breadcrumbs={breadcrumbs} />
       </div>
-      <div className="flex flex-col gap-[30px] w-full h-full pt-5">
-        <div className="md:grid md:grid-cols-3 md:gap-[30px] w-full h-full md:items-start">
-          <div className="md:col-span-1 h-full">
-            <GeneralInformation organizationId={organizationId} />
+      <div className="flex flex-col gap-[20px] w-full h-full pt-5">
+        <GeneralInformation organizationId={organizationId} />
+        <div className="flex flex-col md:flex-row gap-[20px] w-full h-full md:items-start">
+          <div className="w-full md:w-1/2 h-full">
+            <LeafletAddress />
           </div>
-          <div className="md:col-span-2 h-full">
+          <div className="w-full md:w-1/2 h-full">
             <IncidentList />
           </div>
         </div>

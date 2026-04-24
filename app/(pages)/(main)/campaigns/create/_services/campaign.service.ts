@@ -7,6 +7,11 @@ export interface CampaignFormValues {
   title: string;
   description: string;
   difficulty: number;
+  start_date?: string;
+  end_date?: string;
+  latitude?: number;
+  longitude?: number;
+  detail_address: string;
   selectedReports: IIncident[];
 }
 
@@ -15,6 +20,11 @@ export const DEFAULT_CAMPAIGN_FORM_VALUES: CampaignFormValues = {
   title: "",
   description: "",
   difficulty: 1,
+  start_date: undefined,
+  end_date: undefined,
+  latitude: undefined,
+  longitude: undefined,
+  detail_address: "",
   selectedReports: [],
 };
 
@@ -28,6 +38,11 @@ export const transformToApiData = (
     title: data.title.trim(),
     description: data.description.trim(),
     difficulty: data.difficulty,
+    start_date: data.start_date,
+    end_date: data.end_date,
+    latitude: data.latitude,
+    longitude: data.longitude,
+    detail_address: data.detail_address.trim() || undefined,
     report_ids: data.selectedReports.map((report) => report.id),
   };
 };

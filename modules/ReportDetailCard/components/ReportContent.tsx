@@ -29,7 +29,7 @@ export const ReportContent = memo(function ReportContent({
     const base =
       onPreviewOpenChange != null
         ? {
-            onVisibleChange: (visible: boolean) => onPreviewOpenChange(visible),
+            onOpenChange: (visible: boolean) => onPreviewOpenChange(visible),
           }
         : true;
     if (!isExpanded) return base;
