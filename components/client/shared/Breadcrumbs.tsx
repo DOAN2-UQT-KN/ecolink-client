@@ -11,6 +11,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import React, { Fragment } from "react";
+import { cn } from "@/libs/utils";
 
 export interface BreadcrumbItemProps {
   label: string;
@@ -20,9 +21,10 @@ export interface BreadcrumbItemProps {
 
 interface BreadcrumbsProps {
   breadcrumbs: BreadcrumbItemProps[];
+  isAdmin?: boolean;
 }
 
-export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ breadcrumbs }) => {
+export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ breadcrumbs, isAdmin = false }) => {
   const router = useRouter();
   const { t } = useTranslation("common");
 
@@ -34,13 +36,13 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ breadcrumbs }) => {
             <BreadcrumbItem>
               {item.type === "link" ? (
                 <BreadcrumbLink
-                  className="text-button-accent-hover cursor-pointer"
+                  className={cn("text-button-accent-hover cursor-pointer", isAdmin && "text-foreground-secondary hover:text-black")}
                   onClick={() => router.push(item.path)}
                 >
                   {t(item.label)}
                 </BreadcrumbLink>
               ) : (
-                <BreadcrumbPage className="text-button-accent">
+                <BreadcrumbPage className={cn("text-button-accent", isAdmin && "text-black")}>
                   {t(item.label)}
                 </BreadcrumbPage>
               )}

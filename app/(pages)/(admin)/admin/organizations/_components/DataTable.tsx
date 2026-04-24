@@ -15,6 +15,7 @@ import { TbScanEye  } from "react-icons/tb";
 
 
 const COLUMN_KEYS = {
+  NO: "no",
   NAME_LOGO: "name_logo",
   CREATED: "created",
   STATUS: "status",
@@ -44,6 +45,16 @@ export function DataTable() {
 
   const columns: DataTableColumn<IOrganization>[] = useMemo(
     () => [
+      {
+        key: COLUMN_KEYS.NO,
+        title: t("No"),
+        className: "w-[72px]",
+        render: (_, __, index) => (
+          <span className="tabular-nums">
+            {(pagination.current - 1) * pagination.pageSize + index + 1}
+          </span>
+        ),
+      },
       {
         key: COLUMN_KEYS.NAME_LOGO,
         title: t("Organization"),
@@ -160,7 +171,7 @@ export function DataTable() {
         ),
       },
     ],
-    [isDark, t],
+    [isDark, pagination.current, pagination.pageSize, t],
   );
 
   return (

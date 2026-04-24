@@ -82,6 +82,7 @@ const GeneralInformation = memo(function GeneralInformation({
             {...register("description")}
             placeholder={t("Describe this campaign...")}
             className={cn(inputClassName, "min-h-[120px]")}
+            rows={4}
           />
           <FieldError errors={[errors.description]} />
         </Field>

@@ -16,6 +16,7 @@ import { VerifyIncidentConfirm } from "./VerifyIncidentConfirm";
 import { TbScanEye } from "react-icons/tb";
 
 const COLUMN_KEYS = {
+  NO: "no",
   INCIDENT: "incident",
   OWNER: "owner",
   STATUS: "status",
@@ -43,6 +44,16 @@ export function DataTable() {
 
   const columns: DataTableColumn<IIncident>[] = useMemo(
     () => [
+      {
+        key: COLUMN_KEYS.NO,
+        title: t("No"),
+        className: "w-[72px]",
+        render: (_, __, index) => (
+          <span className="tabular-nums">
+            {(pagination.current - 1) * pagination.pageSize + index + 1}
+          </span>
+        ),
+      },
       {
         key: COLUMN_KEYS.INCIDENT,
         title: t("Incident"),
@@ -145,7 +156,7 @@ export function DataTable() {
         ),
       },
     ],
-    [isDark, t],
+    [isDark, pagination.current, pagination.pageSize, t],
   );
 
   return (

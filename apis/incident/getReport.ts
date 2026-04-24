@@ -3,7 +3,7 @@ import { IGetReportsRequest, IGetReportsResponse } from "./models/getReport";
 import { useGet, UseGetOptions } from "@/hooks/reactQuery";
 
 const url = "/api/v1/reports/search";
-const myReportsurl = "/api/v1/reports/my";
+const myReportsUrl = "/api/v1/reports/my";
 
 export const getReports = async (
   params: IGetReportsRequest,

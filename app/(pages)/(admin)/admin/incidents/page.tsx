@@ -21,7 +21,7 @@ function IncidentsContent() {
 
   return (
     <div className="space-y-6">
-      <Breadcrumbs breadcrumbs={breadcrumbs} />
+      <Breadcrumbs breadcrumbs={breadcrumbs} isAdmin={true} />
 
       <FormFilter />
       <DataTable />

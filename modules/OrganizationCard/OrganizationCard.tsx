@@ -429,7 +429,7 @@ export const OrganizationCard = memo(function OrganizationCard({
                   aria-label="Organization description"
                 />
               ) : (
-                <p className="text-sm text-foreground whitespace-pre-wrap break-words">
+                <p className="text-sm text-foreground whitespace-pre-wrap break-words line-clamp-2 pt-1">
                   {displayDescription}
                 </p>
               )}
