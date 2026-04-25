@@ -14,6 +14,7 @@ import {
   ISignInFormValues,
   handleSignInSuccess,
 } from "../_services/auth.service";
+import { getGoogleAuthorizationUrl } from "@/apis/auth/googleSignIn";
 
 type SignInFormProps = {
   redirect: string;
@@ -154,7 +155,18 @@ export default function SignInForm({ redirect }: SignInFormProps) {
             <div className="flex-1 lg:w-[133px] h-[1px] bg-background-tertiary"></div>
           </div>
 
-          <Button variant="outlined-green" className="w-full h-[60px]">
+          <Button
+            variant="outlined-green"
+            className="w-full h-[60px]"
+            onClick={async () => {
+              try {
+                const response = await getGoogleAuthorizationUrl();
+                window.location.href = response.data.authorizationUrl;
+              } catch {
+                router.push("/sign-in?error=google_oauth_failed");
+              }
+            }}
+          >
             <div className="flex flex-row items-center gap-[10px]">
               <Image src="/google.png" alt="google" width={25} height={25} />
               <span className="!font-medium !font-display-3 px-2">
