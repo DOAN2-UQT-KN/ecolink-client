@@ -16,6 +16,7 @@ import { Tag } from '@/components/client/shared/Tag';
 import { formattedDate } from '@/utils/formattedDate';
 import { HiMapPin } from 'react-icons/hi2';
 import { TooltipTruncatedText } from '@/components/ui/TooltipTruncatedText';
+import ReportSummaryCard from '@/modules/ReportSummaryCard';
 
 const DEFAULT_BANNER = '/banner-default.jpg';
 
@@ -111,6 +112,21 @@ export const DetailInformation = memo(function DetailInformation() {
             value={memberProgress}
             className="h-2.5 bg-button-accent/10 [&>[data-slot=progress-indicator]]:bg-button-accent"
           />
+        </div>
+      </div>
+
+      <div className={cardClass}>
+        <h2 className="font-display-6 font-semibold text-button-accent mb-4">{t('Reports')}</h2>
+        <div className="sm:grid sm:grid-cols-2 gap-4 lg:grid-cols-3">
+          {campaign?.reports?.map((report) => (
+            <ReportSummaryCard
+              enabledCheckbox={false}
+              key={report.id}
+              incident={report}
+              selectedReports={[]}
+              setSelectedReports={() => {}}
+            />
+          ))}
         </div>
       </div>
     </div>

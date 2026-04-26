@@ -2,7 +2,7 @@
 
 import React, { memo, useCallback, useMemo } from "react";
 import Image from "next/image";
-import { getRelativeTime } from "../utils/time";
+import { formattedDate } from "@/utils/formattedDate";
 import { IUser } from "@/apis/auth/models/user";
 import { useTranslation } from "react-i18next";
 import { useSaveResource } from "@/apis/saved-resource/saveResource";
@@ -72,7 +72,7 @@ export const ReportHeader = memo(function ReportHeader({
             {userName}
           </h4>
           <span className="font-display-1 text-foreground-secondary">
-            {getRelativeTime(createdAt, i18n.language)}
+            {formattedDate(createdAt)}
           </span>
         </div>
       </div>

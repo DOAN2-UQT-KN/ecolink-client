@@ -4,11 +4,12 @@ import { memo, useCallback, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
 import { Inbox } from 'lucide-react';
+import Image from 'next/image';
 import { useTranslation } from 'react-i18next';
+import { HiCheck, HiOutlineX } from 'react-icons/hi';
 
-import { useGetJoinRequestsByOrg } from '@/apis/organization/organizationById';
-import { useProcessJoinRequest } from '@/apis/organization/joinRequest';
-import type { IGetJoinRequestsRequest } from '@/apis/organization/models/joinRequestModels';
+import { useGetJoinRequests, useProcessJoinCampaign } from '@/apis/campaign/joinCampaign';
+import type { IGetJoinCampaignRequest } from '@/apis/campaign/models/joinCampaign';
 import { Button as SharedButton } from '@/components/client/shared/Button';
 import {
   Empty,
@@ -20,12 +21,9 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { STATUS } from '@/constants/status';
 
-import { useOrganizationDetail } from '../_hooks/useOrganizationDetail';
+import { useCampaignDetail } from '../_hooks/useCampaignDetail';
 
 import defaultAvatar from '@/public/default-avatar.png';
-import Image from 'next/image';
-
-import { HiCheck, HiOutlineX } from 'react-icons/hi';
 
 function formatRequestedAt(iso: string | undefined): string {
   if (!iso?.trim()) return '—';
@@ -37,50 +35,43 @@ function formatRequestedAt(iso: string | undefined): string {
 }
 
 function shortUserId(id: string): string {
-  if (id?.length <= 14) return id;
-  return `${id?.slice(0, 6)}…${id?.slice(-4)}`;
+  if (id.length <= 14) return id;
+  return `${id.slice(0, 6)}…${id.slice(-4)}`;
 }
 
-export const OrganizationJoinRequests = memo(function OrganizationJoinRequests({
+export const CampaignJoinRequest = memo(function CampaignJoinRequest({
   enabled,
 }: {
   enabled: boolean;
 }) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const { organizationId, organization } = useOrganizationDetail();
+  const { campaignId, campaign } = useCampaignDetail();
   const [pendingAction, setPendingAction] = useState<{
     id: string;
     approved: boolean;
   } | null>(null);
 
-  const listRequest = useMemo((): IGetJoinRequestsRequest => {
+  const listRequest = useMemo((): IGetJoinCampaignRequest => {
     return {
-      organization_id: organizationId,
+      campaignId: campaignId,
       page: 1,
       limit: 50,
       status: STATUS.PENDING,
       sort_by: 'created_at',
       sort_order: 'desc',
     };
-  }, [organizationId]);
+  }, [campaignId]);
 
-  const { data, isLoading, isError } = useGetJoinRequestsByOrg(listRequest, {
-    enabled: enabled && Boolean(organizationId),
+  const { data, isLoading, isError } = useGetJoinRequests(listRequest, {
+    enabled: enabled && Boolean(campaignId),
   });
 
-  const { mutate } = useProcessJoinRequest({
+  const { mutate } = useProcessJoinCampaign({
     onSettled: () => {
       setPendingAction(null);
-      void queryClient.invalidateQueries({
-        queryKey: ['organization-join-requests', organizationId],
-      });
-      void queryClient.invalidateQueries({
-        queryKey: ['organization', organizationId],
-      });
-      void queryClient.invalidateQueries({
-        queryKey: ['organization-members', organizationId],
-      });
+      void queryClient.invalidateQueries({ queryKey: ['campaign-join-requests'] });
+      void queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });
     },
   });
 
@@ -94,7 +85,7 @@ export const OrganizationJoinRequests = memo(function OrganizationJoinRequests({
 
   const rows = data?.data?.join_requests ?? [];
 
-  if (!organization) {
+  if (!campaign) {
     return null;
   }
 
@@ -134,8 +125,8 @@ export const OrganizationJoinRequests = memo(function OrganizationJoinRequests({
                 <div className="min-w-0 space-y-1 flex flex-row items-center justify-center gap-2">
                   <div className="flex items-center gap-2">
                     <Image
-                      src={jr.requester?.avatar || defaultAvatar}
-                      alt={jr.requester?.name || 'Default Avatar'}
+                      src={jr.volunteer?.avatar || defaultAvatar}
+                      alt={jr.volunteer?.name || 'Default Avatar'}
                       width={40}
                       height={40}
                       className="rounded-full"
@@ -143,7 +134,7 @@ export const OrganizationJoinRequests = memo(function OrganizationJoinRequests({
                   </div>
                   <div className="flex flex-col gap-1">
                     <div className="text-sm font-medium text-foreground break-words">
-                      {jr.requester?.name || jr.requester?.email || shortUserId(jr.requester_id)}
+                      {jr.volunteer?.name || jr.volunteer?.email || shortUserId(jr.user_id)}
                     </div>
                     <p className="text-xs text-foreground-tertiary">
                       {formatRequestedAt(jr.created_at)}

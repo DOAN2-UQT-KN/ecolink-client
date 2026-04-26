@@ -58,7 +58,7 @@ export function DataTableRow<T>({
   return (
     <BaseTableRow
       className={cn(
-        "transition-colors",
+        "group transition-colors",
         isDark
           ? "border-b border-zinc-700/40 hover:bg-zinc-800/50"
           : "border-b border-zinc-200 hover:bg-zinc-100",
@@ -116,6 +116,20 @@ export function DataTableRow<T>({
             className={cn(
               "px-3 py-2.5 font-display-1",
               isDark ? "text-zinc-200" : "text-zinc-900",
+              // ── Sticky column ──────────────────────────────────────────
+              column.sticky === "left" && "sticky left-0 z-10",
+              column.sticky === "right" && "sticky right-0 z-10",
+              // Default solid background (no selection, no hover)
+              column.sticky && !selected &&
+                (isDark ? "bg-zinc-900" : "bg-white"),
+              // Selected row background
+              column.sticky && selected &&
+                (isDark ? "bg-zinc-800" : "bg-zinc-200"),
+              // Hover – use group-hover so the cell background tracks the row
+              column.sticky && !selected &&
+                (isDark
+                  ? "group-hover:bg-zinc-800/50"
+                  : "group-hover:bg-zinc-100"),
               column.className,
             )}
             onDoubleClick={(event) => {

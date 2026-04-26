@@ -21,10 +21,26 @@ import { CampaignDetailProvider } from './_context/CampaignDetailContext';
 import { useCampaignDetail } from './_hooks/useCampaignDetail';
 import { TbArrowRight } from 'react-icons/tb';
 import { Button } from '@/components/client/shared/Button';
+import { STATUS } from '@/constants/status';
 
 function CampaignDetailBody() {
   const { t } = useTranslation('common');
-  const { campaignId, campaign, isLoading, isError } = useCampaignDetail();
+  const {
+    campaignId,
+    campaign,
+    isLoading,
+    isError,
+    isCampaignOwner,
+    handleJoinCampaign,
+    isJoining,
+    handleCancelJoinRequest,
+    isCancelling,
+  } = useCampaignDetail();
+
+  const requestStatus = campaign?.request_status;
+  const isApproved = requestStatus === STATUS.APPROVED;
+  const isPending = requestStatus === STATUS.PENDING;
+  const showJoinCta = !isApproved && !isPending;
 
   const breadcrumbs: BreadcrumbItemProps[] = useMemo(
     () => [
@@ -98,18 +114,32 @@ function CampaignDetailBody() {
       <Breadcrumbs breadcrumbs={breadcrumbs} />
 
       <div className="pt-5 space-y-6">
-        <div className="flex justify-end">
-          <Button
-            type="button"
-            variant="brown"
-            size="medium"
-            // className="min-w-[200px]"
-            iconRight={<TbArrowRight className="size-4" aria-hidden />}
-            // onClick={handleJoinCampaign}
-          >
-            {t('Join')}
-          </Button>
-        </div>
+        {!isApproved && !isCampaignOwner && (
+          <div className="flex justify-end">
+            {isPending ? (
+              <Button
+                type="button"
+                variant="outlined-brown"
+                size="medium"
+                isLoading={isCancelling}
+                onClick={handleCancelJoinRequest}
+              >
+                {t('Cancel')}
+              </Button>
+            ) : showJoinCta ? (
+              <Button
+                type="button"
+                variant="brown"
+                size="medium"
+                iconRight={<TbArrowRight className="size-4" aria-hidden />}
+                isLoading={isJoining}
+                onClick={handleJoinCampaign}
+              >
+                {t('Join')}
+              </Button>
+            ) : null}
+          </div>
+        )}
         <StatsCards />
         <div className="w-full min-w-0">
           <CampaignTabs />

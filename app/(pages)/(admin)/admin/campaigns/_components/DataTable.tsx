@@ -15,6 +15,7 @@ import {
 import { cn } from '@/libs/utils';
 import { useCampaignContext } from '../_context/CampaignContext';
 import { VerifyCampaignConfirm } from './VerifyCampaignConfirm';
+import { formattedDate } from '@/utils/formattedDate';
 
 const COLUMN_KEYS = {
   NO: 'no',
@@ -29,13 +30,6 @@ const COLUMN_KEYS = {
   DIFFICULTY: 'difficulty',
   ACTION: 'action',
 } as const;
-
-function toDisplayDate(value?: string | null) {
-  if (!value) return '—';
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString();
-}
 
 function difficultyLabel(difficulty?: number | null): string {
   if (difficulty == null) return '—';
@@ -108,6 +102,7 @@ export const DataTable = memo(function DataTable() {
         key: COLUMN_KEYS.NO,
         title: t('No'),
         className: 'w-[60px]',
+        sticky: 'right',
         render: (_, __, index) => (
           <span className="tabular-nums">
             {(pagination.current - 1) * pagination.pageSize + index + 1}
@@ -117,6 +112,7 @@ export const DataTable = memo(function DataTable() {
       {
         key: COLUMN_KEYS.TITLE,
         title: t('Title'),
+        sticky: 'right',
         className: 'min-w-[200px] max-w-[260px]',
         render: (_, record) => (
           <span
@@ -146,8 +142,13 @@ export const DataTable = memo(function DataTable() {
         title: t('Created at'),
         className: 'min-w-[120px]',
         render: (_, record) => (
-          <span className={cn('tabular-nums text-sm', isDark ? 'text-zinc-300' : 'text-zinc-700')}>
-            {toDisplayDate(record.created_at)}
+          <span
+            className={cn(
+              'tabular-nums font-display-1',
+              isDark ? 'text-zinc-300' : 'text-zinc-700',
+            )}
+          >
+            {formattedDate(record.created_at)}
           </span>
         ),
       },
@@ -158,10 +159,12 @@ export const DataTable = memo(function DataTable() {
         render: (_, record) => (
           <div className="space-y-0.5">
             <p className={cn('text-xs', isDark ? 'text-zinc-400' : 'text-zinc-600')}>
-              <span className="font-medium">{t('Start')}:</span> {toDisplayDate(record.start_date)}
+              <span className="font-medium">{t('Start')}:</span>{' '}
+              {formattedDate(record.start_date ?? undefined)}
             </p>
             <p className={cn('text-xs', isDark ? 'text-zinc-400' : 'text-zinc-600')}>
-              <span className="font-medium">{t('End')}:</span> {toDisplayDate(record.end_date)}
+              <span className="font-medium">{t('End')}:</span>{' '}
+              {formattedDate(record.end_date ?? undefined)}
             </p>
           </div>
         ),
@@ -185,7 +188,12 @@ export const DataTable = memo(function DataTable() {
         title: t('Members'),
         className: 'min-w-[110px]',
         render: (_, record) => (
-          <span className={cn('tabular-nums text-sm', isDark ? 'text-zinc-300' : 'text-zinc-700')}>
+          <span
+            className={cn(
+              'tabular-nums font-display-1',
+              isDark ? 'text-zinc-300' : 'text-zinc-700',
+            )}
+          >
             <span className="font-semibold text-emerald-400">{record.current_members ?? 0}</span>
             <span className={isDark ? 'text-zinc-500' : 'text-zinc-400'}> / </span>
             <span>{record.max_members ?? '∞'}</span>
@@ -207,7 +215,9 @@ export const DataTable = memo(function DataTable() {
         title: t('Difficulty'),
         className: 'min-w-[100px]',
         render: (_, record) => (
-          <span className={cn('text-sm font-medium', difficultyColor(record.difficulty, isDark))}>
+          <span
+            className={cn('font-display-1 font-medium', difficultyColor(record.difficulty, isDark))}
+          >
             {t(difficultyLabel(record.difficulty))}
           </span>
         ),
@@ -215,7 +225,8 @@ export const DataTable = memo(function DataTable() {
       {
         key: COLUMN_KEYS.ACTION,
         title: t('Action'),
-        className: 'sticky right-0 z-20 min-w-[100px]',
+        sticky: 'right',
+        // className: 'sticky right-0 z-20 min-w-[100px]',
         render: (_, record) => (
           <div className="flex items-center gap-2">
             {/* Preview — opens campaign detail in a new tab */}

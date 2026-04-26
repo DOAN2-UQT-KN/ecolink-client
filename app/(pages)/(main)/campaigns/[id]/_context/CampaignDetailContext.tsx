@@ -1,17 +1,22 @@
-"use client";
+'use client';
 
-import React, { createContext, ReactNode, useCallback, useMemo } from "react";
+import React, { createContext, ReactNode, useCallback, useMemo } from 'react';
 
-import { useGetCampaignById } from "@/apis/campaign/campaignById";
-import type { ICampaign } from "@/apis/campaign/models/campaign";
-import showMessage, { MessageLevel, MessageType } from "@/utils/showMessage";
-import { useTranslation } from "react-i18next";
+import { useQueryClient } from '@tanstack/react-query';
 
-import { parseCampaignDetailData } from "../_services/campaignDetailService";
+import { useGetCampaignById } from '@/apis/campaign/campaignById';
+import { useCancelJoinCampaign, useGetMyJoinRequests, useJoinCampaign } from '@/apis/campaign/joinCampaign';
+import type { ICampaign } from '@/apis/campaign/models/campaign';
+import { STATUS } from '@/constants/status';
+
+import useAuthStore from '@/stores/useAuthStore';
+
+import { parseCampaignDetailData } from '../_services/campaignDetailService';
 
 export interface CampaignDetailContextType {
   campaignId: string;
   campaign: ICampaign | undefined;
+  isCampaignOwner: boolean;
   isLoading: boolean;
   isError: boolean;
   isFetching: boolean;
@@ -21,12 +26,15 @@ export interface CampaignDetailContextType {
   daysSinceStart: number | null;
   memberProgress: number;
   archivedTasksCount: number;
+  isJoining: boolean;
+  isCancelling: boolean;
   handleJoinCampaign: () => void;
+  handleCancelJoinRequest: () => void;
 }
 
-export const CampaignDetailContext = createContext<
-  CampaignDetailContextType | undefined
->(undefined);
+export const CampaignDetailContext = createContext<CampaignDetailContextType | undefined>(
+  undefined,
+);
 
 export function CampaignDetailProvider({
   campaignId,
@@ -35,13 +43,51 @@ export function CampaignDetailProvider({
   campaignId: string;
   children: ReactNode;
 }) {
-  const { t } = useTranslation("common");
-  const { data, isLoading, isError, isFetching } = useGetCampaignById(
-    campaignId,
-    { enabled: Boolean(campaignId) },
-  );
+  const queryClient = useQueryClient();
+  const currentUserId = useAuthStore((s) => s.user?.id);
+  const { data, isLoading, isError, isFetching } = useGetCampaignById(campaignId, {
+    enabled: Boolean(campaignId),
+  });
+
+  const { mutate: joinCampaignMutate, isPending: isJoining } = useJoinCampaign({
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });
+    },
+  });
+
+  const { mutate: cancelJoinMutate, isPending: isCancelling } = useCancelJoinCampaign({
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });
+    },
+  });
 
   const campaign = data?.data?.campaign;
+
+  const isCampaignOwner = useMemo(
+    () =>
+      currentUserId != null &&
+      campaign?.owner?.id != null &&
+      campaign.owner.id === currentUserId,
+    [currentUserId, campaign?.owner?.id],
+  );
+
+  const needsJoinRequestIdFromList =
+    campaign?.request_status === STATUS.PENDING && !campaign?.join_request_id;
+
+  const { data: myJoinRequestsData } = useGetMyJoinRequests(
+    {
+      campaign_id: campaignId,
+      status: STATUS.PENDING,
+      page: 1,
+      limit: 1,
+    },
+    {
+      enabled: Boolean(campaignId) && needsJoinRequestIdFromList,
+    },
+  );
+
+  const joinRequestIdForCancel =
+    campaign?.join_request_id ?? myJoinRequestsData?.data?.join_requests?.[0]?.id;
 
   const derived = useMemo(() => {
     if (!campaign) {
@@ -64,18 +110,24 @@ export function CampaignDetailProvider({
   }, [campaign]);
 
   const handleJoinCampaign = useCallback(() => {
-    showMessage({
-      type: MessageType.Toast,
-      level: MessageLevel.Info,
-      title: t("Join campaign"),
-      content: t("Campaign registration is not available yet. Please check back later."),
-    });
-  }, [t]);
+    if (!campaignId || isJoining) {
+      return;
+    }
+    joinCampaignMutate({ campaign_id: campaignId });
+  }, [campaignId, isJoining, joinCampaignMutate]);
+
+  const handleCancelJoinRequest = useCallback(() => {
+    if (!joinRequestIdForCancel || isCancelling) {
+      return;
+    }
+    cancelJoinMutate({ request_id: joinRequestIdForCancel });
+  }, [joinRequestIdForCancel, isCancelling, cancelJoinMutate]);
 
   const contextValue = useMemo(
     () => ({
       campaignId,
       campaign,
+      isCampaignOwner,
       isLoading,
       isError,
       isFetching,
@@ -84,22 +136,27 @@ export function CampaignDetailProvider({
       daysSinceStart: derived.daysSinceStart,
       memberProgress: derived.memberProgress,
       archivedTasksCount: derived.archivedTasksCount,
+      isJoining,
+      isCancelling,
       handleJoinCampaign,
+      handleCancelJoinRequest,
     }),
     [
       campaignId,
       campaign,
+      isCampaignOwner,
       isLoading,
       isError,
       isFetching,
       derived,
+      isJoining,
+      isCancelling,
       handleJoinCampaign,
+      handleCancelJoinRequest,
     ],
   );
 
   return (
-    <CampaignDetailContext.Provider value={contextValue}>
-      {children}
-    </CampaignDetailContext.Provider>
+    <CampaignDetailContext.Provider value={contextValue}>{children}</CampaignDetailContext.Provider>
   );
 }
