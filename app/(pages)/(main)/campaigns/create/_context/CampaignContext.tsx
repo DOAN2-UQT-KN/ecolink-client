@@ -21,6 +21,7 @@ import {
   transformToApiData,
 } from "../_services/campaign.service";
 import { useCreateCampaign } from "@/apis/campaign/createCampaign";
+import { uploadToCloudinary } from "@/app/(pages)/(main)/incidents/create/_services/upload.service";
 
 interface CampaignContextType {
   form: UseFormReturn<CampaignFormValues>;
@@ -83,8 +84,12 @@ export const CampaignProvider = memo(function CampaignProvider({
 
       try {
         setIsUploading(true);
+        const bannerUrl = data.banner
+          ? await uploadToCloudinary(data.banner)
+          : undefined;
         const payload = transformToApiData({
           ...data,
+          banner: bannerUrl,
           organization_id: targetOrganizationId,
         });
         createCampaign(payload);

@@ -6,6 +6,7 @@ export interface CampaignFormValues {
   organization_id: string;
   title: string;
   description: string;
+  banner?: string | File | Blob;
   difficulty: number;
   start_date?: string;
   end_date?: string;
@@ -19,6 +20,7 @@ export const DEFAULT_CAMPAIGN_FORM_VALUES: CampaignFormValues = {
   organization_id: "",
   title: "",
   description: "",
+  banner: undefined,
   difficulty: 1,
   start_date: undefined,
   end_date: undefined,
@@ -37,6 +39,7 @@ export const transformToApiData = (
     organization_id: data.organization_id,
     title: data.title.trim(),
     description: data.description.trim(),
+    banner: typeof data.banner === "string" ? data.banner : undefined,
     difficulty: data.difficulty,
     start_date: data.start_date,
     end_date: data.end_date,
