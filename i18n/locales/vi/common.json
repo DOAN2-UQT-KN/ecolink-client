@@ -354,7 +354,7 @@
   "Campaign not found": "Không tìm thấy chiến dịch",
   "We couldn't find the campaign you were looking for.": "Chúng tôi không tìm thấy chiến dịch bạn đang tìm.",
   "Sample member list. Reported count:": "Danh sách mẫu. Số liệu báo cáo:",
-  "Member List": "Danh sách thành viên",
+  "Member list": "Danh sách thành viên",
   "Tasks": "Nhiệm vụ",
   "Join campaign": "Tham gia chiến dịch",
   "Campaign registration is not available yet. Please check back later.": "Tính năng đăng ký tham gia chưa mở. Vui lòng quay lại sau.",
@@ -369,5 +369,6 @@
   "campaignDetail.mockTaskBriefing": "Phiên tóm tắt cộng đồng",
   "Active campaign": "Chiến dịch đang diễn ra",
   "Start contributing": "Bắt đầu đóng góp",
-  "View details": "Xem chi tiết"
+  "View details": "Xem chi tiết",
+  "Detail information": "Thông tin chi tiết"
 }

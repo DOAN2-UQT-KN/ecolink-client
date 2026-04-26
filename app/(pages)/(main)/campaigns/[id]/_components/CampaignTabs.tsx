@@ -22,8 +22,8 @@ function formatApprovalRequestBadgeCount(total: number): string {
 }
 
 const ALL_CAMPAIGN_TAB_ITEMS = [
-  { value: 'detail', labelKey: 'Detail Information' },
-  { value: 'members', labelKey: 'Member List' },
+  { value: 'detail', labelKey: 'Detail information' },
+  { value: 'members', labelKey: 'Member list' },
   { value: 'tasks', labelKey: 'Tasks' },
   { value: 'join-requests', labelKey: 'Join requests' },
 ] as const;
