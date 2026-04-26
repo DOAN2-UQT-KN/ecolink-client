@@ -91,7 +91,7 @@ export const OrganizationDetailTabs = memo(function OrganizationDetailTabs() {
         ))}
       </TabsList>
       <TabsContent value="campaign" className="mt-0">
-        <CampaignList />
+        <CampaignList enabled={tab === "campaign"} />
       </TabsContent>
       <TabsContent value="members" className="mt-0">
         <OrganizationMembers enabled={tab === "members"} />

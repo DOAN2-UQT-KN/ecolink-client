@@ -292,6 +292,9 @@
   "Search members by user name": "Tìm thành viên theo tên người dùng",
   "Could not load members.": "Không tải được danh sách thành viên.",
   "No members found.": "Không tìm thấy thành viên.",
+  "Could not load campaigns.": "Không tải được danh sách chiến dịch.",
+  "No campaigns found.": "Không tìm thấy chiến dịch nào.",
+  "There are no campaigns for this group yet.": "Nhóm này chưa có chiến dịch nào.",
   "Try adjusting your search or sort options to find members.": "Thử điều chỉnh tìm kiếm hoặc tùy chọn sắp xếp để tìm thành viên.",
   "You": "Bạn",
   "Member": "Thành viên",
@@ -334,5 +337,9 @@
   "Join requests": "Yêu cầu tham gia",
   "Vote point": "Điểm bình chọn",
   "Saved": "Đã lưu",
-  "Dashboard": "Bảng điều khiển"
+  "Dashboard": "Bảng điều khiển",
+  "Member enrollment": "Thành viên đã đăng ký",
+  "No description available.": "Chưa có mô tả.",
+  "Start date": "Ngày bắt đầu",
+  "End date": "Ngày kết thúc"
 }

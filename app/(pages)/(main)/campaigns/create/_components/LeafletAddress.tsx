@@ -17,6 +17,12 @@ const LeafletAddressMap = dynamic(() => import("@/modules/LeafletAddressMap"), {
   ),
 });
 
+type ReverseGeocodingAddress = {
+  city?: string;
+  district?: string;
+  detailAddress?: string;
+};
+
 const LeafletAddress = memo(function LeafletAddress() {
   const { t } = useTranslation();
   const { form } = useCampaign();
@@ -29,35 +35,110 @@ const LeafletAddress = memo(function LeafletAddress() {
 
   const [position, setPosition] = useState<LatLngLiteral | null>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cacheRef = useRef<Map<string, ReverseGeocodingAddress>>(new Map());
   const detailAddress = watch("detail_address");
   const latitudeValue = watch("latitude");
   const longitudeValue = watch("longitude");
 
+  const parseAddress = useCallback((data: {
+    display_name?: string;
+    address?: Record<string, string | undefined>;
+  }): ReverseGeocodingAddress => {
+    const address = data.address ?? {};
+    const parsedCity =
+      address.city ??
+      address.town ??
+      address.state ??
+      address.province ??
+      address.municipality;
+    const parsedDistrict =
+      address.county ??
+      address.city_district ??
+      address.district ??
+      address.suburb ??
+      address.quarter;
+    const parsedDetail =
+      data.display_name ??
+      [address.road, address.house_number, parsedDistrict, parsedCity]
+        .filter(Boolean)
+        .join(", ");
+
+    return {
+      detailAddress: parsedDetail,
+    };
+  }, []);
+
   const getAddressFromLatLng = useCallback(async (lat: number, lng: number) => {
     const response = await fetch(
       `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
-      { headers: { Accept: "application/json" } },
+      {
+        headers: {
+          Accept: "application/json",
+        },
+      },
     );
 
-    if (!response.ok) return undefined;
-    const data = (await response.json()) as { display_name?: string };
-    return data.display_name;
-  }, []);
+    if (!response.ok) {
+      throw new Error("Reverse geocoding failed");
+    }
+
+    const data = (await response.json()) as {
+      display_name?: string;
+      address?: Record<string, string | undefined>;
+    };
+
+    return parseAddress(data);
+  }, [parseAddress]);
+
+  // Initial GPS positioning
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const newPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          setPosition(newPos);
+          setValue("latitude", newPos.lat);
+          setValue("longitude", newPos.lng);
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+        },
+      );
+    }
+  }, [setValue]);
 
   useEffect(() => {
-    if (!position) return;
+    if (!position) {
+      return;
+    }
 
-    setValue("latitude", position.lat, { shouldDirty: true });
-    setValue("longitude", position.lng, { shouldDirty: true });
+    const cacheKey = `${position.lat.toFixed(4)},${position.lng.toFixed(4)}`;
+    const cachedResult = cacheRef.current.get(cacheKey);
+
+    if (cachedResult) {
+      if (cachedResult.detailAddress) {
+        setValue("detail_address", cachedResult.detailAddress, { shouldDirty: true });
+      }
+      return;
+    }
 
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
 
     debounceTimerRef.current = setTimeout(async () => {
-      const address = await getAddressFromLatLng(position.lat, position.lng);
-      if (address) {
-        setValue("detail_address", address, { shouldDirty: true });
+      try {
+        const parsedAddress = await getAddressFromLatLng(position.lat, position.lng);
+        cacheRef.current.set(cacheKey, parsedAddress);
+
+        setValue("latitude", position.lat, { shouldDirty: true });
+        setValue("longitude", position.lng, { shouldDirty: true });
+
+        if (parsedAddress.detailAddress) {
+          setValue("detail_address", parsedAddress.detailAddress, { shouldDirty: true });
+        }
+      } catch {
+        // Keep manual form values untouched when reverse geocoding fails.
       }
     }, 400);
 
@@ -93,7 +174,7 @@ const LeafletAddress = memo(function LeafletAddress() {
       </Field>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <Field>
+        <Field hidden>
           <FieldLabel className="text-foreground-tertiary font-display-3">
             {t("Latitude")}
           </FieldLabel>
@@ -103,7 +184,7 @@ const LeafletAddress = memo(function LeafletAddress() {
             className="border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50"
           />
         </Field>
-        <Field>
+        <Field hidden>
           <FieldLabel className="text-foreground-tertiary font-display-3">
             {t("Longitude")}
           </FieldLabel>

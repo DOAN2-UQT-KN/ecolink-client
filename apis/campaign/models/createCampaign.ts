@@ -13,6 +13,7 @@ export interface ICreateCampaignRequest {
   latitude?: number;
   longitude?: number;
   detail_address?: string;
+  banner?: string;
 }
 
 export interface ICreateCampaignResponse extends IBaseResponse<{

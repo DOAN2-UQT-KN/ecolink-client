@@ -10,7 +10,7 @@ import {
   PiSkullLight,
   PiTrash,
 } from "react-icons/pi";
-import { TbArrowBigDown, TbArrowBigUp } from "react-icons/tb";
+import { TbArrowBigDown, TbArrowBigUp, TbStarFilled } from "react-icons/tb";
 
 import { IIncident } from "@/apis/incident/models/incident";
 import ReportDetailCard from "@/modules/ReportDetailCard/ReportDetailCard";
@@ -105,25 +105,25 @@ const ReportSummaryCard = memo(function ReportSummaryCard({
           >
             <Checkbox checked={isChecked} onCheckedChange={toggleSelected} />
           </div>
-          <div className="pl-7 flex flex-col gap-3">
+          <div className="pl-5 flex flex-col gap-3">
             <div className="space-y-1">
               <h4 className="font-semibold text-black leading-tight line-clamp-2">
                 {incident.title || t("Untitled report")}
               </h4>
               {incident.detail_address && (
-                <div className="flex items-center gap-2 font-display-1 text-foreground-tertiary">
+                <div className="flex items-center gap-2 font-display-1 text-foreground-tertiary overflow-hidden">
                   <HiMapPin size={14} />
-                  <p className="line-clamp-1">{incident.detail_address}</p>
+                  <p className="line-clamp-1 overflow-hidden">{incident.detail_address}</p>
                 </div>
               )}
             </div>
-            <p className="font-display-2 text-foreground-secondary leading-relaxed line-clamp-2 max-h-[100px] overflow-y-auto scrollbar-hide">
+            <p className="font-display-1 text-foreground-secondary leading-relaxed line-clamp-2 h-[40px] overflow-y-auto scrollbar-hide">
               {incident.description || t("No description provided.")}
             </p>
 
-            <div className="grid grid-cols-2 grid-rows-2 gap-3 py-3 border-y border-border/50">
+            <div className="grid grid-cols-2 grid-rows-2 gap-1 py-2 border-y border-border/50">
               {footerItems.map((item) => (
-                <div key={item.label} className="flex items-center gap-2.5">
+                <div key={item.label} className="flex items-center gap-1 ">
                   <div className="p-2 rounded-lg">{item.icon}</div>
                   <div className="flex flex-col min-w-0">
                     <span className="text-[10px] uppercase tracking-wider font-bold text-foreground-tertiary">
@@ -138,11 +138,12 @@ const ReportSummaryCard = memo(function ReportSummaryCard({
             </div>
 
             <div className="flex items-center justify-between">
-              <div className="flex items-center h-10 px-4 bg-muted/60 dark:bg-accent/30 rounded-full transition-all">
-                <span className="font-display-1 text-foreground-secondary">{t("Vote point")}</span>
-                <span className="mx-2 font-display-2 font-semibold text-foreground min-w-[20px] text-center">
+              <div className="flex items-center h-10 px-2 bg-muted/60 dark:bg-accent/30 rounded-full transition-all">
+                {/* <span className="font-display-1 text-foreground-secondary">{t("Vote point")}</span> */}
+                <span className="mx-2 font-display-1 font-semibold text-foreground min-w-[10px] text-center">
                   {votePoint}
                 </span>
+                <TbStarFilled size={16} className="text-yellow-500" />
               </div>
             </div>
           </div>

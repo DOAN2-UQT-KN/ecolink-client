@@ -5,6 +5,7 @@ import {
   IUpdateOrganizationResponse,
   IVerifyOrganizationResponse,
   IResendContactEmailResponse,
+  IVerifyOrganizationRequest,
 } from "./models/organizationById";
 import { ICreateJoinRequestResponse } from "./models/joinRequestById";
 import {
@@ -43,11 +44,13 @@ export const useGetOrganizationById = (
 
 // PUT /api/v1/organizations/{id}/verify
 export const verifyOrganization = async (
-  id: string,
+  params: IVerifyOrganizationRequest,
 ): Promise<IVerifyOrganizationResponse> => {
+  const {id, ...rest} = params;
   return await requestApi.put<IVerifyOrganizationResponse>(
     `${url}/${id}/verify`,
-    undefined,
+    {...rest}
+    ,
   );
 };
 
@@ -57,7 +60,7 @@ export async function rejectOrganizationMock(_id: string): Promise<void> {
 }
 
 export const useVerifyOrganization = (
-  options?: UsePostOptions<IVerifyOrganizationResponse, string>,
+  options?: UsePostOptions<IVerifyOrganizationResponse, IVerifyOrganizationRequest>,
 ) => {
   const { t } = useTranslation();
   return usePost({

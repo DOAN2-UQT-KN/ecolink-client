@@ -2,7 +2,7 @@ export interface ICampaign {
   id: string;
   organization_id?: string;
   title: string;
-  description: string | null;
+  description: string;
 
   status?: number;
   difficulty?: number;
@@ -10,8 +10,8 @@ export interface ICampaign {
 
   is_verify?: boolean;
 
-  created_by?: string | null;
-  updated_by?: string | null;
+  created_by?: string;
+  updated_by?: string;
 
   created_at: string; // ISO date
   updated_at: string; // ISO date
@@ -22,10 +22,15 @@ export interface ICampaign {
   votes: {
     upvote_count: number;
     downvote_count: number;
-    my_vote: number | null;
+    my_vote: number;
   };
 
-  saved?: boolean | null;
+  saved?: boolean;
   request_status?: number;
+
+  banner?: string;
+  detail_address?: string;
+  start_date?: string;
+  end_date?: string;
 }
 

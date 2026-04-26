@@ -12,6 +12,7 @@ import { DataTable as SharedDataTable, type DataTableColumn } from "@/components
 import { PreviewOrganizationPopover } from "./PreviewOrganizationPopover";
 import { ApproveOrganizationConfirm } from "./ApproveOrganizationConfirm";
 import { TbScanEye  } from "react-icons/tb";
+import { TooltipTruncatedText } from "@/components/ui/TooltipTruncatedText";
 
 
 const COLUMN_KEYS = {
@@ -134,6 +135,12 @@ export function DataTable() {
         title: t("Description"),
         dataIndex: "description",
         className: "min-w-[260px]",
+        render: (_, record) => (
+         <TooltipTruncatedText 
+          text={record.description}
+          className="line-clamp-2 h-[40px] overflow-hidden"
+         />
+        ),
       },
       {
         key: COLUMN_KEYS.ACTION,
@@ -176,7 +183,7 @@ export function DataTable() {
 
   return (
     <SharedDataTable
-      columns={columns}
+      columns={columns} 
       data={organizations}
       loading={loading}
       rowKey="id"
