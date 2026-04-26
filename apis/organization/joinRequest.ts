@@ -1,4 +1,4 @@
-import requestApi from "@/utils/requestApi";
+import requestApi from '@/utils/requestApi';
 import {
   IGetMyJoinRequestsRequest,
   IGetMyJoinRequestsResponse,
@@ -7,40 +7,32 @@ import {
   ICancelJoinRequestRequest,
   ICancelJoinRequestResponse,
   ICreateOrganizationJoinRequestResponse,
-} from "./models/joinRequestModels";
-import {
-  useGet,
-  UseGetOptions,
-  usePost,
-  UsePostOptions,
-} from "@/hooks/reactQuery";
-import { useTranslation } from "react-i18next";
-import { MessageType } from "@/utils/showMessage";
+} from './models/joinRequestModels';
+import { useGet, UseGetOptions, usePost, UsePostOptions } from '@/hooks/reactQuery';
+import { useTranslation } from 'react-i18next';
+import { MessageType } from '@/utils/showMessage';
 
-const baseUrl = "api/v1/organizations/join-requests";
+const baseUrl = 'api/v1/organizations/join-requests';
 
 /** POST /organizations/{id}/join-requests */
 export const createOrganizationJoinRequest = async (
   organizationId: string,
 ): Promise<ICreateOrganizationJoinRequestResponse> => {
   return await requestApi.post<ICreateOrganizationJoinRequestResponse>(
-    `/organizations/${organizationId}/join-requests`,
+    `api/v1/organizations/${organizationId}/join-requests`,
     {},
   );
 };
 
 export const useCreateOrganizationJoinRequest = (
-  options?: UsePostOptions<
-    ICreateOrganizationJoinRequestResponse,
-    string
-  >,
+  options?: UsePostOptions<ICreateOrganizationJoinRequestResponse, string>,
 ) => {
   const { t } = useTranslation();
   return usePost({
     mutationFn: createOrganizationJoinRequest,
-    queryKey: ["my-join-requests"],
+    queryKey: ['my-join-requests'],
     messageSuccess: {
-      content: t("Join request submitted successfully"),
+      content: t('Join request submitted successfully'),
       type: MessageType.Toast,
     },
     messageError: {
@@ -59,13 +51,10 @@ export const getMyJoinRequests = async (
 
 export const useGetMyJoinRequests = (
   req: IGetMyJoinRequestsRequest,
-  options?: Omit<
-    UseGetOptions<IGetMyJoinRequestsResponse>,
-    "queryKey" | "queryFn"
-  >,
+  options?: Omit<UseGetOptions<IGetMyJoinRequestsResponse>, 'queryKey' | 'queryFn'>,
 ) => {
   return useGet({
-    queryKey: ["my-join-requests", req],
+    queryKey: ['my-join-requests', req],
     queryFn: () => getMyJoinRequests(req),
     ...options,
   });
@@ -75,23 +64,17 @@ export const useGetMyJoinRequests = (
 export const processJoinRequest = async (
   req: IProcessJoinRequestRequest,
 ): Promise<IProcessJoinRequestResponse> => {
-  return await requestApi.put<IProcessJoinRequestResponse>(
-    `${baseUrl}/process`,
-    req,
-  );
+  return await requestApi.put<IProcessJoinRequestResponse>(`${baseUrl}/process`, req);
 };
 
 export const useProcessJoinRequest = (
-  options?: UsePostOptions<
-    IProcessJoinRequestResponse,
-    IProcessJoinRequestRequest
-  >,
+  options?: UsePostOptions<IProcessJoinRequestResponse, IProcessJoinRequestRequest>,
 ) => {
   const { t } = useTranslation();
   return usePost({
     mutationFn: processJoinRequest,
     messageSuccess: {
-      content: t("Join request processed successfully"),
+      content: t('Join request processed successfully'),
       type: MessageType.Toast,
     },
     messageError: {
@@ -105,23 +88,17 @@ export const useProcessJoinRequest = (
 export const cancelJoinRequest = async (
   req: ICancelJoinRequestRequest,
 ): Promise<ICancelJoinRequestResponse> => {
-  return await requestApi.delete<ICancelJoinRequestResponse>(
-    `${baseUrl}/cancel`,
-    { data: req },
-  );
+  return await requestApi.delete<ICancelJoinRequestResponse>(`${baseUrl}/cancel`, { data: req });
 };
 
 export const useCancelJoinRequest = (
-  options?: UsePostOptions<
-    ICancelJoinRequestResponse,
-    ICancelJoinRequestRequest
-  >,
+  options?: UsePostOptions<ICancelJoinRequestResponse, ICancelJoinRequestRequest>,
 ) => {
   const { t } = useTranslation();
   return usePost({
     mutationFn: cancelJoinRequest,
     messageSuccess: {
-      content: t("Join request cancelled successfully"),
+      content: t('Join request cancelled successfully'),
       type: MessageType.Toast,
     },
     messageError: {

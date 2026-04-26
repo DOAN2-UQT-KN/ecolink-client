@@ -9,6 +9,7 @@ import { formattedDate } from '@/utils/formattedDate';
 import { TbCalendarClock, TbArrowRight } from 'react-icons/tb';
 import { useTranslation } from 'react-i18next';
 import { Button } from './Button';
+import { useRouter } from 'next/navigation';
 
 interface SummaryCampaignCardProps {
   campaign: ICampaign;
@@ -19,9 +20,14 @@ export default function SummaryCampaignCard({ campaign }: SummaryCampaignCardPro
   const maxMembers = 50;
   const currentMembers = 18;
   const memberProgress = (currentMembers / maxMembers) * 100;
-
+  const router = useRouter();
   return (
-    <article className="rounded-xl border border-[rgba(136,122,71,0.35)] bg-white/60 p-6 shadow-sm flex flex-row gap-5 items-center">
+    <article
+      onClick={() => {
+        router.push(`/campaigns/${campaign.id}`);
+      }}
+      className="rounded-xl border border-[rgba(136,122,71,0.35)] bg-white/60 p-6 shadow-sm flex flex-row gap-5 items-center"
+    >
       <Image
         src={campaign.banner ?? '/banner-default.jpg'}
         alt={campaign.title}

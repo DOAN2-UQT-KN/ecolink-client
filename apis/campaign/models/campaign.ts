@@ -32,5 +32,7 @@ export interface ICampaign {
   detail_address?: string;
   start_date?: string;
   end_date?: string;
-}
 
+  current_members?: number;
+  max_members?: number;
+}
