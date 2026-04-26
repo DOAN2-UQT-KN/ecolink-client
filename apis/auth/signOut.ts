@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { MessageType } from "@/utils/showMessage";
 import { IBaseResponse } from "@/types/BaseResponse";
 
-const url = "/auth/sign-out";
+const url = "/api/v1/auth/sign-out";
 
 export const signOut = async (): Promise<IBaseResponse> => {
   return await requestApi.post<IBaseResponse>(url, {});

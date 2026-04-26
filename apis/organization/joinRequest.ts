@@ -17,7 +17,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { MessageType } from "@/utils/showMessage";
 
-const baseUrl = "/organizations/join-requests";
+const baseUrl = "api/v1/organizations/join-requests";
 
 /** POST /organizations/{id}/join-requests */
 export const createOrganizationJoinRequest = async (

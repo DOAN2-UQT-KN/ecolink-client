@@ -10,6 +10,8 @@ import { ConfirmPopover } from "@/components/admin/shared/ConfirmPopover";
 import { cn } from "@/libs/utils";
 import showMessage, { MessageLevel, MessageType } from "@/utils/showMessage";
 import { TbCheckbox } from "react-icons/tb";
+import { STATUS } from "@/constants/status";
+import { queryClient } from "@/libs/queryClient";
 
 type Props = {
   organizationId: string;
@@ -25,27 +27,22 @@ export const ApproveOrganizationConfirm = memo(function ApproveOrganizationConfi
   const { t } = useTranslation();
   const [rejecting, setRejecting] = useState(false);
 
-  const { mutateAsync: verifyAsync, isPending: approving } = useVerifyOrganization({
+  const { mutate: verify, isPending: approving } = useVerifyOrganization({
     queryKey: ["organizations"],
   });
 
-  const handleApprove = useCallback(async () => {
-    await verifyAsync(organizationId);
-  }, [verifyAsync, organizationId]);
-
-  const handleReject = useCallback(async () => {
-    setRejecting(true);
-    try {
-      await rejectOrganizationMock(organizationId);
-      showMessage({
-        type: MessageType.Toast,
-        level: MessageLevel.Info,
-        title: t("Rejection is not connected to the API yet (mock)."),
-      });
-    } finally {
-      setRejecting(false);
-    }
-  }, [organizationId, t]);
+  const handleVerify = useCallback((status: number) => {
+    verify({
+      id: organizationId,
+      status
+    },
+    {
+      onSuccess: () => {
+       queryClient.invalidateQueries({ queryKey: ["organizations"] });
+      },
+    },
+  );
+  }, [organizationId]);
 
   const isDark = theme === "dark";
 
@@ -53,14 +50,14 @@ export const ApproveOrganizationConfirm = memo(function ApproveOrganizationConfi
     <ConfirmPopover
       theme={theme}
       title={t("Approve this organization?")}
-      description={t("You can verify {{name}} or reject it. Reject is currently a mock.", {
+      description={t("You can verify {{name}} or reject it.", {
         name: organizationName,
       })}
       confirmLabel={t("Approve")}
       rejectLabel={t("Reject")}
       // cancelLabel={t("Cancel")}
-      onConfirm={handleApprove}
-      onReject={handleReject}
+      onConfirm={() => handleVerify(STATUS.ACTIVE)}
+      onReject={() => handleVerify(STATUS.INACTIVE)}
       confirmPending={approving}
       rejectPending={rejecting}
       trigger={

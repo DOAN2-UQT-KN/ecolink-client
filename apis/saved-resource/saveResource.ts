@@ -3,9 +3,9 @@ import { usePost, UsePostOptions } from "@/hooks/reactQuery";
 import {
   ISaveResourceRequest,
   ISaveResourceResponse,
-} from "./models/saved-resource";
+} from "./models/savedResource";
 
-const saveUrl = "/incident/saved-resources/save";
+const saveUrl = "/api/v1/incident/saved-resources/save";
 
 export const postSaveResource = async (
   data: ISaveResourceRequest,

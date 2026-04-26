@@ -11,6 +11,7 @@ import { cn } from "@/libs/utils";
 import { useGiftContext } from "../_context/GiftContext";
 
 const COLUMN_KEYS = {
+  NO: "no",
   NAME: "name",
   POINTS: "points",
   STOCK: "stock",
@@ -32,6 +33,16 @@ export function DataTable({ onEdit }: { onEdit: (gift: IGift) => void }) {
 
   const columns: DataTableColumn<IGift>[] = useMemo(
     () => [
+      {
+        key: COLUMN_KEYS.NO,
+        title: t("No"),
+        className: "w-[72px]",
+        render: (_, __, index) => (
+          <span className="tabular-nums">
+            {(pagination.current - 1) * pagination.pageSize + index + 1}
+          </span>
+        ),
+      },
       {
         key: COLUMN_KEYS.NAME,
         title: t("Name"),
@@ -112,7 +123,7 @@ export function DataTable({ onEdit }: { onEdit: (gift: IGift) => void }) {
         ),
       },
     ],
-    [isDark, onEdit, t],
+    [isDark, onEdit, pagination.current, pagination.pageSize, t],
   );
 
   return (

@@ -2,8 +2,8 @@ import requestApi from "@/utils/requestApi";
 import { usePost, UsePostOptions } from "@/hooks/reactQuery";
 import { IVoteRequest, IVoteResponse } from "./models/vote";
 
-const upvoteUrl = "/incident/votes/upvote";
-const downvoteUrl = "/incident/votes/downvote";
+const upvoteurl = "/api/v1/incident/votes/upvote";
+const downvoteurl = "/api/v1/incident/votes/downvote";
 
 export const postUpvote = async (
   data: IVoteRequest,

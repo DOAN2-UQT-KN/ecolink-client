@@ -1,22 +1,25 @@
 "use client";
 
-import React, { memo, useCallback, useMemo, useState } from "react";
-import { Pencil, X } from "lucide-react";
+import { memo, useCallback, useMemo, useState } from "react";
+import { Image as AntdImage } from "antd";
 import { BiGroup } from "react-icons/bi";
 import { HiOutlineUserRemove } from "react-icons/hi";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { HiEye, HiPencilAlt } from "react-icons/hi";
 
 import { Button as SharedButton } from "@/components/client/shared/Button";
 import { cn } from "@/libs/utils";
 import { UpdateOrganizationPopover } from "@/app/(pages)/(main)/organizations/me/_components/UpdateOrganizationPopover";
 
 import { useOrganizationDetail } from "../_hooks/useOrganizationDetail";
+import { HiXMark } from "react-icons/hi2";
 
 export const HeroSection = memo(function HeroSection() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [isEditGroupOpen, setIsEditGroupOpen] = useState(false);
+  const [previewImageSrc, setPreviewImageSrc] = useState<string | null>(null);
   const {
     organization,
     organizationId,
@@ -65,6 +68,10 @@ export const HeroSection = memo(function HeroSection() {
     [backgroundUrl],
   );
 
+  const openImagePreview = useCallback((src: string) => {
+    setPreviewImageSrc(src);
+  }, []);
+
   if (!organization) {
     return null;
   }
@@ -72,9 +79,32 @@ export const HeroSection = memo(function HeroSection() {
   return (
     <>
     <section className="w-full overflow-hidden rounded-xl border border-[rgba(136,122,71,0.5)] bg-white/80 shadow-sm ring-1 ring-white/5">
-      <div className={headerClassName} style={headerStyle}>
+      <div
+        className={cn(headerClassName, backgroundUrl && "group cursor-pointer")}
+        style={headerStyle}
+        onClick={backgroundUrl ? () => openImagePreview(backgroundUrl) : undefined}
+        role={backgroundUrl ? "button" : undefined}
+        tabIndex={backgroundUrl ? 0 : undefined}
+        onKeyDown={
+          backgroundUrl
+            ? (e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  openImagePreview(backgroundUrl);
+                }
+              }
+            : undefined
+        }
+      >
         {backgroundUrl ? (
-          <div className="absolute inset-0 bg-black/25" aria-hidden />
+          <>
+            <div className="absolute inset-0 bg-black/25 transition-colors group-hover:bg-black/35" aria-hidden />
+            <div className="absolute inset-0 z-[1] flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100" aria-hidden>
+              {/* <span className="inline-flex items-center justify-center rounded-full bg-black/45 p-2 text-white backdrop-blur-[1px]"> */}
+                <HiEye className="size-10 text-white/80" />
+              {/* </span> */}
+            </div>
+          </>
         ) : null}
       </div>
 
@@ -83,16 +113,35 @@ export const HeroSection = memo(function HeroSection() {
           <div
             className={cn(
               "relative z-10 shrink-0 size-32 sm:size-40 -mt-[4.25rem] sm:-mt-[5.25rem] -translate-x-1 sm:-translate-x-1.5 rounded-full border-[3px] border-white/95 bg-white shadow-md overflow-hidden flex items-center justify-center",
+              logoUrl && "group cursor-pointer",
               !logoUrl && "bg-muted",
             )}
+            onClick={logoUrl ? () => openImagePreview(logoUrl) : undefined}
+            role={logoUrl ? "button" : undefined}
+            tabIndex={logoUrl ? 0 : undefined}
+            onKeyDown={
+              logoUrl
+                ? (e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      openImagePreview(logoUrl);
+                    }
+                  }
+                : undefined
+            }
           >
             {logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element -- arbitrary logo URLs
-              <img
-                src={logoUrl}
-                alt=""
-                className="size-full object-cover"
-              />
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element -- arbitrary logo URLs */}
+                <img
+                  src={logoUrl}
+                  alt=""
+                  className="size-full object-cover transition-transform duration-200 group-hover:scale-105"
+                />
+                <div className="pointer-events-none absolute inset-0 z-[1] flex items-center justify-center bg-black/35 opacity-0 transition-opacity group-hover:opacity-100">
+                    <HiEye className="size-8 text-white/80" />
+                </div>
+              </>
             ) : (
               <span className="text-xs text-muted-foreground px-2 text-center">
                 Logo
@@ -121,7 +170,7 @@ export const HeroSection = memo(function HeroSection() {
                   variant="brown"
                   size="medium"
                   className="min-w-0 flex-1 sm:flex-none sm:min-w-[140px]"
-                  iconLeft={<X className="size-4" aria-hidden />}
+                  iconLeft={<HiXMark className="size-4" aria-hidden />}
                   isLoading={isCancelPending}
                   onClick={handleCancelJoinClick}
                 >
@@ -187,7 +236,7 @@ export const HeroSection = memo(function HeroSection() {
                   variant="outlined-brown"
                   size="medium"
                   className="min-w-0 flex-1 sm:flex-none sm:min-w-[140px]"
-                  iconLeft={<Pencil className="size-4" aria-hidden />}
+                  iconLeft={<HiPencilAlt className="size-4" aria-hidden />}
                   onClick={() => setIsEditGroupOpen(true)}
                 >
                   {t("Edit group")}
@@ -204,6 +253,21 @@ export const HeroSection = memo(function HeroSection() {
       onOpenChange={setIsEditGroupOpen}
       onUpdated={handleOrganizationUpdated}
     />
+    {previewImageSrc ? (
+      <AntdImage
+        src={previewImageSrc}
+        alt={organization?.name ?? "preview"}
+        className="hidden"
+        preview={{
+          visible: Boolean(previewImageSrc),
+          onOpenChange: (visible) => {
+            if (!visible) {
+              setPreviewImageSrc(null);
+            }
+          },
+        }}
+      />
+    ) : null}
     </>
   );
 });

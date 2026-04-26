@@ -2,7 +2,7 @@ import requestApi from "@/utils/requestApi";
 import { IGetReportDetailResponse } from "./models/getReportDetail";
 import { useGet, UseGetOptions } from "@/hooks/reactQuery";
 
-const url = "/reports";
+const url = "/api/v1/reports";
 
 export const getReportDetail = async (
   id: string,

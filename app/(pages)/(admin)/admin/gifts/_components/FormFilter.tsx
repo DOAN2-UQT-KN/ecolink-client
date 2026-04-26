@@ -25,7 +25,7 @@ type FormFieldConfig = {
 
 export function FormFilter() {
   const { t } = useTranslation();
-  const { filters, onFilterChange, onResetFilters } = useGiftContext();
+  const { filters, onFilterChange } = useGiftContext();
   const values = filters;
   const [searchInput, setSearchInput] = useState(values.search);
   const debouncedSearch = useDebounce(searchInput, 500);
@@ -124,12 +124,12 @@ export function FormFilter() {
 
   return (
     <div className="space-y-4 rounded-[10px] border border-zinc-200 bg-card p-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      {/* <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-muted-foreground text-sm">{t("Manage gift catalog and redemptions.")}</p>
         <Button type="button" variant="outline" size="sm" onClick={onResetFilters}>
           {t("Reset")}
         </Button>
-      </div>
+      </div> */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         {formFields.map((field) => (
           <Field key={field.key}>

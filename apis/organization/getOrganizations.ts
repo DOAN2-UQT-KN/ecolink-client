@@ -5,7 +5,7 @@ import {
 } from "./models/getOrganizations";
 import { useGet, UseGetOptions } from "@/hooks/reactQuery";
 
-const url = "/organizations";
+const url = "/api/v1/organizations";
 
 export const getOrganizations = async (
   req: IGetOrganizationsRequest,

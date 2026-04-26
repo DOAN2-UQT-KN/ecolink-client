@@ -1,33 +1,34 @@
-"use client";
+'use client';
 
-import React, { memo, useCallback, useMemo, useRef, useState } from "react";
-import { cn } from "@/libs/utils";
-import { AlignLeft, X } from "lucide-react";
-import { HiMail } from "react-icons/hi";
-import { BiGroup } from "react-icons/bi";
-import { HiOutlineUserRemove } from "react-icons/hi";
-import { Button } from "@/components/ui/button";
-import { Button as SharedButton } from "@/components/client/shared/Button";
-import { ConfirmPopoverModal } from "@/modules/OrganizationCard/components/ConfirmPopoverModal";
-import type { OrganizationCardSavePayload } from "./types/OrganizationCard.types";
-import { useOrganizationCardEdit } from "./hooks/useOrganizationCardEdit";
+import React, { memo, useCallback, useMemo, useRef, useState } from 'react';
+import { cn } from '@/libs/utils';
+import { AlignLeft, X } from 'lucide-react';
+import { HiMail } from 'react-icons/hi';
+import { BiGroup } from 'react-icons/bi';
+import { HiOutlineUserRemove } from 'react-icons/hi';
+import { Button } from '@/components/ui/button';
+import { Button as SharedButton } from '@/components/client/shared/Button';
+import { ConfirmPopoverModal } from '@/modules/OrganizationCard/components/ConfirmPopoverModal';
+import type { OrganizationCardSavePayload } from './types/OrganizationCard.types';
+import { useOrganizationCardEdit } from './hooks/useOrganizationCardEdit';
 import {
   useCancelJoinRequest,
   useCreateOrganizationJoinRequest,
-} from "@/apis/organization/joinRequest";
-import { useLeaveOrganization } from "@/apis/organization/leaveOrganization";
-import useAuthStore from "@/stores/useAuthStore";
-import { useTranslation } from "react-i18next";
-import { useRouter } from "next/navigation";
-import { useQueryClient } from "@tanstack/react-query";
-import { invalidateOrganizationListsQuery } from "./services/invalidateOrganizationLists";
-import { STATUS } from "@/constants/status";
+} from '@/apis/organization/joinRequest';
+import { useLeaveOrganization } from '@/apis/organization/leaveOrganization';
+import useAuthStore from '@/stores/useAuthStore';
+import { useTranslation } from 'react-i18next';
+import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
+import { invalidateOrganizationListsQuery } from './services/invalidateOrganizationLists';
+import { STATUS } from '@/constants/status';
 import {
   joinListingShowsCancelButton,
   joinListingShowsJoinButton,
-} from "./utils/joinRequestListingUi";
+} from './utils/joinRequestListingUi';
+import { RichTextContent } from '@/components/ui/RichTextContent';
 
-export { useOrganizationCardEdit } from "./hooks/useOrganizationCardEdit";
+export { useOrganizationCardEdit } from './hooks/useOrganizationCardEdit';
 
 export type { OrganizationCardSavePayload };
 
@@ -68,16 +69,13 @@ export const OrganizationCard = memo(function OrganizationCard({
   joinRequestId,
   ownerId,
   onSave,
-  saveLabel = "Save",
+  saveLabel = 'Save',
 }: OrganizationCardProps) {
   const { t } = useTranslation();
   const router = useRouter();
   const queryClient = useQueryClient();
   const currentUserId = useAuthStore((s) => s.user?.id);
-  const showYourGroupTag =
-    ownerId != null &&
-    currentUserId != null &&
-    ownerId === currentUserId;
+  const showYourGroupTag = ownerId != null && currentUserId != null && ownerId === currentUserId;
 
   const logoInputRef = useRef<HTMLInputElement>(null);
   const backgroundInputRef = useRef<HTMLInputElement>(null);
@@ -87,20 +85,17 @@ export const OrganizationCard = memo(function OrganizationCard({
     invalidateOrganizationListsQuery(queryClient);
   }, [queryClient]);
 
-  const { mutate: requestJoin, isPending: isJoinPending } =
-    useCreateOrganizationJoinRequest({
-      onSettled: invalidateOrganizationLists,
-    });
+  const { mutate: requestJoin, isPending: isJoinPending } = useCreateOrganizationJoinRequest({
+    onSettled: invalidateOrganizationLists,
+  });
 
-  const { mutateAsync: cancelJoinAsync, isPending: isCancelPending } =
-    useCancelJoinRequest({
-      onSettled: invalidateOrganizationLists,
-    });
+  const { mutateAsync: cancelJoinAsync, isPending: isCancelPending } = useCancelJoinRequest({
+    onSettled: invalidateOrganizationLists,
+  });
 
-  const { mutateAsync: leaveOrganizationAsync, isPending: isLeavePending } =
-    useLeaveOrganization({
-      onSettled: invalidateOrganizationLists,
-    });
+  const { mutateAsync: leaveOrganizationAsync, isPending: isLeavePending } = useLeaveOrganization({
+    onSettled: invalidateOrganizationLists,
+  });
 
   const draft = useOrganizationCardEdit({
     enabled: editMode,
@@ -117,32 +112,31 @@ export const OrganizationCard = memo(function OrganizationCard({
   const headerClassName = useMemo(
     () =>
       cn(
-        "relative h-28 sm:h-32 w-full overflow-hidden rounded-t-[10px] bg-gradient-to-br from-button-accent/30 via-white/10 to-white/5",
-        headerUrl && "bg-center bg-cover",
-        editMode && "cursor-pointer group/cover",
+        'relative h-28 sm:h-32 w-full overflow-hidden rounded-t-[10px] bg-gradient-to-br from-button-accent/30 via-white/10 to-white/5',
+        headerUrl && 'bg-center bg-cover',
+        editMode && 'cursor-pointer group/cover',
       ),
     [headerUrl, editMode],
   );
 
   const headerStyle = useMemo(
-    () =>
-      headerUrl ? { backgroundImage: `url(${headerUrl})` } : undefined,
+    () => (headerUrl ? { backgroundImage: `url(${headerUrl})` } : undefined),
     [headerUrl],
   );
 
   const displayName = useMemo(() => {
     const raw = editMode ? draft.name : name;
-    return raw.trim() ? raw : "—";
+    return raw.trim() ? raw : '—';
   }, [editMode, draft.name, name]);
 
   const displayDescription = useMemo(() => {
     const raw = editMode ? draft.description : description;
-    return raw.trim() ? raw : "—";
+    return raw.trim() ? raw : '—';
   }, [editMode, draft.description, description]);
 
   const displayEmail = useMemo(() => {
     const raw = editMode ? draft.contactEmail : contactEmail;
-    return raw.trim() ? raw : "—";
+    return raw.trim() ? raw : '—';
   }, [editMode, draft.contactEmail, contactEmail]);
 
   const emailHref = useMemo(() => {
@@ -162,7 +156,7 @@ export const OrganizationCard = memo(function OrganizationCard({
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0] ?? null;
       draft.onLogoFile(file);
-      e.target.value = "";
+      e.target.value = '';
     },
     [draft],
   );
@@ -171,7 +165,7 @@ export const OrganizationCard = memo(function OrganizationCard({
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0] ?? null;
       draft.onBackgroundFile(file);
-      e.target.value = "";
+      e.target.value = '';
     },
     [draft],
   );
@@ -192,7 +186,7 @@ export const OrganizationCard = memo(function OrganizationCard({
   }, [organizationId, requestJoin]);
 
   const handleConfirmCancelJoin = useCallback(async () => {
-    console.log("handleConfirmCancelJoin", joinRequestId);
+    console.log('handleConfirmCancelJoin', joinRequestId);
     if (!joinRequestId) return;
     await cancelJoinAsync({ request_id: joinRequestId });
   }, [joinRequestId, cancelJoinAsync]);
@@ -207,16 +201,14 @@ export const OrganizationCard = memo(function OrganizationCard({
     router.push(`/organizations/${organizationId}`);
   }, [organizationId, router]);
 
-  const showJoinButton =
-    !showYourGroupTag && joinListingShowsJoinButton(requestStatus);
+  const showJoinButton = !showYourGroupTag && joinListingShowsJoinButton(requestStatus);
   const showCancelButton = joinListingShowsCancelButton(requestStatus);
-  const showLeaveButton =
-    !showYourGroupTag && requestStatus === STATUS.APPROVED;
+  const showLeaveButton = !showYourGroupTag && requestStatus === STATUS.APPROVED;
 
   return (
     <article
       className={cn(
-        "flex flex-col w-full mx-auto border border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5 overflow-hidden",
+        'flex flex-col w-full mx-auto border border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5 overflow-hidden',
         className,
       )}
     >
@@ -240,20 +232,19 @@ export const OrganizationCard = memo(function OrganizationCard({
       <button
         type="button"
         className={cn(
-          "block w-full p-0 border-0 bg-transparent text-left",
-          !editMode && "pointer-events-none cursor-default",
+          'block w-full p-0 border-0 bg-transparent text-left',
+          !editMode && 'pointer-events-none cursor-default',
         )}
         onClick={editMode ? openBackgroundPicker : undefined}
-        aria-label={editMode ? "Change cover image" : undefined}
+        aria-label={editMode ? 'Change cover image' : undefined}
         disabled={!editMode}
       >
         <div className={headerClassName} style={headerStyle}>
           {headerUrl ? (
             <div
               className={cn(
-                "absolute inset-0 bg-black/25",
-                editMode &&
-                  "transition-colors group-hover/cover:bg-black/40",
+                'absolute inset-0 bg-black/25',
+                editMode && 'transition-colors group-hover/cover:bg-black/40',
               )}
               aria-hidden
             />
@@ -266,27 +257,20 @@ export const OrganizationCard = memo(function OrganizationCard({
           <button
             type="button"
             className={cn(
-              "relative z-10 size-20 sm:size-30 rounded-full border-2 border-white/90 bg-white shadow-md overflow-hidden flex items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-button-accent/50",
-              !logoDisplayUrl && "bg-muted",
-              editMode &&
-                "cursor-pointer hover:ring-2 hover:ring-button-accent/30",
-              !editMode && "pointer-events-none",
+              'relative z-10 size-20 sm:size-30 rounded-full border-2 border-white/90 bg-white shadow-md overflow-hidden flex items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-button-accent/50',
+              !logoDisplayUrl && 'bg-muted',
+              editMode && 'cursor-pointer hover:ring-2 hover:ring-button-accent/30',
+              !editMode && 'pointer-events-none',
             )}
             onClick={editMode ? openLogoPicker : undefined}
-            aria-label={editMode ? "Change logo" : undefined}
+            aria-label={editMode ? 'Change logo' : undefined}
             disabled={!editMode}
           >
             {logoDisplayUrl ? (
               // eslint-disable-next-line @next/next/no-img-element -- arbitrary logo URLs
-              <img
-                src={logoDisplayUrl}
-                alt=""
-                className="size-full object-cover"
-              />
+              <img src={logoDisplayUrl} alt="" className="size-full object-cover" />
             ) : (
-              <span className="text-xs text-muted-foreground px-2 text-center">
-                Logo
-              </span>
+              <span className="text-xs text-muted-foreground px-2 text-center">Logo</span>
             )}
           </button>
         </div>
@@ -309,18 +293,15 @@ export const OrganizationCard = memo(function OrganizationCard({
             {showYourGroupTag ? (
               <span
                 className="shrink-0 inline-flex items-center rounded-sm border border-[rgba(136,122,71,0.45)] bg-button-accent/10 px-2.5 py-0.5 text-xs font-semibold text-button-accent"
-                aria-label={t("Your group")}
+                aria-label={t('Your group')}
               >
-                {t("Your group")}
+                {t('Your group')}
               </span>
             ) : null}
           </div>
 
           <div className="flex items-center justify-center gap-2 text-sm text-foreground-secondary break-words min-w-0">
-            <HiMail
-              className="size-4 shrink-0 text-button-accent mt-0.5"
-              aria-hidden
-            />
+            <HiMail className="size-4 shrink-0 text-button-accent mt-0.5" aria-hidden />
             <div className="text-center">
               {editMode ? (
                 <input
@@ -362,7 +343,7 @@ export const OrganizationCard = memo(function OrganizationCard({
                       isLoading={isCancelPending}
                       // isDisabled={!joinRequestId}
                     >
-                      {t("Cancel")}
+                      {t('Cancel')}
                     </SharedButton>
                   }
                 />
@@ -378,13 +359,11 @@ export const OrganizationCard = memo(function OrganizationCard({
                       variant="brown"
                       size="medium"
                       className="w-full"
-                      iconLeft={
-                        <HiOutlineUserRemove className="size-4" aria-hidden />
-                      }
+                      iconLeft={<HiOutlineUserRemove className="size-4" aria-hidden />}
                       isLoading={isLeavePending}
                       isDisabled={!organizationId}
                     >
-                      {t("Leave")}
+                      {t('Leave')}
                     </SharedButton>
                   }
                 />
@@ -399,7 +378,7 @@ export const OrganizationCard = memo(function OrganizationCard({
                 isDisabled={!organizationId}
                 onClick={handleJoinClick}
               >
-                {t("Join")}
+                {t('Join')}
               </SharedButton>
             ) : null}
             <SharedButton
@@ -409,17 +388,14 @@ export const OrganizationCard = memo(function OrganizationCard({
               isDisabled={!organizationId}
               onClick={handleViewMoreClick}
             >
-              {t("View more")}
+              {t('View more')}
             </SharedButton>
-
           </div>
         ) : (
           <div className="flex items-start justify-center gap-2 rounded-lg border border-[rgba(136,122,71,0.35)] bg-white/40 px-3 py-2.5">
             <AlignLeft className="size-4 shrink-0 text-button-accent mt-0.5" />
             <div className="min-w-0 text-left w-full">
-              <p className="text-xs font-medium text-foreground-tertiary">
-                Description
-              </p>
+              <p className="text-xs font-medium text-foreground-tertiary">Description</p>
               {editMode ? (
                 <textarea
                   value={draft.description}
@@ -429,9 +405,17 @@ export const OrganizationCard = memo(function OrganizationCard({
                   aria-label="Organization description"
                 />
               ) : (
-                <p className="text-sm text-foreground whitespace-pre-wrap break-words">
-                  {displayDescription}
-                </p>
+                // <p className="text-sm text-foreground whitespace-pre-wrap break-words line-clamp-2 pt-1">
+                //   {displayDescription}
+                // </p>
+                <RichTextContent
+                  value={displayDescription}
+                  className="text-sm text-foreground whitespace-pre-wrap break-words !font-display-1"
+                  maxLines={2}
+                  showMoreLabel={t('See more')}
+                  showLessLabel={t('See less')}
+                  emptyFallback={<span className="text-foreground-secondary">—</span>}
+                />
               )}
             </div>
           </div>
@@ -439,13 +423,8 @@ export const OrganizationCard = memo(function OrganizationCard({
 
         {editMode ? (
           <div className="flex justify-center pt-1">
-            <Button
-              type="button"
-              size="sm"
-              disabled={isSaving || !onSave}
-              onClick={handleSave}
-            >
-              {isSaving ? "…" : saveLabel}
+            <Button type="button" size="sm" disabled={isSaving || !onSave} onClick={handleSave}>
+              {isSaving ? '…' : saveLabel}
             </Button>
           </div>
         ) : null}

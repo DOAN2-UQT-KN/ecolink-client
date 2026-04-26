@@ -227,6 +227,7 @@ export function GiftFormDialog({ mode, gift, open, onOpenChange }: GiftFormDialo
                 checked={unlimitedStock}
                 onCheckedChange={(v) => setValue("unlimitedStock", v === true)}
                 disabled={busy}
+                className=""
               />
               <label htmlFor="gift-unlimited-stock" className="text-sm">
                 {t("Unlimited stock")}
@@ -258,11 +259,11 @@ export function GiftFormDialog({ mode, gift, open, onOpenChange }: GiftFormDialo
               </label>
             </div>
 
-            <DialogFooter className="gap-2 sm:gap-0">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={busy}>
+            <DialogFooter className="gap-2 sm:gap-3">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={busy} className="px-4 !h-[45px] cursor-pointer">
                 {t("Cancel")}
               </Button>
-              <Button type="submit" disabled={!canSubmit}>
+              <Button type="submit" disabled={!canSubmit} className="px-4 !h-[45px] cursor-pointer">
                 {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : t("Save")}
               </Button>
             </DialogFooter>

@@ -5,7 +5,7 @@ import {
 } from "./models/joinRequestById";
 import { useGet, UseGetOptions } from "@/hooks/reactQuery";
 
-const url = "/organizations";
+const url = "/api/v1/organizations";
 
 // GET /api/v1/organizations/{id}/join-requests
 export const getJoinRequestsByOrg = async (

@@ -4,7 +4,7 @@ import { usePost, UsePostOptions } from "@/hooks/reactQuery";
 import { useTranslation } from "react-i18next";
 import { MessageType } from "@/utils/showMessage";
 
-const url = "/reports";
+const url = "/api/v1/reports";
 
 export const banReport = async (id: string): Promise<IBaseResponse<unknown>> => {
   return await requestApi.put<IBaseResponse<unknown>>(`${url}/${id}/ban`, {});

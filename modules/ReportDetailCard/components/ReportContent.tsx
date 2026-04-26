@@ -4,6 +4,8 @@ import React, { memo, useCallback, useMemo } from "react";
 import { Image as AntdImage } from "antd";
 import { HiMapPin } from "react-icons/hi2";
 import { PiImagesSquareFill } from "react-icons/pi";
+import { useTranslation } from "react-i18next";
+import { RichTextContent } from "@/components/ui/RichTextContent";
 import { cn } from "@/libs/utils";
 
 interface ReportContentProps {
@@ -24,12 +26,13 @@ export const ReportContent = memo(function ReportContent({
   isExpanded = false,
   onPreviewOpenChange,
 }: ReportContentProps) {
+  const { t } = useTranslation();
   /** Explicit z-index when expanded: preview portals to body and must sit above Radix Dialog (z-50); otherwise next/prev clicks hit the dialog. */
   const previewProps = useMemo(() => {
     const base =
       onPreviewOpenChange != null
         ? {
-            onVisibleChange: (visible: boolean) => onPreviewOpenChange(visible),
+            onOpenChange: (visible: boolean) => onPreviewOpenChange(visible),
           }
         : true;
     if (!isExpanded) return base;
@@ -217,16 +220,15 @@ export const ReportContent = memo(function ReportContent({
           </div>
         )}
       </div>
-      {description && (
-        <p
-          className={cn(
-            "font-display-2 text-foreground-secondary leading-relaxed transition-all duration-300",
-            !isExpanded && "line-clamp-3 hover:line-clamp-none",
-          )}
-        >
-          {description}
-        </p>
-      )}
+      <RichTextContent
+        value={description}
+        className={cn(
+          "font-display-2 text-foreground-secondary leading-relaxed transition-all duration-300",
+        )}
+        maxLines={isExpanded ? undefined : 3}
+        showMoreLabel={t("Show more")}
+        showLessLabel={t("Show less")}
+      />
       {renderImageGrid()}
     </div>
   );

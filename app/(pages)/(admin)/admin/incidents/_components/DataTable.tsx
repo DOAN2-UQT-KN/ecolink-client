@@ -10,12 +10,14 @@ import AddressDisplay from "@/app/(pages)/(main)/incidents/me/_components/Addres
 import { DataTable as SharedDataTable, type DataTableColumn } from "@/components/admin/shared/DataTable";
 import { PreviewIncidentPopover } from "./PreviewIncidentPopover";
 import { StatusTag } from "@/components/ui/StatusTag";
+import { RichTextContent } from "@/components/ui/RichTextContent";
 import { cn } from "@/libs/utils";
 import { useIncidentContext } from "../_context/IncidentContext";
 import { VerifyIncidentConfirm } from "./VerifyIncidentConfirm";
 import { TbScanEye } from "react-icons/tb";
 
 const COLUMN_KEYS = {
+  NO: "no",
   INCIDENT: "incident",
   OWNER: "owner",
   STATUS: "status",
@@ -44,6 +46,16 @@ export function DataTable() {
   const columns: DataTableColumn<IIncident>[] = useMemo(
     () => [
       {
+        key: COLUMN_KEYS.NO,
+        title: t("No"),
+        className: "w-[72px]",
+        render: (_, __, index) => (
+          <span className="tabular-nums">
+            {(pagination.current - 1) * pagination.pageSize + index + 1}
+          </span>
+        ),
+      },
+      {
         key: COLUMN_KEYS.INCIDENT,
         title: t("Incident"),
         className: "sticky left-0 z-20 min-w-[280px]",
@@ -69,14 +81,25 @@ export function DataTable() {
               >
                 {record.title || t("Untitled Incident")}
               </span>
-              <span
-                className={cn(
-                  "mb-0.5 line-clamp-1 text-xs",
-                  isDark ? "text-zinc-400" : "text-muted-foreground",
-                )}
-              >
-                {record.description}
-              </span>
+              <div className="mb-0.5 min-w-0 max-w-full">
+                <RichTextContent
+                  value={record.description}
+                  className={cn("text-xs", isDark ? "text-zinc-400" : "text-muted-foreground")}
+                  maxLines={1}
+                  showMoreLabel={t("Show more")}
+                  showLessLabel={t("Show less")}
+                  emptyFallback={
+                    <span
+                      className={cn(
+                        "text-xs",
+                        isDark ? "text-zinc-500" : "text-muted-foreground/70",
+                      )}
+                    >
+                      —
+                    </span>
+                  }
+                />
+              </div>
               <div className="mt-0.5 flex items-center gap-1 overflow-hidden">
                 <div className="min-w-0 flex-1">
                   <AddressDisplay
@@ -145,7 +168,7 @@ export function DataTable() {
         ),
       },
     ],
-    [isDark, t],
+    [isDark, pagination.current, pagination.pageSize, t],
   );
 
   return (

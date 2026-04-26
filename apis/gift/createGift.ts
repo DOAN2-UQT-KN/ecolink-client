@@ -4,7 +4,7 @@ import { usePost, UsePostOptions } from "@/hooks/reactQuery";
 import { useTranslation } from "react-i18next";
 import { MessageType } from "@/utils/showMessage";
 
-const url = "/gifts";
+const url = "/api/v1/gifts";
 
 export const createGift = async (data: ICreateGiftRequest): Promise<ICreateGiftResponse> => {
   return await requestApi.post<ICreateGiftResponse>(url, data);

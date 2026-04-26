@@ -19,6 +19,11 @@ export type IUpdateOrganizationResponse = IBaseResponse<{
   organization: IOrganization;
 }>;
 
+export type IVerifyOrganizationRequest = {
+  status?: number;
+  id: string;
+};
+
 export type IVerifyOrganizationResponse = IBaseResponse<{
   organization: IOrganization;
 }>;

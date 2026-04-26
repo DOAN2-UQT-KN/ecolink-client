@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { useIncident } from "../_hooks/useIncident";
 
-const LeafletAddressMap = dynamic(() => import("./LeafletAddressMap"), {
+const LeafletAddressMap = dynamic(() => import("@/modules/LeafletAddressMap"), {
   ssr: false,
   loading: () => <div className="h-full w-full bg-slate-100 animate-pulse rounded-xl" />,
 });

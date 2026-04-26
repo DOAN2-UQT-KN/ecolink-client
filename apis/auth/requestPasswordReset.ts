@@ -7,7 +7,7 @@ import { usePost, UsePostOptions } from "@/hooks/reactQuery";
 import { useTranslation } from "react-i18next";
 import { MessageType } from "@/utils/showMessage";
 
-const url = "/auth/request-password-reset";
+const url = "/api/v1/auth/request-password-reset";
 
 export const requestPasswordReset = async (
   req: IRequestPasswordResetRequest,

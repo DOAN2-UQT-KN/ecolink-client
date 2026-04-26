@@ -1,38 +1,39 @@
-"use client";
+'use client';
 
-import { memo, useMemo } from "react";
-import { useTranslation } from "react-i18next";
-import { useIncident } from "../_hooks/useIncident";
-import { Input } from "@/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Field, FieldLabel, FieldError } from "@/components/ui/field";
-import { MultiSelect } from "@/components/ui/select";
-import { Controller } from "react-hook-form";
-import { cn } from "@/libs/utils";
+import { memo, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useIncident } from '../_hooks/useIncident';
+import { Input } from '@/components/ui/input';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Field, FieldLabel, FieldError } from '@/components/ui/field';
+import { MultiSelect } from '@/components/ui/select';
+import { Controller } from 'react-hook-form';
+import { cn } from '@/libs/utils';
+import RichTextEditor from '@/components/ui/RichTextEditor';
 
 const wasteTypeOptions = [
-  { label: "Household waste", value: "household" },
-  { label: "Construction waste", value: "construction" },
-  { label: "Industrial waste", value: "industrial" },
-  { label: "Hazardous waste", value: "hazardous" },
+  { label: 'Household waste', value: 'household' },
+  { label: 'Construction waste', value: 'construction' },
+  { label: 'Industrial waste', value: 'industrial' },
+  { label: 'Hazardous waste', value: 'hazardous' },
 ];
 
 const conditionOptions = [
-  { label: "Newly-appeared", value: "newly-appeared" },
-  { label: "Long-standing", value: "long-standing" },
-  { label: "Previously cleaned but reappeared", value: "reappeared" },
+  { label: 'Newly-appeared', value: 'newly-appeared' },
+  { label: 'Long-standing', value: 'long-standing' },
+  { label: 'Previously cleaned but reappeared', value: 'reappeared' },
 ];
 
 const pollutionLevelOptions = [
-  { label: "Odor present / No odor", value: "odor" },
-  { label: "Leachate present / No leachate", value: "leachate" },
-  { label: "Smoke or fire present / No smoke or fire", value: "smoke-fire" },
+  { label: 'Odor present / No odor', value: 'odor' },
+  { label: 'Leachate present / No leachate', value: 'leachate' },
+  { label: 'Smoke or fire present / No smoke or fire', value: 'smoke-fire' },
 ];
 
 const sizeOptions = [
-  { label: "Small", value: "1" },
-  { label: "Medium", value: "2" },
-  { label: "Large", value: "3" },
+  { label: 'Small', value: '1' },
+  { label: 'Medium', value: '2' },
+  { label: 'Large', value: '3' },
 ];
 
 const Information = memo(function Information() {
@@ -44,6 +45,9 @@ const Information = memo(function Information() {
     handleSubmit,
     formState: { errors },
   } = form;
+
+  const inputClassName =
+    'border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50';
 
   const translatedWasteTypeOptions = useMemo(
     () =>
@@ -85,48 +89,59 @@ const Information = memo(function Information() {
     () => (
       <div className="flex flex-col gap-6">
         <span className="font-display-5 font-semibold !text-button-accent ">
-          {t("General Information")}
+          {t('General Information')}
         </span>
 
         <Field>
           <FieldLabel className="text-foreground-tertiary font-display-3">
-            {t("Title")} <span className="text-destructive">*</span>
+            {t('Title')} <span className="text-destructive">*</span>
           </FieldLabel>
           <Input
-            {...register("title", { required: t("Title is required") })}
-            placeholder={t("Enter title...")}
-            className="border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50"
+            {...register('title', { required: t('Title is required') })}
+            placeholder={t('Enter title...')}
+            className={inputClassName}
           />
           <FieldError errors={[errors.title]} />
         </Field>
 
         <Field>
           <FieldLabel className="text-foreground-tertiary font-display-3">
-            {t("Description")}
+            {t('Description')}
           </FieldLabel>
-          <Input
-            {...register("description")}
-            placeholder={t("Enter description...")}
-            className="border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50"
+          <Controller
+            name="description"
+            control={control}
+            render={({ field }) => (
+              <RichTextEditor
+                value={field.value}
+                onChange={field.onChange}
+                placeholder={t('Enter description...')}
+                className={cn(
+                  inputClassName,
+                  'min-h-[220px]',
+                  isPending && 'pointer-events-none opacity-60',
+                )}
+              />
+            )}
           />
           <FieldError errors={[errors.description]} />
         </Field>
       </div>
     ),
-    [errors.description, errors.title, register, t],
+    [control, errors.description, errors.title, inputClassName, isPending, register, t],
   );
 
   const detailInformation = useMemo(
     () => (
       <div className="flex flex-col gap-6">
         <span className="font-display-5 font-semibold !text-button-accent ">
-          {t("Detail Information")}
+          {t('Detail Information')}
         </span>
 
         {/* Waste Type — multi-select */}
         <Field>
           <FieldLabel className="text-foreground-tertiary font-display-3">
-            {t("Waste type")}
+            {t('Waste type')}
           </FieldLabel>
           <Controller
             name="wasteTypes"
@@ -137,7 +152,7 @@ const Information = memo(function Information() {
                 options={translatedWasteTypeOptions}
                 value={field.value ?? []}
                 onChange={field.onChange}
-                placeholder={t("Select waste type...")}
+                placeholder={t('Select waste type...')}
                 triggerClassName="border-[rgba(136,122,71,0.5)] focus-visible:ring-[rgba(136,122,71,0.5)]/50 w-full"
               />
             )}
@@ -147,7 +162,7 @@ const Information = memo(function Information() {
         {/* Condition — single-select radio */}
         <Field>
           <FieldLabel className="text-foreground-tertiary font-display-3">
-            {t("Condition")}
+            {t('Condition')}
           </FieldLabel>
           <Controller
             name="condition"
@@ -163,19 +178,14 @@ const Information = memo(function Information() {
                     key={option.value}
                     htmlFor={`condition-${option.value}`}
                     className={cn(
-                      "flex items-center gap-2 py-2.5 px-3 rounded-lg border transition-all cursor-pointer",
+                      'flex items-center gap-2 py-2.5 px-3 rounded-lg border transition-all cursor-pointer',
                       field.value === option.value
-                        ? "bg-button-accent/10 border-button-accent"
-                        : "bg-white/5 border-white/10 hover:border-white/20",
+                        ? 'bg-button-accent/10 border-button-accent'
+                        : 'bg-white/5 border-white/10 hover:border-white/20',
                     )}
                   >
-                    <RadioGroupItem
-                      value={option.value}
-                      id={`condition-${option.value}`}
-                    />
-                    <span className="text-sm font-normal flex-1">
-                      {option.label}
-                    </span>
+                    <RadioGroupItem value={option.value} id={`condition-${option.value}`} />
+                    <span className="text-sm font-normal flex-1">{option.label}</span>
                   </label>
                 ))}
               </RadioGroup>
@@ -186,7 +196,7 @@ const Information = memo(function Information() {
         {/* Pollution Level — multi-select */}
         <Field>
           <FieldLabel className="text-foreground-tertiary font-display-3">
-            {t("Pollution level")}
+            {t('Pollution level')}
           </FieldLabel>
           <Controller
             name="pollutionLevels"
@@ -197,7 +207,7 @@ const Information = memo(function Information() {
                 options={translatedPollutionLevelOptions}
                 value={field.value ?? []}
                 onChange={field.onChange}
-                placeholder={t("Select pollution level...")}
+                placeholder={t('Select pollution level...')}
                 triggerClassName="border-[rgba(136,122,71,0.5)] focus-visible:ring-[rgba(136,122,71,0.5)]/50 w-full"
               />
             )}
@@ -206,9 +216,7 @@ const Information = memo(function Information() {
 
         {/* Size — single-select radio */}
         <Field>
-          <FieldLabel className="text-foreground-tertiary font-display-3">
-            {t("Size")}
-          </FieldLabel>
+          <FieldLabel className="text-foreground-tertiary font-display-3">{t('Size')}</FieldLabel>
           <Controller
             name="size"
             control={control}
@@ -223,19 +231,14 @@ const Information = memo(function Information() {
                     key={option.value}
                     htmlFor={`size-${option.value}`}
                     className={cn(
-                      "flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer flex-1 justify-center",
+                      'flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer flex-1 justify-center',
                       field.value === option.value
-                        ? "bg-button-accent/10 border-button-accent"
-                        : "bg-white/5 border-white/10 hover:border-white/20",
+                        ? 'bg-button-accent/10 border-button-accent'
+                        : 'bg-white/5 border-white/10 hover:border-white/20',
                     )}
                   >
-                    <RadioGroupItem
-                      value={option.value}
-                      id={`size-${option.value}`}
-                    />
-                    <span className="text-sm font-normal flex-1">
-                      {option.label}
-                    </span>
+                    <RadioGroupItem value={option.value} id={`size-${option.value}`} />
+                    <span className="text-sm font-normal flex-1">{option.label}</span>
                   </label>
                 ))}
               </RadioGroup>

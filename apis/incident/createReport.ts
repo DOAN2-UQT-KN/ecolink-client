@@ -7,7 +7,7 @@ import { usePost, UsePostOptions } from "@/hooks/reactQuery";
 import { useTranslation } from "react-i18next";
 import { MessageType } from "@/utils/showMessage";
 
-const url = "/reports";
+const url = "/api/v1/reports";
 
 export const createReport = async (
   req: ICreateReportRequest,

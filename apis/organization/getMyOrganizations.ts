@@ -5,7 +5,7 @@ import {
   IGetMyOrganizationsResponse,
 } from "./models/getMyOrganizations";
 
-const url = "/organizations/my";
+const url = "/api/v1/organizations/my";
 
 export const getMyOrganizations = async (
   req: IGetMyOrganizationsRequest,

@@ -4,7 +4,7 @@ import { usePost, UsePostOptions } from "@/hooks/reactQuery";
 import { useTranslation } from "react-i18next";
 import { MessageType } from "@/utils/showMessage";
 
-const url = "/auth/sign-up";
+const url = "/api/v1/auth/sign-up";
 
 export const signUp = async (req: ISignUpRequest): Promise<ISignUpResponse> => {
   return await requestApi.post<ISignUpResponse>(url, req);
