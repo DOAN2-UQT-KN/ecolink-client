@@ -35,4 +35,12 @@ export interface ICampaign {
 
   current_members?: number;
   max_members?: number;
+
+  /** Populated by admin-facing endpoints */
+  organization?: {
+    id: string;
+    name: string;
+    logo_url?: string | null;
+    contact_email?: string | null;
+  } | null;
 }
