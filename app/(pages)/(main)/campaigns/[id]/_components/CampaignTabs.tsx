@@ -18,7 +18,7 @@ const CAMPAIGN_TAB_ITEMS = [
 export type CampaignTabValue = (typeof CAMPAIGN_TAB_ITEMS)[number]["value"];
 
 export const CampaignTabs = memo(function CampaignTabs() {
-  const { t } = useTranslation();
+  const { t } = useTranslation("common");
   const [tab, setTab] = useState<CampaignTabValue>("detail");
 
   return (

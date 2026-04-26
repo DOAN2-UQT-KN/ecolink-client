@@ -35,7 +35,7 @@ export function CampaignDetailProvider({
   campaignId: string;
   children: ReactNode;
 }) {
-  const { t } = useTranslation();
+  const { t } = useTranslation("common");
   const { data, isLoading, isError, isFetching } = useGetCampaignById(
     campaignId,
     { enabled: Boolean(campaignId) },

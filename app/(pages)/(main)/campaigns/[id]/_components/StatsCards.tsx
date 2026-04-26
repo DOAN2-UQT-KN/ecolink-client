@@ -1,41 +1,46 @@
-"use client";
+'use client';
 
-import { memo, useMemo } from "react";
-import { useTranslation } from "react-i18next";
-import { HiOutlineArchive, HiOutlineClock, HiOutlineUserGroup } from "react-icons/hi";
+import { memo, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import { HiOutlineArchive, HiOutlineClock, HiOutlineUserGroup } from 'react-icons/hi';
 
-import StatsCard from "@/components/client/shared/StatsCard";
+import StatsCard from '@/components/client/shared/StatsCard';
+import { cn } from '@/libs/utils';
 
-import { useCampaignDetail } from "../_hooks/useCampaignDetail";
+import { useCampaignDetail } from '../_hooks/useCampaignDetail';
 
 const StatsCards = memo(function StatsCards() {
-  const { t } = useTranslation();
-  const { currentMembers, daysSinceStart, archivedTasksCount } =
-    useCampaignDetail();
+  const { t } = useTranslation('common');
+  const { currentMembers, daysSinceStart, archivedTasksCount } = useCampaignDetail();
 
   const daysLabel = useMemo(() => {
-    if (daysSinceStart === null) return "—";
+    if (daysSinceStart === null) return t('Not available');
     return String(daysSinceStart);
-  }, [daysSinceStart]);
+  }, [daysSinceStart, t]);
 
   return (
-    <div className="flex flex-col lg:flex-row items-center justify-between w-full gap-5">
+    <div
+      className={cn(
+        'flex w-full flex-col items-stretch justify-between gap-5 lg:flex-row',
+        'backdrop-blur-sm sm:gap-5 sm:p-4',
+      )}
+    >
       <StatsCard
-        title={t("Volunteers")}
+        title={t('Volunteers')}
         value={currentMembers}
-        description={t("Current campaign members")}
+        description={t('Current campaign members')}
         icon={<HiOutlineUserGroup size={22} className="text-button-accent" />}
       />
       <StatsCard
-        title={t("Days since start")}
+        title={t('Days since start')}
         value={daysLabel}
-        description={t("From campaign start date to today")}
+        description={t('From campaign start date to today')}
         icon={<HiOutlineClock size={22} className="text-button-accent" />}
       />
       <StatsCard
-        title={t("Archived tasks")}
+        title={t('Archived tasks')}
         value={archivedTasksCount}
-        description={t("Completed and archived work items")}
+        description={t('Completed and archived work items')}
         icon={<HiOutlineArchive size={22} className="text-button-accent" />}
       />
     </div>
