@@ -70,7 +70,9 @@ const OrgCell = memo(function OrgCell({
       <div
         className={cn(
           'flex h-8 w-8 shrink-0 items-center justify-center rounded-full overflow-hidden ring-1 text-xs font-semibold',
-          isDark ? 'ring-zinc-600 bg-zinc-800 text-zinc-300' : 'ring-zinc-300 bg-zinc-200 text-zinc-600',
+          isDark
+            ? 'ring-zinc-600 bg-zinc-800 text-zinc-300'
+            : 'ring-zinc-300 bg-zinc-200 text-zinc-600',
         )}
       >
         {org.logo_url ? (
@@ -117,7 +119,9 @@ export const DataTable = memo(function DataTable() {
         title: t('Title'),
         className: 'min-w-[200px] max-w-[260px]',
         render: (_, record) => (
-          <span className={cn('font-medium line-clamp-2', isDark ? 'text-zinc-100' : 'text-zinc-900')}>
+          <span
+            className={cn('font-medium line-clamp-2', isDark ? 'text-zinc-100' : 'text-zinc-900')}
+          >
             {record.title}
           </span>
         ),
@@ -154,12 +158,10 @@ export const DataTable = memo(function DataTable() {
         render: (_, record) => (
           <div className="space-y-0.5">
             <p className={cn('text-xs', isDark ? 'text-zinc-400' : 'text-zinc-600')}>
-              <span className="font-medium">{t('Start')}:</span>{' '}
-              {toDisplayDate(record.start_date)}
+              <span className="font-medium">{t('Start')}:</span> {toDisplayDate(record.start_date)}
             </p>
             <p className={cn('text-xs', isDark ? 'text-zinc-400' : 'text-zinc-600')}>
-              <span className="font-medium">{t('End')}:</span>{' '}
-              {toDisplayDate(record.end_date)}
+              <span className="font-medium">{t('End')}:</span> {toDisplayDate(record.end_date)}
             </p>
           </div>
         ),
@@ -168,9 +170,7 @@ export const DataTable = memo(function DataTable() {
         key: COLUMN_KEYS.ORGANIZATION,
         title: t('Organization'),
         className: 'min-w-[180px]',
-        render: (_, record) => (
-          <OrgCell org={record.organization} isDark={isDark} />
-        ),
+        render: (_, record) => <OrgCell org={record.organization} isDark={isDark} />,
       },
       {
         key: COLUMN_KEYS.STATUS,

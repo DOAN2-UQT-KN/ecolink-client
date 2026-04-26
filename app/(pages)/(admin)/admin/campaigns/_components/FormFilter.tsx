@@ -11,7 +11,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import SelectListOrganization from '@/components/form/SelectListOrganization';
+import SelectListOrganization, {
+  ALL_ORGANIZATIONS_VALUE,
+} from '@/components/form/SelectListOrganization';
 import { STATUS } from '@/constants/status';
 import { useCampaignContext } from '../_context/CampaignContext';
 
@@ -39,8 +41,8 @@ export const FormFilter = memo(function FormFilter() {
 
   const handleOrganizationChange = useCallback(
     (value: string) => {
-      // treat the "clear" sentinel ("") as no filter
-      onFilterChange({ organizationId: value });
+      // treat the "-1" sentinel ("All") as no filter
+      onFilterChange({ organizationId: value === ALL_ORGANIZATIONS_VALUE ? '' : value });
     },
     [onFilterChange],
   );
@@ -78,9 +80,10 @@ export const FormFilter = memo(function FormFilter() {
             {t('Organization')}
           </FieldLabel>
           <SelectListOrganization
-            value={filters.organizationId || undefined}
+            value={filters.organizationId || ALL_ORGANIZATIONS_VALUE}
             onChange={handleOrganizationChange}
             className="!h-10 !border !border-zinc-300"
+            allOptions
           />
         </Field>
       </div>
