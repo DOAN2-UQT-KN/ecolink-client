@@ -1,4 +1,4 @@
- "use client";
+"use client";
 
 import isHotkey from "is-hotkey";
 import React, {
@@ -7,10 +7,12 @@ import React, {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { cn } from "@/libs/utils";
 import { List, ListOrdered } from "lucide-react";
+import { parseRichTextValue, serializeRichText } from "@/components/ui/richTextValue";
 import {
   Descendant,
   Editor,
@@ -87,22 +89,6 @@ interface RichTextEditorProps {
   autoFocus?: boolean;
 }
 
-const createValueFromText = (value?: string): Descendant[] => {
-  if (!value?.trim()) {
-    return [{ type: "paragraph", children: [{ text: "" }] }];
-  }
-
-  const lines = value.split("\n");
-  return lines.map((line) => ({
-    type: "paragraph",
-    children: [{ text: line }],
-  }));
-};
-
-const serializeValueToText = (nodes: Descendant[]): string => {
-  return nodes.map((node) => Node.string(node)).join("\n");
-};
-
 const RichTextEditor = ({
   value,
   onChange,
@@ -113,24 +99,41 @@ const RichTextEditor = ({
   const renderElement = useCallback((props: RenderElementProps) => <Element {...props} />, []);
   const renderLeaf = useCallback((props: RenderLeafProps) => <Leaf {...props} />, []);
   const editor = useMemo(() => withHistory(withReact(createEditor())), []);
-  const [editorValue, setEditorValue] = useState<Descendant[]>(() => createValueFromText(value));
+  const skipExternalSyncRef = useRef(false);
+  const [, forceRender] = useState(0);
 
   useEffect(() => {
-    const incoming = value ?? "";
-    const current = serializeValueToText(editorValue);
-    if (incoming !== current) {
-      setEditorValue(createValueFromText(incoming));
+    if (skipExternalSyncRef.current) {
+      skipExternalSyncRef.current = false;
+      return;
     }
-  }, [value, editorValue]);
+    const next = parseRichTextValue(value ?? "");
+    const incoming = serializeRichText(next);
+    const current = serializeRichText(editor.children as Descendant[]);
+    if (incoming !== current) {
+      HistoryEditor.withoutSaving(editor, () => {
+        editor.children = next;
+        Editor.normalize(editor, { force: true });
+        // Replace document invalidates all paths; old selection (e.g. [4,0]) must not linger.
+        const start = Editor.start(editor, []);
+        Transforms.select(editor, { anchor: start, focus: start });
+      });
+      if (HistoryEditor.isHistoryEditor(editor)) {
+        editor.history.undos = [];
+        editor.history.redos = [];
+      }
+      forceRender((n) => n + 1);
+    }
+  }, [value, editor]);
 
   return (
     <div className={cn("rounded-md border border-input bg-transparent", className)}>
       <Slate
         editor={editor}
-        initialValue={editorValue}
+        initialValue={parseRichTextValue(value ?? "")}
         onChange={(nextValue) => {
-          setEditorValue(nextValue);
-          onChange?.(serializeValueToText(nextValue));
+          skipExternalSyncRef.current = true;
+          onChange?.(serializeRichText(nextValue));
         }}
       >
         <div className="flex flex-wrap items-center gap-1 border-b border-input p-2">

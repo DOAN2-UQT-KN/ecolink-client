@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { Tag } from './Tag';
 import { HiMapPin } from 'react-icons/hi2';
 import { TooltipTruncatedText } from '@/components/ui/TooltipTruncatedText';
+import { RichTextContent } from '@/components/ui/RichTextContent';
 import { formattedDate } from '@/utils/formattedDate';
 import { TbCalendarClock, TbArrowRight } from 'react-icons/tb';
 import { useTranslation } from 'react-i18next';
@@ -47,9 +48,18 @@ export default function SummaryCampaignCard({ campaign }: SummaryCampaignCardPro
           </div>
         </div>
 
-        <p className="font-display-1 text-foreground-secondary">
-          {campaign.description ?? t('No description available.')}
-        </p>
+        <RichTextContent
+          value={campaign.description}
+          className="!font-display-1 text-foreground-secondary"
+          maxLines={4}
+          showMoreLabel={t('See more')}
+          showLessLabel={t('See less')}
+          emptyFallback={
+            <span className="font-display-1 text-foreground-secondary">
+              {t('No description available.')}
+            </span>
+          }
+        />
 
         <div className="space-y-2">
           <div className="flex items-center justify-between font-display-1 text-button-accent">
