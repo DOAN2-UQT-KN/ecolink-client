@@ -8,13 +8,13 @@ const downvoteurl = "/api/v1/incident/votes/downvote";
 export const postUpvote = async (
   data: IVoteRequest,
 ): Promise<IVoteResponse> => {
-  return await requestApi.post<IVoteResponse>(upvoteUrl, data);
+  return await requestApi.post<IVoteResponse>(upvoteurl, data);
 };
 
 export const postDownvote = async (
   data: IVoteRequest,
 ): Promise<IVoteResponse> => {
-  return await requestApi.post<IVoteResponse>(downvoteUrl, data);
+  return await requestApi.post<IVoteResponse>(downvoteurl, data);
 };
 
 export const useUpvote = (
