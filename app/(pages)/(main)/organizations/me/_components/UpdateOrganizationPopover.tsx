@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useCallback, useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
@@ -14,6 +14,8 @@ import {
 import { Button } from "@/components/client/shared/Button";
 import { Input } from "@/components/ui/input";
 import { Field, FieldLabel, FieldError } from "@/components/ui/field";
+import RichTextEditor from "@/components/ui/RichTextEditor";
+import { cn } from "@/libs/utils";
 import { IOrganization } from "@/apis/organization/models/organization";
 import { useUpdateOrganization } from "@/apis/organization/organizationById";
 import { OrganizationFormValues } from "@/app/(pages)/(main)/organizations/create/_services/organization.service";
@@ -161,11 +163,21 @@ const EditOrganizationFormBody = memo(function EditOrganizationFormBody({
             <FieldLabel className="text-foreground-tertiary font-display-3">
               {t("Description")}
             </FieldLabel>
-            <Input
-              {...register("description")}
-              placeholder={t("Enter description...")}
-              className={inputClassName}
-              disabled={busy}
+            <Controller
+              name="description"
+              control={control}
+              render={({ field }) => (
+                <RichTextEditor
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder={t("Enter description...")}
+                  className={cn(
+                    inputClassName,
+                    "min-h-[220px]",
+                    busy && "pointer-events-none opacity-60",
+                  )}
+                />
+              )}
             />
             <FieldError errors={[errors.description]} />
           </Field>

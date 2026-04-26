@@ -9,7 +9,7 @@ import { Field, FieldLabel, FieldError } from '@/components/ui/field';
 import { MultiSelect } from '@/components/ui/select';
 import { Controller } from 'react-hook-form';
 import { cn } from '@/libs/utils';
-import { Textarea } from '@/components/ui/textarea';
+import RichTextEditor from '@/components/ui/RichTextEditor';
 
 const wasteTypeOptions = [
   { label: 'Household waste', value: 'household' },
@@ -45,6 +45,9 @@ const Information = memo(function Information() {
     handleSubmit,
     formState: { errors },
   } = form;
+
+  const inputClassName =
+    'border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50';
 
   const translatedWasteTypeOptions = useMemo(
     () =>
@@ -96,7 +99,7 @@ const Information = memo(function Information() {
           <Input
             {...register('title', { required: t('Title is required') })}
             placeholder={t('Enter title...')}
-            className="border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50"
+            className={inputClassName}
           />
           <FieldError errors={[errors.title]} />
         </Field>
@@ -105,17 +108,27 @@ const Information = memo(function Information() {
           <FieldLabel className="text-foreground-tertiary font-display-3">
             {t('Description')}
           </FieldLabel>
-          <Textarea
-            rows={5}
-            {...register('description')}
-            placeholder={t('Enter description...')}
-            className="border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50"
+          <Controller
+            name="description"
+            control={control}
+            render={({ field }) => (
+              <RichTextEditor
+                value={field.value}
+                onChange={field.onChange}
+                placeholder={t('Enter description...')}
+                className={cn(
+                  inputClassName,
+                  'min-h-[220px]',
+                  isPending && 'pointer-events-none opacity-60',
+                )}
+              />
+            )}
           />
           <FieldError errors={[errors.description]} />
         </Field>
       </div>
     ),
-    [errors.description, errors.title, register, t],
+    [control, errors.description, errors.title, inputClassName, isPending, register, t],
   );
 
   const detailInformation = useMemo(

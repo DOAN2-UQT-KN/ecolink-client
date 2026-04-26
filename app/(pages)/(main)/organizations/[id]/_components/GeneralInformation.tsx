@@ -1,17 +1,17 @@
-"use client";
+'use client';
 
-import React, { memo, useMemo } from "react";
-import { HiMail } from "react-icons/hi";
-import { AlignLeft, Calendar } from "lucide-react";
-import { format, parseISO } from "date-fns";
-import { useTranslation } from "react-i18next";
+import React, { memo, useMemo } from 'react';
+import { TbAlignLeft2, TbCalendarCheck, TbMailPin } from 'react-icons/tb';
+import { format, parseISO } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 
-import { useOrganizationDetail } from "../_hooks/useOrganizationDetail";
+import { useOrganizationDetail } from '../_hooks/useOrganizationDetail';
+import { RichTextContent } from '@/components/ui/RichTextContent';
 
 function formatCreatedAt(iso: string | undefined): string {
-  if (!iso?.trim()) return "—";
+  if (!iso?.trim()) return '—';
   try {
-    return format(parseISO(iso), "PPP");
+    return format(parseISO(iso), 'PPP');
   } catch {
     return iso;
   }
@@ -21,8 +21,8 @@ export const GeneralInformation = memo(function GeneralInformation() {
   const { t } = useTranslation();
   const { organization } = useOrganizationDetail();
 
-  const contactEmail = organization?.contact_email?.trim() ?? "";
-  const description = organization?.description?.trim() ?? "";
+  const contactEmail = organization?.contact_email?.trim() ?? '';
+  const description = organization?.description?.trim() ?? '';
   const createdLabel = useMemo(
     () => formatCreatedAt(organization?.created_at),
     [organization?.created_at],
@@ -36,19 +36,16 @@ export const GeneralInformation = memo(function GeneralInformation() {
     <aside className="w-full rounded-xl border border-[rgba(136,122,71,0.35)] bg-white/70 p-4 sm:p-5 space-y-5 shadow-sm">
       <div>
         <p className="text-xs font-medium text-foreground-tertiary uppercase tracking-wide">
-          {t("Contact")}
+          {t('Contact')}
         </p>
         <div className="mt-2 flex items-start gap-2 text-sm text-foreground min-w-0">
-          <HiMail
-            className="size-4 shrink-0 text-button-accent mt-0.5"
-            aria-hidden
-          />
+          <TbMailPin className="size-4 shrink-0 text-button-accent mt-0.5" aria-hidden />
           {contactEmail ? (
             <a
               href={`mailto:${contactEmail}`}
               className="break-all text-foreground-secondary hover:underline"
             >
-              {contactEmail}
+              <span className="font-display-1">{contactEmail}</span>
             </a>
           ) : (
             <span className="text-foreground-secondary">—</span>
@@ -56,25 +53,32 @@ export const GeneralInformation = memo(function GeneralInformation() {
         </div>
       </div>
 
-      <div className="flex items-start gap-2 rounded-lg border border-[rgba(136,122,71,0.25)] bg-white/50 px-3 py-2.5">
-        <AlignLeft className="size-4 shrink-0 text-button-accent mt-0.5" />
-        <div className="min-w-0">
-          <p className="text-xs font-medium text-foreground-tertiary">
-            {t("Description")}
-          </p>
-          <p className="mt-1 text-sm text-foreground whitespace-pre-wrap break-words">
-            {description ? description : "—"}
-          </p>
+      <div className="flex items-start gap-2 bg-white/50 flex-col">
+        <p className="text-xs font-medium text-foreground-tertiary uppercase tracking-wide">
+          {t('Description')}
+        </p>
+        <div className="flex items-start gap-2 text-sm text-foreground">
+          <TbAlignLeft2 className="size-4 shrink-0 text-button-accent mt-1.5" />
+          <div className="min-w-0">
+            <RichTextContent
+              value={description}
+              className="text-sm text-foreground whitespace-pre-wrap break-words !font-display-1"
+              maxLines={4}
+              showMoreLabel={t('See more')}
+              showLessLabel={t('See less')}
+              emptyFallback={<span className="text-foreground-secondary">—</span>}
+            />
+          </div>
         </div>
       </div>
 
       <div>
         <p className="text-xs font-medium text-foreground-tertiary uppercase tracking-wide">
-          {t("Created at")}
+          {t('Created at')}
         </p>
         <div className="mt-2 flex items-center gap-2 text-sm text-foreground">
-          <Calendar className="size-4 shrink-0 text-button-accent" aria-hidden />
-          <span>{createdLabel}</span>
+          <TbCalendarCheck className="size-4 shrink-0 text-button-accent" aria-hidden />
+          <span className="font-display-1">{createdLabel}</span>
         </div>
       </div>
     </aside>

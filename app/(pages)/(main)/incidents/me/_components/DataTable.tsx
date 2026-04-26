@@ -18,7 +18,7 @@ import {
 import AddressDisplay from "./AddressDisplay";
 
 import { StatusTag } from "@/components/ui/StatusTag";
-import { TooltipTruncatedText } from "@/components/ui/TooltipTruncatedText";
+import { RichTextContent } from "@/components/ui/RichTextContent";
 import FormFilter from "./FormFilter";
 
 const defaultPagination = { current: 1, pageSize: 10 };
@@ -56,12 +56,18 @@ const DataTableComponent = memo(function DataTableComponent() {
               <span className="font-bold text-sm truncate">
                 {record.title || t("Untitled Incident")}
               </span>
-              <TooltipTruncatedText
-                text={record.description}
-                className="text-xs text-muted-foreground mb-0.5"
-                maxLength={80}
-                maxWidth="100%"
-              />
+              <div className="min-w-0 max-w-full mb-0.5">
+                <RichTextContent
+                  value={record.description}
+                  className="text-xs text-muted-foreground"
+                  maxLines={2}
+                  showMoreLabel={t("Show more")}
+                  showLessLabel={t("Show less")}
+                  emptyFallback={
+                    <span className="text-xs text-muted-foreground/60">—</span>
+                  }
+                />
+              </div>
               <div className="flex items-center gap-1 overflow-hidden mt-0.5">
                 <div className="min-w-0 flex-1">
                   <AddressDisplay
