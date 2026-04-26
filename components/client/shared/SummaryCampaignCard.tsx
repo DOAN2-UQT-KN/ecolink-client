@@ -40,7 +40,7 @@ export default function SummaryCampaignCard({ campaign }: SummaryCampaignCardPro
         </div>
 
         <div className="flex flex-col gap-1 w-full">
-          <h3 className="font-semibold text-button-accent font-display-7">{campaign.title}</h3>
+          <h3 className="font-semibold text-button-accent font-display-6">{campaign.title}</h3>
           <div className="font-display-1 text-muted-foreground flex flex-row items-center gap-1">
             <HiMapPin size={14} />
             <TooltipTruncatedText text={campaign.detail_address ?? '-'} maxLength={50} />
