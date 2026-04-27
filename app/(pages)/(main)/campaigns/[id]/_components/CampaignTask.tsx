@@ -8,6 +8,7 @@ import { useCampaignDetail } from '../_hooks/useCampaignDetail';
 import { Button } from '@/components/client/shared/Button';
 import { CampaignTaskCard } from '@/components/client/shared/CampaignTaskCard';
 import PopoverCreateUpdateTask from '@/components/client/shared/PopoverCreateUpdateTask';
+import { TbCirclePlus } from 'react-icons/tb';
 
 export const CampaignTask = memo(function CampaignTask() {
   const { t } = useTranslation('common');
@@ -36,11 +37,16 @@ export const CampaignTask = memo(function CampaignTask() {
   return (
     <div className="rounded-xl border border-[rgba(136,122,71,0.4)] bg-white/60 p-5 sm:p-6 shadow-sm">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-display-6 font-semibold text-button-accent">{t('Tasks')}</h3>
+        {/* <h3 className="font-display-6 font-semibold text-button-accent">{t('Tasks')}</h3> */}
         {isCampaignOwner && (
-          <Button onClick={handleCreate} size="small" variant="brown">
-            {t('Add task')}
+          // <div className="flex w-full justify-end">
+          <Button onClick={handleCreate} size="medium" variant="brown" className="!h-[45px]">
+            <div className="flex items-center gap-2">
+              <TbCirclePlus className="size-5" />
+              {t('Add task')}
+            </div>
           </Button>
+          // </div>
         )}
       </div>
 

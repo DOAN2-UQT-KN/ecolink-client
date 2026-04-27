@@ -3,7 +3,6 @@ import { IBaseResponse } from '@/types/BaseResponse';
 
 export interface ICampaignTask {
   id: string;
-  name: string;
   description: string;
   status: number;
   created_at: string;
@@ -11,19 +10,24 @@ export interface ICampaignTask {
   campaign_id: string;
   scheduled_time: string;
   priority: number;
-  result: string;
   title?: string;
+  result?: {
+    description?: string;
+    file?: string[];
+  };
+  scheduled_date: string;
 }
 
 export interface IGetCampaignTaskRequest {
   campaignId: string;
 }
 
-export interface IGetCampaignTaskResponse extends IPaginationResponse<ICampaignTask, 'tasks'> {}
+export interface IGetCampaignTaskResponse extends IPaginationResponse<ICampaignTask[], 'tasks'> {}
 
 export interface ICreateCampaignTaskRequest {
   title: string;
   description: string;
+  scheduled_date: string;
   scheduled_time: string;
   priority: number;
 }
@@ -34,6 +38,7 @@ export interface IUpdateCampaignTaskRequest {
   id: string;
   title: string;
   description: string;
+  scheduled_date: string;
   scheduled_time: string;
   status: number;
   priority: number;

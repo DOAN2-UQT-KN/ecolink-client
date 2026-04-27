@@ -1,18 +1,20 @@
-import { PRIORITY } from "@/constants/priority";
-import { Dropdown, Tag } from "antd";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { PRIORITY } from '@/constants/priority';
+import { Dropdown, Tag, MenuProps } from 'antd';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface TagPriorityProps {
   type: number;
   onChangePriority?: (value: number) => void;
   enabledDropdown?: boolean;
+  size?: 'sm' | 'md' | 'lg';
 }
 
 const ChangePriority: React.FC<TagPriorityProps> = ({
   type,
   onChangePriority,
   enabledDropdown = true,
+  size = 'md',
 }) => {
   const { t } = useTranslation();
   const [currentPriority, setCurrentPriority] = useState<number>(type);
@@ -23,37 +25,37 @@ const ChangePriority: React.FC<TagPriorityProps> = ({
 
   const filterColorByType = useCallback((priority: number) => {
     switch (priority) {
-      case PRIORITY.HIGH:
-        return "red";
+      case PRIORITY.URGENT:
+        return 'red';
       case PRIORITY.MEDIUM:
-        return "blue";
+        return 'blue';
       case PRIORITY.LOW:
-        return "yellow";
+        return 'yellow';
       default:
-        return "default";
+        return 'default';
     }
   }, []);
 
   const renderNamePriority = useCallback(() => {
     switch (currentPriority) {
-      case PRIORITY.HIGH:
-        return t("High");
+      case PRIORITY.URGENT:
+        return t('Urgent');
       case PRIORITY.MEDIUM:
-        return t("Medium");
+        return t('Medium');
       case PRIORITY.LOW:
-        return t("Low");
+        return t('Low');
       default:
-        return "";
+        return '';
     }
   }, [currentPriority, t]);
 
   const priorityOptions = useMemo(
     () => [
-      { label: t("High"), value: PRIORITY.HIGH, color: "#F5222D" },
-      { label: t("Medium"), value: PRIORITY.MEDIUM, color: "#1677FF" },
-      { label: t("Low"), value: PRIORITY.LOW, color: "#FADB14" },
+      { label: t('Urgent'), value: PRIORITY.URGENT, color: '#F5222D' },
+      { label: t('Medium'), value: PRIORITY.MEDIUM, color: '#1677FF' },
+      { label: t('Low'), value: PRIORITY.LOW, color: '#FADB14' },
     ],
-    [t]
+    [t],
   );
 
   const handleChangePriority = useCallback(
@@ -61,34 +63,54 @@ const ChangePriority: React.FC<TagPriorityProps> = ({
       setCurrentPriority(value);
       onChangePriority?.(value);
     },
-    [onChangePriority]
+    [onChangePriority],
   );
 
-  const menuItems = useMemo(
+  const handleMenuClick: MenuProps['onClick'] = useCallback(
+    (e: any) => {
+      handleChangePriority(Number(e.key));
+    },
+    [handleChangePriority],
+  );
+
+  const menuItems: MenuProps['items'] = useMemo(
     () =>
       priorityOptions.map((item) => ({
-        key: item.value,
+        key: String(item.value),
         label: (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center">
             <span
-              className="w-3 h-3 rounded-full"
               style={{
                 backgroundColor: item.color,
-                display: "inline-block",
+                display: 'inline-block',
+                // alignItems: 'center',
+                textAlign: 'center',
               }}
-            />
-            <span>{item.label}</span>
+            >
+              {item.label}
+            </span>
           </div>
         ),
-        onClick: () => handleChangePriority(item.value),
       })),
-    [priorityOptions, handleChangePriority]
+    [priorityOptions],
   );
+
+  const sizeClasses = useMemo(() => {
+    switch (size) {
+      case 'sm':
+        return 'min-w-16 py-0 text-xs';
+      case 'lg':
+        return 'min-w-32 py-1 text-base';
+      case 'md':
+      default:
+        return 'min-w-24 pb-0.5 text-sm';
+    }
+  }, [size]);
 
   if (!enabledDropdown) {
     return (
       <Tag
-        className="min-w-24 text-center rounded-md pb-0.5 mx-auto cursor-pointer"
+        className={`text-center rounded-md mx-auto cursor-pointer ${sizeClasses}`}
         color={filterColorByType(currentPriority)}
       >
         {renderNamePriority()}
@@ -99,9 +121,13 @@ const ChangePriority: React.FC<TagPriorityProps> = ({
   if (!currentPriority) return null;
 
   return (
-    <Dropdown menu={{ items: menuItems }} trigger={["hover"]}>
+    <Dropdown
+      menu={{ items: menuItems, onClick: handleMenuClick }}
+      trigger={['hover', 'click']}
+      getPopupContainer={(triggerNode) => triggerNode.parentNode as HTMLElement}
+    >
       <Tag
-        className="min-w-24 text-center rounded-md pb-0.5 mx-auto cursor-pointer"
+        className={`text-center rounded-md mx-auto cursor-pointer ${sizeClasses}`}
         color={filterColorByType(currentPriority)}
       >
         {renderNamePriority()}

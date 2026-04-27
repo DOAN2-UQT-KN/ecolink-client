@@ -1,8 +1,13 @@
 'use client';
 
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
+import { format } from 'date-fns';
+import { CalendarIcon, Clock } from 'lucide-react';
+import TimePicker from 'react-time-picker';
+import 'react-time-picker/dist/TimePicker.css';
+import 'react-clock/dist/Clock.css';
 import {
   Dialog,
   DialogContent,
@@ -11,6 +16,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/client/shared/Button';
+import { Button as UIButton } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Field, FieldLabel, FieldError } from '@/components/ui/field';
@@ -19,7 +25,9 @@ import { ICampaignTask } from '@/apis/campaign/models/campaignTask';
 import RichTextEditor from '@/components/ui/RichTextEditor';
 import { cn } from '@/libs/utils';
 import { Calendar } from '@/components/ui/calendar';
-import ChangePriority from '@/components/ui/ChangePriority';
+import SelectListPriority from '@/components/form/SelectListPriority';
+import { PRIORITY } from '@/constants/priority';
+import { parseScheduledTimeRange } from '@/utils/scheduledTimeRange';
 
 export interface PopoverCreateUpdateTaskProps {
   open: boolean;
@@ -32,7 +40,9 @@ export interface PopoverCreateUpdateTaskProps {
 type TaskFormValues = {
   title: string;
   description: string;
-  scheduled_time: string;
+  scheduled_date: string;
+  scheduled_time_from: string;
+  scheduled_time_to: string;
   priority: number;
   result?: string;
   status?: number;
@@ -47,19 +57,27 @@ const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
   const { t } = useTranslation();
   const isCreate = !task;
 
-  const defaultValues = useMemo(
-    (): TaskFormValues => ({
-      title: task?.title || task?.name || '',
+  const defaultValues = useMemo((): TaskFormValues => {
+    let initialDate = '';
+    const initialTimeRange = parseScheduledTimeRange(task?.scheduled_time);
+
+    if (task?.scheduled_date) {
+      initialDate = new Date(task.scheduled_date).toISOString().substring(0, 16);
+    } else if (task?.scheduled_time && task.scheduled_time.includes('T')) {
+      initialDate = new Date(task.scheduled_time).toISOString().substring(0, 16);
+    }
+
+    return {
+      title: task?.title || '',
       description: task?.description || '',
-      scheduled_time: task?.scheduled_time
-        ? new Date(task.scheduled_time).toISOString().substring(0, 16)
-        : '',
-      priority: task?.priority ?? 1,
-      result: task?.result || '',
+      scheduled_date: initialDate,
+      scheduled_time_from: initialTimeRange.scheduled_time_from,
+      scheduled_time_to: initialTimeRange.scheduled_time_to,
+      priority: task?.priority ?? PRIORITY.MEDIUM,
+      //   result: task?.result || '',
       status: task?.status ?? 1,
-    }),
-    [task],
-  );
+    };
+  }, [task]);
 
   const form = useForm<TaskFormValues>({
     defaultValues,
@@ -85,6 +103,8 @@ const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
     },
   });
 
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+
   const busy = isCreating || isUpdating;
 
   const inputClassName = useMemo(
@@ -95,12 +115,15 @@ const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
 
   const onValidSubmit = useCallback(
     async (data: TaskFormValues) => {
+      const scheduleTimeRange = `${data.scheduled_time_from}-${data.scheduled_time_to}`;
+
       if (isCreate) {
         await createMutate({
           campaignId,
           title: data.title.trim(),
           description: data.description.trim(),
-          scheduled_time: new Date(data.scheduled_time).toISOString(),
+          scheduled_date: new Date(data.scheduled_date).toISOString(),
+          scheduled_time: scheduleTimeRange,
           priority: Number(data.priority),
         });
       } else {
@@ -109,7 +132,8 @@ const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
           id: task.id,
           title: data.title.trim(),
           description: data.description.trim(),
-          scheduled_time: new Date(data.scheduled_time).toISOString(),
+          scheduled_date: new Date(data.scheduled_date).toISOString(),
+          scheduled_time: scheduleTimeRange,
           priority: Number(data.priority),
           result: data.result?.trim() || '',
           status: Number(data.status),
@@ -130,6 +154,21 @@ const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
         if (busy) e.preventDefault();
       }}
     >
+      <style>{`
+        .react-time-picker-custom .react-time-picker__wrapper {
+          border: none !important;
+          background: transparent !important;
+        }
+        .react-time-picker-custom .react-time-picker__inputGroup__input {
+          outline: none !important;
+          background: transparent !important;
+          font-size: 14px;
+        }
+        .react-time-picker-custom .react-time-picker__inputGroup__divider,
+        .react-time-picker-custom .react-time-picker__inputGroup__leadingZero {
+          color: inherit;
+        }
+      `}</style>
       <DialogHeader>
         <DialogTitle className="text-left font-semibold">
           {isCreate ? t('Create task') : t('Edit task')}
@@ -170,26 +209,132 @@ const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
             <FieldError errors={[errors.description]} />
           </Field>
 
-          <Field>
-            <FieldLabel className="text-foreground-tertiary font-display-3">
-              {t('Schedule Date')} <span className="text-destructive">*</span>
-            </FieldLabel>
-            <Controller
-              control={form.control}
-              name="scheduled_time"
-              rules={{ required: t('Schedule date is required') }}
-              render={({ field }) => (
-                <Calendar
-                  mode="single"
-                  selected={field.value ? new Date(field.value) : undefined}
-                  onSelect={(date) => field.onChange(date ? date.toISOString() : '')}
-                  className="rounded-md border border-[rgba(136,122,71,0.5)] shadow w-fit bg-background"
-                  disabled={busy}
+          <div className="flex flex-col sm:flex-row gap-6">
+            <Field className="flex-1">
+              <FieldLabel className="text-foreground-tertiary font-display-3">
+                {t('Schedule Date')} <span className="text-destructive">*</span>
+              </FieldLabel>
+              <Controller
+                control={form.control}
+                name="scheduled_date"
+                rules={{ required: t('Schedule date is required') }}
+                render={({ field }) => (
+                  <div className="relative">
+                    <UIButton
+                      type="button"
+                      variant="outline"
+                      className={cn(
+                        'w-full justify-start text-left font-normal border-[rgba(136,122,71,0.5)] hover:bg-transparent !h-[50px] focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50',
+                        !field.value && 'text-muted-foreground',
+                      )}
+                      onClick={() => setIsDatePickerOpen((prev) => !prev)}
+                      disabled={busy}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {field.value ? (
+                        format(new Date(field.value), 'PPP')
+                      ) : (
+                        <span>{t('Pick a date')}</span>
+                      )}
+                    </UIButton>
+                    {isDatePickerOpen && (
+                      <div className="absolute z-50 mt-2 rounded-md border border-[rgba(136,122,71,0.5)] bg-background shadow-md">
+                        <Calendar
+                          mode="single"
+                          selected={field.value ? new Date(field.value) : undefined}
+                          onSelect={(date) => {
+                            field.onChange(date ? date.toISOString() : '');
+                            setIsDatePickerOpen(false);
+                          }}
+                          disabled={busy}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+              />
+              <FieldError errors={[errors.scheduled_date]} />
+            </Field>
+
+            <Field className="flex-1">
+              <FieldLabel className="text-foreground-tertiary font-display-3">
+                {t('Scheduled Time')} <span className="text-destructive">*</span>
+              </FieldLabel>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
+                <span className="text-xs text-muted-foreground">{t('From')}</span>
+                <span className="text-xs text-muted-foreground">{t('To')}</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Controller
+                  control={form.control}
+                  name="scheduled_time_from"
+                  rules={{ required: t('Start time is required') }}
+                  render={({ field }) => (
+                    <div
+                      className={cn(
+                        'flex items-center w-full px-3 bg-transparent rounded-md',
+                        inputClassName,
+                      )}
+                    >
+                      <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
+                      <TimePicker
+                        onChange={field.onChange}
+                        value={field.value}
+                        disabled={busy}
+                        format="HH:mm"
+                        clearIcon={null}
+                        clockIcon={null}
+                        disableClock={true}
+                        className="w-full h-[48px] react-time-picker-custom"
+                      />
+                    </div>
+                  )}
                 />
-              )}
-            />
-            <FieldError errors={[errors.scheduled_time]} />
-          </Field>
+                <Controller
+                  control={form.control}
+                  name="scheduled_time_to"
+                  rules={{
+                    required: t('End time is required'),
+                    validate: (value) => {
+                      const fromTime = form.getValues('scheduled_time_from');
+                      return (
+                        !fromTime || value > fromTime || t('End time must be later than start time')
+                      );
+                    },
+                  }}
+                  render={({ field }) => (
+                    <div
+                      className={cn(
+                        'flex items-center w-full px-3 bg-transparent rounded-md',
+                        inputClassName,
+                      )}
+                    >
+                      <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
+                      <TimePicker
+                        onChange={field.onChange}
+                        value={field.value}
+                        disabled={busy}
+                        format="HH:mm"
+                        clearIcon={null}
+                        clockIcon={null}
+                        disableClock={true}
+                        className="w-full h-[48px] react-time-picker-custom"
+                      />
+                    </div>
+                  )}
+                />
+              </div>
+
+              {form.watch('scheduled_time_from') &&
+                form.watch('scheduled_time_to') &&
+                form.watch('scheduled_time_to') <= form.watch('scheduled_time_from') && (
+                  <p className="text-sm text-destructive">
+                    {t('End time must be later than start time')}
+                  </p>
+                )}
+              <FieldError errors={[errors.scheduled_time_from, errors.scheduled_time_to]} />
+            </Field>
+          </div>
 
           <Field>
             <FieldLabel className="text-foreground-tertiary font-display-3">
@@ -199,13 +344,12 @@ const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
               control={form.control}
               name="priority"
               render={({ field }) => (
-                <div className="flex items-center">
-                  <ChangePriority
-                    type={field.value}
-                    onChangePriority={field.onChange}
-                    enabledDropdown={!busy}
-                  />
-                </div>
+                <SelectListPriority
+                  value={field.value}
+                  onChange={field.onChange}
+                  disabled={busy}
+                  className={inputClassName}
+                />
               )}
             />
             <FieldError errors={[errors.priority]} />
