@@ -4,8 +4,8 @@ import Image from 'next/image';
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { useGetCampaignManager } from '@/apis/campaign/getCampaignManager';
-import { useGetCampaignVolunteer } from '@/apis/campaign/getCampaignVolunteer';
+import { useGetCampaignManager } from '@/apis/campaign/campaignManager';
+import { useGetCampaignVolunteer } from '@/apis/campaign/campaignVolunteer';
 import { Skeleton } from '@/components/ui/skeleton';
 import defaultAvatar from '@/public/default-avatar.png';
 
@@ -93,7 +93,7 @@ export const CurrentMember = memo(function CurrentMember() {
       {/* Members card */}
       <div className="rounded-xl border border-[rgba(136,122,71,0.4)] bg-white/60 p-5 sm:p-6 shadow-sm">
         <p className="font-display-1 text-muted-foreground mb-4">
-          {t('Current members')}:{' '}
+          {t('Members')}:{' '}
           <span className="font-medium text-foreground tabular-nums">{currentMembers}</span>
         </p>
         <AvatarList isLoading={isVolunteerLoading} items={volunteers} />
