@@ -4,7 +4,7 @@ import { IPaginationResponse } from '@/types/PaginationResponse';
 export interface IGetCampaignsRequest {
   search?: string;
   status?: number;
-  organization_id?: string;
+  organizationId?: string;
   page?: number;
   limit?: number;
   latitude?: number;
