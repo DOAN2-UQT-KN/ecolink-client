@@ -26,17 +26,17 @@ import {
 import { useCampaignSearch } from '../_context/CampaignSearchContext';
 
 const FILTER_PANEL_CLASS =
-  'w-full  p-6 border-1 border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5 h-fit';
+  'w-full  p-6 border border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5 h-fit';
 
 const FILTER_CONTROL_H = '!h-11';
 
 const SEARCH_INPUT_CLASS = cn(
-  'pl-10 border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50 bg-white/50 focus-visible:bg-white transition-all',
+  'pl-10 border border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-[rgba(136,122,71,0.5)]/50 bg-white/50 focus-visible:bg-white transition-all',
   FILTER_CONTROL_H,
 );
 
 const FILTER_SELECT_CLASS = cn(
-  'w-full border-1 border-[rgba(136,122,71,0.5)] focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50 bg-white/50',
+  'w-full border border-[rgba(136,122,71,0.5)] focus-visible:ring-2 focus-visible:ring-[rgba(136,122,71,0.5)]/50 bg-white/50',
   FILTER_CONTROL_H,
 );
 
@@ -45,9 +45,11 @@ const RESET_BUTTON_CLASS = cn(
   FILTER_CONTROL_H,
 );
 
-const FILTER_STICKY_TOP_CLASS = '-top-[20px] sticky';
+interface SearchFilterProps {
+  isScrolled?: boolean;
+}
 
-export const SearchFilter = memo(function SearchFilter() {
+export const SearchFilter = memo(function SearchFilter({ isScrolled = false }: SearchFilterProps) {
   const { t } = useTranslation();
   const { filters, setFilters, resetFilters } = useCampaignSearch();
   const router = useRouter();
@@ -143,8 +145,13 @@ export const SearchFilter = memo(function SearchFilter() {
   );
 
   return (
-    <aside className="w-full lg:w-[320px] lg:sticky lg:top-[150px] z-[40] space-y-2 p-6 border-1 border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5 h-fit">
-      <div className="space-y-4">
+    <aside
+      className={cn(
+        'w-full lg:w-[320px] sticky top-0 z-[40] h-full transition-all duration-200',
+        isScrolled ? 'pt-[100px]' : 'pt-0',
+      )}
+    >
+      <div className={cn(FILTER_PANEL_CLASS, 'space-y-4')}>
         <Field className="w-full">
           <FieldLabel className="text-foreground-tertiary font-display-3">{t('Search')}</FieldLabel>
           <div className="relative group">
