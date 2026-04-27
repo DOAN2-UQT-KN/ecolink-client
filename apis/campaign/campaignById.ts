@@ -23,7 +23,7 @@ export const useGetCampaignById = (
 };
 
 export const markDoneCampaign = async (id: string): Promise<IBaseResponse<null>> => {
-  return await requestApi.put<IBaseResponse<null>>(`${url}/${id}/mark-done`);
+  return await requestApi.put<IBaseResponse<null>>(`${url}/${id}/mark-done`, {});
 };
 
 export const useMarkDoneCampaign = (

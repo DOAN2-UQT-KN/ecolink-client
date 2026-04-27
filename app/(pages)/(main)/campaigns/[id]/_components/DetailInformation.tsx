@@ -42,8 +42,6 @@ export const DetailInformation = memo(function DetailInformation() {
     return null;
   }
 
-  console.log('memberProgress', memberProgress);
-
   return (
     <div className="flex flex-col gap-4 sm:gap-5">
       <div className={cardClass}>
