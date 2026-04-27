@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Image as AntdImage } from 'antd';
+import { ConfirmPopover } from '@/components/admin/shared/ConfirmPopover';
 import { ICampaignTask } from '@/apis/campaign/models/campaignTask';
 import { formattedDate } from '@/utils/formattedDate';
 import ChangePriority from '@/components/ui/ChangePriority';
@@ -12,6 +13,7 @@ import {
   TbChevronDown,
   TbChevronUp,
   TbPencil,
+  TbTrash,
   TbUrgent,
 } from 'react-icons/tb';
 import RichTextContent from '@/components/ui/RichTextContent';
@@ -23,10 +25,11 @@ import { cn } from '@/libs/utils';
 export interface CampaignTaskCardProps {
   task: ICampaignTask;
   onEdit?: (task: ICampaignTask) => void;
+  onDelete?: (task: ICampaignTask) => void;
   isOwner?: boolean;
 }
 
-export function CampaignTaskCard({ task, onEdit, isOwner }: CampaignTaskCardProps) {
+export function CampaignTaskCard({ task, onEdit, onDelete, isOwner }: CampaignTaskCardProps) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const { scheduled_time_from, scheduled_time_to } = parseScheduledTimeRange(task.scheduled_time);
@@ -77,6 +80,25 @@ export function CampaignTaskCard({ task, onEdit, isOwner }: CampaignTaskCardProp
             >
               <TbPencil className="size-5" />
             </button>
+          )}
+          {isOwner && onDelete && task.status !== STATUS.COMPLETED && (
+            <div onClick={(e) => e.stopPropagation()}>
+              <ConfirmPopover
+                title={t('Delete task')}
+                description={t('Are you sure to delete this task?')}
+                onConfirm={() => {
+                  onDelete(task);
+                }}
+                cancelLabel={t('No')}
+                confirmLabel={t('Yes')}
+                theme="light"
+                trigger={
+                  <button className="rounded-full hover:bg-red-500/10 cursor-pointer text-red-500 transition-colors flex items-center justify-center">
+                    <TbTrash className="size-5" />
+                  </button>
+                }
+              />
+            </div>
           )}
           {isOpen ? (
             <button className="rounded-full hover:bg-button-accent/10 cursor-pointer text-button-accent transition-colors">

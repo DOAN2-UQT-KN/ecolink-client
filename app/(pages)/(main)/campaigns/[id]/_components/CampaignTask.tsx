@@ -2,7 +2,7 @@
 
 import { memo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useGetCampaignTasks } from '@/apis/campaign/campaignTask';
+import { useGetCampaignTasks, useDeleteCampaignTask } from '@/apis/campaign/campaignTask';
 import { ICampaignTask } from '@/apis/campaign/models/campaignTask';
 import { useCampaignDetail } from '../_hooks/useCampaignDetail';
 import { Button } from '@/components/client/shared/Button';
@@ -19,6 +19,12 @@ export const CampaignTask = memo(function CampaignTask() {
     { enabled: !!campaignId },
   );
 
+  const { mutate: deleteTask } = useDeleteCampaignTask({
+    onSuccess: () => {
+      refetch();
+    },
+  });
+
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<ICampaignTask | undefined>(undefined);
 
@@ -30,6 +36,10 @@ export const CampaignTask = memo(function CampaignTask() {
   const handleEdit = (task: ICampaignTask) => {
     setEditingTask(task);
     setIsPopoverOpen(true);
+  };
+
+  const handleDelete = (task: ICampaignTask) => {
+    deleteTask({ id: task.id });
   };
 
   const tasks = tasksData?.data?.tasks ?? [];
@@ -57,6 +67,7 @@ export const CampaignTask = memo(function CampaignTask() {
             task={task}
             isOwner={isCampaignOwner}
             onEdit={handleEdit}
+            onDelete={handleDelete}
           />
         ))}
         {tasks.length === 0 && (
