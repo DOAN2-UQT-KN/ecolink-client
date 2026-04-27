@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/empty";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ReportSummaryCard from "@/modules/ReportSummaryCard/index";
+import { STATUS } from "@/constants/status";
 import { Inbox } from "lucide-react";
 
 import { useCampaign } from "../_hooks/useCampaign";
@@ -26,7 +27,10 @@ const IncidentList = memo(function IncidentList() {
   const [activeTab, setActiveTab] = useState("explore");
   const { selectedReports, setSelectedReports } = useCampaign();
 
-  const reportsQueryParams = useMemo(() => ({ page: 1, limit: 20 }), []);
+  const reportsQueryParams = useMemo(
+    () => ({ page: 1, limit: 20, status: STATUS.TODO }),
+    [],
+  );
   const savedQueryParams = useMemo(
     () => ({
       page: 1,

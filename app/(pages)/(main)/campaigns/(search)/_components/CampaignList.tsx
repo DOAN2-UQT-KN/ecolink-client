@@ -1,14 +1,20 @@
-"use client";
+'use client';
 
-import React, { memo, useCallback, useMemo } from "react";
-import { ChevronLeft, ChevronRight, Inbox } from "lucide-react";
-import { useTranslation } from "react-i18next";
+import React, { memo, useCallback, useMemo } from 'react';
+import { ChevronLeft, ChevronRight, Inbox } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
-import SummaryCampaignCard from "@/components/client/shared/SummaryCampaignCard";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import SummaryCampaignCard from '@/components/client/shared/SummaryCampaignCard';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty';
 
-import { useCampaignSearch } from "../_context/CampaignSearchContext";
+import { useCampaignSearch } from '../_context/CampaignSearchContext';
 
 export const CampaignList = memo(function CampaignList() {
   const { t } = useTranslation();
@@ -17,7 +23,7 @@ export const CampaignList = memo(function CampaignList() {
   const handlePageChange = useCallback(
     (newPage: number) => {
       setPagination({ ...pagination, current: newPage });
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     },
     [pagination, setPagination],
   );
@@ -53,9 +59,9 @@ export const CampaignList = memo(function CampaignList() {
             <EmptyMedia variant="icon">
               <Inbox className="h-12 w-12 text-muted-foreground" />
             </EmptyMedia>
-            <EmptyTitle>{t("No campaigns found")}</EmptyTitle>
+            <EmptyTitle>{t('No campaigns found')}</EmptyTitle>
             <EmptyDescription>
-              {t("Try adjusting your search filters to find matching campaigns.")}
+              {t('Try adjusting your search filters to find matching campaigns.')}
             </EmptyDescription>
           </EmptyHeader>
         </Empty>
@@ -67,7 +73,7 @@ export const CampaignList = memo(function CampaignList() {
     <div className="w-full space-y-8 pb-10">
       <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
         {campaigns.map((campaign) => (
-          <SummaryCampaignCard key={campaign.id} campaign={campaign} />
+          <SummaryCampaignCard key={campaign.id} campaign={campaign} exploreMode={true} />
         ))}
       </div>
 
@@ -80,11 +86,11 @@ export const CampaignList = memo(function CampaignList() {
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all rounded-xl border border-border hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <ChevronLeft size={16} />
-            {t("Previous")}
+            {t('Previous')}
           </button>
 
           <span className="text-sm font-medium text-foreground-secondary">
-            {t("Page")} {pagination.current} {t("of")} {totalPages}
+            {t('Page')} {pagination.current} {t('of')} {totalPages}
           </span>
 
           <button
@@ -93,7 +99,7 @@ export const CampaignList = memo(function CampaignList() {
             disabled={pagination.current >= totalPages}
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all rounded-xl border border-border hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {t("Next")}
+            {t('Next')}
             <ChevronRight size={16} />
           </button>
         </div>

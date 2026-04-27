@@ -34,9 +34,8 @@ const severityOptions = [
 ];
 
 const statusOptions = [
-  { label: 'Pending', value: STATUS.PENDING.toString() },
-  { label: 'Approved', value: STATUS.APPROVED.toString() },
-  { label: 'Verified', value: STATUS.VERIFIED.toString() },
+  { label: 'To do', value: STATUS.TODO.toString() },
+  { label: 'In progress', value: STATUS.IN_PROGRESS.toString() },
   { label: 'Completed', value: STATUS.COMPLETED.toString() },
 ];
 

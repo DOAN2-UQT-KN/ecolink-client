@@ -30,11 +30,11 @@ const FILTER_PANEL_CLASS =
 
 const FILTER_CONTROL_H = '!h-11';
 const GREEN_POINTS_MIN = 0;
-const GREEN_POINTS_MAX = 1000;
+const GREEN_POINTS_MAX = 100;
 
 const normalizeGreenPointsRange = (from?: number, to?: number): [number, number] => {
-  const normalizedFrom = from ?? GREEN_POINTS_MIN;
-  const normalizedTo = to ?? GREEN_POINTS_MAX;
+  const normalizedFrom = Math.min(Math.max(from ?? GREEN_POINTS_MIN, GREEN_POINTS_MIN), GREEN_POINTS_MAX);
+  const normalizedTo = Math.min(Math.max(to ?? GREEN_POINTS_MAX, GREEN_POINTS_MIN), GREEN_POINTS_MAX);
 
   return normalizedFrom <= normalizedTo
     ? [normalizedFrom, normalizedTo]
@@ -71,14 +71,12 @@ export const SearchFilter = memo(function SearchFilter({ isScrolled = false }: S
   const [greenPointsRange, setGreenPointsRange] = useState<[number, number]>(
     normalizeGreenPointsRange(filters.greenPointsFrom, filters.greenPointsTo),
   );
-  const [prevSearch, setPrevSearch] = useState(filters.search);
-
-  if (filters.search !== prevSearch) {
-    setPrevSearch(filters.search);
-    setSearchValue(filters.search || '');
-  }
 
   const debouncedSearchValue = useDebounce(searchValue, CAMPAIGN_SEARCH_DEBOUNCE_MS);
+
+  useEffect(() => {
+    setSearchValue(filters.search || '');
+  }, [filters.search]);
 
   const updateURL = useCallback(
     (updates: Record<string, string | undefined>) => {

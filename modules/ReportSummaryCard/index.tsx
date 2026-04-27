@@ -17,6 +17,7 @@ import ReportDetailCard from '@/modules/ReportDetailCard/ReportDetailCard';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { cn } from '@/libs/utils';
+import RichTextContent from '@/components/ui/RichTextContent';
 
 interface ReportSummaryCardProps {
   incident: IIncident;
@@ -113,10 +114,17 @@ const ReportSummaryCard = memo(function ReportSummaryCard({
                 </div>
               )}
             </div>
-            <p className="font-display-1 text-foreground-secondary leading-relaxed line-clamp-2 h-[40px] overflow-y-auto scrollbar-hide">
+            <RichTextContent
+              value={incident.description}
+              className="!font-display-1 text-foreground-secondary "
+              maxLines={2}
+              // showMoreLabel={t('See more')}
+              // showLessLabel={t('See less')}
+              emptyFallback={<span className="text-foreground-secondary">—</span>}
+            />{' '}
+            {/* <p className="font-display-1 text-foreground-secondary leading-relaxed line-clamp-2 h-[40px] overflow-y-auto scrollbar-hide">
               {incident.description || t('No description provided.')}
-            </p>
-
+            </p> */}
             <div className="grid grid-cols-2 grid-rows-2 gap-1 py-2 border-y border-border/50">
               {footerItems.map((item) => (
                 <div key={item.label} className="flex items-center gap-1 ">
@@ -132,7 +140,6 @@ const ReportSummaryCard = memo(function ReportSummaryCard({
                 </div>
               ))}
             </div>
-
             <div className="flex items-center justify-between">
               <div className="flex items-center h-10 px-2 bg-muted/60 dark:bg-accent/30 rounded-full transition-all">
                 {/* <span className="font-display-1 text-foreground-secondary">{t("Vote point")}</span> */}
