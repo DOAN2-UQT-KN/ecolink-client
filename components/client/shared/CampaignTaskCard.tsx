@@ -17,6 +17,8 @@ import {
 import RichTextContent from '@/components/ui/RichTextContent';
 import { parseScheduledTimeRange } from '@/utils/scheduledTimeRange';
 import ChangeStatus from '@/components/ui/ChangeStatus';
+import { STATUS } from '@/constants/status';
+import { cn } from '@/libs/utils';
 
 export interface CampaignTaskCardProps {
   task: ICampaignTask;
@@ -30,9 +32,23 @@ export function CampaignTaskCard({ task, onEdit, isOwner }: CampaignTaskCardProp
   const { scheduled_time_from, scheduled_time_to } = parseScheduledTimeRange(task.scheduled_time);
   const resultDescription = task.result?.description ?? '';
   const resultImages = task.result?.file ?? [];
+  const normalizedPriority = Number(task.priority);
+  const leftBorderColor =
+    normalizedPriority === PRIORITY.URGENT
+      ? '#ef4444'
+      : normalizedPriority === PRIORITY.MEDIUM
+        ? '#3b82f6'
+        : normalizedPriority === PRIORITY.LOW
+          ? '#eab308'
+          : 'rgba(136,122,71,0.25)';
 
   return (
-    <div className="rounded-xl border border-[rgba(136,122,71,0.25)] bg-red-500 p-4 transition-all shadow-sm">
+    <div
+      className={cn(
+        'rounded-xl border border-[rgba(136,122,71,0.25)] p-4 transition-all shadow-sm border-l-4',
+      )}
+      style={{ borderLeftColor: leftBorderColor, borderLeftWidth: '4px' }}
+    >
       <div
         className="flex items-center justify-between cursor-pointer"
         onClick={() => setIsOpen(!isOpen)}
@@ -51,7 +67,7 @@ export function CampaignTaskCard({ task, onEdit, isOwner }: CampaignTaskCardProp
         </div>
 
         <div className="flex items-center gap-1">
-          {isOwner && onEdit && (
+          {isOwner && onEdit && task.status !== STATUS.COMPLETED && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -75,7 +91,7 @@ export function CampaignTaskCard({ task, onEdit, isOwner }: CampaignTaskCardProp
       </div>
 
       {isOpen && (
-        <div className="mt-4 pt-4 border-t border-[rgba(136,122,71,0.25)] flex flex-col gap-4 text-sm text-foreground-secondary bg-background-primary/80">
+        <div className="mt-4 pt-4 border-t border-[rgba(136,122,71,0.25)] flex flex-col gap-4 text-sm text-foreground-secondary">
           <div className="flex flex-row gap-1 w-full">
             <div className="flex flex-col gap-5 w-2/3  border-r border-[rgba(136,122,71,0.25)] pr-5">
               <div className="flex flex-col gap-2">

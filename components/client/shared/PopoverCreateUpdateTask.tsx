@@ -135,6 +135,7 @@ const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
 }: Omit<PopoverCreateUpdateTaskProps, 'open'>) {
   const { t } = useTranslation();
   const isCreate = !task;
+  const isInProgressTask = !isCreate && task?.status === STATUS.IN_PROGRESS;
 
   const defaultValues = useMemo((): TaskFormValues => {
     let initialDate = '';
@@ -166,6 +167,8 @@ const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
   const {
     register,
     handleSubmit,
+    setError,
+    clearErrors,
     formState: { errors },
   } = form;
 
@@ -198,7 +201,7 @@ const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
   );
   const statusOptions = useMemo(
     () => [
-      { value: STATUS.PENDING, label: t('Pending') },
+      { value: STATUS.TODO, label: t('To do') },
       { value: STATUS.IN_PROGRESS, label: t('In progress') },
       { value: STATUS.COMPLETED, label: t('Completed') },
     ],
@@ -268,6 +271,19 @@ const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
         });
       } else {
         if (!task) return;
+        const isCompletedStatus = Number(data.status) === STATUS.COMPLETED;
+        const hasResultDescription = Boolean(data.result_description?.trim());
+        const hasResultImages = (data.result_images?.length ?? 0) > 0;
+
+        if (isCompletedStatus && !hasResultDescription && !hasResultImages) {
+          setError('result_description', {
+            type: 'manual',
+            message: t('Result is required when status is Completed'),
+          });
+          return;
+        }
+
+        clearErrors('result_description');
 
         let resultImageUrls: string[] = [];
         try {
@@ -296,7 +312,7 @@ const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
         });
       }
     },
-    [isCreate, createMutate, updateMutate, campaignId, t, task],
+    [isCreate, createMutate, updateMutate, campaignId, t, task, setError, clearErrors],
   );
   return (
     <DialogContent
@@ -345,170 +361,210 @@ const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
               {...register('title', { required: t('Title is required') })}
               placeholder={t('Enter task title...')}
               className={inputClassName}
-              disabled={busy}
+              disabled={busy || [STATUS.COMPLETED, STATUS.IN_PROGRESS].includes(task?.status || 0)}
             />
             <FieldError errors={[errors.title]} />
           </Field>
 
-          <Field>
-            <FieldLabel className="text-foreground-tertiary font-display-3">
-              {t('Description')}
-            </FieldLabel>
-
-            <RichTextEditor
-              value={defaultValues.description}
-              onChange={(value) => form.setValue('description', value)}
-              placeholder={t('Enter description...')}
-              className={cn(inputClassName, 'min-h-[220px]')}
-            />
-            <FieldError errors={[errors.description]} />
-          </Field>
-
-          <div className="flex flex-col sm:flex-row gap-6">
-            <Field className="flex-1">
+          {!isCreate && (
+            <Field>
               <FieldLabel className="text-foreground-tertiary font-display-3">
-                {t('Schedule Date')} <span className="text-destructive">*</span>
+                {t('Status')}
               </FieldLabel>
               <Controller
                 control={form.control}
-                name="scheduled_date"
-                rules={{ required: t('Schedule date is required') }}
+                name="status"
+                rules={{ required: t('Status is required') }}
                 render={({ field }) => (
-                  <div className="relative">
-                    <UIButton
-                      type="button"
-                      variant="outline"
-                      className={cn(
-                        'w-full justify-start text-left font-normal border-[rgba(136,122,71,0.5)] hover:bg-transparent !h-[50px] focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50',
-                        !field.value && 'text-muted-foreground',
+                  <Select
+                    value={field.value != null ? String(field.value) : undefined}
+                    onValueChange={(value) => field.onChange(Number(value))}
+                    disabled={busy}
+                  >
+                    <SelectTrigger className={cn('w-full', inputClassName)}>
+                      <SelectValue placeholder={t('Select status')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {statusOptions.map((option) => (
+                        <SelectItem key={option.value} value={String(option.value)}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              <FieldError errors={[errors.status]} />
+            </Field>
+          )}
+
+          {!isInProgressTask && (
+            <Field>
+              <FieldLabel className="text-foreground-tertiary font-display-3">
+                {t('Description')}
+              </FieldLabel>
+
+              <RichTextEditor
+                value={defaultValues.description}
+                onChange={(value) => form.setValue('description', value)}
+                placeholder={t('Enter description...')}
+                className={cn(inputClassName, 'min-h-[220px]')}
+              />
+              <FieldError errors={[errors.description]} />
+            </Field>
+          )}
+
+          {!isInProgressTask && (
+            <div className="flex flex-col sm:flex-row gap-6">
+              <Field className="flex-1">
+                <FieldLabel className="text-foreground-tertiary font-display-3">
+                  {t('Schedule Date')} <span className="text-destructive">*</span>
+                </FieldLabel>
+                <Controller
+                  control={form.control}
+                  name="scheduled_date"
+                  rules={{ required: t('Schedule date is required') }}
+                  render={({ field }) => (
+                    <div className="relative">
+                      <UIButton
+                        type="button"
+                        variant="outline"
+                        className={cn(
+                          'w-full justify-start text-left font-normal border-[rgba(136,122,71,0.5)] hover:bg-transparent !h-[50px] focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50',
+                          !field.value && 'text-muted-foreground',
+                        )}
+                        onClick={() => setIsDatePickerOpen((prev) => !prev)}
+                        disabled={busy}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {field.value ? (
+                          format(new Date(field.value), 'PPP')
+                        ) : (
+                          <span>{t('Pick a date')}</span>
+                        )}
+                      </UIButton>
+                      {isDatePickerOpen && (
+                        <div className="absolute z-50 mt-2 rounded-md border border-[rgba(136,122,71,0.5)] bg-background shadow-md">
+                          <Calendar
+                            mode="single"
+                            selected={field.value ? new Date(field.value) : undefined}
+                            onSelect={(date) => {
+                              field.onChange(date ? date.toISOString() : '');
+                              setIsDatePickerOpen(false);
+                            }}
+                            disabled={busy}
+                          />
+                        </div>
                       )}
-                      onClick={() => setIsDatePickerOpen((prev) => !prev)}
-                      disabled={busy}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {field.value ? (
-                        format(new Date(field.value), 'PPP')
-                      ) : (
-                        <span>{t('Pick a date')}</span>
-                      )}
-                    </UIButton>
-                    {isDatePickerOpen && (
-                      <div className="absolute z-50 mt-2 rounded-md border border-[rgba(136,122,71,0.5)] bg-background shadow-md">
-                        <Calendar
-                          mode="single"
-                          selected={field.value ? new Date(field.value) : undefined}
-                          onSelect={(date) => {
-                            field.onChange(date ? date.toISOString() : '');
-                            setIsDatePickerOpen(false);
-                          }}
+                    </div>
+                  )}
+                />
+                <FieldError errors={[errors.scheduled_date]} />
+              </Field>
+
+              <Field className="flex-1">
+                <FieldLabel className="text-foreground-tertiary font-display-3">
+                  {t('Scheduled Time')} <span className="text-destructive">*</span>
+                </FieldLabel>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
+                  <span className="text-xs text-muted-foreground">{t('From')}</span>
+                  <span className="text-xs text-muted-foreground">{t('To')}</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Controller
+                    control={form.control}
+                    name="scheduled_time_from"
+                    rules={{ required: t('Start time is required') }}
+                    render={({ field }) => (
+                      <div
+                        className={cn(
+                          'flex items-center w-full px-3 bg-transparent rounded-md',
+                          inputClassName,
+                        )}
+                      >
+                        <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
+                        <TimePicker
+                          onChange={field.onChange}
+                          value={field.value}
                           disabled={busy}
+                          format="HH:mm"
+                          clearIcon={null}
+                          clockIcon={null}
+                          disableClock={true}
+                          className="w-full h-[48px] react-time-picker-custom"
                         />
                       </div>
                     )}
-                  </div>
+                  />
+                  <Controller
+                    control={form.control}
+                    name="scheduled_time_to"
+                    rules={{
+                      required: t('End time is required'),
+                      validate: (value) => {
+                        const fromTime = form.getValues('scheduled_time_from');
+                        return (
+                          !fromTime ||
+                          value > fromTime ||
+                          t('End time must be later than start time')
+                        );
+                      },
+                    }}
+                    render={({ field }) => (
+                      <div
+                        className={cn(
+                          'flex items-center w-full px-3 bg-transparent rounded-md',
+                          inputClassName,
+                        )}
+                      >
+                        <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
+                        <TimePicker
+                          onChange={field.onChange}
+                          value={field.value}
+                          disabled={busy}
+                          format="HH:mm"
+                          clearIcon={null}
+                          clockIcon={null}
+                          disableClock={true}
+                          className="w-full h-[48px] react-time-picker-custom"
+                        />
+                      </div>
+                    )}
+                  />
+                </div>
+
+                {form.watch('scheduled_time_from') &&
+                  form.watch('scheduled_time_to') &&
+                  form.watch('scheduled_time_to') <= form.watch('scheduled_time_from') && (
+                    <p className="text-sm text-destructive">
+                      {t('End time must be later than start time')}
+                    </p>
+                  )}
+                <FieldError errors={[errors.scheduled_time_from, errors.scheduled_time_to]} />
+              </Field>
+            </div>
+          )}
+
+          {!isInProgressTask && (
+            <Field>
+              <FieldLabel className="text-foreground-tertiary font-display-3">
+                {t('Priority')}
+              </FieldLabel>
+              <Controller
+                control={form.control}
+                name="priority"
+                render={({ field }) => (
+                  <SelectListPriority
+                    value={field.value}
+                    onChange={field.onChange}
+                    disabled={busy}
+                    className={inputClassName}
+                  />
                 )}
               />
-              <FieldError errors={[errors.scheduled_date]} />
+              <FieldError errors={[errors.priority]} />
             </Field>
-
-            <Field className="flex-1">
-              <FieldLabel className="text-foreground-tertiary font-display-3">
-                {t('Scheduled Time')} <span className="text-destructive">*</span>
-              </FieldLabel>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
-                <span className="text-xs text-muted-foreground">{t('From')}</span>
-                <span className="text-xs text-muted-foreground">{t('To')}</span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <Controller
-                  control={form.control}
-                  name="scheduled_time_from"
-                  rules={{ required: t('Start time is required') }}
-                  render={({ field }) => (
-                    <div
-                      className={cn(
-                        'flex items-center w-full px-3 bg-transparent rounded-md',
-                        inputClassName,
-                      )}
-                    >
-                      <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
-                      <TimePicker
-                        onChange={field.onChange}
-                        value={field.value}
-                        disabled={busy}
-                        format="HH:mm"
-                        clearIcon={null}
-                        clockIcon={null}
-                        disableClock={true}
-                        className="w-full h-[48px] react-time-picker-custom"
-                      />
-                    </div>
-                  )}
-                />
-                <Controller
-                  control={form.control}
-                  name="scheduled_time_to"
-                  rules={{
-                    required: t('End time is required'),
-                    validate: (value) => {
-                      const fromTime = form.getValues('scheduled_time_from');
-                      return (
-                        !fromTime || value > fromTime || t('End time must be later than start time')
-                      );
-                    },
-                  }}
-                  render={({ field }) => (
-                    <div
-                      className={cn(
-                        'flex items-center w-full px-3 bg-transparent rounded-md',
-                        inputClassName,
-                      )}
-                    >
-                      <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
-                      <TimePicker
-                        onChange={field.onChange}
-                        value={field.value}
-                        disabled={busy}
-                        format="HH:mm"
-                        clearIcon={null}
-                        clockIcon={null}
-                        disableClock={true}
-                        className="w-full h-[48px] react-time-picker-custom"
-                      />
-                    </div>
-                  )}
-                />
-              </div>
-
-              {form.watch('scheduled_time_from') &&
-                form.watch('scheduled_time_to') &&
-                form.watch('scheduled_time_to') <= form.watch('scheduled_time_from') && (
-                  <p className="text-sm text-destructive">
-                    {t('End time must be later than start time')}
-                  </p>
-                )}
-              <FieldError errors={[errors.scheduled_time_from, errors.scheduled_time_to]} />
-            </Field>
-          </div>
-
-          <Field>
-            <FieldLabel className="text-foreground-tertiary font-display-3">
-              {t('Priority')}
-            </FieldLabel>
-            <Controller
-              control={form.control}
-              name="priority"
-              render={({ field }) => (
-                <SelectListPriority
-                  value={field.value}
-                  onChange={field.onChange}
-                  disabled={busy}
-                  className={inputClassName}
-                />
-              )}
-            />
-            <FieldError errors={[errors.priority]} />
-          </Field>
+          )}
 
           {!isCreate && (
             <>
@@ -529,6 +585,13 @@ const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
                       className={cn(inputClassName, 'min-h-[180px] mt-2')}
                     />
                     <FieldError errors={[errors.result_description]} />
+                    {form.watch('status') === STATUS.COMPLETED &&
+                      !form.watch('result_description')?.trim() &&
+                      resultImages.length === 0 && (
+                        <p className="text-sm text-destructive">
+                          {t('Result is required when status is Completed')}
+                        </p>
+                      )}
                   </div>
 
                   <div>
@@ -624,36 +687,6 @@ const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
                     </div>
                   </div>
                 </div>
-              </Field>
-
-              <Field>
-                <FieldLabel className="text-foreground-tertiary font-display-3">
-                  {t('Status')}
-                </FieldLabel>
-                <Controller
-                  control={form.control}
-                  name="status"
-                  rules={{ required: t('Status is required') }}
-                  render={({ field }) => (
-                    <Select
-                      value={field.value != null ? String(field.value) : undefined}
-                      onValueChange={(value) => field.onChange(Number(value))}
-                      disabled={busy}
-                    >
-                      <SelectTrigger className={cn('w-full', inputClassName)}>
-                        <SelectValue placeholder={t('Select status')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {statusOptions.map((option) => (
-                          <SelectItem key={option.value} value={String(option.value)}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                <FieldError errors={[errors.status]} />
               </Field>
             </>
           )}
