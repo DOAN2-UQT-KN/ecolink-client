@@ -73,10 +73,10 @@ export const CurrentMember = memo(function CurrentMember() {
   }));
 
   const managers = (managerData?.data?.managers ?? []).map((m) => ({
-    id: m?.user?.id,
-    avatar: m?.user?.avatar,
-    name: m?.user?.name,
-    email: m?.user?.email,
+    id: m?.user_id,
+    avatar: m?.avatar,
+    name: m?.name,
+    email: m?.email,
   }));
 
   return (

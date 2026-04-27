@@ -38,7 +38,7 @@ export interface IGetMyJoinCampaignRequest {
 }
 
 export interface ICancelJoinCampaignRequest {
-  request_id: string;
+  requestId: string;
 }
 
 export interface ICancelJoinCampaignResponse extends IBaseResponse<unknown> {}

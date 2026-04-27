@@ -42,6 +42,8 @@ export const DetailInformation = memo(function DetailInformation() {
     return null;
   }
 
+  console.log('memberProgress', memberProgress);
+
   return (
     <div className="flex flex-col gap-4 sm:gap-5">
       <div className={cardClass}>
@@ -110,7 +112,7 @@ export const DetailInformation = memo(function DetailInformation() {
           </div>
           <Progress
             value={memberProgress}
-            className="h-2.5 bg-button-accent/10 [&>[data-slot=progress-indicator]]:bg-button-accent"
+            className="h-2 bg-button-accent/10 [&>[data-slot=progress-indicator]]:bg-button-accent"
           />
         </div>
       </div>

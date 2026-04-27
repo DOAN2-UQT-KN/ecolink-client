@@ -20,6 +20,7 @@ export default function SummaryCampaignCard({ campaign }: SummaryCampaignCardPro
   const maxMembers = 50;
   const currentMembers = 18;
   const memberProgress = (currentMembers / maxMembers) * 100;
+
   const router = useRouter();
   return (
     <article

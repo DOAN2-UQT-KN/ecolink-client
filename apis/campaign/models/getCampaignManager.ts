@@ -15,7 +15,9 @@ export interface IGetCampaignManagerItem {
   status: number;
   created_at: string;
   updated_at: string;
-  user: Pick<IUser, 'id' | 'name' | 'email' | 'avatar'>;
+  avatar: string | null;
+  name: string | null;
+  email: string | null;
 }
 
 export interface IGetCampaignManagerResponse extends IPaginationResponse<

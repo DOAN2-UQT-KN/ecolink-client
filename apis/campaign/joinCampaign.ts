@@ -36,9 +36,13 @@ export const getMyJoinRequests = async (
 export const cancelJoinCampaign = async (
   req: ICancelJoinCampaignRequest,
 ): Promise<ICancelJoinCampaignResponse> => {
-  return await requestApi.delete<ICancelJoinCampaignResponse>(`${baseUrl}/cancel`, {
-    data: req,
-  });
+  return await requestApi.delete<ICancelJoinCampaignResponse>(
+    `${baseUrl}/cancel`,
+    {},
+    {
+      data: req,
+    },
+  );
 };
 
 export const useJoinCampaign = (
