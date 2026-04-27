@@ -8,6 +8,7 @@ import { TbZoom, TbZoomReset } from 'react-icons/tb';
 import { Button } from '@/components/client/shared/Button';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { Slider } from '@/components/ui/slider';
 import {
   Select,
   SelectContent,
@@ -21,7 +22,6 @@ import { cn } from '@/libs/utils';
 import {
   CAMPAIGN_SEARCH_DEBOUNCE_MS,
   CAMPAIGN_STATUS_OPTIONS,
-  parseGreenPoints,
 } from '../_services/campaignSearch.service';
 import { useCampaignSearch } from '../_context/CampaignSearchContext';
 
@@ -29,6 +29,17 @@ const FILTER_PANEL_CLASS =
   'w-full  p-6 border border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5 h-fit';
 
 const FILTER_CONTROL_H = '!h-11';
+const GREEN_POINTS_MIN = 0;
+const GREEN_POINTS_MAX = 1000;
+
+const normalizeGreenPointsRange = (from?: number, to?: number): [number, number] => {
+  const normalizedFrom = from ?? GREEN_POINTS_MIN;
+  const normalizedTo = to ?? GREEN_POINTS_MAX;
+
+  return normalizedFrom <= normalizedTo
+    ? [normalizedFrom, normalizedTo]
+    : [normalizedTo, normalizedFrom];
+};
 
 const SEARCH_INPUT_CLASS = cn(
   'pl-10 border border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-[rgba(136,122,71,0.5)]/50 bg-white/50 focus-visible:bg-white transition-all',
@@ -57,11 +68,8 @@ export const SearchFilter = memo(function SearchFilter({ isScrolled = false }: S
   const searchParams = useSearchParams();
 
   const [searchValue, setSearchValue] = useState(filters.search || '');
-  const [greenPointsFromValue, setGreenPointsFromValue] = useState(
-    filters.greenPointsFrom?.toString() ?? '',
-  );
-  const [greenPointsToValue, setGreenPointsToValue] = useState(
-    filters.greenPointsTo?.toString() ?? '',
+  const [greenPointsRange, setGreenPointsRange] = useState<[number, number]>(
+    normalizeGreenPointsRange(filters.greenPointsFrom, filters.greenPointsTo),
   );
   const [prevSearch, setPrevSearch] = useState(filters.search);
 
@@ -106,24 +114,35 @@ export const SearchFilter = memo(function SearchFilter({ isScrolled = false }: S
     [setFilters, updateURL],
   );
 
-  const handleGreenPointBlur = useCallback(() => {
-    const greenPointsFrom = parseGreenPoints(greenPointsFromValue);
-    const greenPointsTo = parseGreenPoints(greenPointsToValue);
+  useEffect(() => {
+    setGreenPointsRange(normalizeGreenPointsRange(filters.greenPointsFrom, filters.greenPointsTo));
+  }, [filters.greenPointsFrom, filters.greenPointsTo]);
 
-    setGreenPointsFromValue(greenPointsFrom?.toString() ?? '');
-    setGreenPointsToValue(greenPointsTo?.toString() ?? '');
-    setFilters({ greenPointsFrom, greenPointsTo });
-    updateURL({
-      green_points_from: greenPointsFrom?.toString(),
-      green_points_to: greenPointsTo?.toString(),
-    });
-  }, [greenPointsFromValue, greenPointsToValue, setFilters, updateURL]);
+  const handleGreenPointsChange = useCallback((value: number[]) => {
+    if (value.length < 2) return;
+    setGreenPointsRange([value[0] ?? GREEN_POINTS_MIN, value[1] ?? GREEN_POINTS_MAX]);
+  }, []);
+
+  const handleGreenPointsCommit = useCallback(
+    (value: number[]) => {
+      if (value.length < 2) return;
+
+      const greenPointsFrom = value[0] ?? GREEN_POINTS_MIN;
+      const greenPointsTo = value[1] ?? GREEN_POINTS_MAX;
+
+      setFilters({ greenPointsFrom, greenPointsTo });
+      updateURL({
+        green_points_from: greenPointsFrom.toString(),
+        green_points_to: greenPointsTo.toString(),
+      });
+    },
+    [setFilters, updateURL],
+  );
 
   const onReset = useCallback(() => {
     resetFilters();
     setSearchValue('');
-    setGreenPointsFromValue('');
-    setGreenPointsToValue('');
+    setGreenPointsRange([GREEN_POINTS_MIN, GREEN_POINTS_MAX]);
 
     const params = new URLSearchParams(searchParams.toString());
     params.delete('search');
@@ -165,37 +184,29 @@ export const SearchFilter = memo(function SearchFilter({ isScrolled = false }: S
           </div>
         </Field>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
-          <Field className="w-full">
-            <FieldLabel className="text-foreground-tertiary font-display-3">
-              {t('Green points from')}
-            </FieldLabel>
-            <Input
-              type="number"
-              min={0}
-              className={SEARCH_INPUT_CLASS}
-              value={greenPointsFromValue}
-              onChange={(e) => setGreenPointsFromValue(e.target.value)}
-              onBlur={handleGreenPointBlur}
-              placeholder={t('Min')}
+        {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 w-full"> */}
+        <Field className="w-full">
+          <FieldLabel className="text-foreground-tertiary font-display-3">
+            {t('Green points')}
+          </FieldLabel>
+          <div className="rounded-md border border-[rgba(136,122,71,0.5)] bg-white/50 px-4 py-3 w-full">
+            <Slider
+              min={GREEN_POINTS_MIN}
+              max={GREEN_POINTS_MAX}
+              step={1}
+              value={greenPointsRange}
+              onValueChange={handleGreenPointsChange}
+              onValueCommit={handleGreenPointsCommit}
+              aria-label={t('Green points')}
+              className="[&_[data-slot=slider-range]]:bg-button-accent [&_[data-slot=slider-thumb]]:border-button-accent"
             />
-          </Field>
-
-          <Field className="w-full">
-            <FieldLabel className="text-foreground-tertiary font-display-3">
-              {t('Green points to')}
-            </FieldLabel>
-            <Input
-              type="number"
-              min={0}
-              className={SEARCH_INPUT_CLASS}
-              value={greenPointsToValue}
-              onChange={(e) => setGreenPointsToValue(e.target.value)}
-              onBlur={handleGreenPointBlur}
-              placeholder={t('Max')}
-            />
-          </Field>
-        </div>
+            <div className="mt-2 flex items-center justify-between text-sm text-muted-foreground">
+              <span>{greenPointsRange[0]}</span>
+              <span>{greenPointsRange[1]}</span>
+            </div>
+          </div>
+        </Field>
+        {/* </div> */}
 
         <Field className="w-full">
           <FieldLabel className="text-foreground-tertiary font-display-3">{t('Status')}</FieldLabel>
