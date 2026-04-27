@@ -5,7 +5,11 @@ import React, { createContext, ReactNode, useCallback, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { useGetCampaignById } from '@/apis/campaign/campaignById';
-import { useCancelJoinCampaign, useGetMyJoinRequests, useJoinCampaign } from '@/apis/campaign/joinCampaign';
+import {
+  useCancelJoinCampaign,
+  useGetMyJoinRequests,
+  useJoinCampaign,
+} from '@/apis/campaign/joinCampaign';
 import type { ICampaign } from '@/apis/campaign/models/campaign';
 import { STATUS } from '@/constants/status';
 
@@ -65,9 +69,7 @@ export function CampaignDetailProvider({
 
   const isCampaignOwner = useMemo(
     () =>
-      currentUserId != null &&
-      campaign?.owner?.id != null &&
-      campaign.owner.id === currentUserId,
+      currentUserId != null && campaign?.owner?.id != null && campaign.owner.id === currentUserId,
     [currentUserId, campaign?.owner?.id],
   );
 
@@ -120,7 +122,7 @@ export function CampaignDetailProvider({
     if (!joinRequestIdForCancel || isCancelling) {
       return;
     }
-    cancelJoinMutate({ request_id: joinRequestIdForCancel });
+    cancelJoinMutate({ requestId: joinRequestIdForCancel });
   }, [joinRequestIdForCancel, isCancelling, cancelJoinMutate]);
 
   const contextValue = useMemo(

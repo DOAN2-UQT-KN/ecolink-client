@@ -1,37 +1,89 @@
-"use client";
+'use client';
 
-import { memo } from "react";
-import { useTranslation } from "react-i18next";
-import { HiOutlineCheckCircle } from "react-icons/hi";
-
-const MOCK_TASKS = [
-  { id: "1", titleKey: "campaignDetail.mockTaskShoreline" as const },
-  { id: "2", titleKey: "campaignDetail.mockTaskWaste" as const },
-  { id: "3", titleKey: "campaignDetail.mockTaskBriefing" as const },
-] as const;
+import { memo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useGetCampaignTasks, useDeleteCampaignTask } from '@/apis/campaign/campaignTask';
+import { ICampaignTask } from '@/apis/campaign/models/campaignTask';
+import { useCampaignDetail } from '../_hooks/useCampaignDetail';
+import { Button } from '@/components/client/shared/Button';
+import { CampaignTaskCard } from '@/components/client/shared/CampaignTaskCard';
+import PopoverCreateUpdateTask from '@/components/client/shared/PopoverCreateUpdateTask';
+import { TbCirclePlus } from 'react-icons/tb';
 
 export const CampaignTask = memo(function CampaignTask() {
-  const { t } = useTranslation("common");
+  const { t } = useTranslation('common');
+  const { campaignId, isCampaignOwner } = useCampaignDetail();
+
+  const { data: tasksData, refetch } = useGetCampaignTasks(
+    { campaignId: campaignId! },
+    { enabled: !!campaignId },
+  );
+
+  const { mutate: deleteTask } = useDeleteCampaignTask({
+    onSuccess: () => {
+      refetch();
+    },
+  });
+
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<ICampaignTask | undefined>(undefined);
+
+  const handleCreate = () => {
+    setEditingTask(undefined);
+    setIsPopoverOpen(true);
+  };
+
+  const handleEdit = (task: ICampaignTask) => {
+    setEditingTask(task);
+    setIsPopoverOpen(true);
+  };
+
+  const handleDelete = (task: ICampaignTask) => {
+    deleteTask({ id: task.id });
+  };
+
+  const tasks = tasksData?.data?.tasks ?? [];
 
   return (
     <div className="rounded-xl border border-[rgba(136,122,71,0.4)] bg-white/60 p-5 sm:p-6 shadow-sm">
-      <h3 className="font-display-6 font-semibold text-button-accent mb-4">
-        {t("Tasks")}
-      </h3>
-      <ul className="space-y-3">
-        {MOCK_TASKS.map((task) => (
-          <li
+      <div className="flex items-center justify-between mb-4">
+        {/* <h3 className="font-display-6 font-semibold text-button-accent">{t('Tasks')}</h3> */}
+        {isCampaignOwner && (
+          // <div className="flex w-full justify-end">
+          <Button onClick={handleCreate} size="medium" variant="brown" className="!h-[45px]">
+            <div className="flex items-center gap-2">
+              <TbCirclePlus className="size-5" />
+              {t('Add task')}
+            </div>
+          </Button>
+          // </div>
+        )}
+      </div>
+
+      <div className="space-y-3">
+        {tasks.map((task) => (
+          <CampaignTaskCard
             key={task.id}
-            className="flex items-center gap-3 rounded-lg border border-[rgba(136,122,71,0.25)] bg-white/80 px-4 py-3 font-display-1 text-foreground"
-          >
-            <HiOutlineCheckCircle
-              className="size-5 shrink-0 text-button-accent/80"
-              aria-hidden
-            />
-            {t(task.titleKey)}
-          </li>
+            task={task}
+            isOwner={isCampaignOwner}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
         ))}
-      </ul>
+        {tasks.length === 0 && (
+          <div className="text-center py-6 text-foreground-tertiary">{t('No tasks found')}</div>
+        )}
+      </div>
+
+      {isPopoverOpen && campaignId && (
+        <PopoverCreateUpdateTask
+          open={isPopoverOpen}
+          onClose={() => setIsPopoverOpen(false)}
+          task={editingTask}
+          campaignId={campaignId}
+          onSuccess={() => refetch()}
+        />
+      )}
     </div>
   );
 });

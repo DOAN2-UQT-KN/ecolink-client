@@ -110,7 +110,7 @@ export const DetailInformation = memo(function DetailInformation() {
           </div>
           <Progress
             value={memberProgress}
-            className="h-2.5 bg-button-accent/10 [&>[data-slot=progress-indicator]]:bg-button-accent"
+            className="h-2 bg-button-accent/10 [&>[data-slot=progress-indicator]]:bg-button-accent"
           />
         </div>
       </div>
