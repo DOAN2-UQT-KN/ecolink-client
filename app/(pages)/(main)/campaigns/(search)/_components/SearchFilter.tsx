@@ -1,0 +1,224 @@
+'use client';
+
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
+import { TbZoom, TbZoomReset } from 'react-icons/tb';
+
+import { Button } from '@/components/client/shared/Button';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useDebounce } from '@/hooks/useDebounce';
+import { cn } from '@/libs/utils';
+
+import {
+  CAMPAIGN_SEARCH_DEBOUNCE_MS,
+  CAMPAIGN_STATUS_OPTIONS,
+  parseGreenPoints,
+} from '../_services/campaignSearch.service';
+import { useCampaignSearch } from '../_context/CampaignSearchContext';
+
+const FILTER_PANEL_CLASS =
+  'w-full  p-6 border-1 border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5 h-fit';
+
+const FILTER_CONTROL_H = '!h-11';
+
+const SEARCH_INPUT_CLASS = cn(
+  'pl-10 border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50 bg-white/50 focus-visible:bg-white transition-all',
+  FILTER_CONTROL_H,
+);
+
+const FILTER_SELECT_CLASS = cn(
+  'w-full border-1 border-[rgba(136,122,71,0.5)] focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50 bg-white/50',
+  FILTER_CONTROL_H,
+);
+
+const RESET_BUTTON_CLASS = cn(
+  'w-full lg:w-auto border-dashed border-2 hover:border-primary hover:text-primary transition-all gap-2 shrink-0',
+  FILTER_CONTROL_H,
+);
+
+const FILTER_STICKY_TOP_CLASS = '-top-[20px] sticky';
+
+export const SearchFilter = memo(function SearchFilter() {
+  const { t } = useTranslation();
+  const { filters, setFilters, resetFilters } = useCampaignSearch();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const [searchValue, setSearchValue] = useState(filters.search || '');
+  const [greenPointsFromValue, setGreenPointsFromValue] = useState(
+    filters.greenPointsFrom?.toString() ?? '',
+  );
+  const [greenPointsToValue, setGreenPointsToValue] = useState(
+    filters.greenPointsTo?.toString() ?? '',
+  );
+  const [prevSearch, setPrevSearch] = useState(filters.search);
+
+  if (filters.search !== prevSearch) {
+    setPrevSearch(filters.search);
+    setSearchValue(filters.search || '');
+  }
+
+  const debouncedSearchValue = useDebounce(searchValue, CAMPAIGN_SEARCH_DEBOUNCE_MS);
+
+  const updateURL = useCallback(
+    (updates: Record<string, string | undefined>) => {
+      const params = new URLSearchParams(searchParams.toString());
+
+      for (const [key, value] of Object.entries(updates)) {
+        if (value) {
+          params.set(key, value);
+        } else {
+          params.delete(key);
+        }
+      }
+
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchParams],
+  );
+
+  useEffect(() => {
+    if (debouncedSearchValue !== filters.search) {
+      setFilters({ search: debouncedSearchValue });
+      updateURL({ search: debouncedSearchValue || undefined });
+    }
+  }, [debouncedSearchValue, filters.search, setFilters, updateURL]);
+
+  const handleStatusChange = useCallback(
+    (value: string) => {
+      const status = value === 'all' ? undefined : Number(value);
+      setFilters({ status });
+      updateURL({ status: status?.toString() });
+    },
+    [setFilters, updateURL],
+  );
+
+  const handleGreenPointBlur = useCallback(() => {
+    const greenPointsFrom = parseGreenPoints(greenPointsFromValue);
+    const greenPointsTo = parseGreenPoints(greenPointsToValue);
+
+    setGreenPointsFromValue(greenPointsFrom?.toString() ?? '');
+    setGreenPointsToValue(greenPointsTo?.toString() ?? '');
+    setFilters({ greenPointsFrom, greenPointsTo });
+    updateURL({
+      green_points_from: greenPointsFrom?.toString(),
+      green_points_to: greenPointsTo?.toString(),
+    });
+  }, [greenPointsFromValue, greenPointsToValue, setFilters, updateURL]);
+
+  const onReset = useCallback(() => {
+    resetFilters();
+    setSearchValue('');
+    setGreenPointsFromValue('');
+    setGreenPointsToValue('');
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('search');
+    params.delete('status');
+    params.delete('green_points_from');
+    params.delete('green_points_to');
+
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }, [pathname, resetFilters, router, searchParams]);
+
+  const statusItems = useMemo(
+    () =>
+      CAMPAIGN_STATUS_OPTIONS.map((option) => ({
+        value: option.value.toString(),
+        label: t(option.label),
+      })),
+    [t],
+  );
+
+  return (
+    <aside className="w-full lg:w-[320px] lg:sticky lg:top-[150px] z-[40] space-y-2 p-6 border-1 border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5 h-fit">
+      <div className="space-y-4">
+        <Field className="w-full">
+          <FieldLabel className="text-foreground-tertiary font-display-3">{t('Search')}</FieldLabel>
+          <div className="relative group">
+            <TbZoom className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
+            <Input
+              className={SEARCH_INPUT_CLASS}
+              placeholder={t('Campaign name')}
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+            />
+          </div>
+        </Field>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
+          <Field className="w-full">
+            <FieldLabel className="text-foreground-tertiary font-display-3">
+              {t('Green points from')}
+            </FieldLabel>
+            <Input
+              type="number"
+              min={0}
+              className={SEARCH_INPUT_CLASS}
+              value={greenPointsFromValue}
+              onChange={(e) => setGreenPointsFromValue(e.target.value)}
+              onBlur={handleGreenPointBlur}
+              placeholder={t('Min')}
+            />
+          </Field>
+
+          <Field className="w-full">
+            <FieldLabel className="text-foreground-tertiary font-display-3">
+              {t('Green points to')}
+            </FieldLabel>
+            <Input
+              type="number"
+              min={0}
+              className={SEARCH_INPUT_CLASS}
+              value={greenPointsToValue}
+              onChange={(e) => setGreenPointsToValue(e.target.value)}
+              onBlur={handleGreenPointBlur}
+              placeholder={t('Max')}
+            />
+          </Field>
+        </div>
+
+        <Field className="w-full">
+          <FieldLabel className="text-foreground-tertiary font-display-3">{t('Status')}</FieldLabel>
+          <Select value={filters.status?.toString() || 'all'} onValueChange={handleStatusChange}>
+            <SelectTrigger className={FILTER_SELECT_CLASS}>
+              <SelectValue placeholder={t('All statuses')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('All statuses')}</SelectItem>
+              {statusItems.map((item) => (
+                <SelectItem key={item.value} value={item.value}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+
+        <Button
+          type="button"
+          variant="outlined-brown"
+          className={RESET_BUTTON_CLASS}
+          onClick={onReset}
+        >
+          <span className="flex flex-row items-center justify-center gap-2">
+            <TbZoomReset size={16} />
+            {t('Reset')}
+          </span>
+        </Button>
+      </div>
+    </aside>
+  );
+});
