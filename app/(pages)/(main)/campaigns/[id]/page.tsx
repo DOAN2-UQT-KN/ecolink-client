@@ -22,6 +22,9 @@ import { useCampaignDetail } from './_hooks/useCampaignDetail';
 import { TbArrowRight } from 'react-icons/tb';
 import { Button } from '@/components/client/shared/Button';
 import { STATUS } from '@/constants/status';
+import { ConfirmPopover } from '@/components/admin/shared/ConfirmPopover';
+import { useMarkDoneCampaign } from '@/apis/campaign/campaignById';
+import { useQueryClient } from '@tanstack/react-query';
 
 function CampaignDetailBody() {
   const { t } = useTranslation('common');
@@ -41,6 +44,25 @@ function CampaignDetailBody() {
   const isApproved = requestStatus === STATUS.APPROVED;
   const isPending = requestStatus === STATUS.PENDING;
   const showJoinCta = !isApproved && !isPending;
+
+  const queryClient = useQueryClient();
+  const { mutate: markDoneMutate, isPending: isMarkingDone } = useMarkDoneCampaign({
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });
+    },
+  });
+
+  const handleMarkDone = () => {
+    return new Promise<void>((resolve, reject) => {
+      markDoneMutate(
+        { id: campaignId },
+        {
+          onSuccess: () => resolve(),
+          onError: () => reject(),
+        },
+      );
+    });
+  };
 
   const breadcrumbs: BreadcrumbItemProps[] = useMemo(
     () => [
@@ -138,6 +160,34 @@ function CampaignDetailBody() {
                 {t('Join')}
               </Button>
             ) : null}
+          </div>
+        )}
+
+        {isCampaignOwner && campaign?.status !== STATUS.COMPLETED && (
+          <div className="flex justify-end">
+            <ConfirmPopover
+              title={t('Mark Campaign as Done')}
+              description={t(
+                'Are you sure you want to mark this campaign as done? This action cannot be undone.',
+              )}
+              onConfirm={handleMarkDone}
+              cancelLabel={t('Cancel')}
+              confirmLabel={t('Mark done')}
+              theme="light"
+              confirmPending={isMarkingDone}
+              trigger={
+                <Button
+                  type="button"
+                  variant="brown"
+                  size="medium"
+                  isLoading={isMarkingDone}
+                  className="!h-[45px]"
+                  disabled={isMarkingDone}
+                >
+                  {t('Mark done')}
+                </Button>
+              }
+            />
           </div>
         )}
         <StatsCards />
