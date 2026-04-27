@@ -1,13 +1,18 @@
 'use client';
 
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { CalendarIcon, Clock } from 'lucide-react';
+import { Image as AntdImage } from 'antd';
+import { toast } from 'sonner';
 import TimePicker from 'react-time-picker';
 import 'react-time-picker/dist/TimePicker.css';
 import 'react-clock/dist/Clock.css';
+import { IoDocumentAttachOutline } from 'react-icons/io5';
+import { BiTrash, BiPlus } from 'react-icons/bi';
+import { FaEye } from 'react-icons/fa';
 import {
   Dialog,
   DialogContent,
@@ -18,8 +23,14 @@ import {
 import { Button } from '@/components/client/shared/Button';
 import { Button as UIButton } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Field, FieldLabel, FieldError } from '@/components/ui/field';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useCreateCampaignTask, useUpdateCampaignTask } from '@/apis/campaign/campaignTask';
 import { ICampaignTask } from '@/apis/campaign/models/campaignTask';
 import RichTextEditor from '@/components/ui/RichTextEditor';
@@ -27,7 +38,11 @@ import { cn } from '@/libs/utils';
 import { Calendar } from '@/components/ui/calendar';
 import SelectListPriority from '@/components/form/SelectListPriority';
 import { PRIORITY } from '@/constants/priority';
+import { STATUS } from '@/constants/status';
 import { parseScheduledTimeRange } from '@/utils/scheduledTimeRange';
+import { compressImage } from '@/libs/compressImage';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { uploadMultipleImages } from '@/app/(pages)/(main)/incidents/create/_services/upload.service';
 
 export interface PopoverCreateUpdateTaskProps {
   open: boolean;
@@ -44,9 +59,73 @@ type TaskFormValues = {
   scheduled_time_from: string;
   scheduled_time_to: string;
   priority: number;
-  result?: string;
+  result_description: string;
+  result_images: (string | Blob)[];
   status?: number;
 };
+
+const ImagePreviewItem = memo(function ImagePreviewItem({
+  image,
+  index,
+  onRemove,
+}: {
+  image: string | Blob;
+  index: number;
+  onRemove: (index: number) => void;
+}) {
+  const [previewUrl, setPreviewUrl] = useState('');
+
+  useEffect(() => {
+    let url = '';
+    if (typeof image === 'string') {
+      url = image;
+    } else {
+      url = URL.createObjectURL(image);
+    }
+    setPreviewUrl(url);
+
+    return () => {
+      if (typeof image !== 'string' && url) {
+        URL.revokeObjectURL(url);
+      }
+    };
+  }, [image]);
+
+  if (!previewUrl) {
+    return (
+      <div className="w-[120px] h-[120px] rounded-xl bg-slate-100 animate-pulse border border-[rgba(136,122,71,0.5)]" />
+    );
+  }
+
+  return (
+    <div className="relative w-[120px] h-[120px] rounded-xl group shadow-sm ring-1 ring-black/5">
+      <AntdImage
+        src={previewUrl}
+        alt={`Uploaded ${index}`}
+        width={120}
+        height={120}
+        className="object-cover transition-transform duration-300 w-full h-full rounded-xl"
+        preview={{
+          cover: (
+            <div className="absolute inset-0 bg-black/20 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <FaEye size={24} />
+            </div>
+          ),
+        }}
+      />
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onRemove(index);
+        }}
+        className="absolute -top-2 -right-2 p-1.5 text-red-500 bg-red-100 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-md hover:bg-red-200 cursor-pointer z-10"
+      >
+        <BiTrash size={16} />
+      </button>
+    </div>
+  );
+});
 
 const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
   task,
@@ -74,7 +153,8 @@ const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
       scheduled_time_from: initialTimeRange.scheduled_time_from,
       scheduled_time_to: initialTimeRange.scheduled_time_to,
       priority: task?.priority ?? PRIORITY.MEDIUM,
-      //   result: task?.result || '',
+      result_description: task?.result?.description || '',
+      result_images: task?.result?.file || [],
       status: task?.status ?? 1,
     };
   }, [task]);
@@ -104,14 +184,74 @@ const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
   });
 
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [compressingResultImages, setCompressingResultImages] = useState(false);
+  const [uploadingResultImages, setUploadingResultImages] = useState(false);
+  const resultImageInputRef = useRef<HTMLInputElement>(null);
 
-  const busy = isCreating || isUpdating;
+  const busy = isCreating || isUpdating || uploadingResultImages;
+  const resultImages = form.watch('result_images') || [];
 
   const inputClassName = useMemo(
     () =>
       'border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50',
     [],
   );
+  const statusOptions = useMemo(
+    () => [
+      { value: STATUS.PENDING, label: t('Pending') },
+      { value: STATUS.IN_PROGRESS, label: t('In progress') },
+      { value: STATUS.COMPLETED, label: t('Completed') },
+    ],
+    [t],
+  );
+
+  const handleResultImagesChange = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+
+      const remainingSlots = 10 - resultImages.length;
+      if (remainingSlots <= 0) {
+        toast.error(t('Maximum 10 images allowed.'));
+        return;
+      }
+
+      const filesToProcess = Array.from(files).slice(0, remainingSlots);
+      if (files.length > remainingSlots) {
+        toast.warning(
+          t('Only {{count}} images were added because of the limit.', {
+            count: remainingSlots,
+          }),
+        );
+      }
+
+      setCompressingResultImages(true);
+
+      try {
+        const newImages = await Promise.all(filesToProcess.map((file) => compressImage(file)));
+        form.setValue('result_images', [...resultImages, ...newImages], { shouldDirty: true });
+      } catch (error) {
+        console.error('Error compressing files:', error);
+        toast.error(t('Failed to compress some images.'));
+      } finally {
+        setCompressingResultImages(false);
+        e.target.value = '';
+      }
+    },
+    [form, resultImages, t],
+  );
+
+  const removeResultImage = useCallback(
+    (index: number) => {
+      const updatedImages = resultImages.filter((_, i) => i !== index);
+      form.setValue('result_images', updatedImages, { shouldDirty: true });
+    },
+    [form, resultImages],
+  );
+
+  const clearAllResultImages = useCallback(() => {
+    form.setValue('result_images', [], { shouldDirty: true });
+  }, [form]);
 
   const onValidSubmit = useCallback(
     async (data: TaskFormValues) => {
@@ -128,6 +268,19 @@ const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
         });
       } else {
         if (!task) return;
+
+        let resultImageUrls: string[] = [];
+        try {
+          setUploadingResultImages(true);
+          resultImageUrls = await uploadMultipleImages(data.result_images);
+        } catch (error) {
+          console.error('Error uploading result images:', error);
+          toast.error(t('Failed to upload some images.'));
+          return;
+        } finally {
+          setUploadingResultImages(false);
+        }
+
         await updateMutate({
           id: task.id,
           title: data.title.trim(),
@@ -135,14 +288,16 @@ const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
           scheduled_date: new Date(data.scheduled_date).toISOString(),
           scheduled_time: scheduleTimeRange,
           priority: Number(data.priority),
-          result: data.result?.trim() || '',
+          result: {
+            description: data.result_description?.trim() || '',
+            file: resultImageUrls,
+          },
           status: Number(data.status),
         });
       }
     },
-    [isCreate, createMutate, updateMutate, campaignId, task],
+    [isCreate, createMutate, updateMutate, campaignId, t, task],
   );
-
   return (
     <DialogContent
       className="sm:max-w-xl max-h-[min(90vh,720px)] overflow-y-auto gap-4 scrollbar-hide"
@@ -361,25 +516,142 @@ const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
                 <FieldLabel className="text-foreground-tertiary font-display-3">
                   {t('Result')}
                 </FieldLabel>
-                <Textarea
-                  {...register('result')}
-                  placeholder={t('Enter result...')}
-                  className={inputClassName}
-                  disabled={busy}
-                />
-                <FieldError errors={[errors.result]} />
+
+                <div className="flex flex-col gap-4">
+                  <div>
+                    <span className="text-sm text-foreground-tertiary">{t('Description')}</span>
+                    <RichTextEditor
+                      value={form.watch('result_description')}
+                      onChange={(value) =>
+                        form.setValue('result_description', value || '', { shouldDirty: true })
+                      }
+                      placeholder={t('Enter result description...')}
+                      className={cn(inputClassName, 'min-h-[180px] mt-2')}
+                    />
+                    <FieldError errors={[errors.result_description]} />
+                  </div>
+
+                  <div>
+                    <span className="text-sm text-foreground-tertiary">{t('Upload Images')}</span>
+                    <div className="mt-2 ">
+                      <input
+                        type="file"
+                        ref={resultImageInputRef}
+                        onChange={handleResultImagesChange}
+                        multiple
+                        accept="image/*"
+                        className="hidden"
+                        disabled={busy || compressingResultImages}
+                      />
+
+                      {resultImages.length === 0 ? (
+                        <div
+                          className="p-6 flex flex-col gap-4 items-center justify-center border border-dashed border-button-accent-hover rounded-[16px] cursor-pointer hover:bg-button-accent/5 transition-colors"
+                          onClick={() => resultImageInputRef.current?.click()}
+                        >
+                          <IoDocumentAttachOutline size={32} className="text-button-accent" />
+                          <div className="flex flex-col gap-1 items-center text-center">
+                            <span className="font-display-3 font-semibold text-button-accent">
+                              {t('Drag and drop your images')}
+                            </span>
+                            <span className="font-display-2 text-button-accent-hover">
+                              {t('JPEG, PNG, and WEBP formats, up to 50MB')}
+                            </span>
+                          </div>
+                          <Button
+                            variant="outlined-brown"
+                            type="button"
+                            isDisabled={busy || compressingResultImages}
+                          >
+                            {compressingResultImages ? t('Compressing...') : t('Select files')}
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-4">
+                          <div className="flex items-center justify-between">
+                            <span className="font-display-3 font-semibold text-button-accent">
+                              {t('Uploaded Images')}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={clearAllResultImages}
+                              className="text-xs font-semibold text-red-500 hover:text-red-600 transition-colors bg-red-50 px-2.5 py-1 rounded-full border border-red-100"
+                              disabled={busy}
+                            >
+                              {t('Clear all')}
+                            </button>
+                          </div>
+
+                          <div className="flex flex-wrap gap-3">
+                            <AntdImage.PreviewGroup>
+                              {resultImages.map((image, index) => (
+                                <ImagePreviewItem
+                                  key={`${typeof image === 'string' ? image : index}`}
+                                  image={image}
+                                  index={index}
+                                  onRemove={removeResultImage}
+                                />
+                              ))}
+                            </AntdImage.PreviewGroup>
+
+                            {resultImages.length < 10 && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    type="button"
+                                    onClick={() => resultImageInputRef.current?.click()}
+                                    className="w-[120px] h-[120px] border-2 border-dashed border-button-accent-hover rounded-[15px] flex items-center justify-center cursor-pointer hover:bg-button-accent/5 transition-colors group"
+                                    disabled={busy || compressingResultImages}
+                                  >
+                                    <BiPlus
+                                      size={32}
+                                      className="text-button-accent group-hover:scale-110 transition-transform"
+                                    />
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>{t('Add more images')}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            )}
+                          </div>
+
+                          <span className="text-sm text-button-accent-hover font-medium">
+                            {resultImages.length}/10
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </Field>
 
               <Field>
                 <FieldLabel className="text-foreground-tertiary font-display-3">
                   {t('Status')}
                 </FieldLabel>
-                <Input
-                  type="number"
-                  {...register('status', { valueAsNumber: true })}
-                  placeholder={t('Enter status...')}
-                  className={inputClassName}
-                  disabled={busy}
+                <Controller
+                  control={form.control}
+                  name="status"
+                  rules={{ required: t('Status is required') }}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value != null ? String(field.value) : undefined}
+                      onValueChange={(value) => field.onChange(Number(value))}
+                      disabled={busy}
+                    >
+                      <SelectTrigger className={cn('w-full', inputClassName)}>
+                        <SelectValue placeholder={t('Select status')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {statusOptions.map((option) => (
+                          <SelectItem key={option.value} value={String(option.value)}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 />
                 <FieldError errors={[errors.status]} />
               </Field>

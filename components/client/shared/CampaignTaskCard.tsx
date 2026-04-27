@@ -12,9 +12,11 @@ import {
   TbChevronDown,
   TbChevronUp,
   TbPencil,
+  TbUrgent,
 } from 'react-icons/tb';
 import RichTextContent from '@/components/ui/RichTextContent';
 import { parseScheduledTimeRange } from '@/utils/scheduledTimeRange';
+import ChangeStatus from '@/components/ui/ChangeStatus';
 
 export interface CampaignTaskCardProps {
   task: ICampaignTask;
@@ -30,7 +32,7 @@ export function CampaignTaskCard({ task, onEdit, isOwner }: CampaignTaskCardProp
   const resultImages = task.result?.file ?? [];
 
   return (
-    <div className="rounded-xl border border-[rgba(136,122,71,0.25)] bg-background-primary p-4 transition-all shadow-sm">
+    <div className="rounded-xl border border-[rgba(136,122,71,0.25)] bg-red-500 p-4 transition-all shadow-sm">
       <div
         className="flex items-center justify-between cursor-pointer"
         onClick={() => setIsOpen(!isOpen)}
@@ -44,7 +46,7 @@ export function CampaignTaskCard({ task, onEdit, isOwner }: CampaignTaskCardProp
               <TbCalendarClock />
               {formattedDate(task.scheduled_date)}
             </div>
-            <ChangePriority type={task?.priority ?? PRIORITY.MEDIUM} enabledDropdown={false} />
+            <ChangeStatus type={task.status || 0} enabledDropdown={false} />
           </div>
         </div>
 
@@ -75,18 +77,20 @@ export function CampaignTaskCard({ task, onEdit, isOwner }: CampaignTaskCardProp
       {isOpen && (
         <div className="mt-4 pt-4 border-t border-[rgba(136,122,71,0.25)] flex flex-col gap-4 text-sm text-foreground-secondary bg-background-primary/80">
           <div className="flex flex-row gap-1 w-full">
-            <div className="flex flex-col gap-1 w-2/3  border-r border-[rgba(136,122,71,0.25)]">
-              <div className="flex items-center gap-2 font-semibold block text-foreground-tetiary uppercase font-display-1">
-                <TbAlignLeft2 className="size-4 shrink-0 text-button-accent" />
-                {t('Description')}
+            <div className="flex flex-col gap-5 w-2/3  border-r border-[rgba(136,122,71,0.25)] pr-5">
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2 font-semibold block text-foreground-tetiary uppercase font-display-1">
+                  <TbAlignLeft2 className="size-4 shrink-0 text-button-accent" />
+                  {t('Description')}
+                </div>
+                <RichTextContent
+                  value={task.description || ''}
+                  className="text-foreground whitespace-pre-wrap break-words !font-display-4"
+                />
               </div>
-              <RichTextContent
-                value={task.description || ''}
-                className="text-foreground whitespace-pre-wrap break-words !font-display-4"
-              />
 
               {(resultDescription || resultImages.length > 0) && (
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-2 font-semibold block text-foreground-tetiary uppercase font-display-1">
                     <TbChecklist className="size-4 shrink-0 text-button-accent" />
                     {t('Result')}
@@ -105,14 +109,14 @@ export function CampaignTaskCard({ task, onEdit, isOwner }: CampaignTaskCardProp
                         {resultImages.map((img, idx) => (
                           <div
                             key={img || idx}
-                            className="relative aspect-[4/3] overflow-hidden rounded-md bg-muted group cursor-pointer"
+                            className="relative aspect-[4/3] overflow-hidden  bg-muted group cursor-pointer"
                           >
                             <AntdImage
                               src={img}
                               alt={task.title || ''}
-                              className="object-cover transition-transform duration-300 group-hover:scale-105 w-full h-full"
-                              width="100%"
-                              height="100%"
+                              className="object-cover transition-transform duration-300 group-hover:scale-105 w-[220px] h-[220px]"
+                              width="220px"
+                              height="220px"
                             />
                           </div>
                         ))}
@@ -123,7 +127,7 @@ export function CampaignTaskCard({ task, onEdit, isOwner }: CampaignTaskCardProp
               )}
             </div>
 
-            <div className="flex flex-row gap-1 w-1/3 pl-5">
+            <div className="flex flex-col gap-5 w-1/3 pl-5">
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-2 font-semibold block text-foreground-tetiary uppercase font-display-1">
                   <TbCalendarClock className="size-4 shrink-0 text-button-accent " />
@@ -133,6 +137,15 @@ export function CampaignTaskCard({ task, onEdit, isOwner }: CampaignTaskCardProp
                   {scheduled_time_from}
                   {scheduled_time_to ? ` - ${scheduled_time_to}` : ''}
                 </p>
+              </div>
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2 font-semibold block text-foreground-tetiary uppercase font-display-1">
+                  <TbUrgent className="size-4 shrink-0 text-button-accent" />
+                  {t('Priority')}
+                </div>
+                <div>
+                  <ChangePriority type={task.priority || PRIORITY.MEDIUM} enabledDropdown={false} />
+                </div>
               </div>
             </div>
           </div>

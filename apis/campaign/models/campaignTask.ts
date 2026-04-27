@@ -42,7 +42,10 @@ export interface IUpdateCampaignTaskRequest {
   scheduled_time: string;
   status: number;
   priority: number;
-  result: string;
+  result: {
+    description: string;
+    file: string[];
+  };
 }
 
 export interface IUpdateCampaignTaskResponse extends IBaseResponse<{ task: ICampaignTask }> {}
