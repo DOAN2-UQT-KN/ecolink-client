@@ -10,6 +10,9 @@ export interface ICampaignTask {
   updated_at: string;
   campaign_id: string;
   scheduled_time: string;
+  priority: number;
+  result: string;
+  title?: string;
 }
 
 export interface IGetCampaignTaskRequest {
@@ -22,6 +25,7 @@ export interface ICreateCampaignTaskRequest {
   title: string;
   description: string;
   scheduled_time: string;
+  priority: number;
 }
 
 export interface ICreateCampaignTaskResponse extends IBaseResponse<{ task: ICampaignTask }> {}
@@ -32,6 +36,8 @@ export interface IUpdateCampaignTaskRequest {
   description: string;
   scheduled_time: string;
   status: number;
+  priority: number;
+  result: string;
 }
 
 export interface IUpdateCampaignTaskResponse extends IBaseResponse<{ task: ICampaignTask }> {}
