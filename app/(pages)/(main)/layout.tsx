@@ -1,6 +1,6 @@
 import Header from '@/components/client/layout/Header';
 import Footer from '@/components/client/layout/Footer';
-import ClickSpark from '@/components/ClickSpark';
+import ClickSpark from '@/components/ui/ClickSpark';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
