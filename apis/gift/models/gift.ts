@@ -36,7 +36,8 @@ export type IGetGiftsResponse = IBaseResponse<{
 
 export interface ICreateGiftRequest {
   name: string;
-  mediaId: string;
+  // mediaId: string;
+  imageUrl: string;
   description: string;
   greenPoints: number;
   stockRemaining?: number | null;
@@ -47,7 +48,8 @@ export type ICreateGiftResponse = IBaseResponse<{ gift: IGift }>;
 
 export interface IUpdateGiftRequest {
   name?: string;
-  mediaId?: string;
+  // mediaId?: string;
+  imageUrl?: string;
   description?: string;
   greenPoints?: number;
   stockRemaining?: number | null;

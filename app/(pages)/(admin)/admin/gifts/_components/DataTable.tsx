@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { Image } from "antd";
 
 import type { IGift } from "@/apis/gift/models/gift";
 import { useAdminLayout } from "@/app/(pages)/(admin)/_context/AdminLayoutContext";
@@ -16,14 +17,9 @@ const COLUMN_KEYS = {
   POINTS: "points",
   STOCK: "stock",
   ACTIVE: "active",
-  MEDIA: "media",
+  IMAGE: "image",
   ACTION: "action",
 } as const;
-
-function shortId(id: string) {
-  if (id.length <= 14) return id;
-  return `${id.slice(0, 6)}…${id.slice(-4)}`;
-}
 
 export function DataTable({ onEdit }: { onEdit: (gift: IGift) => void }) {
   const { t } = useTranslation();
@@ -103,13 +99,19 @@ export function DataTable({ onEdit }: { onEdit: (gift: IGift) => void }) {
         ),
       },
       {
-        key: COLUMN_KEYS.MEDIA,
-        title: t("Media ID"),
-        className: "w-[140px]",
+        key: COLUMN_KEYS.IMAGE,
+        title: t("Image"),
+        className: "w-[120px]",
         render: (_, record) => (
-          <span className="font-mono text-xs" title={record.mediaId}>
-            {shortId(record.mediaId)}
-          </span>
+          <Image
+            src={record.mediaId.startsWith("http") ? record.mediaId : "/banner-default.jpg"}
+            alt={record.name}
+            width={48}
+            height={48}
+            className="rounded-md object-cover"
+            fallback="/banner-default.jpg"
+            preview={false}
+          />
         ),
       },
       {
