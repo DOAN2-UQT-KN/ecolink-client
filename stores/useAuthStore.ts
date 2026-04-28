@@ -109,6 +109,11 @@ const useAuthStore = create<AuthState>()(
                     ip,
                 }),
                 onRehydrateStorage: () => (state) => {
+                    // `is_authenticated` is not persisted; restore it when we still have a session.
+                    if (state?.accessToken && state?.user) {
+                        state.setIsAuthenticated(true)
+                        state.setIsVerified(true)
+                    }
                     state?.setHasHydrated(true)
                 },
             }
