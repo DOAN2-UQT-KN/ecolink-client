@@ -1,9 +1,18 @@
 'use client';
 
 import { memo, useCallback, useMemo } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, History } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import type { IPointTransaction } from '@/apis/points/models/point';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty';
+import { Skeleton } from '@/components/ui/skeleton';
 import usePointsContext from '../_hooks/usePointsContext';
 import { formatPoints } from '../_services/points.service';
 
@@ -24,8 +33,11 @@ function formatTransactionDateTime(value?: string): string {
 }
 
 function TransactionCard({ transaction }: { transaction: IPointTransaction }) {
+  const { t } = useTranslation();
   const campaignTitle = transaction.resource?.title?.trim();
-  const message = campaignTitle ? `${campaignTitle} đã hoàn thành` : 'Hoạt động đã hoàn thành';
+  const message = campaignTitle
+    ? t('Campaign completed message', { title: campaignTitle })
+    : t('Activity completed');
   const timestamp = formatTransactionDateTime(transaction.created_at);
   const points = transaction.points ?? 0;
   const pointsPrefix = points > 0 ? '+' : points < 0 ? '-' : '';
@@ -33,7 +45,7 @@ function TransactionCard({ transaction }: { transaction: IPointTransaction }) {
     points > 0 ? 'text-emerald-600' : points < 0 ? 'text-rose-600' : 'text-foreground-secondary';
 
   return (
-    <article className="flex items-center justify-between rounded-xl border border-[rgba(136,122,71,0.5)]  bg-white/80 p-4 sm:p-5">
+    <article className="flex items-center justify-between rounded-xl border border-[rgba(136,122,71,0.5)]  bg-white p-4 sm:p-5 shadow-sm">
       <div className="flex flex-col gap-1">
         <p className="text-sm font-semibold text-foreground-primary sm:text-base">{message}</p>
         {timestamp && <p className="text-xs text-foreground-secondary sm:text-sm">{timestamp}</p>}
@@ -47,7 +59,20 @@ function TransactionCard({ transaction }: { transaction: IPointTransaction }) {
   );
 }
 
+function TransactionCardSkeleton() {
+  return (
+    <article className="flex items-center justify-between rounded-xl border border-[rgba(136,122,71,0.5)] bg-white p-4 sm:p-5 shadow-sm">
+      <div className="flex flex-1 flex-col gap-2">
+        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-3 w-1/2" />
+      </div>
+      <Skeleton className="h-6 w-14" />
+    </article>
+  );
+}
+
 const TransactionHistory = memo(function TransactionHistory() {
+  const { t } = useTranslation();
   const { transactions, isLoading, pagination, setPagination } = usePointsContext();
 
   const totalPages = useMemo(
@@ -63,13 +88,27 @@ const TransactionHistory = memo(function TransactionHistory() {
   );
 
   return (
-    <section className="rounded-xl border border-[rgba(136,122,71,0.35)] bg-background-primary/10 p-5 sm:p-6">
-      <h2 className="text-lg font-semibold">Transaction History</h2>
+    <section className="rounded-xl border border-[rgba(136,122,71,0.35)] bg-white p-5 sm:p-6">
+      <h2 className="text-lg font-semibold">{t('Transaction history')}</h2>
 
       {isLoading ? (
-        <div className="mt-4 text-sm text-foreground-secondary">Loading transactions...</div>
+        <div className="mt-4 space-y-3">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <TransactionCardSkeleton key={`transaction-skeleton-${index}`} />
+          ))}
+        </div>
       ) : transactions.length === 0 ? (
-        <div className="mt-4 text-sm text-foreground-secondary">No transactions found.</div>
+        <div className="mt-4">
+          <Empty className="rounded-xl border border-border/50 bg-background/40 p-8">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <History className="h-5 w-5 text-muted-foreground" />
+              </EmptyMedia>
+              <EmptyTitle>{t('No transactions found.')}</EmptyTitle>
+              <EmptyDescription>{t('No transactions yet for this account.')}</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        </div>
       ) : (
         <div className="mt-4 space-y-3">
           {transactions.map((transaction, index) => (
@@ -90,11 +129,11 @@ const TransactionHistory = memo(function TransactionHistory() {
             className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40"
           >
             <ChevronLeft size={16} />
-            Previous
+            {t('Previous')}
           </button>
 
           <p className="text-sm text-foreground-secondary">
-            Page {pagination.current} of {totalPages}
+            {t('Page')} {pagination.current} {t('of')} {totalPages}
           </p>
 
           <button
@@ -103,7 +142,7 @@ const TransactionHistory = memo(function TransactionHistory() {
             disabled={pagination.current >= totalPages}
             className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40"
           >
-            Next
+            {t('Next')}
             <ChevronRight size={16} />
           </button>
         </div>

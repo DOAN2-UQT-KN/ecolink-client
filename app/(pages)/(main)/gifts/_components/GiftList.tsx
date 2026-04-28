@@ -62,8 +62,8 @@ export const GiftList = memo(function GiftList() {
             <EmptyMedia variant="icon">
               <Gift className="h-12 w-12 text-muted-foreground" />
             </EmptyMedia>
-            <EmptyTitle>{t('No rewards found')}</EmptyTitle>
-            <EmptyDescription>{t('Try changing your filter options.')}</EmptyDescription>
+            <EmptyTitle>{t('No gifts found')}</EmptyTitle>
+            <EmptyDescription>{t('No gifts match the current filters.')}</EmptyDescription>
           </EmptyHeader>
         </Empty>
       </div>

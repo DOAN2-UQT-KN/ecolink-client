@@ -9,11 +9,7 @@ type PointTransactionRequestWithType = IGetPointTransactionRequest & {
 
 export const POINTS_DEFAULT_PAGE_SIZE = 10;
 
-export const POINTS_FILTER_TABS: Array<{ label: string; value: PointsFilterTab }> = [
-  { label: 'All Transaction', value: 'all' },
-  { label: 'Earned', value: 'earned' },
-  { label: 'Spent', value: 'spent' },
-];
+export const POINTS_FILTER_TABS: PointsFilterTab[] = ['all', 'earned', 'spent'];
 
 export function buildTransactionRequestByTab(tab: PointsFilterTab): PointTransactionRequestWithType {
   if (tab === 'all') return {};

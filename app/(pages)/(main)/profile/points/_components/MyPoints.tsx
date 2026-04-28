@@ -27,7 +27,7 @@ const MyPoints = memo(function MyPoints() {
         </div>
         <div className="rounded-lg border border-[rgba(136,122,71,0.5)] bg-background p-4">
           <div className="font-display-2 uppercase tracking-wide text-foreground-secondary flex items-center gap-2">
-            <TbLeaf className="inline-block size-8 text-emerald-600" /> {t('Green Points')}
+            <TbLeaf className="inline-block size-8 text-emerald-600" /> {t('Green points')}
           </div>
           <div className="mt-2 font-display-4 font-semibold tabular-nums">
             {isLoading ? '...' : formatPoints(points?.green_points)}

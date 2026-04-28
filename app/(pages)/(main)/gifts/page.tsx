@@ -23,7 +23,7 @@ const GiftsPageContent = memo(function GiftsPageContent() {
   const breadcrumbs: BreadcrumbItemProps[] = useMemo(
     () => [
       { label: t("Home"), path: "/", type: "link" },
-      { label: t("Rewards"), path: "/gifts", type: "page" },
+      { label: t("Gifts"), path: "/gifts", type: "page" },
     ],
     [t],
   );
