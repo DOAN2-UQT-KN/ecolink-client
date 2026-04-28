@@ -2,12 +2,10 @@
 
 import { memo, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { TbArrowRight, TbCalendarClock } from 'react-icons/tb';
+import { TbCalendarClock } from 'react-icons/tb';
 
-import { Button } from '@/components/client/shared/Button';
 import { Progress } from '@/components/ui/progress';
 import { RichTextContent } from '@/components/ui/RichTextContent';
-import TagStatus from '@/components/ui/TagStatus';
 import { cn } from '@/libs/utils';
 
 import { useCampaignDetail } from '../_hooks/useCampaignDetail';

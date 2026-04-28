@@ -7,11 +7,15 @@ import { PiImagesSquareFill } from "react-icons/pi";
 import { useTranslation } from "react-i18next";
 import { RichTextContent } from "@/components/ui/RichTextContent";
 import { cn } from "@/libs/utils";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface ReportContentProps {
   title: string | null;
   address: string | null;
   description: string | null;
+  /** AI recommendation in markdown. */
+  aiRecommendation?: string | null;
   images?: string[];
   isExpanded?: boolean;
   /** Fired when Ant Design image preview opens or closes (true = preview visible). */
@@ -22,6 +26,7 @@ export const ReportContent = memo(function ReportContent({
   title,
   address,
   description,
+  aiRecommendation,
   images = [],
   isExpanded = false,
   onPreviewOpenChange,
@@ -229,6 +234,20 @@ export const ReportContent = memo(function ReportContent({
         showMoreLabel={t("Show more")}
         showLessLabel={t("Show less")}
       />
+
+      {isExpanded && aiRecommendation ? (
+        <section className="rounded-lg border border-border/60 bg-white/70 p-4">
+          <h3 className="font-display-3 font-semibold text-black mb-2">
+            AI recommendation
+          </h3>
+          <div className="prose prose-sm max-w-none text-foreground-secondary">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {aiRecommendation}
+            </ReactMarkdown>
+          </div>
+        </section>
+      ) : null}
+
       {renderImageGrid()}
     </div>
   );

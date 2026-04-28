@@ -32,6 +32,8 @@ export interface IIncident {
   longitude: number | null;
   status: number | null;
   ai_verified: boolean;
+  /** AI recommendation in markdown (nullable until analysis completes). */
+  ai_recommendation?: string | null;
   size?: string;
   condition?: string;
   created_at: string;
