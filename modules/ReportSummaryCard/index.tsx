@@ -8,8 +8,8 @@ import {
   PiSealWarningLight,
   PiSkullLight,
   PiTrash,
-} from 'react-icons/pi';
-import { TbStarFilled } from 'react-icons/tb';
+} from "react-icons/pi";
+import { TbStarFilled } from "react-icons/tb";
 
 import { IIncident } from '@/apis/incident/models/incident';
 import ReportDetailCard from '@/modules/ReportDetailCard/ReportDetailCard';
