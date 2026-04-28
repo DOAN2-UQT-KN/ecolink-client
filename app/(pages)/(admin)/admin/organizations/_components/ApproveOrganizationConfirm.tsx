@@ -3,12 +3,10 @@
 import { memo, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  rejectOrganizationMock,
   useVerifyOrganization,
 } from "@/apis/organization/organizationById";
 import { ConfirmPopover } from "@/components/admin/shared/ConfirmPopover";
 import { cn } from "@/libs/utils";
-import showMessage, { MessageLevel, MessageType } from "@/utils/showMessage";
 import { TbCheckbox } from "react-icons/tb";
 import { STATUS } from "@/constants/status";
 import { queryClient } from "@/libs/queryClient";

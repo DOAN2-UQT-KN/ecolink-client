@@ -1,4 +1,3 @@
-import { IUser } from '@/apis/auth/models/user';
 import { IPaginationResponse } from '@/types/PaginationResponse';
 
 export interface IGetCampaignManagerRequest {

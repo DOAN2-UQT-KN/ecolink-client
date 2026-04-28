@@ -66,6 +66,7 @@ const ReportDetailCard = memo(function ReportDetailCard({
             title={incident.title}
             address={incident.detail_address || null}
             description={incident.description}
+            aiRecommendation={incident.ai_recommendation ?? null}
             images={images}
             isExpanded={isExpanded}
             onPreviewOpenChange={handlePreviewOpenChange}
