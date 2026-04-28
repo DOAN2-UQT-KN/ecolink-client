@@ -18,8 +18,15 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Field, FieldLabel } from '@/components/ui/field';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
 import { useAdminLayout } from '@/app/(pages)/(admin)/_context/AdminLayoutContext';
 import { SingleImageFileField } from '@/components/client/shared/SingleImageFileField';
 import { uploadToCloudinary } from '@/app/(pages)/(main)/incidents/create/_services/upload.service';
@@ -135,16 +142,19 @@ export function GiftFormDialog({ mode, gift, open, onOpenChange }: GiftFormDialo
 
   const { register, watch, setValue } = form;
   const unlimitedStock = watch('unlimitedStock');
-  const isActive = watch('isActive');
+  // const isActive = watch('isActive');
   const giftImage = watch('giftImage');
   const hasNewImage = isBlobLike(giftImage) || giftImage?.constructor?.name === 'File';
+  const isEditMode = mode === 'edit' && Boolean(gift);
+  const isInactiveGift = isEditMode && gift?.isActive === false;
+  const formDisabled = busy || isInactiveGift;
   const imageOk = mode === 'edit' && gift ? true : hasNewImage;
 
   const canSubmit =
     form.watch('name').trim().length > 0 &&
     form.watch('description').trim().length > 0 &&
     imageOk &&
-    !busy;
+    !formDisabled;
 
   return (
     <Dialog
@@ -181,7 +191,7 @@ export function GiftFormDialog({ mode, gift, open, onOpenChange }: GiftFormDialo
               <Input
                 {...register('name', { required: true })}
                 className="h-10 !border !border-zinc-300"
-                disabled={busy}
+                disabled={formDisabled}
               />
             </Field>
 
@@ -189,7 +199,7 @@ export function GiftFormDialog({ mode, gift, open, onOpenChange }: GiftFormDialo
               control={form.control}
               name="giftImage"
               label={t('Gift image')}
-              disabled={busy}
+              disabled={formDisabled}
               isDark={isDark}
               helperText={
                 mode === 'edit' && gift && !hasNewImage
@@ -204,7 +214,7 @@ export function GiftFormDialog({ mode, gift, open, onOpenChange }: GiftFormDialo
                 {...register('description', { required: true })}
                 rows={4}
                 className={cn(isDark && 'border-zinc-700 bg-zinc-800 text-zinc-100')}
-                disabled={busy}
+                disabled={formDisabled}
               />
             </Field>
 
@@ -215,22 +225,28 @@ export function GiftFormDialog({ mode, gift, open, onOpenChange }: GiftFormDialo
                 min={0}
                 {...register('greenPoints')}
                 className="h-10 !border !border-zinc-300"
-                disabled={busy}
+                disabled={formDisabled}
               />
             </Field>
 
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="gift-unlimited-stock"
-                checked={unlimitedStock}
-                onCheckedChange={(v) => setValue('unlimitedStock', v === true)}
-                disabled={busy}
-                className=""
-              />
-              <label htmlFor="gift-unlimited-stock" className="text-sm">
-                {t('Unlimited stock')}
-              </label>
-            </div>
+            <Field>
+              <FieldLabel>{t('Stock type')}</FieldLabel>
+              <RadioGroup
+                value={unlimitedStock ? 'unlimited' : 'limited'}
+                onValueChange={(value) => setValue('unlimitedStock', value === 'unlimited')}
+                disabled={formDisabled}
+                className="flex flex-col gap-2"
+              >
+                <label className="flex items-center gap-2 text-sm">
+                  <RadioGroupItem value="unlimited" />
+                  {t('Unlimited')}
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <RadioGroupItem value="limited" />
+                  {t('Limited')}
+                </label>
+              </RadioGroup>
+            </Field>
 
             {!unlimitedStock ? (
               <Field>
@@ -240,22 +256,30 @@ export function GiftFormDialog({ mode, gift, open, onOpenChange }: GiftFormDialo
                   min={0}
                   {...register('stockRemaining')}
                   className="h-10 !border !border-zinc-300"
-                  disabled={busy}
+                  disabled={formDisabled}
                 />
               </Field>
             ) : null}
 
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="gift-active"
-                checked={isActive}
-                onCheckedChange={(v) => setValue('isActive', v === true)}
-                disabled={busy}
-              />
-              <label htmlFor="gift-active" className="text-sm">
-                {t('Active')}
-              </label>
-            </div>
+            {isEditMode ? (
+              <Field>
+                <FieldLabel>{t('Status')}</FieldLabel>
+                <Select
+                  // value={gift?.isActive ? 'active' : 'inactive'}
+                  value={form.watch('isActive') ? 'active' : 'inactive'}
+                  onValueChange={(value) => setValue('isActive', value === 'active')}
+                  disabled={formDisabled}
+                >
+                  <SelectTrigger className="h-10 !border !border-zinc-300">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">{t('Active')}</SelectItem>
+                    <SelectItem value="inactive">{t('Inactive')}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </Field>
+            ) : null}
 
             <DialogFooter className="gap-2 sm:gap-3">
               <Button

@@ -2,6 +2,8 @@ import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Image as AntdImage } from "antd";
+import Cropper, { type Area } from "react-easy-crop";
+import "react-easy-crop/react-easy-crop.css";
 import { BiTrash } from "react-icons/bi";
 import { FaEye } from "react-icons/fa";
 import { IoDocumentAttachOutline } from "react-icons/io5";
@@ -9,6 +11,14 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/client/shared/Button";
 import { compressImage } from "@/libs/compressImage";
+import { getCroppedImageBlob } from "@/libs/getCroppedImage";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 import { CampaignFormValues } from "../_services/campaign.service";
 
@@ -19,6 +29,11 @@ const UploadBanner = memo(function UploadBanner() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [compressing, setCompressing] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string>("");
+  const [cropOpen, setCropOpen] = useState(false);
+  const [cropSrc, setCropSrc] = useState("");
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
 
   useEffect(() => {
     if (!banner) {
@@ -37,31 +52,75 @@ const UploadBanner = memo(function UploadBanner() {
     return () => URL.revokeObjectURL(url);
   }, [banner]);
 
-  const handleFileChange = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
+  const revokeCropSrc = useCallback(() => {
+    setCropSrc((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return "";
+    });
+  }, []);
 
-      setCompressing(true);
-      try {
-        const compressedImage = await compressImage(file);
-        setValue("banner", compressedImage, { shouldDirty: true });
-      } catch (error) {
-        console.error("Error compressing banner:", error);
-        toast.error(t("Failed to compress image."));
-      } finally {
-        setCompressing(false);
-        if (fileInputRef.current) {
-          fileInputRef.current.value = "";
-        }
+  const resetCropState = useCallback(() => {
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
+    setCroppedAreaPixels(null);
+  }, []);
+
+  const onCropDialogOpenChange = useCallback(
+    (open: boolean) => {
+      if (!open) {
+        setCropOpen(false);
+        revokeCropSrc();
+        resetCropState();
       }
     },
-    [setValue, t],
+    [resetCropState, revokeCropSrc],
+  );
+
+  const onCropComplete = useCallback(
+    (_croppedArea: Area, croppedPixels: Area) => {
+      setCroppedAreaPixels(croppedPixels);
+    },
+    [],
+  );
+
+  const handleFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      revokeCropSrc();
+      resetCropState();
+      const url = URL.createObjectURL(file);
+      setCropSrc(url);
+      setCropOpen(true);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    },
+    [resetCropState, revokeCropSrc],
   );
 
   const removeBanner = useCallback(() => {
     setValue("banner", undefined, { shouldDirty: true });
   }, [setValue]);
+
+  const applyCroppedImage = useCallback(async () => {
+    if (!cropSrc || !croppedAreaPixels) {
+      toast.error(t("Failed to crop image."));
+      return;
+    }
+    setCompressing(true);
+    try {
+      const raw = await getCroppedImageBlob(cropSrc, croppedAreaPixels);
+      const compressedImage = await compressImage(raw);
+      setValue("banner", compressedImage, { shouldDirty: true });
+      onCropDialogOpenChange(false);
+    } catch (error) {
+      console.error("Error processing banner:", error);
+      toast.error(t("Failed to compress image."));
+    } finally {
+      setCompressing(false);
+    }
+  }, [cropSrc, croppedAreaPixels, onCropDialogOpenChange, setValue, t]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -126,6 +185,69 @@ const UploadBanner = memo(function UploadBanner() {
           </div>
         </div>
       )}
+      <Dialog open={cropOpen} onOpenChange={onCropDialogOpenChange}>
+        <DialogContent
+          className="max-w-lg gap-4 sm:max-w-xl"
+          showCloseButton={!compressing}
+          onPointerDownOutside={(ev) => {
+            if (compressing) ev.preventDefault();
+          }}
+          onEscapeKeyDown={(ev) => {
+            if (compressing) ev.preventDefault();
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle>{t("Crop image")}</DialogTitle>
+          </DialogHeader>
+          {cropSrc ? (
+            <>
+              <div className="relative h-[min(50vh,360px)] w-full overflow-hidden rounded-lg bg-black">
+                <Cropper
+                  image={cropSrc}
+                  crop={crop}
+                  zoom={zoom}
+                  aspect={16 / 9}
+                  onCropChange={setCrop}
+                  onZoomChange={setZoom}
+                  onCropComplete={onCropComplete}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-xs text-muted-foreground">{t("Zoom")}</span>
+                <input
+                  type="range"
+                  min={1}
+                  max={3}
+                  step={0.01}
+                  value={zoom}
+                  onChange={(ev) => setZoom(Number(ev.target.value))}
+                  className="w-full"
+                  style={{ accentColor: "var(--button-accent)" }}
+                  disabled={compressing}
+                />
+              </div>
+            </>
+          ) : null}
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button
+              variant="outlined-brown"
+              type="button"
+              disabled={compressing}
+              onClick={() => onCropDialogOpenChange(false)}
+            >
+              {t("Cancel")}
+            </Button>
+            <Button
+              variant="brown"
+              type="button"
+              disabled={compressing || !cropSrc}
+              onClick={() => void applyCroppedImage()}
+            >
+              {compressing ? t("Loading...") : t("Confirm")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 });

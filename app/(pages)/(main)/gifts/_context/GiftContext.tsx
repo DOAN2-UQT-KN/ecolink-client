@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, {
   createContext,
@@ -8,13 +8,13 @@ import React, {
   useEffect,
   useMemo,
   useState,
-} from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+} from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
-import type { IGift } from "@/apis/gift/models/gift";
-import { useGetGifts } from "@/apis/gift/getGifts";
-import { useRedeemGift } from "@/apis/gift/redeemGift";
-import useGetParam from "@/hooks/useGetParam";
+import type { IGift } from '@/apis/gift/models/gift';
+import { useGetGifts } from '@/apis/gift/getGifts';
+import { useRedeemGift } from '@/apis/gift/redeemGift';
+import useGetParam from '@/hooks/useGetParam';
 
 import {
   buildGiftFilters,
@@ -22,7 +22,7 @@ import {
   type GiftFilters,
   GIFT_PAGE_SIZE,
   normalizePointsRange,
-} from "../_services/gift.service";
+} from '../_services/gift.service';
 
 type PaginationState = {
   current: number;
@@ -46,17 +46,21 @@ type GiftContextType = {
 
 const GiftContext = createContext<GiftContextType | undefined>(undefined);
 
-export const GiftProvider = React.memo(function GiftProvider({ children }: { children: ReactNode }) {
+export const GiftProvider = React.memo(function GiftProvider({
+  children,
+}: {
+  children: ReactNode;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const urlSearch = useGetParam<string>("search", "string", "");
-  const urlStock = useGetParam<string>("in_stock", "string", undefined);
-  const urlSortBy = useGetParam<string>("sort_by", "string", undefined);
-  const urlPointsMin = useGetParam<string>("points_min", "string", undefined);
-  const urlPointsMax = useGetParam<string>("points_max", "string", undefined);
-  const urlPage = useGetParam<number>("page", "number", 1);
+  const urlSearch = useGetParam<string>('search', 'string', '');
+  const urlStock = useGetParam<string>('in_stock', 'string', undefined);
+  const urlSortBy = useGetParam<string>('sort_by', 'string', undefined);
+  const urlPointsMin = useGetParam<string>('points_min', 'string', undefined);
+  const urlPointsMax = useGetParam<string>('points_max', 'string', undefined);
+  const urlPage = useGetParam<number>('page', 'number', 1);
 
   const [pagination, setPaginationState] = useState<PaginationState>({
     current: Math.max(1, urlPage ?? 1),
@@ -94,7 +98,7 @@ export const GiftProvider = React.memo(function GiftProvider({ children }: { chi
   }, [urlPage]);
 
   const request = useMemo(() => buildGiftRequest(filters, pagination), [filters, pagination]);
-  const { data, isLoading } = useGetGifts(request);
+  const { data, isLoading } = useGetGifts({ ...request, isActive: true });
   const { mutateAsync: redeemGiftMutateAsync, isPending: isRedeeming } = useRedeemGift();
 
   const rawGifts = useMemo(() => data?.data?.gifts ?? [], [data]);
@@ -102,16 +106,16 @@ export const GiftProvider = React.memo(function GiftProvider({ children }: { chi
   const gifts = useMemo(() => {
     const sorted = [...rawGifts];
     switch (filters.sortBy) {
-      case "name_asc":
+      case 'name_asc':
         sorted.sort((a, b) => a.name.localeCompare(b.name));
         break;
-      case "name_desc":
+      case 'name_desc':
         sorted.sort((a, b) => b.name.localeCompare(a.name));
         break;
-      case "points_desc":
+      case 'points_desc':
         sorted.sort((a, b) => b.greenPoints - a.greenPoints);
         break;
-      case "points_asc":
+      case 'points_asc':
       default:
         sorted.sort((a, b) => a.greenPoints - b.greenPoints);
         break;
@@ -164,11 +168,11 @@ export const GiftProvider = React.memo(function GiftProvider({ children }: { chi
         };
         updateURL({
           search: merged.search.trim() || undefined,
-          in_stock: merged.inStock === "in_stock" ? "in_stock" : undefined,
+          in_stock: merged.inStock === 'in_stock' ? 'in_stock' : undefined,
           sort_by: merged.sortBy,
           points_min: String(merged.pointsRange[0]),
           points_max: String(merged.pointsRange[1]),
-          page: "1",
+          page: '1',
         });
         return merged;
       });
@@ -243,7 +247,7 @@ export const GiftProvider = React.memo(function GiftProvider({ children }: { chi
 export const useGift = () => {
   const ctx = useContext(GiftContext);
   if (!ctx) {
-    throw new Error("useGift must be used within GiftProvider");
+    throw new Error('useGift must be used within GiftProvider');
   }
   return ctx;
 };
