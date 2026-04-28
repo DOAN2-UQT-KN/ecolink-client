@@ -8,6 +8,7 @@ import { ImagePlus, MessageCircle, Plus, SendHorizontal, X } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import AssistantMarkdown from "./AssistantMarkdown"
+import AddressPickerCard from "./AddressPickerCard"
 import {
     createConversation,
     DEFAULT_AGENT_ID,
@@ -48,6 +49,27 @@ type UiMessage = {
     imageUrls?: string[]
 }
 
+const HIDDEN_MESSAGE_MARKER = "[[HIDDEN_message]]"
+const PICK_ADDRESS_MARKER = "[[PICK_ADDRESS]]"
+
+function stripPickAddressAndUrlsForDisplay(text: string): string {
+    const hasPick = text.includes(PICK_ADDRESS_MARKER)
+    if (!hasPick) return text
+
+    // Remove the marker line completely.
+    const withoutMarker = text
+        .split("\n")
+        .filter((line) => line.trim() !== PICK_ADDRESS_MARKER)
+        .join("\n")
+
+    // For this flow, don't show raw URLs (e.g. Cloudinary image links).
+    // Keep it simple and polite; the UI already shows the address picker.
+    return withoutMarker.replace(
+        /https?:\/\/[^\s)]+/g,
+        ""
+    )
+}
+
 function dtoToUi(m: ChatMessageDto): UiMessage | null {
     if (m.role !== "user" && m.role !== "assistant") return null
     const raw = m.content ?? ""
@@ -57,6 +79,10 @@ function dtoToUi(m: ChatMessageDto): UiMessage | null {
             role: m.role,
             content: stripThinkingDisplay(raw),
         }
+    }
+    if (raw.trimStart().startsWith(HIDDEN_MESSAGE_MARKER)) {
+        // Hide user messages that are meant to be tool/UX glue (e.g. address submit).
+        return null
     }
     const append = m.append_text ?? ""
     let mediaIds = parseMediaIdsFromAppendText(append)
@@ -279,8 +305,8 @@ export default function AiChatWidget() {
         setPendingImages([])
         snapshot.forEach((p) => URL.revokeObjectURL(p.previewUrl))
 
-        let mediaIds: string[] = []
-        let imageUrls: string[] = []
+        const mediaIds: string[] = []
+        const imageUrls: string[] = []
         if (snapshot.length > 0) {
             setIsUploading(true)
             try {
@@ -301,28 +327,32 @@ export default function AiChatWidget() {
             }
         }
 
+        const hidden = text.trimStart().startsWith(HIDDEN_MESSAGE_MARKER)
         const userMsgId = `local-user-${Date.now()}`
         const asstMsgId = `local-asst-${Date.now()}`
         const appendText =
             mediaIds.length > 0 ? formatAppendTextForMediaIds(mediaIds) : undefined
-        setMessages((prev) => [
-            ...prev,
-            {
-                id: userMsgId,
-                role: "user",
-                content: text,
-                append_text: appendText,
-                mediaIds: mediaIds.length ? mediaIds : undefined,
-                imageUrls: imageUrls.length ? imageUrls : undefined,
-            },
-            {
+        setMessages((prev) => {
+            const next = [...prev]
+            if (!hidden) {
+                next.push({
+                    id: userMsgId,
+                    role: "user",
+                    content: text,
+                    append_text: appendText,
+                    mediaIds: mediaIds.length ? mediaIds : undefined,
+                    imageUrls: imageUrls.length ? imageUrls : undefined,
+                })
+            }
+            next.push({
                 id: asstMsgId,
                 role: "assistant",
                 content: "",
                 streaming: true,
                 toolsUsed: [],
-            },
-        ])
+            })
+            return next
+        })
         setStreaming(true)
 
         const ac = new AbortController()
@@ -396,6 +426,137 @@ export default function AiChatWidget() {
         persistConversationId,
         streaming,
     ])
+
+    const sendTextOnly = useCallback(
+        async (text: string) => {
+            if (!text.trim()) return
+            if (streaming || isUploading || booting || !accessToken) return
+
+            // Temporarily stash existing pending images; this send is text-only.
+            const prev = pendingImages
+            if (prev.length) setPendingImages([])
+            try {
+                setInput(text)
+                await handleSend()
+            } finally {
+                // Restore pending images; do not lose attachments.
+                if (prev.length) setPendingImages(prev)
+            }
+        },
+        [accessToken, booting, handleSend, isUploading, pendingImages, streaming]
+    )
+
+    const sendHiddenToAgent = useCallback(
+        async (text: string) => {
+            const content = text.trim()
+            if (!content) return
+            if (streaming || isUploading || booting || !accessToken) return
+            if (!baseConfigured) {
+                toast.error("API URL is not configured (NEXT_PUBLIC_API_URL).")
+                return
+            }
+
+            let convId = conversationId
+            if (!convId) {
+                setBooting(true)
+                try {
+                    const conv = await createConversation({
+                        agentId: DEFAULT_AGENT_ID,
+                    })
+                    convId = conv.id
+                    persistConversationId(conv.id)
+                } catch (e) {
+                    const msg =
+                        e instanceof Error ? e.message : "Could not create conversation"
+                    toast.error(msg)
+                    setBooting(false)
+                    return
+                } finally {
+                    setBooting(false)
+                }
+            }
+
+            const asstMsgId = `local-asst-${Date.now()}`
+            setMessages((prev) => [
+                ...prev,
+                {
+                    id: asstMsgId,
+                    role: "assistant",
+                    content: "",
+                    streaming: true,
+                    toolsUsed: [],
+                },
+            ])
+            setStreaming(true)
+
+            const ac = new AbortController()
+            abortRef.current = ac
+
+            try {
+                await streamAssistantReply(
+                    convId,
+                    content,
+                    ac.signal,
+                    (ev) => {
+                        if (ev.type === "token") {
+                            setMessages((prev) =>
+                                prev.map((m) =>
+                                    m.id === asstMsgId
+                                        ? { ...m, content: m.content + ev.text }
+                                        : m
+                                )
+                            )
+                        } else if (ev.type === "tool_end") {
+                            setMessages((prev) =>
+                                prev.map((m) =>
+                                    m.id === asstMsgId
+                                        ? {
+                                              ...m,
+                                              toolsUsed: [
+                                                  ...(m.toolsUsed ?? []),
+                                                  ev.name,
+                                              ],
+                                          }
+                                        : m
+                                )
+                            )
+                        } else if (ev.type === "done") {
+                            setMessages((prev) =>
+                                prev.map((m) =>
+                                    m.id === asstMsgId
+                                        ? { ...m, id: ev.message_id, streaming: false }
+                                        : m
+                                )
+                            )
+                        } else if (ev.type === "error") {
+                            toast.error(ev.message)
+                            setMessages((prev) => prev.filter((m) => m.id !== asstMsgId))
+                        }
+                    }
+                )
+            } catch (e) {
+                if ((e as Error).name === "AbortError") return
+                const msg = e instanceof Error ? e.message : "Stream failed"
+                toast.error(msg)
+                setMessages((prev) => prev.filter((m) => m.id !== asstMsgId))
+            } finally {
+                setStreaming(false)
+                abortRef.current = null
+                setMessages((prev) =>
+                    prev.map((m) => (m.streaming ? { ...m, streaming: false } : m))
+                )
+            }
+        },
+        [
+            accessToken,
+            baseConfigured,
+            booting,
+            conversationId,
+            isUploading,
+            persistConversationId,
+            streaming,
+        ]
+    )
 
     const canChat = hasHydrated && !!accessToken && baseConfigured
 
@@ -496,17 +657,45 @@ export default function AiChatWidget() {
                                         </ul>
                                     )}
                                 {m.role === "assistant" ? (
-                                    m.content.trim() || !m.streaming ? (
-                                        <AssistantMarkdown
-                                            text={stripThinkingDisplay(
-                                                m.content
-                                            )}
-                                        />
-                                    ) : (
-                                        <span className="text-muted-foreground">
-                                            …
-                                        </span>
-                                    )
+                                    <>
+                                        {m.content.trim() || !m.streaming ? (
+                                            <AssistantMarkdown
+                                                text={stripPickAddressAndUrlsForDisplay(
+                                                    stripThinkingDisplay(m.content)
+                                                )}
+                                            />
+                                        ) : (
+                                            <span className="text-muted-foreground">
+                                                …
+                                            </span>
+                                        )}
+                                        {m.content.includes(PICK_ADDRESS_MARKER) && (
+                                            <AddressPickerCard
+                                                disabled={
+                                                    streaming ||
+                                                    booting ||
+                                                    isUploading ||
+                                                    !canChat
+                                                }
+                                                onSubmit={(payload) => {
+                                                    const body = [
+                                                        HIDDEN_MESSAGE_MARKER,
+                                                        "detail_address:",
+                                                        payload.detailAddress,
+                                                        payload.latitude != null
+                                                            ? `latitude: ${payload.latitude}`
+                                                            : null,
+                                                        payload.longitude != null
+                                                            ? `longitude: ${payload.longitude}`
+                                                            : null,
+                                                    ]
+                                                        .filter(Boolean)
+                                                        .join("\n")
+                                                    void sendHiddenToAgent(body)
+                                                }}
+                                            />
+                                        )}
+                                    </>
                                 ) : (
                                     <>
                                         {m.imageUrls && m.imageUrls.length > 0 && (
