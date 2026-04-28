@@ -1,6 +1,14 @@
 'use client';
 
-import { createContext, type ReactNode, useCallback, useMemo, useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import {
+  createContext,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 import { useGetPointTransactions, useGetPoints } from '@/apis/points/getPoints';
 import type { IPoint, IPointTransaction } from '@/apis/points/models/point';
@@ -30,12 +38,30 @@ export interface PointsContextType {
 
 export const PointsContext = createContext<PointsContextType | undefined>(undefined);
 
+function isPointsFilterTab(value: string | null): value is PointsFilterTab {
+  return value === 'all' || value === 'earned' || value === 'spent';
+}
+
 export function PointsProvider({ children }: { children: ReactNode }) {
-  const [tab, setTab] = useState<PointsFilterTab>('all');
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const urlType = searchParams.get('type');
+  const initialTab: PointsFilterTab =
+    isPointsFilterTab(urlType) && urlType !== 'all' ? urlType : 'all';
+
+  const [tab, setTab] = useState<PointsFilterTab>(initialTab);
   const [pagination, setPaginationState] = useState({
     current: 1,
     pageSize: POINTS_DEFAULT_PAGE_SIZE,
   });
+
+  useEffect(() => {
+    const nextTab: PointsFilterTab =
+      isPointsFilterTab(urlType) && urlType !== 'all' ? urlType : 'all';
+    setTab((prev) => (prev === nextTab ? prev : nextTab));
+  }, [urlType]);
 
   const pointsQuery = useGetPoints({});
   const transactionsQuery = useGetPointTransactions({
@@ -58,10 +84,27 @@ export function PointsProvider({ children }: { children: ReactNode }) {
     setPaginationState(next);
   }, []);
 
+  const updateTabInURL = useCallback(
+    (nextTab: PointsFilterTab) => {
+      const params = new URLSearchParams(searchParams.toString());
+
+      if (nextTab === 'all') {
+        params.delete('type');
+      } else {
+        params.set('type', nextTab);
+      }
+
+      const query = params.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchParams],
+  );
+
   const handleSetTab = useCallback((nextTab: PointsFilterTab) => {
     setTab(nextTab);
     setPaginationState((prev) => ({ ...prev, current: 1 }));
-  }, []);
+    updateTabInURL(nextTab);
+  }, [updateTabInURL]);
 
   const refetch = useCallback(() => {
     pointsQuery.refetch();
