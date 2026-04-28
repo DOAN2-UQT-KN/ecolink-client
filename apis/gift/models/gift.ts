@@ -8,6 +8,10 @@ export interface IGift {
   greenPoints: number;
   stockRemaining: number | null;
   isActive: boolean;
+  media: {
+    id: string;
+    url: string;
+  };
 }
 
 export interface IGetGiftsRequest {

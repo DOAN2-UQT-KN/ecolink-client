@@ -101,7 +101,7 @@ export function DataTable({ onEdit }: { onEdit: (gift: IGift) => void }) {
         className: 'w-[120px]',
         render: (_, record) => (
           <Image
-            src={record.mediaId.startsWith('http') ? record.mediaId : '/banner-default.jpg'}
+            src={record.media.url.startsWith('http') ? record.media.url : '/banner-default.jpg'}
             alt={record.name}
             width={48}
             height={48}
