@@ -6,11 +6,10 @@ import { HiMapPin } from "react-icons/hi2";
 import {
   PiArrowsOutSimple,
   PiSealWarningLight,
-  PiShareNetwork,
   PiSkullLight,
   PiTrash,
 } from "react-icons/pi";
-import { TbArrowBigDown, TbArrowBigUp, TbStarFilled } from "react-icons/tb";
+import { TbStarFilled } from "react-icons/tb";
 
 import { IIncident } from "@/apis/incident/models/incident";
 import ReportDetailCard from "@/modules/ReportDetailCard/ReportDetailCard";

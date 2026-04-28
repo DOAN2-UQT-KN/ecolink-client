@@ -5,7 +5,8 @@ import ReactQueryProvider from "@/components/client/providers/ReactQueryProvider
 import { Inter } from "next/font/google";
 import { cn } from "@/libs/utils";
 import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip"
+import { TooltipProvider } from "@/components/ui/tooltip";
+import AiChatWidget from "@/components/client/ai-chat/AiChatWidget";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -53,6 +54,7 @@ export default function RootLayout({
           </TooltipProvider>
         </ReactQueryProvider>
         <Toaster />
+        <AiChatWidget />
       </body>
     </html>
   );
