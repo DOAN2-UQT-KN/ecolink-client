@@ -10,6 +10,8 @@ export interface IOrganization {
   is_email_verified: boolean;
   status: number;
   owner_id: string;
+  /** True when the signed-in user is an active member of this org. */
+  is_member?: boolean;
   created_at: string;
   updated_at: string;
   request_status?: number;

@@ -19,6 +19,7 @@ import LanguageSwitcher from "../shared/LanguageSwitcher";
 import SpotlightCard from "../shared/SpotlightCard";
 import useAuthStore from "@/stores/useAuthStore";
 import { useRouter } from "next/navigation";
+import { clearAuthStorage } from "@/utils/logout";
 
 type CardNavLink = {
   label: string;
@@ -136,7 +137,7 @@ const Header: React.FC<CardNavProps> = ({ ease = "power3.out", menuColor }) => {
   const cardsRef = useRef<HTMLDivElement[]>([]);
   const tlRef = useRef<gsap.core.Timeline | null>(null);
 
-  const { user } = useAuthStore();
+  const { user, setLogoutSuccess } = useAuthStore();
   const router = useRouter();
 
   const calculateHeight = () => {
@@ -346,7 +347,17 @@ const Header: React.FC<CardNavProps> = ({ ease = "power3.out", menuColor }) => {
           </DropdownMenuTrigger>
           <DropdownMenuContent>
             <DropdownMenuItem>{t("Profile")}</DropdownMenuItem>
-            <DropdownMenuItem>{t("Logout")}</DropdownMenuItem>
+            <DropdownMenuItem
+              variant="destructive"
+              onSelect={(e) => {
+                e.preventDefault();
+                clearAuthStorage();
+                setLogoutSuccess();
+                router.push("/authenticate");
+              }}
+            >
+              {t("Logout")}
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       ) : (

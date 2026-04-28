@@ -72,8 +72,12 @@ export const CampaignList = memo(function CampaignList() {
   return (
     <div className="w-full space-y-8 pb-10">
       <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        {campaigns.map((campaign) => (
-          <SummaryCampaignCard key={campaign.id} campaign={campaign} exploreMode={true} />
+        {campaigns.map((campaign, index) => (
+          <SummaryCampaignCard
+            key={`${campaign.id ?? "campaign"}-${index}`}
+            campaign={campaign}
+            exploreMode={true}
+          />
         ))}
       </div>
 

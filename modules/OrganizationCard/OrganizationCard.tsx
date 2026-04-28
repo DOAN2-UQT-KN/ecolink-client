@@ -47,6 +47,8 @@ export interface OrganizationCardProps {
   organizationId?: string;
   /** Current user's join request state for this org from the listing API (0 = none, 12 = pending). */
   requestStatus?: number;
+  /** True when the signed-in user is an active member of this org. */
+  isMember?: boolean;
   /** Join request id when pending; used by cancel. */
   joinRequestId?: string;
   /** When set and equal to the signed-in user id, a "Your group" tag is shown next to the name. */
@@ -66,6 +68,7 @@ export const OrganizationCard = memo(function OrganizationCard({
   listingMode = false,
   organizationId,
   requestStatus,
+  isMember = false,
   joinRequestId,
   ownerId,
   onSave,
@@ -201,9 +204,10 @@ export const OrganizationCard = memo(function OrganizationCard({
     router.push(`/organizations/${organizationId}`);
   }, [organizationId, router]);
 
-  const showJoinButton = !showYourGroupTag && joinListingShowsJoinButton(requestStatus);
+  const showJoinButton =
+    !showYourGroupTag && !isMember && joinListingShowsJoinButton(requestStatus);
   const showCancelButton = joinListingShowsCancelButton(requestStatus);
-  const showLeaveButton = !showYourGroupTag && requestStatus === STATUS.APPROVED;
+  const showLeaveButton = !showYourGroupTag && isMember;
 
   return (
     <article

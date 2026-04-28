@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
-import { useParams } from "next/navigation";
+import { useEffect, useMemo } from "react";
+import { useParams, useSearchParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { Inbox } from "lucide-react";
+import { toast } from "sonner";
 
 import {
   Breadcrumbs,
@@ -26,12 +27,20 @@ import { useOrganizationDetail } from "./_hooks/useOrganizationDetail";
 
 function OrganizationDetailBody() {
   const { t } = useTranslation();
+  const searchParams = useSearchParams();
   const {
     organizationId,
     organization,
     isLoading,
     isError,
   } = useOrganizationDetail();
+
+  useEffect(() => {
+    if (!searchParams) return;
+    if (searchParams.get("verifiedEmail") === "1") {
+      toast.success(t("Verify email successfully"));
+    }
+  }, [searchParams, t]);
 
   const breadcrumbs: BreadcrumbItemProps[] = useMemo(
     () => [

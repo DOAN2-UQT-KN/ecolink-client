@@ -43,11 +43,11 @@ export function FormFilter() {
   const formFields: FormFieldConfig[] = useMemo(() => {
     const statusOptions = [
       { label: t("All"), value: "all" },
+      { label: t("Draft"), value: "4" },
       { label: t("Active"), value: "1" },
       { label: t("Inactive"), value: "2" },
+      { label: t("In review"), value: "9" },
       { label: t("Pending"), value: "12" },
-      { label: t("Approved"), value: "14" },
-      { label: t("Rejected"), value: "18" },
     ];
 
     return [

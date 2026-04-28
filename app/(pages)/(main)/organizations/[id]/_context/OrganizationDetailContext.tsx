@@ -93,6 +93,7 @@ export function OrganizationDetailProvider({
   const ownerId = organization?.owner_id;
   const requestStatus = organization?.request_status;
   const joinRequestId = organization?.join_request_id;
+  const isMember = Boolean(organization?.is_member);
 
   const showYourGroupTag =
     ownerId != null &&
@@ -100,10 +101,9 @@ export function OrganizationDetailProvider({
     ownerId === currentUserId;
 
   const showJoinButton =
-    !showYourGroupTag && joinListingShowsJoinButton(requestStatus);
+    !showYourGroupTag && !isMember && joinListingShowsJoinButton(requestStatus);
   const showCancelButton = joinListingShowsCancelButton(requestStatus);
-  const showLeaveButton =
-    !showYourGroupTag && requestStatus === STATUS.APPROVED;
+  const showLeaveButton = !showYourGroupTag && isMember;
 
   const handleJoinClick = useCallback(() => {
     if (!organizationId) return;

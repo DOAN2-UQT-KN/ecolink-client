@@ -11,7 +11,7 @@ export const leaveOrganization = async (
   req: ILeaveOrganizationRequest,
 ): Promise<ILeaveOrganizationResponse> => {
   return await requestApi.delete<ILeaveOrganizationResponse>(
-    `/organizations/${req.id}/members/me`,
+    `/api/v1/organizations/${req.id}/members/me`,
   );
 };
 
