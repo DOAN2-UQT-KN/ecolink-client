@@ -10,9 +10,9 @@ export interface IPointTransaction {
   user_id?: string;
   type?: string;
   resource_id?: string;
-  resource_type?: string;
+  resourceType?: string;
   points?: number;
-  created_at?: string;
-  updated_at?: string;
+  createdAt?: string;
+  updatedAt?: string;
   resource?: ICampaign;
 }

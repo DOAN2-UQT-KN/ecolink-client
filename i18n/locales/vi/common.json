@@ -382,6 +382,8 @@
   "No transactions yet for this account.": "Tài khoản này chưa có giao dịch nào.",
   "Activity completed": "Hoạt động đã hoàn thành",
   "Campaign completed message": "{{title}} đã hoàn thành",
+  "Gift redeemed": "Đã đổi quà",
+  "Gift redeemed message": "Đã đổi quà {{name}}",
   "Gift name": "Tên quà",
   "Green points range": "Khoảng điểm xanh",
   "Points: Low to high": "Điểm: thấp đến cao",

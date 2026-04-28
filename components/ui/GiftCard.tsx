@@ -26,7 +26,7 @@ export const GiftCard = memo(function GiftCard({
 }: GiftCardProps) {
   const { t } = useTranslation();
   const imageSrc = useMemo(
-    () => (gift.mediaId.startsWith('http') ? gift.mediaId : bannerDefault),
+    () => (gift?.media?.url?.startsWith('http') ? gift.media?.url : bannerDefault),
     [gift.mediaId],
   );
 

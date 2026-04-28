@@ -15,30 +15,21 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import usePointsContext from '../_hooks/usePointsContext';
 import { formatPoints } from '../_services/points.service';
-
-function formatTransactionDateTime(value?: string): string {
-  if (!value) return '';
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '';
-
-  return date.toLocaleString('en-US', {
-    month: 'short',
-    day: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
-  });
-}
+import { formattedDate } from '@/utils/formattedDate';
 
 function TransactionCard({ transaction }: { transaction: IPointTransaction }) {
   const { t } = useTranslation();
   const campaignTitle = transaction.resource?.title?.trim();
-  const message = campaignTitle
-    ? t('Campaign completed message', { title: campaignTitle })
-    : t('Activity completed');
-  const timestamp = formatTransactionDateTime(transaction.created_at);
+  const giftName = (transaction.resource as { name?: string } | undefined)?.name?.trim();
+  const isGiftRedemption = transaction.resourceType === 'GIFT_REDEMPTION';
+  const message = isGiftRedemption
+    ? giftName
+      ? t('Gift redeemed message', { name: giftName })
+      : t('Gift redeemed')
+    : campaignTitle
+      ? t('Campaign completed message', { title: campaignTitle })
+      : t('Activity completed');
+  const timestamp = formattedDate(transaction.createdAt, true);
   const points = transaction.points ?? 0;
   const pointsPrefix = points > 0 ? '+' : points < 0 ? '-' : '';
   const pointsClassName =
@@ -113,7 +104,7 @@ const TransactionHistory = memo(function TransactionHistory() {
         <div className="mt-4 space-y-3">
           {transactions.map((transaction, index) => (
             <TransactionCard
-              key={transaction.id ?? `${transaction.created_at ?? 'transaction'}-${index}`}
+              key={transaction.id ?? `${transaction.createdAt ?? 'transaction'}-${index}`}
               transaction={transaction}
             />
           ))}
