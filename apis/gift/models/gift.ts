@@ -1,4 +1,4 @@
-import type { IBaseResponse } from "@/types/BaseResponse";
+import type { IBaseResponse } from '@/types/BaseResponse';
 
 export interface IGift {
   id: string;
@@ -36,7 +36,8 @@ export type IGetGiftsResponse = IBaseResponse<{
 
 export interface ICreateGiftRequest {
   name: string;
-  mediaId: string;
+  // mediaId: string;
+  imageUrl: string;
   description: string;
   greenPoints: number;
   stockRemaining?: number | null;
@@ -47,7 +48,8 @@ export type ICreateGiftResponse = IBaseResponse<{ gift: IGift }>;
 
 export interface IUpdateGiftRequest {
   name?: string;
-  mediaId?: string;
+  // mediaId?: string;
+  imageUrl?: string;
   description?: string;
   greenPoints?: number;
   stockRemaining?: number | null;
@@ -55,3 +57,19 @@ export interface IUpdateGiftRequest {
 }
 
 export type IUpdateGiftResponse = IBaseResponse<{ gift: IGift }>;
+
+export interface IGiftRedeem {
+  id: string;
+  name: string;
+  giftId: string;
+  greenPointsSpent: string;
+  createdAt: string;
+}
+
+export interface IRedeemGiftRequest {
+  id: string;
+}
+
+export type IRedeemGiftResponse = IBaseResponse<{
+  redemption: IGiftRedeem;
+}>;
