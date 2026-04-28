@@ -1,3 +1,5 @@
+import { ICampaign } from '@/apis/campaign/models/campaign';
+
 export interface IPoint {
   balance?: number;
   green_points?: number;
@@ -12,4 +14,5 @@ export interface IPointTransaction {
   points?: number;
   created_at?: string;
   updated_at?: string;
+  resource?: ICampaign;
 }

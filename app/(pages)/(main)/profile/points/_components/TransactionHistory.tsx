@@ -3,12 +3,49 @@
 import { memo, useCallback, useMemo } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
+import type { IPointTransaction } from '@/apis/points/models/point';
 import usePointsContext from '../_hooks/usePointsContext';
-import {
-  formatPoints,
-  formatTransactionDate,
-  inferTransactionKind,
-} from '../_services/points.service';
+import { formatPoints } from '../_services/points.service';
+
+function formatTransactionDateTime(value?: string): string {
+  if (!value) return '';
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+
+  return date.toLocaleString('en-US', {
+    month: 'short',
+    day: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  });
+}
+
+function TransactionCard({ transaction }: { transaction: IPointTransaction }) {
+  const campaignTitle = transaction.resource?.title?.trim();
+  const message = campaignTitle ? `${campaignTitle} đã hoàn thành` : 'Hoạt động đã hoàn thành';
+  const timestamp = formatTransactionDateTime(transaction.created_at);
+  const points = transaction.points ?? 0;
+  const pointsPrefix = points > 0 ? '+' : points < 0 ? '-' : '';
+  const pointsClassName =
+    points > 0 ? 'text-emerald-600' : points < 0 ? 'text-rose-600' : 'text-foreground-secondary';
+
+  return (
+    <article className="flex items-center justify-between rounded-xl border border-[rgba(136,122,71,0.5)]  bg-white/80 p-4 sm:p-5">
+      <div className="flex flex-col gap-1">
+        <p className="text-sm font-semibold text-foreground-primary sm:text-base">{message}</p>
+        {timestamp && <p className="text-xs text-foreground-secondary sm:text-sm">{timestamp}</p>}
+      </div>
+
+      <p className={`text-base font-bold tabular-nums sm:text-lg ${pointsClassName}`}>
+        {pointsPrefix}
+        {formatPoints(Math.abs(points))}
+      </p>
+    </article>
+  );
+}
 
 const TransactionHistory = memo(function TransactionHistory() {
   const { transactions, isLoading, pagination, setPagination } = usePointsContext();
@@ -34,51 +71,13 @@ const TransactionHistory = memo(function TransactionHistory() {
       ) : transactions.length === 0 ? (
         <div className="mt-4 text-sm text-foreground-secondary">No transactions found.</div>
       ) : (
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full min-w-[680px] border-collapse">
-            <thead>
-              <tr className="border-b border-border/70 text-left text-xs uppercase tracking-wide text-foreground-secondary">
-                <th className="px-3 py-2">Type</th>
-                <th className="px-3 py-2">Resource Type</th>
-                <th className="px-3 py-2">Resource ID</th>
-                <th className="px-3 py-2 text-right">Points</th>
-                <th className="px-3 py-2">Created At</th>
-              </tr>
-            </thead>
-            <tbody>
-              {transactions.map((transaction) => {
-                const kind = inferTransactionKind(transaction.type, transaction.points);
-                const amount = transaction.points ?? 0;
-
-                return (
-                  <tr key={transaction.id} className="border-b border-border/50 text-sm">
-                    <td className="px-3 py-3">
-                      <span
-                        className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
-                          kind === 'earned'
-                            ? 'bg-emerald-100 text-emerald-700'
-                            : 'bg-rose-100 text-rose-700'
-                        }`}
-                      >
-                        {(transaction.type ?? kind).toUpperCase()}
-                      </span>
-                    </td>
-                    <td className="px-3 py-3">{transaction.resource_type ?? '-'}</td>
-                    <td className="px-3 py-3">{transaction.resource_id ?? '-'}</td>
-                    <td
-                      className={`px-3 py-3 text-right font-medium tabular-nums ${
-                        amount >= 0 ? 'text-emerald-600' : 'text-rose-600'
-                      }`}
-                    >
-                      {amount >= 0 ? '+' : '-'}
-                      {formatPoints(Math.abs(amount))}
-                    </td>
-                    <td className="px-3 py-3">{formatTransactionDate(transaction.created_at)}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        <div className="mt-4 space-y-3">
+          {transactions.map((transaction, index) => (
+            <TransactionCard
+              key={transaction.id ?? `${transaction.created_at ?? 'transaction'}-${index}`}
+              transaction={transaction}
+            />
+          ))}
         </div>
       )}
 
