@@ -1,14 +1,10 @@
-"use client";
+'use client';
 
-import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  TableHead,
-  TableHeader as BaseTableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { cn } from "@/libs/utils";
-import type { DataTableColumn, SortOrder } from "./types";
+import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { TableHead, TableHeader as BaseTableHeader, TableRow } from '@/components/ui/table';
+import { cn } from '@/libs/utils';
+import type { DataTableColumn, SortOrder } from './types';
 
 type Props<T> = {
   columns: DataTableColumn<T>[];
@@ -21,7 +17,7 @@ type Props<T> = {
   onToggleAll: (checked: boolean) => void;
   onSortChange?: (key: string, order: SortOrder) => void;
   stickyHeader?: boolean;
-  theme?: "light" | "dark";
+  theme?: 'light' | 'dark';
 };
 
 export function DataTableHeader<T>({
@@ -35,30 +31,30 @@ export function DataTableHeader<T>({
   onToggleAll,
   onSortChange,
   stickyHeader,
-  theme = "dark",
+  theme = 'dark',
 }: Props<T>) {
-  const isDark = theme === "dark";
+  const isDark = theme === 'dark';
 
   return (
     <BaseTableHeader
       className={cn(
-        stickyHeader && "sticky top-0 z-10 backdrop-blur-sm",
+        stickyHeader && 'sticky top-0 z-10 backdrop-blur-sm',
         stickyHeader && isDark
-          ? "bg-zinc-950/95 border-b border-zinc-700/60"
-          : stickyHeader && "bg-zinc-100 border-b border-gray-200",
+          ? 'bg-zinc-950/95 border-b border-zinc-700/60'
+          : stickyHeader && 'bg-zinc-100 border-b border-gray-200',
       )}
     >
       <TableRow
         className={cn(
           isDark
-            ? "bg-zinc-900 hover:bg-zinc-900 border-b border-zinc-700/60"
-            : "bg-zinc-200 hover:bg-zinc-200 border-b border-gray-200",
+            ? 'bg-zinc-900 hover:bg-zinc-900 border-b border-zinc-700/60'
+            : 'bg-zinc-200 hover:bg-zinc-200 border-b border-gray-200',
         )}
       >
         {showSelection && (
           <TableHead className="w-12 px-3">
             <Checkbox
-              checked={allSelected || (partiallySelected ? "indeterminate" : false)}
+              checked={allSelected || (partiallySelected ? 'indeterminate' : false)}
               disabled={!canSelectAny}
               onCheckedChange={(checked) => onToggleAll(Boolean(checked))}
               aria-label="Select all rows"
@@ -67,15 +63,25 @@ export function DataTableHeader<T>({
         )}
         {columns.map((column) => {
           const active = sortKey === column.key;
-          const nextOrder: SortOrder =
-            !active ? "asc" : sortOrder === "asc" ? "desc" : sortOrder === "desc" ? null : "asc";
+          const nextOrder: SortOrder = !active
+            ? 'asc'
+            : sortOrder === 'asc'
+              ? 'desc'
+              : sortOrder === 'desc'
+                ? null
+                : 'asc';
 
           return (
             <TableHead
               key={column.key}
               className={cn(
-                "px-3 py-2.5 font-semibold text-xs uppercase tracking-wide",
-                isDark ? "text-zinc-300" : "text-zinc-700",
+                'px-3 py-2.5 font-semibold text-xs uppercase tracking-wide',
+                isDark ? 'text-zinc-300' : 'text-zinc-700',
+                // ── Sticky column ──────────────────────────────────────────
+                column.sticky === 'left' && 'sticky left-0 z-20',
+                column.sticky === 'right' && 'sticky right-0 z-20',
+                // Solid background so body cells don't bleed through on scroll
+                column.sticky && (isDark ? 'bg-zinc-900' : 'bg-zinc-200'),
                 column.className,
               )}
               style={{ width: column.width }}
@@ -85,23 +91,23 @@ export function DataTableHeader<T>({
                   type="button"
                   onClick={() => onSortChange?.(column.key, nextOrder)}
                   className={cn(
-                    "inline-flex items-center gap-1 transition-colors cursor-pointer",
-                    isDark
-                      ? "text-zinc-300 hover:text-zinc-100"
-                      : "text-black",
+                    'inline-flex items-center gap-1 transition-colors cursor-pointer',
+                    isDark ? 'text-zinc-300 hover:text-zinc-100' : 'text-black',
                   )}
                 >
                   {column.title}
                   {active ? (
-                    sortOrder === "asc" ? (
+                    sortOrder === 'asc' ? (
                       <ArrowUp className="h-4 w-4" />
-                    ) : sortOrder === "desc" ? (
+                    ) : sortOrder === 'desc' ? (
                       <ArrowDown className="h-4 w-4" />
                     ) : (
                       <ArrowUpDown className="h-4 w-4" />
                     )
                   ) : (
-                    <ArrowUpDown className={cn("h-4 w-4", isDark ? "text-zinc-600" : "text-black")} />
+                    <ArrowUpDown
+                      className={cn('h-4 w-4', isDark ? 'text-zinc-600' : 'text-black')}
+                    />
                   )}
                 </button>
               ) : (

@@ -20,6 +20,7 @@ import AddressDisplay from "./AddressDisplay";
 import { StatusTag } from "@/components/ui/StatusTag";
 import { RichTextContent } from "@/components/ui/RichTextContent";
 import FormFilter from "./FormFilter";
+import { formattedDate } from "@/utils/formattedDate";
 
 const defaultPagination = { current: 1, pageSize: 10 };
 
@@ -87,23 +88,9 @@ const DataTableComponent = memo(function DataTableComponent() {
         dataIndex: "created_at",
         key: "created_at",
         render: (created_at) => {
-          const date = created_at ? new Date(created_at) : null;
-          const isValidDate = date && !isNaN(date.getTime());
-
           return (
             <span className="text-xs text-muted-foreground/80 font-medium whitespace-nowrap">
-              {isValidDate
-                ? new Intl.DateTimeFormat(
-                    i18n.language === "vi" ? "vi-VN" : "en-GB",
-                    {
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    },
-                  ).format(date)
-                : "—"}
+              {formattedDate(created_at as string | undefined)}
             </span>
           );
         },

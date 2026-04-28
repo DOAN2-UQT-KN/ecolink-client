@@ -1,10 +1,10 @@
-import { ICampaign } from "./campaign";
-import { IPaginationResponse } from "@/types/PaginationResponse";
+import { ICampaign } from './campaign';
+import { IPaginationResponse } from '@/types/PaginationResponse';
 
 export interface IGetCampaignsRequest {
   search?: string;
   status?: number;
-  organization_id?: string;
+  organizationId?: string;
   page?: number;
   limit?: number;
   latitude?: number;
@@ -13,7 +13,8 @@ export interface IGetCampaignsRequest {
   difficulty?: number;
   start_date?: string;
   end_date?: string;
+
+  is_owner?: boolean;
 }
 
-
-export type IGetCampaignsResponse = IPaginationResponse<ICampaign[], "campaigns">;
+export type IGetCampaignsResponse = IPaginationResponse<ICampaign[], 'campaigns'>;

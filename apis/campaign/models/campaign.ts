@@ -1,3 +1,6 @@
+import type { IUser } from '@/apis/auth/models/user';
+import { IIncident } from '@/apis/incident/models/incident';
+
 export interface ICampaign {
   id: string;
   organization_id?: string;
@@ -27,10 +30,27 @@ export interface ICampaign {
 
   saved?: boolean;
   request_status?: number;
+  /** Present when the current user has a join request; used to cancel while pending. */
+  join_request_id?: string;
 
   banner?: string;
   detail_address?: string;
   start_date?: string;
   end_date?: string;
-}
 
+  current_members?: number;
+  max_members?: number;
+
+  /** Campaign owner; may be omitted in some responses; see also `created_by` */
+  owner?: Pick<IUser, 'id' | 'name' | 'email' | 'avatar'> | null;
+
+  /** Populated by admin-facing endpoints */
+  organization?: {
+    id: string;
+    name: string;
+    logo_url?: string | null;
+    contact_email?: string | null;
+  } | null;
+
+  reports?: IIncident[];
+}

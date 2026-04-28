@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, {
   createContext,
@@ -7,31 +7,29 @@ import React, {
   useCallback,
   useEffect,
   useContext,
-} from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useGetOrganizations } from "@/apis/organization/getOrganizations";
-import { useGetMyOrganizations } from "@/apis/organization/getMyOrganizations";
-import type { IOrganization } from "@/apis/organization/models/organization";
-import type { IGetOrganizationsRequest } from "@/apis/organization/models/getOrganizations";
-import type { IGetMyOrganizationsRequest } from "@/apis/organization/models/getMyOrganizations";
-import { STATUS } from "@/constants/status";
-import useGetParam from "@/hooks/useGetParam";
+} from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useGetOrganizations } from '@/apis/organization/getOrganizations';
+import { useGetMyOrganizations } from '@/apis/organization/getMyOrganizations';
+import type { IOrganization } from '@/apis/organization/models/organization';
+import type { IGetOrganizationsRequest } from '@/apis/organization/models/getOrganizations';
+import type { IGetMyOrganizationsRequest } from '@/apis/organization/models/getMyOrganizations';
+import { STATUS } from '@/constants/status';
+import useGetParam from '@/hooks/useGetParam';
 
-function parseSortBy(
-  v: string | undefined,
-): NonNullable<IGetOrganizationsRequest["sort_by"]> {
-  if (v === "updated_at" || v === "created_at") return v;
-  return "created_at";
+function parseSortBy(v: string | undefined): NonNullable<IGetOrganizationsRequest['sort_by']> {
+  if (v === 'updated_at' || v === 'created_at') return v;
+  return 'created_at';
 }
 
 function parseSortOrder(
   v: string | undefined,
-): NonNullable<IGetOrganizationsRequest["sort_order"]> {
-  if (v === "asc" || v === "desc") return v;
-  return "desc";
+): NonNullable<IGetOrganizationsRequest['sort_order']> {
+  if (v === 'asc' || v === 'desc') return v;
+  return 'desc';
 }
 
-export type OrganizationSearchViewMode = "explore" | "mine";
+export type OrganizationSearchViewMode = 'explore' | 'mine';
 
 interface OrganizationSearchContextType {
   organizations: IOrganization[];
@@ -44,28 +42,19 @@ interface OrganizationSearchContextType {
   setPagination: (pagination: { current: number; pageSize: number }) => void;
   viewMode: OrganizationSearchViewMode;
   setViewMode: (mode: OrganizationSearchViewMode) => void;
-  filters: Pick<
-    IGetOrganizationsRequest,
-    "search" | "sort_by" | "sort_order"
-  >;
+  filters: Pick<IGetOrganizationsRequest, 'search' | 'sort_by' | 'sort_order'>;
   setFilters: (
-    filters: Partial<
-      Pick<IGetOrganizationsRequest, "search" | "sort_by" | "sort_order">
-    >,
+    filters: Partial<Pick<IGetOrganizationsRequest, 'search' | 'sort_by' | 'sort_order'>>,
   ) => void;
   resetFilters: () => void;
   refetch: () => void;
 }
 
-export const OrganizationSearchContext = createContext<
-  OrganizationSearchContextType | undefined
->(undefined);
+export const OrganizationSearchContext = createContext<OrganizationSearchContextType | undefined>(
+  undefined,
+);
 
-export const OrganizationSearchProvider = ({
-  children,
-}: {
-  children: ReactNode;
-}) => {
+export const OrganizationSearchProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -75,17 +64,16 @@ export const OrganizationSearchProvider = ({
     pageSize: 12,
   });
 
-  const urlTab = useGetParam<string>("tab", "string", undefined);
-  const viewMode: OrganizationSearchViewMode =
-    urlTab === "mine" ? "mine" : "explore";
+  const urlTab = useGetParam<string>('tab', 'string', undefined);
+  const viewMode: OrganizationSearchViewMode = urlTab === 'mine' ? 'mine' : 'explore';
 
   const setViewMode = useCallback(
     (mode: OrganizationSearchViewMode) => {
       const params = new URLSearchParams(searchParams.toString());
-      if (mode === "mine") {
-        params.set("tab", "mine");
+      if (mode === 'mine') {
+        params.set('tab', 'mine');
       } else {
-        params.delete("tab");
+        params.delete('tab');
       }
       const qs = params.toString();
       router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
@@ -94,32 +82,28 @@ export const OrganizationSearchProvider = ({
     [pathname, router, searchParams],
   );
 
-  const urlSearch = useGetParam<string>("search", "string", "");
-  const urlSortBy = useGetParam<string>("sort_by", "string", undefined);
-  const urlSortOrder = useGetParam<string>("sort_order", "string", undefined);
+  const urlSearch = useGetParam<string>('search', 'string', '');
+  const urlSortBy = useGetParam<string>('sort_by', 'string', undefined);
+  const urlSortOrder = useGetParam<string>('sort_order', 'string', undefined);
 
   const [filters, setFiltersState] = useState<
-    Pick<IGetOrganizationsRequest, "search" | "sort_by" | "sort_order">
+    Pick<IGetOrganizationsRequest, 'search' | 'sort_by' | 'sort_order'>
   >({
-    search: urlSearch ?? "",
+    search: urlSearch ?? '',
     sort_by: parseSortBy(urlSortBy),
     sort_order: parseSortOrder(urlSortOrder),
   });
 
   useEffect(() => {
     setFiltersState({
-      search: urlSearch ?? "",
+      search: urlSearch ?? '',
       sort_by: parseSortBy(urlSortBy),
       sort_order: parseSortOrder(urlSortOrder),
     });
   }, [urlSearch, urlSortBy, urlSortOrder]);
 
   const setFilters = useCallback(
-    (
-      newFilters: Partial<
-        Pick<IGetOrganizationsRequest, "search" | "sort_by" | "sort_order">
-      >,
-    ) => {
+    (newFilters: Partial<Pick<IGetOrganizationsRequest, 'search' | 'sort_by' | 'sort_order'>>) => {
       setFiltersState((prev) => ({ ...prev, ...newFilters }));
       setPagination((prev) => ({ ...prev, current: 1 }));
     },
@@ -128,9 +112,9 @@ export const OrganizationSearchProvider = ({
 
   const resetFilters = useCallback(() => {
     setFiltersState({
-      search: "",
-      sort_by: "created_at",
-      sort_order: "desc",
+      search: '',
+      sort_by: 'created_at',
+      sort_order: 'desc',
     });
     setPagination((prev) => ({ ...prev, current: 1 }));
   }, []);
@@ -142,16 +126,15 @@ export const OrganizationSearchProvider = ({
     [],
   );
 
-  const listRequest: IGetOrganizationsRequest =
-    {
-      page: pagination.current,
-      limit: pagination.pageSize,
-      search: filters.search?.trim() || undefined,
-      sort_by: filters.sort_by,
-      sort_order: filters.sort_order,
-      is_email_verified: true,
-      status: STATUS.ACTIVE,
-    };
+  const listRequest: IGetOrganizationsRequest = {
+    page: pagination.current,
+    limit: pagination.pageSize,
+    search: filters.search?.trim() || undefined,
+    sort_by: filters.sort_by,
+    sort_order: filters.sort_order,
+    // is_email_verified: true,
+    status: STATUS.ACTIVE,
+  };
 
   const myListRequest: IGetMyOrganizationsRequest = {
     page: pagination.current,
@@ -162,20 +145,17 @@ export const OrganizationSearchProvider = ({
   };
 
   const exploreQuery = useGetOrganizations(listRequest, {
-    enabled: viewMode === "explore",
+    enabled: viewMode === 'explore',
   });
   const myQuery = useGetMyOrganizations(myListRequest, {
-    enabled: viewMode === "mine",
+    enabled: viewMode === 'mine',
   });
 
-  const data = viewMode === "mine" ? myQuery.data : exploreQuery.data;
-  const isLoading = viewMode === "mine" ? myQuery.isLoading : exploreQuery.isLoading;
-  const refetch = viewMode === "mine" ? myQuery.refetch : exploreQuery.refetch;
+  const data = viewMode === 'mine' ? myQuery.data : exploreQuery.data;
+  const isLoading = viewMode === 'mine' ? myQuery.isLoading : exploreQuery.isLoading;
+  const refetch = viewMode === 'mine' ? myQuery.refetch : exploreQuery.refetch;
 
-  const organizations = React.useMemo(
-    () => data?.data?.organizations ?? [],
-    [data],
-  );
+  const organizations = React.useMemo(() => data?.data?.organizations ?? [], [data]);
 
   const total = React.useMemo(() => data?.data?.total ?? 0, [data]);
 
@@ -218,9 +198,7 @@ export const OrganizationSearchProvider = ({
 export const useOrganizationSearch = () => {
   const context = useContext(OrganizationSearchContext);
   if (context === undefined) {
-    throw new Error(
-      "useOrganizationSearch must be used within an OrganizationSearchProvider",
-    );
+    throw new Error('useOrganizationSearch must be used within an OrganizationSearchProvider');
   }
   return context;
 };

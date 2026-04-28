@@ -1,4 +1,5 @@
-import { IPaginationResponse } from "@/types/PaginationResponse";
+import { IIncident } from '@/apis/incident/models/incident';
+import { IPaginationResponse } from '@/types/PaginationResponse';
 
 export interface IGetResourceRequest {
   page?: number;
@@ -14,6 +15,13 @@ export interface IResource {
   description: string;
   created_at: string;
   updated_at: string;
+  resource: IIncident;
 }
 
-export interface IGetResourceResponse extends IPaginationResponse<IResource, "data"> {}
+export interface ISavedResourceItem {
+  items: IResource[];
+}
+export interface IGetResourceResponse extends IPaginationResponse<
+  ISavedResourceItem,
+  'saved_resource'
+> {}

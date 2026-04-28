@@ -13,7 +13,7 @@ export const updateGift = async ({
   id: string;
   data: IUpdateGiftRequest;
 }): Promise<IUpdateGiftResponse> => {
-  return await requestApi.put<IUpdateGiftResponse>(`${baseUrl}/${id}`, data);
+  return await requestApi.put<IUpdateGiftResponse>(`${baseurl}/${id}`, data);
 };
 
 export const useUpdateGift = (

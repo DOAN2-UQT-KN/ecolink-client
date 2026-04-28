@@ -1,0 +1,210 @@
+'use client';
+
+import { useMemo } from 'react';
+import { useParams } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
+import { Inbox } from 'lucide-react';
+
+import { Breadcrumbs, BreadcrumbItemProps } from '@/components/client/shared/Breadcrumbs';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty';
+import { Skeleton } from '@/components/ui/skeleton';
+
+import { CampaignTabs } from './_components/CampaignTabs';
+import StatsCards from './_components/StatsCards';
+import { CampaignDetailProvider } from './_context/CampaignDetailContext';
+import { useCampaignDetail } from './_hooks/useCampaignDetail';
+import { TbArrowRight } from 'react-icons/tb';
+import { Button } from '@/components/client/shared/Button';
+import { STATUS } from '@/constants/status';
+import { ConfirmPopover } from '@/components/admin/shared/ConfirmPopover';
+import { useMarkDoneCampaign } from '@/apis/campaign/campaignById';
+import { useQueryClient } from '@tanstack/react-query';
+
+function CampaignDetailBody() {
+  const { t } = useTranslation('common');
+  const {
+    campaignId,
+    campaign,
+    isLoading,
+    isError,
+    isCampaignOwner,
+    handleJoinCampaign,
+    isJoining,
+    handleCancelJoinRequest,
+    isCancelling,
+  } = useCampaignDetail();
+
+  const requestStatus = campaign?.request_status;
+  const isApproved = requestStatus === STATUS.APPROVED;
+  const isPending = requestStatus === STATUS.PENDING;
+  const showJoinCta = !isApproved && !isPending;
+
+  const queryClient = useQueryClient();
+  const { mutate: markDoneMutate, isPending: isMarkingDone } = useMarkDoneCampaign({
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });
+    },
+  });
+
+  const handleMarkDone = () => {
+    return new Promise<void>((resolve, reject) => {
+      markDoneMutate(
+        { id: campaignId },
+        {
+          onSuccess: () => resolve(),
+          onError: () => reject(),
+        },
+      );
+    });
+  };
+
+  const breadcrumbs: BreadcrumbItemProps[] = useMemo(
+    () => [
+      { label: t('Home'), path: '/', type: 'link' },
+      {
+        label: t('Campaigns'),
+        path: '/campaigns',
+        type: 'link',
+      },
+      {
+        label: campaign?.title?.trim() ? campaign.title : t('Campaign'),
+        path: `/campaigns/${campaignId}`,
+        type: 'page',
+      },
+    ],
+    [t, campaign, campaignId],
+  );
+
+  if (isLoading) {
+    return (
+      <div className="max-w-7xl mx-auto w-full px-4 lg:px-8 pb-10">
+        <div className="space-y-2 py-2">
+          <Skeleton className="h-4 w-48" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <div className="mt-4 flex flex-col overflow-hidden rounded-xl border border-border sm:flex-row">
+          <Skeleton className="h-44 shrink-0 rounded-none sm:h-auto sm:min-h-[200px] sm:w-72" />
+          <div className="flex min-w-0 flex-1 flex-col gap-3 p-5 sm:p-6">
+            <Skeleton className="h-5 w-24" />
+            <Skeleton className="h-8 w-4/5 max-w-md" />
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="h-32 w-full" />
+          </div>
+        </div>
+        <div className="mt-6 flex flex-col sm:flex-row gap-5 w-full">
+          <Skeleton className="h-36 w-full max-w-sm rounded-2xl" />
+          <Skeleton className="h-36 w-full max-w-sm rounded-2xl" />
+          <Skeleton className="h-36 w-full max-w-sm rounded-2xl" />
+        </div>
+        <div className="mt-6">
+          <Skeleton className="h-10 w-full max-w-md rounded-lg mb-4" />
+          <Skeleton className="h-48 w-full rounded-xl" />
+        </div>
+      </div>
+    );
+  }
+
+  if (isError || !campaign) {
+    return (
+      <div className="max-w-7xl mx-auto w-full px-4 lg:px-8 pb-10">
+        <Breadcrumbs breadcrumbs={breadcrumbs} />
+        <div className="flex justify-center pt-16">
+          <Empty>
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Inbox className="h-12 w-12 text-muted-foreground" />
+              </EmptyMedia>
+              <EmptyTitle>{t('Campaign not found')}</EmptyTitle>
+              <EmptyDescription>
+                {t("We couldn't find the campaign you were looking for.")}
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-7xl mx-auto w-full px-4 lg:px-8 pb-10 animate-in fade-in duration-500">
+      <Breadcrumbs breadcrumbs={breadcrumbs} />
+
+      <div className="pt-5 space-y-6">
+        {!isApproved && !isCampaignOwner && (
+          <div className="flex justify-end">
+            {isPending ? (
+              <Button
+                type="button"
+                variant="outlined-brown"
+                size="medium"
+                isLoading={isCancelling}
+                onClick={handleCancelJoinRequest}
+              >
+                {t('Cancel')}
+              </Button>
+            ) : showJoinCta ? (
+              <Button
+                type="button"
+                variant="brown"
+                size="medium"
+                iconRight={<TbArrowRight className="size-4" aria-hidden />}
+                isLoading={isJoining}
+                onClick={handleJoinCampaign}
+              >
+                {t('Join')}
+              </Button>
+            ) : null}
+          </div>
+        )}
+
+        {isCampaignOwner && campaign?.status !== STATUS.COMPLETED && (
+          <div className="flex justify-end">
+            <ConfirmPopover
+              title={t('Mark Campaign as Done')}
+              description={t(
+                'Are you sure you want to mark this campaign as done? This action cannot be undone.',
+              )}
+              onConfirm={handleMarkDone}
+              cancelLabel={t('Cancel')}
+              confirmLabel={t('Mark done')}
+              theme="light"
+              confirmPending={isMarkingDone}
+              trigger={
+                <Button
+                  type="button"
+                  variant="brown"
+                  size="medium"
+                  isLoading={isMarkingDone}
+                  className="!h-[45px]"
+                  disabled={isMarkingDone}
+                >
+                  {t('Mark done')}
+                </Button>
+              }
+            />
+          </div>
+        )}
+        <StatsCards />
+        <div className="w-full min-w-0">
+          <CampaignTabs />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function CampaignDetailPage() {
+  const { id } = useParams() as { id: string };
+
+  return (
+    <CampaignDetailProvider campaignId={id}>
+      <CampaignDetailBody />
+    </CampaignDetailProvider>
+  );
+}

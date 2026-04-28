@@ -16,6 +16,9 @@ import { PreviewOrganizationPopover } from './PreviewOrganizationPopover';
 import { ApproveOrganizationConfirm } from './ApproveOrganizationConfirm';
 import { TbScanEye } from 'react-icons/tb';
 import { RichTextContent } from '@/components/ui/RichTextContent';
+import { formattedDate } from '@/utils/formattedDate';
+import Image from 'next/image';
+import defaultAvatar from '@/public/default-avatar.png';
 
 const COLUMN_KEYS = {
   NO: 'no',
@@ -26,13 +29,6 @@ const COLUMN_KEYS = {
   DESCRIPTION: 'description',
   ACTION: 'action',
 } as const;
-
-function toDisplayDate(value?: string | null) {
-  if (!value) return '-';
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return '-';
-  return d.toLocaleDateString();
-}
 
 function toOwnerLabel(ownerId?: string | null) {
   if (!ownerId) return '-';
@@ -94,13 +90,22 @@ export function DataTable() {
         title: t('Owner'),
         className: 'min-w-[180px]',
         render: (_, record) => (
-          <div className="space-y-1">
-            <p className={cn('font-display-1', isDark ? 'text-zinc-200' : 'text-zinc-800')}>
-              {toDisplayDate(record.created_at)}
-            </p>
-            <p className={cn('font-display-1', isDark ? 'text-zinc-500' : 'text-zinc-600')}>
-              Owner: {toOwnerLabel(record.owner_id)}
-            </p>
+          <div className="flex flex-row items-center justify-center gap-2">
+            <Image
+              src={record?.owner?.avatar || defaultAvatar}
+              alt={record?.owner?.name}
+              width={40}
+              height={40}
+              className="rounded-full"
+            />
+            <div className="flex flex-col gap-2">
+              <span className={cn('font-medium', isDark ? 'text-zinc-100' : 'text-zinc-900')}>
+                {record?.owner?.name}
+              </span>
+              <p className={cn('font-display-1', isDark ? 'text-zinc-500' : 'text-zinc-600')}>
+                {formattedDate(record.created_at ?? undefined)}
+              </p>
+            </div>
           </div>
         ),
       },

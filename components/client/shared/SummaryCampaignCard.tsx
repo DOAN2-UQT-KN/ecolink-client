@@ -9,19 +9,35 @@ import { formattedDate } from '@/utils/formattedDate';
 import { TbCalendarClock, TbArrowRight } from 'react-icons/tb';
 import { useTranslation } from 'react-i18next';
 import { Button } from './Button';
+import { useRouter } from 'next/navigation';
+import useAuthStore from '@/stores/useAuthStore';
+import ChangeStatus from '@/components/ui/ChangeStatus';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface SummaryCampaignCardProps {
   campaign: ICampaign;
+  exploreMode?: boolean;
 }
 
-export default function SummaryCampaignCard({ campaign }: SummaryCampaignCardProps) {
+export default function SummaryCampaignCard({
+  campaign,
+  exploreMode = false,
+}: SummaryCampaignCardProps) {
   const { t } = useTranslation('common');
   const maxMembers = 50;
   const currentMembers = 18;
   const memberProgress = (currentMembers / maxMembers) * 100;
-
+  const router = useRouter();
+  const currentUserId = useAuthStore((s) => s.user?.id);
+  const showYourCampaignTag =
+    campaign.owner?.id != null && currentUserId != null && campaign.owner.id === currentUserId;
   return (
-    <article className="rounded-xl border border-[rgba(136,122,71,0.35)] bg-white/60 p-6 shadow-sm flex flex-row gap-5 items-center">
+    <article
+      onClick={() => {
+        router.push(`/campaigns/${campaign.id}`);
+      }}
+      className="rounded-xl border border-[rgba(136,122,71,0.35)] bg-white/60 p-6 shadow-sm flex flex-row gap-5 items-center"
+    >
       <Image
         src={campaign.banner ?? '/banner-default.jpg'}
         alt={campaign.title}
@@ -32,21 +48,69 @@ export default function SummaryCampaignCard({ campaign }: SummaryCampaignCardPro
 
       <div className="space-y-5 flex flex-col w-[calc(100%-300px)]">
         <div className="flex flex-row items-center justify-between w-full">
-          <Tag variant="green">
-            {campaign.green_points ?? ''} {t('Green points')}
-          </Tag>
+          <div className="flex flex-row items-center gap-2">
+            <Tag variant="green">
+              {campaign.green_points ?? ''} {t('Green points')}
+            </Tag>
+            {showYourCampaignTag ? (
+              <span
+                className="shrink-0 inline-flex items-center rounded-sm border border-[rgba(136,122,71,0.45)] bg-button-accent/10 px-2.5 py-0.5 text-xs font-semibold text-button-accent"
+                aria-label={t('Your campaign')}
+              >
+                {t('Your Campaign')}
+              </span>
+            ) : null}
+          </div>
           <span className="font-display-1 text-muted-foreground">
             {formattedDate(campaign?.created_at)}
           </span>
         </div>
 
         <div className="flex flex-col gap-1 w-full">
-          <h3 className="font-semibold text-button-accent font-display-6">{campaign.title}</h3>
+          <div className="flex flex-row items-center gap-3 w-full">
+            <h3 className="font-semibold text-button-accent font-display-6">{campaign.title}</h3>
+            {campaign.status != null ? (
+              <div onClick={(e) => e.stopPropagation()}>
+                <ChangeStatus type={campaign.status} enabledDropdown={false} />
+              </div>
+            ) : null}
+          </div>
           <div className="font-display-1 text-muted-foreground flex flex-row items-center gap-1">
             <HiMapPin size={14} />
             <TooltipTruncatedText text={campaign.detail_address ?? '-'} maxLength={50} />
           </div>
         </div>
+
+        {exploreMode && campaign.organization ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  router.push(`/organizations/${campaign.organization_id}`);
+                }}
+                className="w-fit flex items-center gap-2 rounded-md border border-[rgba(136,122,71,0.35)] bg-white/80 px-2 py-1.5 hover:bg-white cursor-pointer"
+                aria-label={t('View organization')}
+              >
+                {campaign.organization.logo_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- arbitrary logo URLs
+                  <img
+                    src={campaign.organization.logo_url}
+                    alt={campaign.organization.name}
+                    className="size-6 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="size-6 rounded-full bg-muted" aria-hidden />
+                )}
+                <span className="font-display-1 text-foreground-secondary">
+                  {campaign.organization.name}
+                </span>
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>{t('View organization')}</TooltipContent>
+          </Tooltip>
+        ) : null}
 
         <RichTextContent
           value={campaign.description}
@@ -81,6 +145,7 @@ export default function SummaryCampaignCard({ campaign }: SummaryCampaignCardPro
               {formattedDate(campaign?.start_date)} - {formattedDate(campaign?.end_date)}
             </span>
           </div>
+
           <Button variant="outlined-brown" size="small" className="!h-[35px]">
             <div className="flex flex-row items-center gap-2">
               {t('Join campaign')}

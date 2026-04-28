@@ -1,4 +1,4 @@
-export interface IPaginationResponse<T = unknown, K extends string = "items"> {
+export interface IPaginationResponse<T = unknown, K extends string = 'items'> {
   success: boolean;
   code?: string;
   message?: string;

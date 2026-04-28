@@ -1,27 +1,19 @@
-"use client";
+'use client';
 
-import {
-  createContext,
-  memo,
-  ReactNode,
-  useEffect,
-  useCallback,
-  useMemo,
-  useState,
-} from "react";
-import { FormProvider, useForm, UseFormReturn } from "react-hook-form";
-import { useRouter } from "next/navigation";
+import { createContext, memo, ReactNode, useEffect, useCallback, useMemo, useState } from 'react';
+import { FormProvider, useForm, UseFormReturn } from 'react-hook-form';
+import { useRouter } from 'next/navigation';
 
-import { IIncident } from "@/apis/incident/models/incident";
-import { queryClient } from "@/libs/queryClient";
+import { IIncident } from '@/apis/incident/models/incident';
+import { queryClient } from '@/libs/queryClient';
 
 import {
   CampaignFormValues,
   DEFAULT_CAMPAIGN_FORM_VALUES,
   transformToApiData,
-} from "../_services/campaign.service";
-import { useCreateCampaign } from "@/apis/campaign/createCampaign";
-import { uploadToCloudinary } from "@/app/(pages)/(main)/incidents/create/_services/upload.service";
+} from '../_services/campaign.service';
+import { useCreateCampaign } from '@/apis/campaign/createCampaign';
+import { uploadToCloudinary } from '@/app/(pages)/(main)/incidents/create/_services/upload.service';
 
 interface CampaignContextType {
   form: UseFormReturn<CampaignFormValues>;
@@ -32,9 +24,7 @@ interface CampaignContextType {
   setSelectedReports: (reports: IIncident[]) => void;
 }
 
-export const CampaignContext = createContext<CampaignContextType | undefined>(
-  undefined,
-);
+export const CampaignContext = createContext<CampaignContextType | undefined>(undefined);
 
 export const CampaignProvider = memo(function CampaignProvider({
   children,
@@ -51,19 +41,19 @@ export const CampaignProvider = memo(function CampaignProvider({
   const form = useForm<CampaignFormValues>({
     defaultValues: {
       ...DEFAULT_CAMPAIGN_FORM_VALUES,
-      organization_id: organizationId ?? "",
+      organization_id: organizationId ?? '',
     },
   });
 
   useEffect(() => {
     if (!organizationId) return;
-    form.setValue("organization_id", organizationId, { shouldDirty: false });
+    form.setValue('organization_id', organizationId, { shouldDirty: false });
   }, [form, organizationId]);
 
   const setSelectedReports = useCallback(
     (reports: IIncident[]) => {
       setSelectedReportsState(reports);
-      form.setValue("selectedReports", reports, { shouldDirty: true });
+      form.setValue('selectedReports', reports, { shouldDirty: true });
     },
     [form],
   );
@@ -72,8 +62,8 @@ export const CampaignProvider = memo(function CampaignProvider({
     onSuccess: () => {
       form.reset(DEFAULT_CAMPAIGN_FORM_VALUES);
       setSelectedReportsState([]);
-      queryClient.invalidateQueries({ queryKey: ["campaigns"] });
-      router.push(`/organizations/${organizationId}`);
+      queryClient.invalidateQueries({ queryKey: ['campaigns'] });
+      router.push(`/campaigns/me`);
     },
   });
 
@@ -84,9 +74,7 @@ export const CampaignProvider = memo(function CampaignProvider({
 
       try {
         setIsUploading(true);
-        const bannerUrl = data.banner
-          ? await uploadToCloudinary(data.banner)
-          : undefined;
+        const bannerUrl = data.banner ? await uploadToCloudinary(data.banner) : undefined;
         const payload = transformToApiData({
           ...data,
           banner: bannerUrl,
