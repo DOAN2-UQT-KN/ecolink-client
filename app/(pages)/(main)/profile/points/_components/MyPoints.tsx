@@ -5,24 +5,33 @@ import { memo } from 'react';
 import usePointsContext from '../_hooks/usePointsContext';
 import { formatPoints } from '../_services/points.service';
 
+import { TbCoinFilled, TbLeaf } from 'react-icons/tb';
+import { useTranslation } from 'react-i18next';
+
 const MyPoints = memo(function MyPoints() {
   const { points, isLoading } = usePointsContext();
 
+  const { t } = useTranslation();
+
   return (
-    <section className="rounded-xl border border-[rgba(136,122,71,0.35)] bg-background-primary/10 p-5 sm:p-6">
-      <p className="text-sm text-foreground-secondary">My Points</p>
-      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="rounded-lg border border-border/60 bg-background p-4">
-          <p className="text-xs uppercase tracking-wide text-foreground-secondary">Balance</p>
-          <p className="mt-2 text-3xl font-semibold tabular-nums">
+    <section>
+      {/* <p className="text-sm text-foreground-secondary">My Points</p> */}
+      <div className=" grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="rounded-lg border border-[rgba(136,122,71,0.5)] bg-background p-4">
+          <div className="font-display-2 uppercase tracking-wide text-foreground-secondary flex items-center gap-2 ">
+            <TbCoinFilled className="inline-block size-8 text-yellow-500" /> {t('Coins')}
+          </div>
+          <div className="mt-2 font-display-4 font-semibold tabular-nums">
             {isLoading ? '...' : formatPoints(points?.balance)}
-          </p>
+          </div>
         </div>
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
-          <p className="text-xs uppercase tracking-wide text-emerald-700">Green Points</p>
-          <p className="mt-2 text-3xl font-semibold tabular-nums text-emerald-600">
+        <div className="rounded-lg border border-[rgba(136,122,71,0.5)] bg-background p-4">
+          <div className="font-display-2 uppercase tracking-wide text-foreground-secondary flex items-center gap-2">
+            <TbLeaf className="inline-block size-8 text-emerald-600" /> {t('Green Points')}
+          </div>
+          <div className="mt-2 font-display-4 font-semibold tabular-nums">
             {isLoading ? '...' : formatPoints(points?.green_points)}
-          </p>
+          </div>
         </div>
       </div>
     </section>

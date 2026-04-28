@@ -1,4 +1,4 @@
-import type { IBaseResponse } from "@/types/BaseResponse";
+import type { IBaseResponse } from '@/types/BaseResponse';
 
 export interface IGift {
   id: string;
@@ -55,3 +55,19 @@ export interface IUpdateGiftRequest {
 }
 
 export type IUpdateGiftResponse = IBaseResponse<{ gift: IGift }>;
+
+export interface IGiftRedeem {
+  id: string;
+  name: string;
+  giftId: string;
+  greenPointsSpent: string;
+  createdAt: string;
+}
+
+export interface IRedeemGiftRequest {
+  id: string;
+}
+
+export type IRedeemGiftResponse = IBaseResponse<{
+  redemption: IGiftRedeem;
+}>;
