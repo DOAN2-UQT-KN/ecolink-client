@@ -419,5 +419,12 @@
   "My Campaigns": "Chiến dịch của tôi",
   "My Organizations": "Tổ chức của tôi",
   "My Reports": "Báo cáo của tôi",
-  "Admin": "Quản trị viên"
+  "Admin": "Quản trị viên",
+
+  "Incident & Campaign Map": "Bản đồ sự cố & chiến dịch",
+  "Map updated at {{time}}": "Cập nhật lúc {{time}}",
+  "Refreshing map…": "Đang làm mới bản đồ…",
+  "No markers found on map.": "Không tìm thấy điểm đánh dấu nào trên bản đồ.",
+  "Untitled Campaign": "Chiến dịch chưa đặt tên",
+  "Untitled Incident": "Sự cố chưa đặt tên"
 }

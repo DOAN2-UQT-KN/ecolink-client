@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
-import { getAllCampaigns, getCampaigns } from '@/apis/campaign/getCampaigns';
-import { getAllReports, getReports } from '@/apis/incident/getReport';
-import { STATUS } from '@/constants/status';
+import { useTranslation } from 'react-i18next';
+import { getAllCampaigns } from '@/apis/campaign/getCampaigns';
+import { getAllReports } from '@/apis/incident/getReport';
 
 const MapView = dynamic(() => import('./MapView'), {
   ssr: false,
@@ -30,24 +30,13 @@ export interface MapMarker {
   wasteType?: string | null;
 }
 
-export interface FilterState {
-  status: 'all' | 'pending' | 'resolved';
-  wasteType: string;
-}
-
 // ─── helpers ───────────────────────────────────────────────────────────────────
-const STATUS_MAP: Record<FilterState['status'], number | undefined> = {
-  all: undefined,
-  pending: STATUS.PENDING,
-  resolved: STATUS.COMPLETED,
-};
-
-function toCampaignMarkers(raw: any[]): MapMarker[] {
+function toCampaignMarkers(raw: any[], fallback: string): MapMarker[] {
   return raw
     .filter((c) => c.latitude != null && c.longitude != null)
     .map((c) => ({
       id: String(c.id),
-      title: c.title || 'Untitled Campaign',
+      title: c.title || fallback,
       lat: Number(c.latitude),
       lng: Number(c.longitude),
       type: 'CAMPAIGN' as const,
@@ -57,12 +46,12 @@ function toCampaignMarkers(raw: any[]): MapMarker[] {
     }));
 }
 
-function toIncidentMarkers(raw: any[]): MapMarker[] {
+function toIncidentMarkers(raw: any[], fallback: string): MapMarker[] {
   return raw
     .filter((i) => i.latitude != null && i.longitude != null)
     .map((i) => ({
       id: String(i.id),
-      title: i.title || 'Untitled Incident',
+      title: i.title || fallback,
       lat: Number(i.latitude),
       lng: Number(i.longitude),
       type: 'INCIDENT' as const,
@@ -74,10 +63,7 @@ function toIncidentMarkers(raw: any[]): MapMarker[] {
 
 // ─── component ─────────────────────────────────────────────────────────────────
 export default function MapPage() {
-  const [filters, setFilters] = useState<FilterState>({
-    status: 'all',
-    wasteType: 'all',
-  });
+  const { t } = useTranslation();
   const [campaigns, setCampaigns] = useState<MapMarker[]>([]);
   const [incidents, setIncidents] = useState<MapMarker[]>([]);
   const [loading, setLoading] = useState(true);
@@ -85,27 +71,25 @@ export default function MapPage() {
 
   const fetchData = useCallback(async () => {
     setLoading(true);
-    const statusNum = STATUS_MAP[filters.status];
-    const wasteType = filters.wasteType !== 'all' ? filters.wasteType : undefined;
 
     const [campaignRes, incidentRes] = await Promise.allSettled([
       getAllCampaigns({}),
-      getAllReports({ waste_type: wasteType }),
+      getAllReports({}),
     ]);
 
     if (campaignRes.status === 'fulfilled') {
-      const data = (campaignRes.value as any)?.campaigns ?? [];
-      setCampaigns(toCampaignMarkers(data));
+      const data = (campaignRes.value as any)?.data?.campaigns ?? [];
+      setCampaigns(toCampaignMarkers(data, t('Untitled Campaign')));
     }
 
     if (incidentRes.status === 'fulfilled') {
-      const data = (incidentRes.value as any)?.reports ?? [];
-      setIncidents(toIncidentMarkers(data));
+      const data = (incidentRes.value as any)?.data?.reports ?? [];
+      setIncidents(toIncidentMarkers(data, t('Untitled Incident')));
     }
 
     setLoading(false);
     setLastUpdated(new Date());
-  }, [filters]);
+  }, [t]);
 
   // Initial fetch + 10-second auto-refresh
   useEffect(() => {
@@ -121,8 +105,6 @@ export default function MapPage() {
     <div className="-mt-[92px] -mb-[92px] -mx-[20px] lg:-mx-[160px] h-screen relative overflow-hidden">
       <MapView markers={markers} loading={loading} />
       <FilterPanel
-        filters={filters}
-        onFiltersChange={setFilters}
         loading={loading}
         lastUpdated={lastUpdated}
         counts={{ campaigns: campaigns.length, incidents: incidents.length }}

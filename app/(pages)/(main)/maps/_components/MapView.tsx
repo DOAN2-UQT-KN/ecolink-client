@@ -4,6 +4,7 @@ import { memo, useEffect, useState, useMemo } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { useTranslation } from "react-i18next";
 import type { MapMarker } from "./MapPage";
 
 // Vietnam geographic center
@@ -41,6 +42,8 @@ const MarkerList = memo(function MarkerList({
 }: {
   markers: MapMarker[];
 }) {
+  const { t } = useTranslation();
+
   const icons = useMemo(
     () => ({
       CAMPAIGN: buildPinIcon("#2563eb"),
@@ -66,7 +69,7 @@ const MarkerList = memo(function MarkerList({
                     : "bg-red-100 text-red-700"
                 }`}
               >
-                {m.type === "CAMPAIGN" ? "Campaign" : "Incident"}
+                {m.type === "CAMPAIGN" ? t("Campaign") : t("Incident")}
               </span>
               <p className="font-semibold text-gray-900 text-sm leading-snug">
                 {m.title}
@@ -91,19 +94,21 @@ const MarkerList = memo(function MarkerList({
 
 // ─── loading toast ─────────────────────────────────────────────────────────────
 const LoadingToast = memo(function LoadingToast() {
+  const { t } = useTranslation();
   return (
     <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] flex items-center gap-2 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg text-sm text-gray-600 pointer-events-none select-none">
       <span className="h-3 w-3 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
-      Refreshing…
+      {t('Refreshing map…')}
     </div>
   );
 });
 
 // ─── empty state overlay ───────────────────────────────────────────────────────
 const EmptyState = memo(function EmptyState() {
+  const { t } = useTranslation();
   return (
     <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-[999] bg-white/90 backdrop-blur-sm px-5 py-3 rounded-2xl shadow-lg text-sm text-gray-500 pointer-events-none select-none">
-      No markers match the current filters.
+      {t('No markers found on map.')}
     </div>
   );
 });

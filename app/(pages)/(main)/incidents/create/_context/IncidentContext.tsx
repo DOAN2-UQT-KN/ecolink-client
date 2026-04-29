@@ -1,15 +1,12 @@
-"use client";
+'use client';
 
-import React, { createContext, ReactNode, useCallback, useMemo } from "react";
-import { useForm, FormProvider, UseFormReturn } from "react-hook-form";
-import { useCreateReport } from "@/apis/incident/createReport";
-import {
-  IncidentFormValues,
-  transformToApiData,
-} from "../_services/incident.service";
-import { uploadMultipleImages } from "../_services/upload.service";
-import { useRouter } from "next/navigation";
-import { queryClient } from "@/libs/queryClient";
+import React, { createContext, ReactNode, useCallback, useMemo } from 'react';
+import { useForm, FormProvider, UseFormReturn } from 'react-hook-form';
+import { useCreateReport } from '@/apis/incident/createReport';
+import { IncidentFormValues, transformToApiData } from '../_services/incident.service';
+import { uploadMultipleImages } from '../_services/upload.service';
+import { useRouter } from 'next/navigation';
+import { queryClient } from '@/libs/queryClient';
 
 interface IncidentContextType {
   form: UseFormReturn<IncidentFormValues>;
@@ -18,9 +15,7 @@ interface IncidentContextType {
   isUploading: boolean;
 }
 
-export const IncidentContext = createContext<IncidentContextType | undefined>(
-  undefined,
-);
+export const IncidentContext = createContext<IncidentContextType | undefined>(undefined);
 
 export const IncidentProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
@@ -29,15 +24,15 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
 
   const form = useForm<IncidentFormValues>({
     defaultValues: {
-      title: "",
-      description: "",
+      title: '',
+      description: '',
       latitude: undefined,
       longitude: undefined,
-      detailAddress: "",
+      detailAddress: '',
       wasteTypes: [],
-      condition: "",
+      condition: '',
       pollutionLevels: [],
-      size: "",
+      size: '',
       imageStrings: [],
     },
   });
@@ -45,8 +40,10 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
   const { mutate: createIncident, isPending } = useCreateReport({
     onSuccess: () => {
       form.reset();
-      router.push("/incidents/me");
-      queryClient.invalidateQueries({ queryKey: ["incidents"] });
+      router.push('/incidents/me');
+      queryClient.invalidateQueries({ queryKey: ['incidents'] });
+      queryClient.invalidateQueries({ queryKey: ['all-reports'] });
+      queryClient.invalidateQueries({ queryKey: ['my-reports'] });
     },
   });
 
@@ -66,7 +63,7 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
         // Step 3: Create Incident
         createIncident(apiData);
       } catch (error) {
-        console.error("Submission failed:", error);
+        console.error('Submission failed:', error);
       } finally {
         setIsUploading(false);
       }
