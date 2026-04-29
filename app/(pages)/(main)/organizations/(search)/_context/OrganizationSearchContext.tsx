@@ -132,7 +132,7 @@ export const OrganizationSearchProvider = ({ children }: { children: ReactNode }
     search: filters.search?.trim() || undefined,
     sort_by: filters.sort_by,
     sort_order: filters.sort_order,
-    // is_email_verified: true,
+    is_email_verified: true,
     status: STATUS.ACTIVE,
   };
 
