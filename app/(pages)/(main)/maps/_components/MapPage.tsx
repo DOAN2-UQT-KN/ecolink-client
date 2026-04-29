@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useCallback, useMemo } from "react";
-import dynamic from "next/dynamic";
-import { getCampaigns } from "@/apis/campaign/getCampaigns";
-import { getReports } from "@/apis/incident/getReport";
-import { STATUS } from "@/constants/status";
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import dynamic from 'next/dynamic';
+import { getAllCampaigns, getCampaigns } from '@/apis/campaign/getCampaigns';
+import { getAllReports, getReports } from '@/apis/incident/getReport';
+import { STATUS } from '@/constants/status';
 
-const MapView = dynamic(() => import("./MapView"), {
+const MapView = dynamic(() => import('./MapView'), {
   ssr: false,
   loading: () => (
     <div className="h-full w-full bg-slate-100 animate-pulse flex items-center justify-center">
@@ -14,10 +14,10 @@ const MapView = dynamic(() => import("./MapView"), {
     </div>
   ),
 });
-const FilterPanel = dynamic(() => import("./FilterPanel"), { ssr: false });
+const FilterPanel = dynamic(() => import('./FilterPanel'), { ssr: false });
 
 // ─── shared types ──────────────────────────────────────────────────────────────
-export type MarkerType = "CAMPAIGN" | "INCIDENT";
+export type MarkerType = 'CAMPAIGN' | 'INCIDENT';
 
 export interface MapMarker {
   id: string;
@@ -31,12 +31,12 @@ export interface MapMarker {
 }
 
 export interface FilterState {
-  status: "all" | "pending" | "resolved";
+  status: 'all' | 'pending' | 'resolved';
   wasteType: string;
 }
 
 // ─── helpers ───────────────────────────────────────────────────────────────────
-const STATUS_MAP: Record<FilterState["status"], number | undefined> = {
+const STATUS_MAP: Record<FilterState['status'], number | undefined> = {
   all: undefined,
   pending: STATUS.PENDING,
   resolved: STATUS.COMPLETED,
@@ -47,10 +47,10 @@ function toCampaignMarkers(raw: any[]): MapMarker[] {
     .filter((c) => c.latitude != null && c.longitude != null)
     .map((c) => ({
       id: String(c.id),
-      title: c.title || "Untitled Campaign",
+      title: c.title || 'Untitled Campaign',
       lat: Number(c.latitude),
       lng: Number(c.longitude),
-      type: "CAMPAIGN" as const,
+      type: 'CAMPAIGN' as const,
       status: c.status ?? null,
       address: c.detail_address ?? null,
       wasteType: null,
@@ -62,10 +62,10 @@ function toIncidentMarkers(raw: any[]): MapMarker[] {
     .filter((i) => i.latitude != null && i.longitude != null)
     .map((i) => ({
       id: String(i.id),
-      title: i.title || "Untitled Incident",
+      title: i.title || 'Untitled Incident',
       lat: Number(i.latitude),
       lng: Number(i.longitude),
-      type: "INCIDENT" as const,
+      type: 'INCIDENT' as const,
       status: i.status ?? null,
       address: i.detail_address ?? null,
       wasteType: i.waste_type ?? null,
@@ -75,8 +75,8 @@ function toIncidentMarkers(raw: any[]): MapMarker[] {
 // ─── component ─────────────────────────────────────────────────────────────────
 export default function MapPage() {
   const [filters, setFilters] = useState<FilterState>({
-    status: "all",
-    wasteType: "all",
+    status: 'all',
+    wasteType: 'all',
   });
   const [campaigns, setCampaigns] = useState<MapMarker[]>([]);
   const [incidents, setIncidents] = useState<MapMarker[]>([]);
@@ -86,20 +86,19 @@ export default function MapPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     const statusNum = STATUS_MAP[filters.status];
-    const wasteType =
-      filters.wasteType !== "all" ? filters.wasteType : undefined;
+    const wasteType = filters.wasteType !== 'all' ? filters.wasteType : undefined;
 
     const [campaignRes, incidentRes] = await Promise.allSettled([
-      getCampaigns({ status: statusNum, limit: 200 }),
-      getReports({ status: statusNum, waste_type: wasteType, limit: 200 }),
+      getAllCampaigns({}),
+      getAllReports({ waste_type: wasteType }),
     ]);
 
-    if (campaignRes.status === "fulfilled") {
+    if (campaignRes.status === 'fulfilled') {
       const data = (campaignRes.value as any)?.campaigns ?? [];
       setCampaigns(toCampaignMarkers(data));
     }
 
-    if (incidentRes.status === "fulfilled") {
+    if (incidentRes.status === 'fulfilled') {
       const data = (incidentRes.value as any)?.reports ?? [];
       setIncidents(toIncidentMarkers(data));
     }
@@ -115,10 +114,7 @@ export default function MapPage() {
     return () => clearInterval(interval);
   }, [fetchData]);
 
-  const markers = useMemo(
-    () => [...campaigns, ...incidents],
-    [campaigns, incidents],
-  );
+  const markers = useMemo(() => [...campaigns, ...incidents], [campaigns, incidents]);
 
   return (
     // Break out of the main layout's py-[92px] px-[20px] lg:px-[160px] padding
