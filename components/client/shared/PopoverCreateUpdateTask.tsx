@@ -64,6 +64,15 @@ type TaskFormValues = {
   status?: number;
 };
 
+function hasMeaningfulRichTextContent(value?: string): boolean {
+  if (!value) return false;
+  const plainText = value
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .trim();
+  return plainText.length > 0;
+}
+
 const ImagePreviewItem = memo(function ImagePreviewItem({
   image,
   index,
@@ -193,6 +202,8 @@ const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
 
   const busy = isCreating || isUpdating || uploadingResultImages;
   const resultImages = form.watch('result_images') || [];
+  const watchedStatus = form.watch('status');
+  const watchedResultDescription = form.watch('result_description');
 
   const inputClassName = useMemo(
     () =>
@@ -256,6 +267,16 @@ const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
     form.setValue('result_images', [], { shouldDirty: true });
   }, [form]);
 
+  useEffect(() => {
+    const isCompletedStatus = Number(watchedStatus) === STATUS.COMPLETED;
+    const hasResultDescription = hasMeaningfulRichTextContent(watchedResultDescription);
+    const hasResultImages = (resultImages?.length ?? 0) > 0;
+
+    if (!isCompletedStatus || hasResultDescription || hasResultImages) {
+      clearErrors('result_description');
+    }
+  }, [watchedStatus, watchedResultDescription, resultImages, clearErrors]);
+
   const onValidSubmit = useCallback(
     async (data: TaskFormValues) => {
       const scheduleTimeRange = `${data.scheduled_time_from}-${data.scheduled_time_to}`;
@@ -272,7 +293,7 @@ const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
       } else {
         if (!task) return;
         const isCompletedStatus = Number(data.status) === STATUS.COMPLETED;
-        const hasResultDescription = Boolean(data.result_description?.trim());
+        const hasResultDescription = hasMeaningfulRichTextContent(data.result_description);
         const hasResultImages = (data.result_images?.length ?? 0) > 0;
 
         if (isCompletedStatus && !hasResultDescription && !hasResultImages) {
@@ -586,7 +607,7 @@ const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
                     />
                     <FieldError errors={[errors.result_description]} />
                     {form.watch('status') === STATUS.COMPLETED &&
-                      !form.watch('result_description')?.trim() &&
+                      !hasMeaningfulRichTextContent(form.watch('result_description')) &&
                       resultImages.length === 0 && (
                         <p className="text-sm text-destructive">
                           {t('Result is required when status is Completed')}

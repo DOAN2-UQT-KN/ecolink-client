@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -346,7 +347,9 @@ const Header: React.FC<CardNavProps> = ({ ease = "power3.out", menuColor }) => {
             />
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuItem>{t("Profile")}</DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/profile">{t("Profile")}</Link>
+            </DropdownMenuItem>
             <DropdownMenuItem
               variant="destructive"
               onSelect={(e) => {

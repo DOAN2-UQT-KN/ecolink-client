@@ -8,16 +8,26 @@ import { useGetCampaignManager } from '@/apis/campaign/campaignManager';
 import { useGetCampaignVolunteer } from '@/apis/campaign/campaignVolunteer';
 import { Skeleton } from '@/components/ui/skeleton';
 import defaultAvatar from '@/public/default-avatar.png';
+import { cn } from '@/libs/utils';
 
 import { useCampaignDetail } from '../_hooks/useCampaignDetail';
 
-const AvatarList = ({
+function AvatarList({
   isLoading,
   items,
+  showAttendance,
 }: {
   isLoading: boolean;
-  items: { id: string; avatar?: string | null; name?: string | null; email?: string | null }[];
-}) => {
+  items: {
+    id: string;
+    avatar?: string | null;
+    name?: string | null;
+    email?: string | null;
+    checkedIn?: boolean;
+  }[];
+  showAttendance?: boolean;
+}) {
+  const { t } = useTranslation('common');
   if (isLoading) {
     return (
       <ul className="divide-y divide-[rgba(136,122,71,0.2)]">
@@ -42,14 +52,28 @@ const AvatarList = ({
             height={40}
             className="shrink-0 rounded-full object-cover"
           />
-          <span className="min-w-0 break-words font-medium text-foreground">
-            {item.name || item.email}
-          </span>
+          <div className="min-w-0 flex-1 flex flex-col gap-1">
+            <span className="min-w-0 break-words font-medium text-foreground">
+              {item.name || item.email}
+            </span>
+            {showAttendance ? (
+              <span
+                className={cn(
+                  'inline-flex w-fit rounded-full border px-2 py-0.5 text-[11px] font-medium',
+                  item.checkedIn
+                    ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                    : 'border-amber-200 bg-amber-50 text-amber-900',
+                )}
+              >
+                {item.checkedIn ? t('Attendance checked in') : t('Attendance not checked in')}
+              </span>
+            ) : null}
+          </div>
         </li>
       ))}
     </ul>
   );
-};
+}
 
 export const CurrentMember = memo(function CurrentMember() {
   const { t } = useTranslation('common');
@@ -70,6 +94,7 @@ export const CurrentMember = memo(function CurrentMember() {
     avatar: v?.volunteer?.avatar,
     name: v?.volunteer?.name,
     email: v?.volunteer?.email,
+    checkedIn: Boolean(v.checked_in_at),
   }));
 
   const managers = (managerData?.data?.managers ?? []).map((m) => ({
@@ -96,7 +121,7 @@ export const CurrentMember = memo(function CurrentMember() {
           {t('Members')}:{' '}
           <span className="font-medium text-foreground tabular-nums">{currentMembers}</span>
         </p>
-        <AvatarList isLoading={isVolunteerLoading} items={volunteers} />
+        <AvatarList isLoading={isVolunteerLoading} items={volunteers} showAttendance />
       </div>
     </div>
   );

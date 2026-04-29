@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { Suspense, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { Inbox } from 'lucide-react';
@@ -25,6 +25,9 @@ import { STATUS } from '@/constants/status';
 import { ConfirmPopover } from '@/components/admin/shared/ConfirmPopover';
 import { useMarkDoneCampaign } from '@/apis/campaign/campaignById';
 import { useQueryClient } from '@tanstack/react-query';
+
+import { CampaignAttendanceCheckInHandler } from './_components/CampaignAttendanceCheckInHandler';
+import { CampaignAttendanceQrButton } from './_components/CampaignAttendanceQrButton';
 
 function CampaignDetailBody() {
   const { t } = useTranslation('common');
@@ -163,33 +166,39 @@ function CampaignDetailBody() {
           </div>
         )}
 
-        {isCampaignOwner && campaign?.status !== STATUS.COMPLETED && (
-          <div className="flex justify-end">
-            <ConfirmPopover
-              title={t('Mark Campaign as Done')}
-              description={t(
-                'Are you sure you want to mark this campaign as done? This action cannot be undone.',
-              )}
-              onConfirm={handleMarkDone}
-              cancelLabel={t('Cancel')}
-              confirmLabel={t('Mark done')}
-              theme="light"
-              confirmPending={isMarkingDone}
-              trigger={
-                <Button
-                  type="button"
-                  variant="brown"
-                  size="medium"
-                  isLoading={isMarkingDone}
-                  className="!h-[45px]"
-                  disabled={isMarkingDone}
-                >
-                  {t('Mark done')}
-                </Button>
-              }
-            />
+        {(isCampaignOwner && campaign?.status !== STATUS.COMPLETED) ||
+        (campaign?.can_manage_campaign && campaign?.status === STATUS.ACTIVE) ? (
+          <div className="flex flex-wrap justify-end gap-2">
+            {campaign?.can_manage_campaign && campaign?.status === STATUS.ACTIVE ? (
+              <CampaignAttendanceQrButton />
+            ) : null}
+            {isCampaignOwner && campaign?.status !== STATUS.COMPLETED ? (
+              <ConfirmPopover
+                title={t('Mark Campaign as Done')}
+                description={t(
+                  'Are you sure you want to mark this campaign as done? This action cannot be undone.',
+                )}
+                onConfirm={handleMarkDone}
+                cancelLabel={t('Cancel')}
+                confirmLabel={t('Mark done')}
+                theme="light"
+                confirmPending={isMarkingDone}
+                trigger={
+                  <Button
+                    type="button"
+                    variant="brown"
+                    size="medium"
+                    isLoading={isMarkingDone}
+                    className="!h-[45px]"
+                    disabled={isMarkingDone}
+                  >
+                    {t('Mark done')}
+                  </Button>
+                }
+              />
+            ) : null}
           </div>
-        )}
+        ) : null}
         <StatsCards />
         <div className="w-full min-w-0">
           <CampaignTabs />
@@ -204,6 +213,9 @@ export default function CampaignDetailPage() {
 
   return (
     <CampaignDetailProvider campaignId={id}>
+      <Suspense fallback={null}>
+        <CampaignAttendanceCheckInHandler />
+      </Suspense>
       <CampaignDetailBody />
     </CampaignDetailProvider>
   );

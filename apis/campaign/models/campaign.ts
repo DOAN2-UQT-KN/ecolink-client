@@ -44,6 +44,9 @@ export interface ICampaign {
   /** Campaign owner; may be omitted in some responses; see also `created_by` */
   owner?: Pick<IUser, 'id' | 'name' | 'email' | 'avatar'> | null;
 
+  /** Creator or assigned campaign manager (from GET campaign when authenticated). */
+  can_manage_campaign?: boolean;
+
   /** Populated by admin-facing endpoints */
   organization?: {
     id: string;

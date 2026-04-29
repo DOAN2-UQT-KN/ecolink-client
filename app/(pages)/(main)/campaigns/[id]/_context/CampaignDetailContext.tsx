@@ -21,6 +21,8 @@ export interface CampaignDetailContextType {
   campaignId: string;
   campaign: ICampaign | undefined;
   isCampaignOwner: boolean;
+  /** Campaign creator or assigned manager (from API `can_manage_campaign`). */
+  canManageCampaign: boolean;
   isLoading: boolean;
   isError: boolean;
   isFetching: boolean;
@@ -72,6 +74,8 @@ export function CampaignDetailProvider({
       currentUserId != null && campaign?.owner?.id != null && campaign.owner.id === currentUserId,
     [currentUserId, campaign?.owner?.id],
   );
+
+  const canManageCampaign = Boolean(campaign?.can_manage_campaign);
 
   const needsJoinRequestIdFromList =
     campaign?.request_status === STATUS.PENDING && !campaign?.join_request_id;
@@ -130,6 +134,7 @@ export function CampaignDetailProvider({
       campaignId,
       campaign,
       isCampaignOwner,
+      canManageCampaign,
       isLoading,
       isError,
       isFetching,
@@ -147,6 +152,7 @@ export function CampaignDetailProvider({
       campaignId,
       campaign,
       isCampaignOwner,
+      canManageCampaign,
       isLoading,
       isError,
       isFetching,

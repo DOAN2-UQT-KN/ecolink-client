@@ -12,11 +12,14 @@ export interface IGetCampaignVolunteerRequest {
 export interface IGetCampaignVolunteerItem {
   id: string;
   campaign_id: string;
-  user_id: string;
+  volunteer_id?: string;
+  user_id?: string;
   status: number;
   created_at: string;
   updated_at: string;
   volunteer: Pick<IUser, 'id' | 'name' | 'email' | 'avatar'>;
+  /** ISO datetime when volunteer checked in via QR; absent if not yet. */
+  checked_in_at?: string | null;
 }
 
 export interface IGetCampaignVolunteerResponse extends IPaginationResponse<

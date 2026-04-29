@@ -247,5 +247,19 @@
   "campaignDetail.mockTaskBriefing": "Community briefing session",
   "Active campaign": "Active campaign",
   "Start contributing": "Start contributing",
-  "View details": "View details"
+  "View details": "View details",
+  "Generate attendance QR": "Generate attendance QR",
+  "Attendance QR": "Attendance QR",
+  "Attendance QR description": "Volunteers scan this code on their phone to open this campaign and check in. The link stops working after one hour.",
+  "QR expires at": "Expires: {{time}}",
+  "Loading": "Loading",
+  "Could not generate attendance QR": "Could not generate attendance QR",
+  "Checked in successfully": "Checked in successfully",
+  "Already checked in": "Already checked in",
+  "You had already checked in for this campaign.": "You had already checked in for this campaign.",
+  "Your attendance has been recorded.": "Your attendance has been recorded.",
+  "You are not an approved member of this campaign.": "You are not an approved member of this campaign.",
+  "Check-in failed": "Check-in failed",
+  "Attendance checked in": "Checked in",
+  "Attendance not checked in": "Not checked in"
 }
