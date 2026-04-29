@@ -426,5 +426,15 @@
   "Refreshing map…": "Đang làm mới bản đồ…",
   "No markers found on map.": "Không tìm thấy điểm đánh dấu nào trên bản đồ.",
   "Untitled Campaign": "Chiến dịch chưa đặt tên",
-  "Untitled Incident": "Sự cố chưa đặt tên"
+  "SOS": "SOS",
+  "Create SOS Alert": "Tạo cảnh báo SOS",
+  "Fill in the details below. Our team will respond immediately.": "Điền thông tin bên dưới. Đội ngũ của chúng tôi sẽ phản hồi ngay lập tức.",
+  "Emergency Description": "Mô tả tình trạng khẩn cấp",
+  "Describe the emergency situation...": "Mô tả tình trạng khẩn cấp...",
+  "Contact Phone": "Số điện thoại liên hệ",
+  "Phone number is required": "Số điện thoại liên hệ là bắt buộc",
+  "Invalid phone number": "Số điện thoại không hợp lệ",
+  "e.g. +84 901 234 567": "ví dụ: +84 901 234 567",
+  "Related Campaign": "Chiến dịch liên quan",
+  "optional": "tùy chọn"
 }

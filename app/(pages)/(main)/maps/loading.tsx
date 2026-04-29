@@ -1,3 +1,4 @@
+'use client';
 export default function MapsLoading() {
   return (
     <div className="-mt-[92px] -mb-[92px] -mx-[20px] lg:-mx-[160px] h-screen bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">

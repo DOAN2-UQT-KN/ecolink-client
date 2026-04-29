@@ -110,7 +110,7 @@ export default function MapPage() {
     const [campaignRes, incidentRes, sosRes] = await Promise.allSettled([
       getAllCampaigns({}),
       getAllReports({}),
-      getAllSOS({ limit: 200 }),
+      getAllSOS({}),
     ]);
 
     if (campaignRes.status === 'fulfilled') {
@@ -284,7 +284,7 @@ function SOSButton({ onClick }: { onClick: () => void }) {
       onMouseUp={() => setIsActive(false)}
       style={{
         position: 'absolute',
-        top: '370px',
+        top: '200px',
         right: '20px',
         zIndex: 1000,
 

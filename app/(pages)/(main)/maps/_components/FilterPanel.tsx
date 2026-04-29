@@ -40,13 +40,11 @@ const FilterPanel = memo(function FilterPanel({
       <div className="px-5 py-4 bg-gradient-to-br from-emerald-600 to-teal-700 text-white flex-shrink-0">
         <div className="flex items-center gap-2 mb-2">
           <Map className="h-4 w-4 flex-shrink-0" />
-          <span className="font-bold text-base tracking-tight text-black">
-            {t('Incident & Campaign Map')}
-          </span>
+          <span className="font-bold text-base  text-black">{t('Incident & Campaign Map')}</span>
           {loading && <RefreshCw className="h-3.5 w-3.5 animate-spin ml-auto opacity-80" />}
         </div>
 
-        {/* live stats */}
+        {/* live stats — click each row to show/hide that layer */}
         <div
           style={{
             display: 'flex',
@@ -57,8 +55,23 @@ const FilterPanel = memo(function FilterPanel({
           }}
         >
           {/* Campaigns */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span
+          <button
+            onClick={onToggleCampaigns}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              background: 'none',
+              border: 'none',
+              padding: '3px 4px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              opacity: showCampaigns ? 1 : 0.45,
+              transition: 'opacity 0.2s',
+              textAlign: 'left',
+            }}
+          >
+            {/* <span
               style={{
                 height: '12px',
                 width: '12px',
@@ -67,14 +80,30 @@ const FilterPanel = memo(function FilterPanel({
                 display: 'inline-block',
                 flexShrink: 0,
               }}
-            />
+            /> */}
             <span style={{ fontWeight: 500, color: '#374151' }}>{t('Campaigns')}:</span>
             <span style={{ fontWeight: 600, color: '#2563eb' }}>{counts.campaigns}</span>
-          </div>
+            <ToggleSwitch active={showCampaigns} color="#3b82f6" />
+          </button>
 
           {/* Incidents */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span
+          <button
+            onClick={onToggleIncidents}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              background: 'none',
+              border: 'none',
+              padding: '3px 4px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              opacity: showIncidents ? 1 : 0.45,
+              transition: 'opacity 0.2s',
+              textAlign: 'left',
+            }}
+          >
+            {/* <span
               style={{
                 height: '12px',
                 width: '12px',
@@ -83,14 +112,30 @@ const FilterPanel = memo(function FilterPanel({
                 display: 'inline-block',
                 flexShrink: 0,
               }}
-            />
+            /> */}
             <span style={{ fontWeight: 500, color: '#374151' }}>{t('Incidents')}:</span>
             <span style={{ fontWeight: 600, color: '#dc2626' }}>{counts.incidents}</span>
-          </div>
+            <ToggleSwitch active={showIncidents} color="#ef4444" />
+          </button>
 
           {/* SOS */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span
+          <button
+            onClick={onToggleSOS}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              background: 'none',
+              border: 'none',
+              padding: '3px 4px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              opacity: showSOS ? 1 : 0.45,
+              transition: 'opacity 0.2s',
+              textAlign: 'left',
+            }}
+          >
+            {/* <span
               style={{
                 height: '12px',
                 width: '12px',
@@ -99,14 +144,12 @@ const FilterPanel = memo(function FilterPanel({
                 display: 'inline-block',
                 flexShrink: 0,
               }}
-            />
+            /> */}
             <span style={{ fontWeight: 500, color: '#374151' }}>{t('SOS')}:</span>
             <span style={{ fontWeight: 600, color: '#a16207' }}>{counts.sos}</span>
-
             {counts.sos > 0 && (
               <span
                 style={{
-                  marginLeft: 'auto',
                   fontSize: '9px',
                   fontWeight: '700',
                   textTransform: 'uppercase',
@@ -121,7 +164,8 @@ const FilterPanel = memo(function FilterPanel({
                 {t('LIVE')}
               </span>
             )}
-          </div>
+            <ToggleSwitch active={showSOS} color="#facc15" />
+          </button>
         </div>
 
         {formattedTime && (
@@ -147,84 +191,41 @@ const FilterPanel = memo(function FilterPanel({
           </p>
         )}
       </div>
-
-      {/* ── legend + filters ── */}
-      <div className="p-5">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">
-          {t('Show / Hide')}
-        </p>
-        <div className="space-y-2.5">
-          {/* Campaigns toggle */}
-          <FilterRow
-            color="bg-blue-600"
-            label={t('Campaign')}
-            active={showCampaigns}
-            onToggle={onToggleCampaigns}
-          />
-          {/* Incidents toggle */}
-          <FilterRow
-            color="bg-red-600"
-            label={t('Incident')}
-            active={showIncidents}
-            onToggle={onToggleIncidents}
-          />
-          {/* SOS toggle */}
-          <FilterRow
-            color="bg-yellow-400 border border-yellow-500"
-            label={`🚨 ${t('SOS')}`}
-            active={showSOS}
-            onToggle={onToggleSOS}
-            highlight
-          />
-          dsadasd
-        </div>
-      </div>
     </div>
   );
 });
 
-// ─── single filter row ─────────────────────────────────────────────────────────
-interface FilterRowProps {
-  color: string;
-  label: string;
-  active: boolean;
-  onToggle: () => void;
-  highlight?: boolean;
-}
-
-const FilterRow = memo(function FilterRow({
-  color,
-  label,
-  active,
-  onToggle,
-  highlight,
-}: FilterRowProps) {
+// ─── mini toggle switch ────────────────────────────────────────────────────────
+function ToggleSwitch({ active, color }: { active: boolean; color: string }) {
   return (
-    <button
-      onClick={onToggle}
-      className={`w-full flex items-center gap-2.5 rounded-lg px-2 py-1.5 transition-colors duration-150
-        ${active ? 'bg-gray-50 hover:bg-gray-100' : 'opacity-50 hover:opacity-70'}
-        ${highlight && active ? 'bg-yellow-50 hover:bg-yellow-100' : ''}
-      `}
+    <span
+      style={{
+        marginLeft: 'auto',
+        flexShrink: 0,
+        width: '28px',
+        height: '16px',
+        borderRadius: '9999px',
+        backgroundColor: active ? color : '#d1d5db',
+        position: 'relative',
+        display: 'inline-block',
+        transition: 'background-color 0.2s',
+      }}
     >
       <span
-        className={`flex-shrink-0 w-5 h-5 rounded-full ${color} flex items-center justify-center`}
-      >
-        <span className="w-2 h-2 rounded-full bg-white" />
-      </span>
-      <span className="text-xs text-gray-600 font-medium flex-1 text-left">{label}</span>
-      {/* Toggle indicator */}
-      <span
-        className={`flex-shrink-0 w-7 h-4 rounded-full transition-colors duration-200 relative
-          ${active ? 'bg-emerald-500' : 'bg-gray-300'}`}
-      >
-        <span
-          className={`absolute top-0.5 h-3 w-3 rounded-full bg-white shadow-sm transition-transform duration-200
-            ${active ? 'translate-x-3.5' : 'translate-x-0.5'}`}
-        />
-      </span>
-    </button>
+        style={{
+          position: 'absolute',
+          top: '2px',
+          left: active ? '14px' : '2px',
+          width: '12px',
+          height: '12px',
+          borderRadius: '50%',
+          backgroundColor: '#fff',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
+          transition: 'left 0.2s',
+        }}
+      />
+    </span>
   );
-});
+}
 
 export default FilterPanel;

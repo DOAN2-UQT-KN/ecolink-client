@@ -1,8 +1,9 @@
 'use client';
 
-import { memo, useState, useCallback } from 'react';
+import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AlertTriangle, Phone, FileText, Megaphone } from 'lucide-react';
+import { useForm, Controller } from 'react-hook-form';
+import { AlertTriangle } from 'lucide-react';
 
 import {
   Dialog,
@@ -11,9 +12,10 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/client/shared/Button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
+import { Field, FieldLabel, FieldError } from '@/components/ui/field';
 import SelectListCampaign, { ALL_CAMPAIGNS_VALUE } from '@/components/form/SelectListCampaign';
 import { useCreateSOS } from '@/apis/sos/createSos';
 import type { ISOS } from '@/apis/sos/models/sos';
@@ -25,12 +27,16 @@ interface SOSFormProps {
   defaultCampaignId?: string;
 }
 
-interface FormErrors {
-  content?: string;
-  phone?: string;
+interface SOSFormValues {
+  content: string;
+  phone: string;
+  campaign_id: string;
 }
 
 const PHONE_RE = /^[0-9+\s\-(). ]{7,20}$/;
+
+const inputClassName =
+  'border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50';
 
 const SOSForm = memo(function SOSForm({
   open,
@@ -39,10 +45,20 @@ const SOSForm = memo(function SOSForm({
   defaultCampaignId,
 }: SOSFormProps) {
   const { t } = useTranslation();
-  const [content, setContent] = useState('');
-  const [phone, setPhone] = useState('');
-  const [campaignId, setCampaignId] = useState(defaultCampaignId ?? '');
-  const [errors, setErrors] = useState<FormErrors>({});
+
+  const {
+    register,
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<SOSFormValues>({
+    defaultValues: {
+      content: '',
+      phone: '',
+      campaign_id: defaultCampaignId ?? '',
+    },
+  });
 
   const { mutate: createSOS, isPending } = useCreateSOS({
     onSuccess: (data) => {
@@ -52,43 +68,26 @@ const SOSForm = memo(function SOSForm({
     },
   });
 
-  const handleClose = useCallback(() => {
-    setContent('');
-    setPhone('');
-    setCampaignId(defaultCampaignId ?? '');
-    setErrors({});
+  const handleClose = () => {
+    reset({ content: '', phone: '', campaign_id: defaultCampaignId ?? '' });
     onClose();
-  }, [onClose, defaultCampaignId]);
+  };
 
-  const validate = useCallback((): boolean => {
-    const next: FormErrors = {};
-    if (!content.trim()) next.content = t('Content is required');
-    if (!phone.trim()) {
-      next.phone = t('Phone number is required');
-    } else if (!PHONE_RE.test(phone.trim())) {
-      next.phone = t('Invalid phone number');
-    }
-    setErrors(next);
-    return Object.keys(next).length === 0;
-  }, [content, phone, t]);
-
-  const handleSubmit = useCallback(() => {
-    if (!validate()) return;
+  const onSubmit = (values: SOSFormValues) => {
     createSOS({
-      content: content.trim(),
-      phone: phone.trim(),
-      ...(campaignId && campaignId !== ALL_CAMPAIGNS_VALUE
-        ? { campaign_id: campaignId }
+      content: values.content.trim(),
+      phone: values.phone.trim(),
+      ...(values.campaign_id && values.campaign_id !== ALL_CAMPAIGNS_VALUE
+        ? { campaign_id: values.campaign_id }
         : {}),
     });
-  }, [validate, createSOS, content, phone, campaignId]);
+  };
 
   return (
-    <Dialog open={open} onOpenChange={(open) => !open && handleClose()}>
+    <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-red-600 text-lg font-bold">
-            <AlertTriangle className="h-5 w-5 flex-shrink-0" />
             {t('Create SOS Alert')}
           </DialogTitle>
           <p className="text-xs text-muted-foreground">
@@ -96,90 +95,78 @@ const SOSForm = memo(function SOSForm({
           </p>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
           {/* Content */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
-              <FileText className="h-3.5 w-3.5 text-gray-500" />
-              {t('Emergency Description')}
-              <span className="text-red-500">*</span>
-            </label>
+          <Field>
+            <FieldLabel className="text-foreground-tertiary font-display-3">
+              {t('Emergency Description')} <span className="text-destructive">*</span>
+            </FieldLabel>
             <Textarea
-              value={content}
-              onChange={(e) => {
-                setContent(e.target.value);
-                if (errors.content) setErrors((p) => ({ ...p, content: undefined }));
-              }}
+              {...register('content', { required: t('Content is required') })}
               placeholder={t('Describe the emergency situation...')}
-              className={errors.content ? 'border-red-500 focus-visible:ring-red-500/50' : ''}
+              className={inputClassName}
               rows={3}
             />
-            {errors.content && (
-              <p className="text-xs text-red-500">{errors.content}</p>
-            )}
-          </div>
+            <FieldError errors={[errors.content]} />
+          </Field>
 
           {/* Phone */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
-              <Phone className="h-3.5 w-3.5 text-gray-500" />
-              {t('Contact Phone')}
-              <span className="text-red-500">*</span>
-            </label>
+          <Field>
+            <FieldLabel className="text-foreground-tertiary font-display-3">
+              {t('Contact Phone')} <span className="text-destructive">*</span>
+            </FieldLabel>
             <Input
               type="tel"
-              value={phone}
-              onChange={(e) => {
-                setPhone(e.target.value);
-                if (errors.phone) setErrors((p) => ({ ...p, phone: undefined }));
-              }}
+              {...register('phone', {
+                required: t('Phone number is required'),
+                validate: (v) => PHONE_RE.test(v.trim()) || t('Invalid phone number'),
+              })}
               placeholder={t('e.g. +84 901 234 567')}
-              className={errors.phone ? 'border-red-500 focus-visible:ring-red-500/50' : ''}
+              className={inputClassName}
             />
-            {errors.phone && (
-              <p className="text-xs text-red-500">{errors.phone}</p>
-            )}
-          </div>
+            <FieldError errors={[errors.phone]} />
+          </Field>
 
           {/* Campaign */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
-              <Megaphone className="h-3.5 w-3.5 text-gray-500" />
-              {t('Related Campaign')}
-              <span className="text-xs font-normal text-muted-foreground ml-1">
-                ({t('optional')})
-              </span>
-            </label>
-            <SelectListCampaign
-              value={campaignId}
-              onChange={setCampaignId}
-              allOptions
-              disabled={isPending}
+          <Field>
+            <FieldLabel className="text-foreground-tertiary font-display-3">
+              {t('Related Campaign')} <span className="text-destructive">*</span>
+            </FieldLabel>
+            <Controller
+              name="campaign_id"
+              control={control}
+              render={({ field }) => (
+                <SelectListCampaign
+                  value={field.value}
+                  onChange={field.onChange}
+                  allOptions
+                  disabled={isPending}
+                />
+              )}
             />
-          </div>
-        </div>
+          </Field>
 
-        <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={handleClose} disabled={isPending}>
-            {t('Cancel')}
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={isPending}
-            className="bg-red-600 hover:bg-red-700 active:scale-95 text-white font-bold transition-all duration-200"
-          >
-            {isPending ? (
-              <span className="flex items-center gap-2">
-                <span className="h-3.5 w-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                {t('Sending...')}
-              </span>
-            ) : (
-              <span className="flex items-center gap-2">
-                🚨 {t('Send SOS')}
-              </span>
-            )}
-          </Button>
-        </DialogFooter>
+          <DialogFooter className="gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outlined-brown"
+              onClick={handleClose}
+              disabled={isPending}
+            >
+              {t('Cancel')}
+            </Button>
+            <Button type="submit" variant="brown" disabled={isPending}>
+              {isPending ? (
+                <span className="flex items-center gap-2">
+                  <span className="h-3.5 w-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  {t('Sending...')}
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">{t('Submit')}</span>
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
