@@ -57,9 +57,9 @@ const items = [
         href: '/mission',
       },
       {
-        label: 'How It Works',
-        ariaLabel: 'How EcoLink Works',
-        href: '/how-it-works',
+        label: 'Store',
+        ariaLabel: 'Store',
+        href: '/gifts',
       },
     ],
   },
