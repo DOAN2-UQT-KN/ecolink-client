@@ -279,6 +279,7 @@
   "Unverified": "Chưa xác minh",
   "No incidents found": "Không tìm thấy sự cố nào",
   "No incidents available for the current filters.": "Không có sự cố nào có sẵn cho các bộ lọc hiện tại.",
+  "AI Analysis": "Phân tích AI",
   "Your group": "Nhóm của bạn",
   "Leave": "Rời khỏi",
   "Are you sure?": "Bạn có chắc chắn?",
@@ -414,5 +415,9 @@
   "Stock type": "Loại tồn kho",
   "Limited": "Giới hạn",
   "Earned": "Được nhận",
-  "Spent": "Đã sử dụng"
+  "Spent": "Đã sử dụng",
+  "My Campaigns": "Chiến dịch của tôi",
+  "My Organizations": "Tổ chức của tôi",
+  "My Reports": "Báo cáo của tôi",
+  "Admin": "Quản trị viên"
 }

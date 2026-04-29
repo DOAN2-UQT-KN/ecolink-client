@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import Image from 'next/image';
+import { Image as AntdImage } from 'antd';
 import { useTranslation } from 'react-i18next';
 
 import type { IIncident } from '@/apis/incident/models/incident';
@@ -25,6 +26,7 @@ const COLUMN_KEYS = {
   NO: 'no',
   INCIDENT: 'incident',
   OWNER: 'owner',
+  AI_ANALYSIS: 'ai_analysis',
   STATUS: 'status',
   ACTION: 'action',
 } as const;
@@ -135,6 +137,49 @@ export function DataTable() {
             </div>
           </div>
         ),
+      },
+      {
+        key: COLUMN_KEYS.AI_ANALYSIS,
+        title: t('AI Analysis'),
+        className: 'min-w-[88px]',
+        render: (_, record) => {
+          const urls = (record.media_files ?? [])
+            .map((m) => m.ai_analysis_url)
+            .filter((u): u is string => Boolean(u));
+          if (urls.length === 0) {
+            return (
+              <span
+                className={cn(
+                  'text-xs tabular-nums',
+                  isDark ? 'text-zinc-500' : 'text-muted-foreground',
+                )}
+              >
+                —
+              </span>
+            );
+          }
+          return (
+            <AntdImage.PreviewGroup>
+              <div className="relative flex h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-border/50 bg-muted">
+                <AntdImage
+                  src={urls[0]}
+                  alt={t('AI Analysis')}
+                  width={48}
+                  height={48}
+                  className="object-cover"
+                  preview
+                />
+              </div>
+              {urls.length > 1 ? (
+                <div className="hidden" aria-hidden>
+                  {urls.slice(1).map((url, idx) => (
+                    <AntdImage key={`${url}-${idx}`} src={url} preview />
+                  ))}
+                </div>
+              ) : null}
+            </AntdImage.PreviewGroup>
+          );
+        },
       },
       {
         key: COLUMN_KEYS.STATUS,

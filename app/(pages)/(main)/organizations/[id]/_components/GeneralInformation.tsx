@@ -25,31 +25,26 @@ function formatCreatedAt(iso: string | undefined): string {
 export const GeneralInformation = memo(function GeneralInformation() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const { organization, organizationId, showYourGroupTag } =
-    useOrganizationDetail();
+  const { organization, organizationId, showYourGroupTag } = useOrganizationDetail();
 
   const contactEmail = organization?.contact_email?.trim() ?? '';
   const description = organization?.description?.trim() ?? '';
   const isEmailVerified = Boolean(organization?.is_email_verified);
 
-  const { mutate: resendVerificationEmail, isPending: isResendPending } =
-    useResendContactEmail({
-      onSettled: () => {
-        void queryClient.invalidateQueries({
-          queryKey: ['organization', organizationId],
-        });
-      },
-    });
+  const { mutate: resendVerificationEmail, isPending: isResendPending } = useResendContactEmail({
+    onSettled: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ['organization', organizationId],
+      });
+    },
+  });
 
   const handleResendVerificationEmail = useCallback(() => {
     if (!organizationId) return;
     resendVerificationEmail(organizationId);
   }, [organizationId, resendVerificationEmail]);
 
-  const showResendContactEmail =
-    showYourGroupTag &&
-    Boolean(contactEmail) &&
-    !isEmailVerified;
+  const showResendContactEmail = showYourGroupTag && Boolean(contactEmail) && !isEmailVerified;
   const createdLabel = useMemo(
     () => formatCreatedAt(organization?.created_at),
     [organization?.created_at],
@@ -69,39 +64,41 @@ export const GeneralInformation = memo(function GeneralInformation() {
           <TbMailPin className="size-4 shrink-0 text-button-accent mt-0.5" aria-hidden />
           {contactEmail ? (
             <div className="min-w-0">
-              <a
-                href={`mailto:${contactEmail}`}
-                className="break-all text-foreground-secondary hover:underline"
-              >
-                <span className="font-display-1">{contactEmail}</span>
-              </a>
-              <div className="mt-1">
-                <span
-                  className={cn(
-                    'inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium',
-                    isEmailVerified
-                      ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                      : 'border-amber-200 bg-amber-50 text-amber-800',
-                  )}
+              <div className="flex items-center gap-1">
+                <a
+                  href={`mailto:${contactEmail}`}
+                  className="break-all text-foreground-secondary hover:underline"
                 >
-                  {isEmailVerified ? t('Verified') : t('Unverified')}
-                </span>
-                {showResendContactEmail ? (
-                  <div className="mt-2">
-                    <Button
-                      type="button"
-                      variant="outlined-brown"
-                      size="small"
-                      className="w-full max-w-[220px]"
-                      isLoading={isResendPending}
-                      isDisabled={!organizationId}
-                      onClick={handleResendVerificationEmail}
-                    >
-                      {t('Resend verification email')}
-                    </Button>
+                  <span className="font-display-1">{contactEmail}</span>
+                </a>
+                <div className="mt-1">
+                  <div
+                    className={cn(
+                      'inline-flex items-center flex-row rounded-[10px] border px-2 py-0.5 text-[11px] font-display-1',
+                      isEmailVerified
+                        ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                        : 'border-amber-200 bg-amber-50 text-amber-800',
+                    )}
+                  >
+                    {isEmailVerified ? t('Verified') : t('Unverified')}
                   </div>
-                ) : null}
+                </div>
               </div>
+              {showResendContactEmail ? (
+                <div className="mt-2">
+                  <Button
+                    type="button"
+                    variant="outlined-brown"
+                    size="small"
+                    className="w-full max-w-[220px]"
+                    isLoading={isResendPending}
+                    isDisabled={!organizationId}
+                    onClick={handleResendVerificationEmail}
+                  >
+                    {t('Resend verification email')}
+                  </Button>
+                </div>
+              ) : null}
             </div>
           ) : (
             <span className="text-foreground-secondary">—</span>

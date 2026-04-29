@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { IncidentMeContext } from "../_context/IncidentMeContext";
 import { IIncident } from "@/apis/incident/models/incident";
 import Image from "next/image";
+import { Image as AntdImage } from "antd";
 import { useRouter } from "next/navigation";
 import {
   DropdownMenu,
@@ -95,6 +96,50 @@ const DataTableComponent = memo(function DataTableComponent() {
           );
         },
         width: 150,
+      },
+      {
+        title: t("AI Analysis"),
+        key: "ai_analysis",
+        render: (_, record) => {
+          const urls = (record.media_files ?? [])
+            .map((m) => m.ai_analysis_url)
+            .filter((u): u is string => Boolean(u));
+          if (urls.length === 0) {
+            return (
+              <span className="text-xs text-muted-foreground tabular-nums">—</span>
+            );
+          }
+          return (
+            <div
+              className="flex justify-center"
+              onClick={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+              role="presentation"
+            >
+              <AntdImage.PreviewGroup>
+                <div className="relative flex h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-border/50 bg-muted">
+                  <AntdImage
+                    src={urls[0]}
+                    alt={t("AI Analysis")}
+                    width={48}
+                    height={48}
+                    className="object-cover"
+                    preview
+                  />
+                </div>
+                {urls.length > 1 ? (
+                  <div className="hidden" aria-hidden>
+                    {urls.slice(1).map((url, idx) => (
+                      <AntdImage key={`${url}-${idx}`} src={url} preview />
+                    ))}
+                  </div>
+                ) : null}
+              </AntdImage.PreviewGroup>
+            </div>
+          );
+        },
+        width: 88,
+        align: "center",
       },
       {
         title: t("Status"),

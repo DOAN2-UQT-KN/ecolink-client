@@ -1,26 +1,26 @@
-"use client";
+'use client';
 
-import Image from "next/image";
-import Link from "next/link";
+import Image from 'next/image';
+import Link from 'next/link';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
   DropdownMenuItem,
-} from "../shared/DropdownMenu";
-import { useTranslation } from "react-i18next";
-import { useEffect } from "react";
+} from '../shared/DropdownMenu';
+import { useTranslation } from 'react-i18next';
+import { useEffect } from 'react';
 
-import React, { useLayoutEffect, useRef, useState } from "react";
-import { gsap } from "gsap";
-import { GoArrowUpRight } from "react-icons/go";
-import { useMediaQuery } from "@/hooks/useMediaQuery";
-import Logo from "./Logo";
-import LanguageSwitcher from "../shared/LanguageSwitcher";
-import SpotlightCard from "../shared/SpotlightCard";
-import useAuthStore from "@/stores/useAuthStore";
-import { useRouter } from "next/navigation";
-import { clearAuthStorage } from "@/utils/logout";
+import React, { useLayoutEffect, useRef, useState } from 'react';
+import { gsap } from 'gsap';
+import { GoArrowUpRight } from 'react-icons/go';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+import Logo from './Logo';
+import LanguageSwitcher from '../shared/LanguageSwitcher';
+import SpotlightCard from '../shared/SpotlightCard';
+import useAuthStore from '@/stores/useAuthStore';
+import { useRouter } from 'next/navigation';
+import { clearAuthStorage } from '@/utils/logout';
 
 type CardNavLink = {
   label: string;
@@ -42,96 +42,96 @@ export interface CardNavProps {
 
 const items = [
   {
-    label: "EcoLink",
-    bgColor: "#0D0716",
-    textColor: "#fff",
+    label: 'EcoLink',
+    bgColor: '#0D0716',
+    textColor: '#fff',
     links: [
       {
-        label: "About Us",
-        ariaLabel: "About EcoLink",
-        href: "/about",
+        label: 'About Us',
+        ariaLabel: 'About EcoLink',
+        href: '/about',
       },
       {
-        label: "Our Mission",
-        ariaLabel: "EcoLink Mission",
-        href: "/mission",
+        label: 'Our Mission',
+        ariaLabel: 'EcoLink Mission',
+        href: '/mission',
       },
       {
-        label: "How It Works",
-        ariaLabel: "How EcoLink Works",
-        href: "/how-it-works",
+        label: 'How It Works',
+        ariaLabel: 'How EcoLink Works',
+        href: '/how-it-works',
       },
     ],
   },
   {
-    label: "Community",
-    bgColor: "#170D27",
-    textColor: "#fff",
+    label: 'Community',
+    bgColor: '#170D27',
+    textColor: '#fff',
     links: [
       {
-        label: "Join Campaigns",
-        ariaLabel: "Join Environmental Campaigns",
-        href: "/campaigns",
+        label: 'Join Campaigns',
+        ariaLabel: 'Join Environmental Campaigns',
+        href: '/campaigns',
       },
       {
-        label: "Report Trash",
-        ariaLabel: "Report Trash",
-        href: "/incidents",
+        label: 'Report Trash',
+        ariaLabel: 'Report Trash',
+        href: '/incidents',
       },
       {
-        label: "Join Organizations",
-        ariaLabel: "Join Organizations",
-        href: "/organizations",
+        label: 'Join Organizations',
+        ariaLabel: 'Join Organizations',
+        href: '/organizations',
       },
     ],
   },
   {
-    label: "Impact",
-    bgColor: "#271E37",
-    textColor: "#fff",
+    label: 'Manage',
+    bgColor: '#271E37',
+    textColor: '#fff',
     links: [
       {
-        label: "Collected Trash",
-        ariaLabel: "Total Trash Collected",
-        href: "/impact/trash",
+        label: 'My Campaigns',
+        ariaLabel: 'My Campaigns',
+        href: '/campaigns/me',
       },
       {
-        label: "Impact Map",
-        ariaLabel: "Environmental Impact Map",
-        href: "/impact/map",
+        label: 'My Reports',
+        ariaLabel: 'My Reports',
+        href: '/incidents/me',
       },
       {
-        label: "Success Stories",
-        ariaLabel: "EcoLink Success Stories",
-        href: "/impact/stories",
+        label: 'My Organizations',
+        ariaLabel: 'My Organizations',
+        href: '/organizations/me',
       },
     ],
   },
   {
-    label: "Contact",
-    bgColor: "#33244A",
-    textColor: "#fff",
+    label: 'Contact',
+    bgColor: '#33244A',
+    textColor: '#fff',
     links: [
       {
-        label: "Email",
-        ariaLabel: "Contact EcoLink via Email",
-        href: "mailto:hello@ecolink.com",
+        label: 'Email',
+        ariaLabel: 'Contact EcoLink via Email',
+        href: 'mailto:hello@ecolink.com',
       },
       {
-        label: "Partnership",
-        ariaLabel: "EcoLink Partnership",
-        href: "/partnership",
+        label: 'Partnership',
+        ariaLabel: 'EcoLink Partnership',
+        href: '/partnership',
       },
       {
-        label: "Support",
-        ariaLabel: "EcoLink Support",
-        href: "/support",
+        label: 'Support',
+        ariaLabel: 'EcoLink Support',
+        href: '/support',
       },
     ],
   },
 ];
 
-const Header: React.FC<CardNavProps> = ({ ease = "power3.out", menuColor }) => {
+const Header: React.FC<CardNavProps> = ({ ease = 'power3.out', menuColor }) => {
   const [isHamburgerOpen, setIsHamburgerOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const navRef = useRef<HTMLDivElement | null>(null);
@@ -139,25 +139,26 @@ const Header: React.FC<CardNavProps> = ({ ease = "power3.out", menuColor }) => {
   const tlRef = useRef<gsap.core.Timeline | null>(null);
 
   const { user, setLogoutSuccess } = useAuthStore();
+  // console.log(user);
   const router = useRouter();
 
   const calculateHeight = () => {
     const navEl = navRef.current;
     if (!navEl) return 260;
 
-    const isMobile = window.matchMedia("(max-width: 768px)").matches;
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
     if (isMobile) {
-      const contentEl = navEl.querySelector(".card-nav-content") as HTMLElement;
+      const contentEl = navEl.querySelector('.card-nav-content') as HTMLElement;
       if (contentEl) {
         const wasVisible = contentEl.style.visibility;
         const wasPointerEvents = contentEl.style.pointerEvents;
         const wasPosition = contentEl.style.position;
         const wasHeight = contentEl.style.height;
 
-        contentEl.style.visibility = "visible";
-        contentEl.style.pointerEvents = "auto";
-        contentEl.style.position = "static";
-        contentEl.style.height = "auto";
+        contentEl.style.visibility = 'visible';
+        contentEl.style.pointerEvents = 'auto';
+        contentEl.style.position = 'static';
+        contentEl.style.height = 'auto';
 
         contentEl.offsetHeight;
 
@@ -171,8 +172,7 @@ const Header: React.FC<CardNavProps> = ({ ease = "power3.out", menuColor }) => {
         contentEl.style.height = wasHeight;
 
         const totalHeight = topBar + contentHeight + padding;
-        const maxHeight =
-          typeof window !== "undefined" ? window.innerHeight - 20 : totalHeight;
+        const maxHeight = typeof window !== 'undefined' ? window.innerHeight - 20 : totalHeight;
         return Math.min(totalHeight, maxHeight);
       }
     }
@@ -183,7 +183,7 @@ const Header: React.FC<CardNavProps> = ({ ease = "power3.out", menuColor }) => {
     const navEl = navRef.current;
     if (!navEl) return null;
 
-    gsap.set(navEl, { height: 60, overflow: "hidden" });
+    gsap.set(navEl, { height: 60, overflow: 'hidden' });
     gsap.set(cardsRef.current, { y: 50, opacity: 0 });
 
     const tl = gsap.timeline({ paused: true });
@@ -194,11 +194,7 @@ const Header: React.FC<CardNavProps> = ({ ease = "power3.out", menuColor }) => {
       ease,
     });
 
-    tl.to(
-      cardsRef.current,
-      { y: 0, opacity: 1, duration: 0.4, ease, stagger: 0.08 },
-      "-=0.1",
-    );
+    tl.to(cardsRef.current, { y: 0, opacity: 1, duration: 0.4, ease, stagger: 0.08 }, '-=0.1');
 
     return tl;
   };
@@ -236,8 +232,8 @@ const Header: React.FC<CardNavProps> = ({ ease = "power3.out", menuColor }) => {
       }
     };
 
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, [isExpanded]);
 
   const toggleMenu = () => {
@@ -249,7 +245,7 @@ const Header: React.FC<CardNavProps> = ({ ease = "power3.out", menuColor }) => {
       tl.play(0);
     } else {
       setIsHamburgerOpen(false);
-      tl.eventCallback("onReverseComplete", () => setIsExpanded(false));
+      tl.eventCallback('onReverseComplete', () => setIsExpanded(false));
       tl.reverse();
     }
   };
@@ -258,7 +254,7 @@ const Header: React.FC<CardNavProps> = ({ ease = "power3.out", menuColor }) => {
     if (el) cardsRef.current[i] = el;
   };
 
-  const isLarge = useMediaQuery("(min-width: 1024px)");
+  const isLarge = useMediaQuery('(min-width: 1024px)');
   const { t } = useTranslation();
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -268,52 +264,48 @@ const Header: React.FC<CardNavProps> = ({ ease = "power3.out", menuColor }) => {
       setIsScrolled(scrollY > 0);
     };
 
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        isExpanded &&
-        navRef.current &&
-        !navRef.current.contains(event.target as Node)
-      ) {
+      if (isExpanded && navRef.current && !navRef.current.contains(event.target as Node)) {
         const tl = tlRef.current;
         if (tl) {
           setIsHamburgerOpen(false);
-          tl.eventCallback("onReverseComplete", () => setIsExpanded(false));
+          tl.eventCallback('onReverseComplete', () => setIsExpanded(false));
           tl.reverse();
         }
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isExpanded]);
 
   const renderHamburgerMenu = () => (
     <div
       className={`hamburger-menu ${
-        isHamburgerOpen ? "open" : ""
+        isHamburgerOpen ? 'open' : ''
       } group h-full flex flex-col items-center justify-center cursor-pointer gap-[6px] order-2 md:order-none`}
       onClick={toggleMenu}
       role="button"
-      aria-label={isExpanded ? t("Close menu") : t("Open menu")}
+      aria-label={isExpanded ? t('Close menu') : t('Open menu')}
       suppressHydrationWarning
       tabIndex={0}
-      style={{ color: menuColor || "#000" }}
+      style={{ color: menuColor || '#000' }}
     >
       <div
         className={`hamburger-line w-[30px] h-[2px] bg-current transition-[transform,opacity,margin] duration-300 ease-linear [transform-origin:50%_50%] ${
-          isHamburgerOpen ? "translate-y-[4px] rotate-45" : ""
+          isHamburgerOpen ? 'translate-y-[4px] rotate-45' : ''
         } group-hover:opacity-75`}
       />
       <div
         className={`hamburger-line w-[30px] h-[2px] bg-current transition-[transform,opacity,margin] duration-300 ease-linear [transform-origin:50%_50%] ${
-          isHamburgerOpen ? "-translate-y-[4px] -rotate-45" : ""
+          isHamburgerOpen ? '-translate-y-[4px] -rotate-45' : ''
         } group-hover:opacity-75`}
       />
     </div>
@@ -321,7 +313,7 @@ const Header: React.FC<CardNavProps> = ({ ease = "power3.out", menuColor }) => {
 
   const renderLogo = () => (
     <div className="logo-container flex items-center md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 order-1 md:order-none">
-      <Logo size={isLarge ? "medium" : "small"} />
+      <Logo size={isLarge ? 'medium' : 'small'} />
     </div>
   );
 
@@ -329,8 +321,8 @@ const Header: React.FC<CardNavProps> = ({ ease = "power3.out", menuColor }) => {
     <div
       className={`card-nav-cta-button border-0 rounded-[calc(0.75rem-0.2rem)] items-center font-medium cursor-pointer transition-colors duration-300 gap-1 ${
         isMobile
-          ? "flex md:hidden w-full justify-center gap-6 py-2 lg:py-4 bg-white/40 backdrop-blur-xl border border-white/50 text-black rounded-2xl md:mt-auto"
-          : "hidden md:inline-flex h-full px-4"
+          ? 'flex md:hidden w-full justify-center gap-6 py-2 lg:py-4 bg-white/40 backdrop-blur-xl border border-white/50 text-black rounded-2xl md:mt-auto'
+          : 'hidden md:inline-flex h-full px-4'
       }`}
     >
       <LanguageSwitcher />
@@ -348,18 +340,23 @@ const Header: React.FC<CardNavProps> = ({ ease = "power3.out", menuColor }) => {
           </DropdownMenuTrigger>
           <DropdownMenuContent>
             <DropdownMenuItem asChild>
-              <Link href="/profile">{t("Profile")}</Link>
+              <Link href="/profile/points">{t('Profile')}</Link>
             </DropdownMenuItem>
+            {(user as any).role_id === '11111111-1111-1111-1111-111111111111' && (
+              <DropdownMenuItem asChild>
+                <Link href="/admin">{t('Admin')}</Link>
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem
               variant="destructive"
               onSelect={(e) => {
                 e.preventDefault();
                 clearAuthStorage();
                 setLogoutSuccess();
-                router.push("/authenticate");
+                router.push('/authenticate');
               }}
             >
-              {t("Logout")}
+              {t('Logout')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -370,7 +367,7 @@ const Header: React.FC<CardNavProps> = ({ ease = "power3.out", menuColor }) => {
           width={35}
           height={30}
           className="cursor-pointer"
-          onClick={() => router.push("/authenticate")}
+          onClick={() => router.push('/authenticate')}
         />
       )}
     </div>
@@ -379,9 +376,7 @@ const Header: React.FC<CardNavProps> = ({ ease = "power3.out", menuColor }) => {
   const renderNavContent = () => (
     <div
       className={`card-nav-content absolute left-0 right-0 top-[60px] bottom-0 p-2 flex flex-col items-stretch gap-2 justify-start z-[1] ${
-        isExpanded
-          ? "visible pointer-events-auto"
-          : "invisible pointer-events-none"
+        isExpanded ? 'visible pointer-events-auto' : 'invisible pointer-events-none'
       } md:flex-row md:items-end md:gap-[12px] overflow-y-auto`}
       aria-hidden={!isExpanded}
     >
@@ -408,10 +403,7 @@ const Header: React.FC<CardNavProps> = ({ ease = "power3.out", menuColor }) => {
                 href={lnk.href}
                 aria-label={t(lnk.ariaLabel)}
               >
-                <GoArrowUpRight
-                  className="nav-card-link-icon shrink-0"
-                  aria-hidden="true"
-                />
+                <GoArrowUpRight className="nav-card-link-icon shrink-0" aria-hidden="true" />
                 {t(lnk.label)}
               </a>
             ))}
@@ -432,11 +424,11 @@ const Header: React.FC<CardNavProps> = ({ ease = "power3.out", menuColor }) => {
         <nav
           ref={navRef}
           className={`card-nav ${
-            isExpanded ? "open" : ""
+            isExpanded ? 'open' : ''
           } block h-[60px] p-0 rounded-xl relative overflow-hidden will-change-[height] border border-1 border-black ${
             isScrolled || isExpanded
-              ? "bg-white/20 backdrop-blur-lg shadow-sm"
-              : "bg-background-primary"
+              ? 'bg-white/20 backdrop-blur-lg shadow-sm'
+              : 'bg-background-primary'
           }`}
         >
           <div className="card-nav-top absolute inset-x-0 top-0 h-[60px] flex items-center justify-between p-2 pl-[1.1rem] z-[2]">

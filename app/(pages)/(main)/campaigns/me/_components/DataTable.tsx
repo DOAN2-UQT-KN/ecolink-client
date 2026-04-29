@@ -1,6 +1,7 @@
 'use client';
 
 import { memo, useCallback, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { Building2 } from 'lucide-react';
 import { TbPencil } from 'react-icons/tb';
@@ -52,6 +53,7 @@ function difficultyColor(difficulty?: number | null): string {
 }
 
 export const DataTable = memo(function DataTable() {
+  const router = useRouter();
   const { t } = useTranslation();
   const { campaigns, isLoading, pagination, setPagination, total, refetch } =
     useCampaignMeContext();
@@ -231,6 +233,13 @@ export const DataTable = memo(function DataTable() {
     [setPagination],
   );
 
+  const handleRowClick = useCallback(
+    (record: ICampaign) => {
+      router.push(`/campaigns/${record.id}`);
+    },
+    [router],
+  );
+
   return (
     <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
       <UpdateCampaignPopover
@@ -246,6 +255,7 @@ export const DataTable = memo(function DataTable() {
         loading={isLoading}
         pagination={{ ...(pagination ?? defaultPagination), total }}
         onChange={handleTableChange}
+        onRowClick={handleRowClick}
         emptyText={t('No campaigns found')}
         filter={<FormFilter />}
       />

@@ -21,7 +21,9 @@ export default function AccountPage() {
   const [avatarUploading, setAvatarUploading] = useState(false);
 
   const displayName = useMemo(() => {
-    const anyUser = user as unknown as { name?: string; full_name?: string; email?: string } | undefined;
+    const anyUser = user as unknown as
+      | { name?: string; full_name?: string; email?: string }
+      | undefined;
     return (anyUser?.name ?? anyUser?.full_name ?? anyUser?.email ?? '').trim() || '-';
   }, [user]);
 
@@ -71,10 +73,10 @@ export default function AccountPage() {
     <div className="space-y-4">
       <section className="rounded-xl border border-[rgba(136,122,71,0.35)] bg-white p-5 sm:p-6">
         <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-          <div>
+          {/* <div>
             <h1 className="text-lg font-semibold">{t('Account')}</h1>
             <p className="text-sm text-foreground-secondary">{t('Manage your profile and session')}</p>
-          </div>
+          </div> */}
 
           <div className="mt-3 flex gap-2 sm:mt-0">
             <Button
