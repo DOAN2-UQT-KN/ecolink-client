@@ -1,13 +1,17 @@
 'use client';
 
-import React, { memo, useMemo } from 'react';
+import React, { memo, useCallback, useMemo } from 'react';
 import { TbAlignLeft2, TbCalendarCheck, TbMailPin } from 'react-icons/tb';
 import { format, parseISO } from 'date-fns';
+import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 
-import { useOrganizationDetail } from '../_hooks/useOrganizationDetail';
+import { useResendContactEmail } from '@/apis/organization/organizationById';
+import { Button } from '@/components/client/shared/Button';
 import { RichTextContent } from '@/components/ui/RichTextContent';
 import { cn } from '@/libs/utils';
+
+import { useOrganizationDetail } from '../_hooks/useOrganizationDetail';
 
 function formatCreatedAt(iso: string | undefined): string {
   if (!iso?.trim()) return '—';
@@ -20,11 +24,32 @@ function formatCreatedAt(iso: string | undefined): string {
 
 export const GeneralInformation = memo(function GeneralInformation() {
   const { t } = useTranslation();
-  const { organization } = useOrganizationDetail();
+  const queryClient = useQueryClient();
+  const { organization, organizationId, showYourGroupTag } =
+    useOrganizationDetail();
 
   const contactEmail = organization?.contact_email?.trim() ?? '';
   const description = organization?.description?.trim() ?? '';
   const isEmailVerified = Boolean(organization?.is_email_verified);
+
+  const { mutate: resendVerificationEmail, isPending: isResendPending } =
+    useResendContactEmail({
+      onSettled: () => {
+        void queryClient.invalidateQueries({
+          queryKey: ['organization', organizationId],
+        });
+      },
+    });
+
+  const handleResendVerificationEmail = useCallback(() => {
+    if (!organizationId) return;
+    resendVerificationEmail(organizationId);
+  }, [organizationId, resendVerificationEmail]);
+
+  const showResendContactEmail =
+    showYourGroupTag &&
+    Boolean(contactEmail) &&
+    !isEmailVerified;
   const createdLabel = useMemo(
     () => formatCreatedAt(organization?.created_at),
     [organization?.created_at],
@@ -61,6 +86,21 @@ export const GeneralInformation = memo(function GeneralInformation() {
                 >
                   {isEmailVerified ? t('Verified') : t('Unverified')}
                 </span>
+                {showResendContactEmail ? (
+                  <div className="mt-2">
+                    <Button
+                      type="button"
+                      variant="outlined-brown"
+                      size="small"
+                      className="w-full max-w-[220px]"
+                      isLoading={isResendPending}
+                      isDisabled={!organizationId}
+                      onClick={handleResendVerificationEmail}
+                    >
+                      {t('Resend verification email')}
+                    </Button>
+                  </div>
+                ) : null}
               </div>
             </div>
           ) : (

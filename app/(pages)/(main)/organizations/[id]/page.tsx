@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
-import { useParams, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useRef } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { Inbox } from "lucide-react";
 import { toast } from "sonner";
@@ -27,7 +27,9 @@ import { useOrganizationDetail } from "./_hooks/useOrganizationDetail";
 
 function OrganizationDetailBody() {
   const { t } = useTranslation();
+  const router = useRouter();
   const searchParams = useSearchParams();
+  const contactEmailVerifyToastShown = useRef(false);
   const {
     organizationId,
     organization,
@@ -37,10 +39,12 @@ function OrganizationDetailBody() {
 
   useEffect(() => {
     if (!searchParams) return;
-    if (searchParams.get("verifiedEmail") === "1") {
-      toast.success(t("Verify email successfully"));
-    }
-  }, [searchParams, t]);
+    if (searchParams.get("verifiedEmail") !== "1") return;
+    if (contactEmailVerifyToastShown.current) return;
+    contactEmailVerifyToastShown.current = true;
+    toast.success(t("Organization contact email verified"));
+    router.replace(`/organizations/${organizationId}`, { scroll: false });
+  }, [searchParams, t, router, organizationId]);
 
   const breadcrumbs: BreadcrumbItemProps[] = useMemo(
     () => [
