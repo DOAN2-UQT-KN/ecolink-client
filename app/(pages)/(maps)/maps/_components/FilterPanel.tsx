@@ -75,12 +75,6 @@ const FilterPanel = memo(function FilterPanel({
       onToggle: onToggleSOS,
       variant: 'sos',
       countClassName: 'text-amber-700',
-      trailing:
-        counts.sos > 0 ? (
-          <span className="rounded-full bg-red-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-red-600 animate-pulse">
-            {t('LIVE')}
-          </span>
-        ) : null,
     },
   ];
 
@@ -96,7 +90,16 @@ const FilterPanel = memo(function FilterPanel({
         {/* live stats — click each row to show/hide that layer */}
         <div className="flex flex-col gap-1 text-[11px]">
           {layerRows.map(
-            ({ id, label, count, active, onToggle, variant, countClassName, trailing: _trailing }) => (
+            ({
+              id,
+              label,
+              count,
+              active,
+              onToggle,
+              variant,
+              countClassName,
+              trailing: _trailing,
+            }) => (
               <button
                 key={id}
                 type="button"
@@ -118,9 +121,12 @@ const FilterPanel = memo(function FilterPanel({
         </div>
 
         {formattedTime && (
-          <p className="mt-1.5 flex items-center gap-1 pl-5 text-[10px] text-gray-500">
-            <Activity className="size-3 shrink-0 text-red-500" aria-hidden />
+          <p className="mt-1.5 flex items-center gap-1 text-[10px] text-gray-500">
+            {/* <Activity className="size-3 shrink-0 text-red-500" aria-hidden /> */}
             {t('Map updated at {{time}}', { time: formattedTime })}
+            <span className="rounded-full bg-red-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-red-600 animate-pulse">
+              {t('LIVE')}
+            </span>
           </p>
         )}
       </div>

@@ -437,5 +437,12 @@
   "e.g. +84 901 234 567": "ví dụ: +84 901 234 567",
   "Related Campaign": "Chiến dịch liên quan",
   "optional": "tùy chọn",
-  "Store": "Cửa hàng"
+  "Store": "Cửa hàng",
+  "Mark done": "Đánh dấu hoàn thành",
+  "Change avatar": "Đổi ảnh đại diện",
+  "Avatar": "Ảnh đại diện",
+  "Security": "Bảo mật",
+  "If you suspect your account is compromised, please logout and login again.": "Nếu bạn tin rằng tài khoản của bạn bị đánh cắp, vui lòng đăng xuất và đăng nhập lại.",
+  "Logout successfully": "Đăng xuất thành công",
+  "Logout failed": "Đăng xuất thất bại"
 }

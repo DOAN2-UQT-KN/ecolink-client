@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 import useAuthStore from '@/stores/useAuthStore';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/client/shared/Button';
 import { clearAuthStorage } from '@/utils/logout';
 import defaultAvatar from '@/public/default-avatar.png';
 import { uploadToCloudinary } from '@/app/(pages)/(main)/incidents/create/_services/upload.service';
@@ -80,7 +80,7 @@ export default function AccountPage() {
 
           <div className="mt-3 flex items-center justify-end w-full gap-2 sm:mt-0">
             <Button
-              variant="destructive"
+              variant="brown"
               onClick={() => {
                 clearAuthStorage();
                 setLogoutSuccess();
@@ -110,9 +110,8 @@ export default function AccountPage() {
                   disabled={avatarUploading}
                 />
                 <Button
-                  variant="outline"
-                  size="sm"
-                  className="border-[rgba(136,122,71,0.5)]"
+                  variant="outlined-brown"
+                  size="small"
                   onClick={handlePickAvatar}
                   disabled={avatarUploading}
                 >
@@ -135,8 +134,8 @@ export default function AccountPage() {
       </section>
 
       <section className="rounded-xl border border-[rgba(136,122,71,0.35)] bg-white p-5 sm:p-6">
-        <h2 className="text-lg font-semibold">{t('Security')}</h2>
-        <p className="mt-1 text-sm text-foreground-secondary">
+        <h2 className="text-lg font-semibold text-button-accent">{t('Security')}</h2>
+        <p className="mt-1 font-display-1 text-button-accent-hover">
           {t('If you suspect your account is compromised, please logout and login again.')}
         </p>
       </section>
