@@ -78,14 +78,7 @@ export default function AccountPage() {
             <p className="text-sm text-foreground-secondary">{t('Manage your profile and session')}</p>
           </div> */}
 
-          <div className="mt-3 flex gap-2 sm:mt-0">
-            <Button
-              variant="outline"
-              onClick={() => router.push('/profile/points')}
-              className="border-[rgba(136,122,71,0.5)]"
-            >
-              {t('My points')}
-            </Button>
+          <div className="mt-3 flex items-center justify-end w-full gap-2 sm:mt-0">
             <Button
               variant="destructive"
               onClick={() => {
