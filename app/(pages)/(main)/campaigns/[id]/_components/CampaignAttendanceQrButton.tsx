@@ -50,8 +50,7 @@ export const CampaignAttendanceQrButton = memo(function CampaignAttendanceQrButt
           setExpiresLabel(null);
         }
       }
-      const origin =
-        typeof window !== 'undefined' ? window.location.origin : '';
+      const origin = typeof window !== 'undefined' ? window.location.origin : '';
       const targetUrl = `${origin}/campaigns/${campaignId}?attendance=${encodeURIComponent(tok)}`;
       const dataUrl = await QRCode.toDataURL(targetUrl, { width: 280, margin: 2 });
       setQrDataUrl(dataUrl);
@@ -86,7 +85,7 @@ export const CampaignAttendanceQrButton = memo(function CampaignAttendanceQrButt
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button type="button" variant="outlined-brown" size="medium" className="!h-[45px]">
-          {t('Generate attendance QR')}
+          {t('Attendance QR')}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-md">
@@ -99,7 +98,13 @@ export const CampaignAttendanceQrButton = memo(function CampaignAttendanceQrButt
             <p className="text-sm text-muted-foreground">{t('Loading')}…</p>
           ) : qrDataUrl ? (
             // eslint-disable-next-line @next/next/no-img-element -- data URL from qrcode
-            <img src={qrDataUrl} alt="" className="rounded-lg border border-border/60 p-2 bg-white" width={280} height={280} />
+            <img
+              src={qrDataUrl}
+              alt=""
+              className="rounded-lg border border-border/60 p-2 bg-white"
+              width={280}
+              height={280}
+            />
           ) : null}
           {expiresLabel ? (
             <p className="text-xs text-muted-foreground text-center">

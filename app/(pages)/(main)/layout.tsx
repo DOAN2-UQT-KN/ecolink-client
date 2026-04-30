@@ -1,6 +1,7 @@
 import Header from '@/components/client/layout/Header';
 import Footer from '@/components/client/layout/Footer';
 import ClickSpark from '@/components/ui/ClickSpark';
+import AiChatWidget from '@/components/client/ai-chat/AiChatWidget';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -15,6 +16,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       >
         <main className="py-[92px] px-[20px] lg:px-[160px]">{children}</main>
       </ClickSpark>
+      <AiChatWidget />
       <Footer />
     </>
   );

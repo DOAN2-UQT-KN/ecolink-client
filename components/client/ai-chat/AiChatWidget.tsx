@@ -26,6 +26,7 @@ import {
 import { registerChatMedia } from "@/apis/chat-media/registerChatMedia"
 import { uploadToCloudinary } from "@/app/(pages)/(main)/incidents/create/_services/upload.service"
 import { compressImage } from "@/libs/compressImage"
+import { usePathname } from "next/navigation"
 
 const MAX_CHAT_IMAGES = 8
 
@@ -108,6 +109,7 @@ function storageKey(userId: string) {
 }
 
 export default function AiChatWidget() {
+    const pathname = usePathname()
     const accessToken = useAuthStore((s) => s.accessToken)
     const user = useAuthStore((s) => s.user)
     const hasHydrated = useAuthStore((s) => s.has_hydrated)
@@ -559,6 +561,11 @@ export default function AiChatWidget() {
     )
 
     const canChat = hasHydrated && !!accessToken && baseConfigured
+    const shouldHideOnRoute = pathname === "/maps" || pathname.startsWith("/maps/")
+
+    if (shouldHideOnRoute) {
+        return null
+    }
 
     return (
         <>

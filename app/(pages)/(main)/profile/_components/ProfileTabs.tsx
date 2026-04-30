@@ -11,6 +11,11 @@ const TAB_ROUTE: Record<TabValue, string> = {
   points: '/profile/points',
 };
 
+const TABS: Array<{ value: TabValue; label: string }> = [
+  { value: 'account', label: 'Account' },
+  { value: 'points', label: 'Points' },
+];
+
 export function ProfileTabs() {
   const { t } = useTranslation();
   const pathname = usePathname();
@@ -22,22 +27,19 @@ export function ProfileTabs() {
       aria-label={t('Profile sections')}
       className="flex w-[200px] flex-col gap-2 rounded-[8px] border border-[rgba(136,122,71,0.5)] bg-background-primary/10 p-2 md:flex-col"
     >
-      <Link
-        href={TAB_ROUTE.account}
-        className={`rounded-[8px] px-4 py-2 transition-all !font-display-2 ${
-          activeTab === 'account' ? 'bg-background shadow-sm' : 'hover:bg-background/60'
-        }`}
-      >
-        {t('Account')}
-      </Link>
-      <Link
-        href={TAB_ROUTE.points}
-        className={`rounded-[8px] px-4 py-2 transition-all !font-display-2 ${
-          activeTab === 'points' ? 'bg-background shadow-sm' : 'hover:bg-background/60'
-        }`}
-      >
-        {t('Points')}
-      </Link>
+      {TABS.map((tab) => (
+        <Link
+          key={tab.value}
+          href={TAB_ROUTE[tab.value]}
+          className={`rounded-[8px] px-4 py-2 transition-all !font-display-2 ${
+            activeTab === tab.value
+              ? 'bg-background border border-[rgba(136,122,71,0.5)]'
+              : 'hover:bg-background/60'
+          }`}
+        >
+          {t(tab.label)}
+        </Link>
+      ))}
     </nav>
   );
 }
