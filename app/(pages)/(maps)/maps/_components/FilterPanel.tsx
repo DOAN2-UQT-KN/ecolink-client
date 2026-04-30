@@ -65,7 +65,7 @@ const FilterPanel = memo(function FilterPanel({
       active: showIncidents,
       onToggle: onToggleIncidents,
       variant: 'incident',
-      countClassName: 'text-red-600',
+      countClassName: 'text-yellow-600',
     },
     {
       id: 'sos',
@@ -74,7 +74,7 @@ const FilterPanel = memo(function FilterPanel({
       active: showSOS,
       onToggle: onToggleSOS,
       variant: 'sos',
-      countClassName: 'text-amber-700',
+      countClassName: 'text-red-600',
     },
   ];
 
@@ -137,8 +137,8 @@ const FilterPanel = memo(function FilterPanel({
 // ─── mini toggle switch ────────────────────────────────────────────────────────
 const toggleTrackActive: Record<ToggleVariant, string> = {
   campaign: 'bg-blue-500',
-  incident: 'bg-red-500',
-  sos: 'bg-yellow-400',
+  incident: 'bg-yellow-400',
+  sos: 'bg-red-500',
 };
 
 function ToggleSwitch({ active, variant }: { active: boolean; variant: ToggleVariant }) {

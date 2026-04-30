@@ -33,6 +33,9 @@ export interface MapMarker {
   address?: string | null;
   wasteType?: string | null;
   // SOS-specific
+  campaignId?: string | null;
+  campaignTitle?: string | null;
+  campaignAddress?: string | null;
   phone?: string | null;
   content?: string | null;
 }
@@ -120,6 +123,9 @@ function toSOSMarkers(raw: ISOS[], fallback: string): MapMarker[] {
       type: 'SOS' as const,
       status: s.status ?? null,
       address: s.detail_address ?? s.campaign?.detail_address ?? null,
+      campaignId: s.campaign_id ?? s.campaign?.id ?? null,
+      campaignTitle: s.campaign?.title ?? null,
+      campaignAddress: s.campaign?.detail_address ?? null,
       phone: s.phone,
       content: s.content,
     }));
@@ -191,6 +197,9 @@ export default function MapPage() {
         type: 'SOS',
         status: sos.status ?? null,
         address: sos.detail_address ?? sos.campaign?.detail_address ?? null,
+        campaignId: sos.campaign_id ?? sos.campaign?.id ?? null,
+        campaignTitle: sos.campaign?.title ?? null,
+        campaignAddress: sos.campaign?.detail_address ?? null,
         phone: sos.phone,
         content: sos.content,
       };
@@ -202,7 +211,17 @@ export default function MapPage() {
 
   const markers = useMemo(() => {
     const result: MapMarker[] = [];
-    if (showCampaigns) result.push(...campaigns);
+    const campaignIdsWithSOS = new Set(
+      sosList
+        .map((sos) => sos.campaignId)
+        .filter((campaignId): campaignId is string => Boolean(campaignId)),
+    );
+    const campaignsWithoutSOS = campaigns.filter(
+      (campaign) => !campaignIdsWithSOS.has(campaign.id),
+    );
+
+    // If campaign already has SOS linked by campaign_id, render only SOS marker.
+    if (showCampaigns) result.push(...campaignsWithoutSOS);
     if (showIncidents) result.push(...incidents);
     if (showSOS) result.push(...sosList);
     return result;
