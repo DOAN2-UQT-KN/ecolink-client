@@ -3,7 +3,6 @@
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useForm, Controller } from 'react-hook-form';
-import { AlertTriangle } from 'lucide-react';
 
 import {
   Dialog,

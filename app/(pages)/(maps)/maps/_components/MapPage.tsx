@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { useTranslation } from 'react-i18next';
+import { cn } from '@/libs/utils';
 import { getAllCampaigns } from '@/apis/campaign/getCampaigns';
 import { getAllReports } from '@/apis/incident/getReport';
 import { getAllSOS } from '@/apis/sos/getSos';
@@ -36,8 +37,45 @@ export interface MapMarker {
   content?: string | null;
 }
 
+interface CampaignLike {
+  id: string | number;
+  title?: string | null;
+  latitude?: number | string | null;
+  longitude?: number | string | null;
+  status?: number | null;
+  detail_address?: string | null;
+}
+
+interface IncidentLike {
+  id: string | number;
+  title?: string | null;
+  latitude?: number | string | null;
+  longitude?: number | string | null;
+  status?: number | null;
+  detail_address?: string | null;
+  waste_type?: string | null;
+}
+
+interface CampaignListResponse {
+  data?: {
+    campaigns?: CampaignLike[];
+  };
+}
+
+interface IncidentListResponse {
+  data?: {
+    reports?: IncidentLike[];
+  };
+}
+
+interface SOSListResponse {
+  data?: {
+    sos?: ISOS[];
+  };
+}
+
 // ─── helpers ───────────────────────────────────────────────────────────────────
-function toCampaignMarkers(raw: any[], fallback: string): MapMarker[] {
+function toCampaignMarkers(raw: CampaignLike[], fallback: string): MapMarker[] {
   return raw
     .filter((c) => c.latitude != null && c.longitude != null)
     .map((c) => ({
@@ -52,7 +90,7 @@ function toCampaignMarkers(raw: any[], fallback: string): MapMarker[] {
     }));
 }
 
-function toIncidentMarkers(raw: any[], fallback: string): MapMarker[] {
+function toIncidentMarkers(raw: IncidentLike[], fallback: string): MapMarker[] {
   return raw
     .filter((i) => i.latitude != null && i.longitude != null)
     .map((i) => ({
@@ -114,17 +152,17 @@ export default function MapPage() {
     ]);
 
     if (campaignRes.status === 'fulfilled') {
-      const data = (campaignRes.value as any)?.data?.campaigns ?? [];
+      const data = (campaignRes.value as CampaignListResponse)?.data?.campaigns ?? [];
       setCampaigns(toCampaignMarkers(data, t('Untitled Campaign')));
     }
 
     if (incidentRes.status === 'fulfilled') {
-      const data = (incidentRes.value as any)?.data?.reports ?? [];
+      const data = (incidentRes.value as IncidentListResponse)?.data?.reports ?? [];
       setIncidents(toIncidentMarkers(data, t('Untitled Incident')));
     }
 
     if (sosRes.status === 'fulfilled') {
-      const data = (sosRes.value as any)?.data?.sos ?? [];
+      const data = (sosRes.value as SOSListResponse)?.data?.sos ?? [];
       setSosList(toSOSMarkers(data, t('SOS Alert')));
     }
 
@@ -134,7 +172,7 @@ export default function MapPage() {
 
   // Initial fetch + 10-second auto-refresh
   useEffect(() => {
-    fetchData();
+    void Promise.resolve().then(fetchData);
     const interval = setInterval(fetchData, 10_000);
     return () => clearInterval(interval);
   }, [fetchData]);
@@ -171,7 +209,7 @@ export default function MapPage() {
   }, [campaigns, incidents, sosList, showCampaigns, showIncidents, showSOS]);
 
   return (
-    <div className="-mt-[92px] -mb-[92px] -mx-[20px] lg:-mx-[160px] h-screen relative overflow-hidden">
+    <div className=" h-screen relative overflow-hidden">
       <MapView markers={markers} loading={loading} />
 
       <FilterPanel
@@ -203,59 +241,6 @@ export default function MapPage() {
   );
 }
 
-// ─── SOS floating button ───────────────────────────────────────────────────────
-// function SOSButton({ onClick }: { onClick: () => void }) {
-//   const { t } = useTranslation();
-//   return (
-//     <>
-//       {/* <style>{`
-//         @keyframes sos-glow {
-//           0%   { box-shadow: 0 0 0 0 rgba(239,68,68,0.7), 0 4px 15px rgba(239,68,68,0.4); }
-//           70%  { box-shadow: 0 0 0 14px rgba(239,68,68,0), 0 4px 15px rgba(239,68,68,0.4); }
-//           100% { box-shadow: 0 0 0 0 rgba(239,68,68,0), 0 4px 15px rgba(239,68,68,0.4); }
-//         }
-//         .sos-btn {
-//           animation: sos-glow 2s ease-out infinite;
-//         }
-//         .sos-btn:hover {
-//           animation: none;
-//           box-shadow: 0 8px 25px rgba(239,68,68,0.6);
-//           transform: scale(1.05);
-//         }
-//         .sos-btn:active {
-//           transform: scale(0.95);
-//         }
-//       `}</style> */}
-
-//       <button
-//         onClick={onClick}
-//         aria-label="Emergency SOS"
-//         // className="sos-btn absolute bottom-8 left-1/2 -translate-x-1/2 z-[1000]
-//         //   flex items-center gap-2 px-7 py-3.5 rounded-full
-//         //   bg-red-500 hover:bg-red-600 active:bg-red-700
-//         //   text-white font-bold text-base tracking-wider
-//         //   transition-all duration-200 ease-out
-//         //   cursor-pointer select-none"
-//         style={{
-//           // transform: 'translateX(-50%)',
-//           position: 'absolute',
-//           top: '400px',
-//           right: '20px',
-//           zIndex: 1000,
-//           display: 'flex',
-//           alignItems: 'center',
-//           gap: '2px',
-//           padding: '7px 14px',
-//           borderRadius: 'full',
-//           backgroundColor: 'red',
-//         }}
-//       >
-//         <span className="text-lg leading-none">🚨</span>
-//         <span>{t('SOS')}</span>
-//       </button>
-//     </>
-//   );
-// }
 function SOSButton({ onClick }: { onClick: () => void }) {
   const { t } = useTranslation();
   const [isHover, setIsHover] = useState(false);
@@ -269,10 +254,9 @@ function SOSButton({ onClick }: { onClick: () => void }) {
     return () => clearInterval(interval);
   }, []);
 
-  const scale = isActive ? 0.9 : isHover ? 1.1 : 1;
-
   return (
     <button
+      type="button"
       onClick={onClick}
       aria-label="Emergency SOS"
       onMouseEnter={() => setIsHover(true)}
@@ -282,39 +266,14 @@ function SOSButton({ onClick }: { onClick: () => void }) {
       }}
       onMouseDown={() => setIsActive(true)}
       onMouseUp={() => setIsActive(false)}
+      className={cn(
+        'absolute top-[200px] right-5 z-[1000] flex size-[50px] cursor-pointer select-none items-center justify-center rounded-full border-none bg-red-500 text-[17px] font-bold text-white outline-none transition-all duration-200 ease-out',
+        isActive && 'scale-90 bg-red-700',
+        !isActive && isHover && 'scale-110 bg-red-600',
+        !isActive && !isHover && 'scale-100',
+      )}
       style={{
-        position: 'absolute',
-        top: '200px',
-        right: '20px',
-        zIndex: 1000,
-
-        width: '50px',
-        height: '50px',
-
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-
-        borderRadius: '50%',
-        border: 'none',
-        outline: 'none',
-
-        backgroundColor: isActive ? '#b91c1c' : isHover ? '#dc2626' : '#ef4444',
-
-        color: 'white',
-        fontWeight: 700,
-        fontSize: '17px',
-
-        cursor: 'pointer',
-        userSelect: 'none',
-
-        transform: `scale(${scale})`,
-        transition: 'all 0.2s ease',
-
-        boxShadow: `
-          0 6px 16px rgba(0,0,0,0.25),
-          0 0 ${pulse * 25}px rgba(239,68,68,${1 - pulse})
-        `,
+        boxShadow: `0 6px 16px rgba(0,0,0,0.25), 0 0 ${pulse * 25}px rgba(239,68,68,${1 - pulse})`,
       }}
     >
       <span>{t('SOS')}</span>

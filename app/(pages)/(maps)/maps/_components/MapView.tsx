@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useEffect, useState, useMemo } from "react";
+import { memo, useEffect, useMemo } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -204,14 +204,9 @@ interface MapViewProps {
 }
 
 const MapView = memo(function MapView({ markers, loading }: MapViewProps) {
-  const [mounted, setMounted] = useState(false);
-
   useEffect(() => {
     injectSOSStyle();
-    setMounted(true);
   }, []);
-
-  if (!mounted) return null;
 
   return (
     <div className="relative h-full w-full">
