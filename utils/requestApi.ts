@@ -21,6 +21,10 @@ const requestApi = {
     axiosClient
       .put<TResponse>(url, data, config)
       .then((res) => Promise.resolve(res.data)),
+  patch: <TResponse>(url: string, data: any, config: RequestApiOptions = {}) =>
+    axiosClient
+      .patch<TResponse>(url, data, config)
+      .then((res) => Promise.resolve(res.data)),
   delete: <TResponse>(
     url: string,
     params?: any,

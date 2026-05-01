@@ -12,8 +12,15 @@ export type {
   IGetGamificationPointsBySeasonRequest,
 } from "./models/pointsBySeason";
 export type {
+  IBadgeDefinition,
+  IAdminBadgeDefinition,
   IGamificationBadgeGrant,
   IGetMyGamificationBadgesRequest,
+  IGetAdminGamificationBadgesRequest,
+  ICreateAdminBadgeBody,
+  ICreateAdminBadgeResponse,
+  IPatchAdminBadgeBody,
+  IPatchAdminBadgeResponse,
 } from "./models/gamificationBadge";
 export type { IGetCampaignRewardEstimateRequest } from "./models/campaignRewardEstimate";
 export type {
@@ -41,7 +48,9 @@ export {
 export {
   getMyGamificationBadges,
   useGetMyGamificationBadges,
-} from "./getMyGamificationBadges";
+  getAdminGamificationBadges,
+  useGetAdminGamificationBadges,
+} from "./getGamificationBadges";
 export {
   getCampaignRewardEstimate,
   useGetCampaignRewardEstimate,
@@ -55,3 +64,9 @@ export {
   useGetGamificationLeaderboardMe,
 } from "./getGamificationLeaderboardMe";
 export { exchangeGift, useExchangeGift } from "./exchangeGift";
+export {
+  createAdminBadge,
+  patchAdminBadge,
+  useCreateAdminBadge,
+  usePatchAdminBadge,
+} from "./adminBadge";
