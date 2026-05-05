@@ -12,6 +12,8 @@ export interface ISeason {
 export interface IAdminSeasonsQuery {
   page?: number;
   limit?: number;
+  kind?: "MONTHLY" | "QUARTERLY";
+  search?: string;
 }
 
 export interface ICreateSeasonBody {
