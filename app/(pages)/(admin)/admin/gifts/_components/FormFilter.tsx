@@ -1,20 +1,20 @@
-"use client";
+'use client';
 
-import { useEffect, useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { TbZoom } from "react-icons/tb";
+import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { TbZoom } from 'react-icons/tb';
 
-import { Input } from "@/components/ui/input";
-import { Field, FieldLabel } from "@/components/ui/field";
+import { Input } from '@/components/ui/input';
+import { Field, FieldLabel } from '@/components/ui/field';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { useDebounce } from "@/hooks/useDebounce";
-import { useGiftContext } from "../_context/GiftContext";
+} from '@/components/ui/select';
+import { useDebounce } from '@/hooks/useDebounce';
+import { useGiftContext } from '../_context/GiftContext';
 
 type FormFieldConfig = {
   key: string;
@@ -42,26 +42,26 @@ export function FormFilter() {
 
   const formFields: FormFieldConfig[] = useMemo(() => {
     const activeOptions = [
-      { label: t("All"), value: "all" },
-      { label: t("Active"), value: "active" },
-      { label: t("Inactive"), value: "inactive" },
+      { label: t('All'), value: 'all' },
+      { label: t('Active'), value: 'active' },
+      { label: t('Inactive'), value: 'inactive' },
     ];
 
     const stockOptions = [
-      { label: t("All"), value: "all" },
-      { label: t("In stock only"), value: "in_stock" },
+      { label: t('All'), value: 'all' },
+      { label: t('In stock only'), value: 'in_stock' },
     ];
 
     return [
       {
-        key: "search",
-        label: t("Search"),
+        key: 'search',
+        label: t('Search'),
         render: () => (
           <div className="relative">
             <TbZoom className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               className="h-10 pl-10 !border !border-zinc-300"
-              placeholder={t("Gift name...")}
+              placeholder={t('Gift name...')}
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
             />
@@ -69,8 +69,8 @@ export function FormFilter() {
         ),
       },
       {
-        key: "active",
-        label: t("Visibility"),
+        key: 'active',
+        label: t('Visibility'),
         render: () => (
           <Select
             value={values.activeFilter}
@@ -81,7 +81,7 @@ export function FormFilter() {
             }
           >
             <SelectTrigger className="!h-10 w-full !border !border-zinc-300">
-              <SelectValue placeholder={t("All")} />
+              <SelectValue placeholder={t('All')} />
             </SelectTrigger>
             <SelectContent>
               {activeOptions.map((item) => (
@@ -94,8 +94,8 @@ export function FormFilter() {
         ),
       },
       {
-        key: "stock",
-        label: t("Stock"),
+        key: 'stock',
+        label: t('Stock'),
         render: () => (
           <Select
             value={values.stockFilter}
@@ -106,7 +106,7 @@ export function FormFilter() {
             }
           >
             <SelectTrigger className="!h-10 w-full !border !border-zinc-300">
-              <SelectValue placeholder={t("All")} />
+              <SelectValue placeholder={t('All')} />
             </SelectTrigger>
             <SelectContent>
               {stockOptions.map((item) => (

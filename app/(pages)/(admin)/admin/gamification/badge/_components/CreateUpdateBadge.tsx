@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState, type ChangeEvent } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Loader2 } from 'lucide-react';
@@ -61,6 +61,18 @@ export interface CreateUpdateBadgeProps {
 
 type ApiLeaderboardMetric = BadgeMetric;
 type SymbolMode = 'emoji' | 'image';
+
+function isValidBadgeCategory(value: string): value is BadgeCategory {
+  return value in BADGE_CATEGORY_LABEL;
+}
+
+function isValidBadgeMetric(value: string): value is BadgeMetric {
+  return value in BADGE_METRIC_LABEL;
+}
+
+function isValidBadgeRuleType(value: string): value is BadgeRuleType {
+  return value in BADGE_RULE_TYPE_LABEL;
+}
 
 export const CreateUpdateBadge = memo(function CreateUpdateBadge({
   open,
@@ -128,6 +140,78 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
   const showThresholdInput = ruleType === 'THRESHOLD';
   const showRankTopNInput = ruleType === 'RANK';
 
+  const handleSymbolModeChange = useCallback(
+    (nextMode: SymbolMode) => {
+      if (symbolMode === nextMode) return;
+      setSymbolMode(nextMode);
+      setValue('symbol', '', { shouldDirty: true, shouldValidate: true });
+    },
+    [setValue, symbolMode],
+  );
+
+  const handleCategoryChange = useCallback(
+    (value: string, onChange: (value: BadgeCategory) => void) => {
+      const nextCategory = value as BadgeCategory;
+      onChange(nextCategory);
+      const allowed = BADGE_METRICS_BY_CATEGORY[nextCategory];
+      if (!allowed.includes(metric)) {
+        setValue('metric', allowed[0], { shouldDirty: true, shouldValidate: true });
+      }
+      if (nextCategory === 'RANK') {
+        setValue('ruleType', 'RANK', { shouldDirty: true, shouldValidate: true });
+        setValue('threshold', '');
+      }
+    },
+    [metric, setValue],
+  );
+
+  const handleRuleTypeChange = useCallback(
+    (value: string, onChange: (value: BadgeRuleType) => void) => {
+      const nextRuleType = value as BadgeRuleType;
+      if (category === 'RANK' && nextRuleType !== 'RANK') return;
+      onChange(nextRuleType);
+      if (nextRuleType === 'THRESHOLD') {
+        setValue('rankTopN', '');
+      } else {
+        setValue('threshold', '');
+      }
+    },
+    [category, setValue],
+  );
+
+  const handleSymbolFileChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const allowed = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+      if (!allowed.includes(file.type)) {
+        setError('symbol', { message: t('Only png, jpg, jpeg, webp are allowed') });
+        e.currentTarget.value = '';
+        return;
+      }
+      if (file.size > SYMBOL_IMAGE_MAX_SIZE_BYTES) {
+        setError('symbol', { message: t('Image size must be <= 2MB') });
+        e.currentTarget.value = '';
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = typeof reader.result === 'string' ? reader.result : '';
+        if (!result.startsWith('data:image')) {
+          setError('symbol', { message: t('Invalid image data') });
+          return;
+        }
+        clearErrors('symbol');
+        setValue('symbol', result, { shouldDirty: true, shouldValidate: true });
+      };
+      reader.onerror = () => {
+        setError('symbol', { message: t('Failed to read image file') });
+      };
+      reader.readAsDataURL(file);
+    },
+    [clearErrors, setError, setValue, t],
+  );
+
   const onValidSubmit = useCallback(
     async (data: BadgeFormValues) => {
       clearErrors([
@@ -171,15 +255,15 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
         return;
       }
 
-      if (!(data.category in BADGE_CATEGORY_LABEL)) {
+      if (!isValidBadgeCategory(data.category)) {
         setError('category', { message: t('Category is required') });
         return;
       }
-      if (!(data.metric in BADGE_METRIC_LABEL)) {
+      if (!isValidBadgeMetric(data.metric)) {
         setError('metric', { message: t('Metric is required') });
         return;
       }
-      if (!(data.ruleType in BADGE_RULE_TYPE_LABEL)) {
+      if (!isValidBadgeRuleType(data.ruleType)) {
         setError('ruleType', { message: t('Rule type is required') });
         return;
       }
@@ -278,7 +362,7 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
       <DialogContent
         showCloseButton
         className={cn(
-          'max-h-[90vh] max-w-lg gap-4 overflow-y-auto sm:max-w-xl',
+          'max-h-[90vh] max-w-lg gap-4 overflow-y-auto sm:max-w-xl scrollbar-hide',
           isDark ? 'bg-zinc-900 text-zinc-100' : 'bg-zinc-50 text-zinc-900',
         )}
         onPointerDownOutside={(e) => {
@@ -288,9 +372,9 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
           if (busy) e.preventDefault();
         }}
       >
-        <DialogHeader>
+        <DialogHeader className="!h-[20px]">
           <DialogTitle
-            className={cn('text-left font-semibold', isDark ? 'text-zinc-100' : 'text-zinc-900')}
+            className={cn('text-left font-semibold ', isDark ? 'text-zinc-100' : 'text-zinc-900')}
           >
             {isCreate ? t('Create badge') : t('Edit badge')}
           </DialogTitle>
@@ -336,11 +420,7 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
                   size="sm"
                   className="h-8 px-3"
                   disabled={busy}
-                  onClick={() => {
-                    if (symbolMode === 'emoji') return;
-                    setSymbolMode('emoji');
-                    setValue('symbol', '', { shouldDirty: true, shouldValidate: true });
-                  }}
+                  onClick={() => handleSymbolModeChange('emoji')}
                 >
                   {t('Emoji')}
                 </Button>
@@ -350,11 +430,7 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
                   size="sm"
                   className="h-8 px-3"
                   disabled={busy}
-                  onClick={() => {
-                    if (symbolMode === 'image') return;
-                    setSymbolMode('image');
-                    setValue('symbol', '', { shouldDirty: true, shouldValidate: true });
-                  }}
+                  onClick={() => handleSymbolModeChange('image')}
                 >
                   {t('Image')}
                 </Button>
@@ -374,35 +450,7 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
                     accept={SYMBOL_IMAGE_ACCEPT}
                     className="h-10 !border !border-zinc-300 file:mr-3 file:rounded-md file:border-0 file:bg-zinc-100 file:px-3 file:py-1.5 file:text-sm"
                     disabled={busy}
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      const allowed = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
-                      if (!allowed.includes(file.type)) {
-                        setError('symbol', { message: t('Only png, jpg, jpeg, webp are allowed') });
-                        e.currentTarget.value = '';
-                        return;
-                      }
-                      if (file.size > SYMBOL_IMAGE_MAX_SIZE_BYTES) {
-                        setError('symbol', { message: t('Image size must be <= 2MB') });
-                        e.currentTarget.value = '';
-                        return;
-                      }
-                      const reader = new FileReader();
-                      reader.onload = () => {
-                        const result = typeof reader.result === 'string' ? reader.result : '';
-                        if (!result.startsWith('data:image')) {
-                          setError('symbol', { message: t('Invalid image data') });
-                          return;
-                        }
-                        clearErrors('symbol');
-                        setValue('symbol', result, { shouldDirty: true, shouldValidate: true });
-                      };
-                      reader.onerror = () => {
-                        setError('symbol', { message: t('Failed to read image file') });
-                      };
-                      reader.readAsDataURL(file);
-                    }}
+                    onChange={handleSymbolFileChange}
                   />
                   {isImageSymbol(symbolValue) ? (
                     <img
@@ -427,18 +475,7 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
                 render={({ field }) => (
                   <Select
                     value={field.value}
-                    onValueChange={(value) => {
-                      const nextCategory = value as BadgeCategory;
-                      field.onChange(nextCategory);
-                      const allowed = BADGE_METRICS_BY_CATEGORY[nextCategory];
-                      if (!allowed.includes(metric)) {
-                        setValue('metric', allowed[0], { shouldDirty: true, shouldValidate: true });
-                      }
-                      if (nextCategory === 'RANK') {
-                        setValue('ruleType', 'RANK', { shouldDirty: true, shouldValidate: true });
-                        setValue('threshold', '');
-                      }
-                    }}
+                    onValueChange={(value) => handleCategoryChange(value, field.onChange)}
                     disabled={busy}
                   >
                     <SelectTrigger className="!h-10 !border !border-zinc-300">
@@ -502,18 +539,7 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
                 render={({ field }) => (
                   <Select
                     value={field.value}
-                    onValueChange={(value) => {
-                      const nextRuleType = value as BadgeRuleType;
-                      if (category === 'RANK' && nextRuleType !== 'RANK') {
-                        return;
-                      }
-                      field.onChange(nextRuleType);
-                      if (nextRuleType === 'THRESHOLD') {
-                        setValue('rankTopN', '');
-                      } else {
-                        setValue('threshold', '');
-                      }
-                    }}
+                    onValueChange={(value) => handleRuleTypeChange(value, field.onChange)}
                     disabled={busy}
                   >
                     <SelectTrigger className="!h-10 !border !border-zinc-300">

@@ -1,20 +1,20 @@
-"use client";
+'use client';
 
-import { useEffect, useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { TbZoom } from "react-icons/tb";
+import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { TbZoom } from 'react-icons/tb';
 
-import { Field, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { useDebounce } from "@/hooks/useDebounce";
-import { useSeasonContext } from "../_hooks/useSeasonContext";
+} from '@/components/ui/select';
+import { useDebounce } from '@/hooks/useDebounce';
+import { useSeasonContext } from '../_hooks/useSeasonContext';
 
 export function FormFilter() {
   const { t } = useTranslation();
@@ -36,37 +36,37 @@ export function FormFilter() {
   const fields = useMemo(
     () => [
       {
-        key: "kind",
-        label: t("Kind"),
+        key: 'kind',
+        label: t('Kind'),
         render: () => (
           <Select
-            value={filters.kind || "ALL"}
+            value={filters.kind || 'ALL'}
             onValueChange={(value) =>
               onFilterChange({
-                kind: value === "ALL" ? "" : (value as "MONTHLY" | "QUARTERLY"),
+                kind: value === 'ALL' ? '' : (value as 'MONTHLY' | 'QUARTERLY'),
               })
             }
           >
-            <SelectTrigger className="h-10 border border-zinc-300">
-              <SelectValue placeholder={t("Select kind")} />
+            <SelectTrigger className="!h-10 w-full !border !border-zinc-300">
+              <SelectValue placeholder={t('Select kind')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">{t("All")}</SelectItem>
-              <SelectItem value="MONTHLY">{t("Monthly")}</SelectItem>
-              <SelectItem value="QUARTERLY">{t("Quarterly")}</SelectItem>
+              <SelectItem value="ALL">{t('All')}</SelectItem>
+              <SelectItem value="MONTHLY">{t('Monthly')}</SelectItem>
+              <SelectItem value="QUARTERLY">{t('Quarterly')}</SelectItem>
             </SelectContent>
           </Select>
         ),
       },
       {
-        key: "search",
-        label: t("Search"),
+        key: 'search',
+        label: t('Search'),
         render: () => (
           <div className="relative">
             <TbZoom className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              className="h-10 border border-zinc-300 pl-10"
-              placeholder={t("Search by season name...")}
+              className="!h-10 !border !border-zinc-300 pl-10"
+              placeholder={t('Search by season name...')}
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
             />
