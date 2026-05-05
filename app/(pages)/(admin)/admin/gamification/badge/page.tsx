@@ -11,7 +11,8 @@ import {
 import { Button } from "@/components/ui/button";
 import type { IAdminBadgeDefinition } from "@/apis/gamification/models/gamificationBadge";
 
-import { BadgeAdminProvider, useBadgeAdminContext } from "./_context/BadgeAdminContext";
+import { BadgeAdminProvider } from "./_context/BadgeAdminContext";
+import { useBadgeAdminContext } from "./_hooks/useBadgeAdminContext";
 import { FormFilter } from "./_components/FormFilter";
 import { DataTable } from "./_components/DataTable";
 import { CreateUpdateBadge } from "./_components/CreateUpdateBadge";

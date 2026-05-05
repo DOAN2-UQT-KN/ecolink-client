@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { TbZoom } from "react-icons/tb";
 
-import { useBadgeAdminContext } from "../_context/BadgeAdminContext";
+import { useBadgeAdminContext } from "../_hooks/useBadgeAdminContext";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/useDebounce";

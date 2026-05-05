@@ -23,7 +23,7 @@ import {
   type BadgeMetric,
   type BadgeRuleType,
 } from '@/constants/badge';
-import { useBadgeAdminContext } from '../_context/BadgeAdminContext';
+import { useBadgeAdminContext } from '../_hooks/useBadgeAdminContext';
 import { isImageSymbol } from './symbol';
 
 const COLUMN_KEYS = {
@@ -123,7 +123,7 @@ export function DataTable({ onEdit }: { onEdit: (badge: IAdminBadgeDefinition) =
             ) : (
               '—'
             )}
-            <div className="flex items-start justify-start flex-col">
+            <div className="flex items-start gap-1 justify-start flex-col">
               <span className={cn(isDark ? 'text-zinc-200' : 'text-zinc-800')}>{row.name}</span>
               <span className="text-xs text-zinc-500">#{row.slug}</span>
             </div>

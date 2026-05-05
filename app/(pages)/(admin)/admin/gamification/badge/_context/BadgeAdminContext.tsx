@@ -3,7 +3,6 @@
 import {
   createContext,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useState,
@@ -12,6 +11,11 @@ import { useTranslation } from "react-i18next";
 
 import { useGetAdminGamificationBadges } from "@/apis/gamification/getGamificationBadges";
 import type { IAdminBadgeDefinition } from "@/apis/gamification/models/gamificationBadge";
+import {
+  filterBadges,
+  normalizeBadgePageSize,
+  paginateBadges,
+} from "../_services/badgeAdmin.service";
 
 export type BadgeAdminFilterValues = {
   search: string;
@@ -22,7 +26,7 @@ type PaginationState = {
   pageSize: number;
 };
 
-type BadgeAdminContextType = {
+export type BadgeAdminContextType = {
   filters: BadgeAdminFilterValues;
   pagination: PaginationState;
   badges: IAdminBadgeDefinition[];
@@ -35,18 +39,9 @@ type BadgeAdminContextType = {
   onPageSizeChange: (pageSize: number) => void;
 };
 
-const BadgeAdminContext = createContext<BadgeAdminContextType | undefined>(
+export const BadgeAdminContext = createContext<BadgeAdminContextType | undefined>(
   undefined,
 );
-
-const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const;
-
-function normalizePageSize(limit: number): number {
-  if (!Number.isFinite(limit) || limit < 1) return 10;
-  return PAGE_SIZE_OPTIONS.includes(limit as (typeof PAGE_SIZE_OPTIONS)[number])
-    ? limit
-    : 10;
-}
 
 export function BadgeAdminProvider({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
@@ -62,26 +57,17 @@ export function BadgeAdminProvider({ children }: { children: React.ReactNode }) 
 
   const rawBadges = query.data?.data?.badges ?? [];
 
-  const filteredBadges = useMemo(() => {
-    const q = filters.search.trim().toLowerCase();
-    if (!q) return rawBadges;
-    return rawBadges.filter((b) => {
-      const sym = b.symbol?.toLowerCase() ?? "";
-      return (
-        b.slug.toLowerCase().includes(q) ||
-        b.name.toLowerCase().includes(q) ||
-        sym.includes(q) ||
-        b.id.toLowerCase().includes(q)
-      );
-    });
-  }, [rawBadges, filters.search]);
+  const filteredBadges = useMemo(
+    () => filterBadges(rawBadges, filters),
+    [filters, rawBadges],
+  );
 
   const total = filteredBadges.length;
 
-  const badges = useMemo(() => {
-    const start = (pagination.current - 1) * pagination.pageSize;
-    return filteredBadges.slice(start, start + pagination.pageSize);
-  }, [filteredBadges, pagination.current, pagination.pageSize]);
+  const badges = useMemo(
+    () => paginateBadges(filteredBadges, pagination.current, pagination.pageSize),
+    [filteredBadges, pagination.current, pagination.pageSize],
+  );
 
   useEffect(() => {
     setPagination((p) => ({ ...p, current: 1 }));
@@ -105,7 +91,7 @@ export function BadgeAdminProvider({ children }: { children: React.ReactNode }) 
   const onPageSizeChange = useCallback((pageSize: number) => {
     setPagination({
       current: 1,
-      pageSize: normalizePageSize(pageSize),
+      pageSize: normalizeBadgePageSize(pageSize),
     });
   }, []);
 
@@ -142,12 +128,4 @@ export function BadgeAdminProvider({ children }: { children: React.ReactNode }) 
       {children}
     </BadgeAdminContext.Provider>
   );
-}
-
-export function useBadgeAdminContext(): BadgeAdminContextType {
-  const ctx = useContext(BadgeAdminContext);
-  if (!ctx) {
-    throw new Error("useBadgeAdminContext must be used within BadgeAdminProvider");
-  }
-  return ctx;
 }
