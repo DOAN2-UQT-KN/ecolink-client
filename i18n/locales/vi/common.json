@@ -257,7 +257,7 @@
   "Join request cancelled successfully": "Hủy yêu cầu tham gia thành công",
   "Organizations": "Tổ chức",
   "Admin dashboard": "Bảng điều khiển",
-  "Gamification": "Gamification",
+  "Gamification": "Trò chơi hóa",
   "Season": "Mùa giải",
   "Badge": "Huy hiệu",
   "Config": "Cấu hình",
@@ -511,5 +511,6 @@
   "Logout failed": "Đăng xuất thất bại",
   "Start": "Bắt đầu",
   "End": "Kết thúc",
-  "Campaign duration": "Thời gian tổ chức"
+  "Campaign duration": "Thời gian tổ chức",
+  "gamification": "trò chơi hóa"
 }
