@@ -1,0 +1,157 @@
+import requestApi from "@/utils/requestApi";
+import { useGet, usePost, type UseGetOptions, type UsePostOptions } from "@/hooks/reactQuery";
+import { useTranslation } from "react-i18next";
+import { MessageType } from "@/utils/showMessage";
+import type {
+  IAdminCloseSeasonAndOpenNextResponse,
+  IAdminFreezeSeasonResponse,
+  IAdminSeasonsQuery,
+  ICloseSeasonOpenNextBody,
+  ICreateAdminSeasonResponse,
+  ICreateSeasonBody,
+  IGetAdminSeasonsResponse,
+  IGetSeasonByIdResponse,
+  IGetSeasonCurrentResponse,
+  IPatchAdminSeasonResponse,
+  IPatchSeasonBody,
+} from "./models";
+
+const seasonsUrl = "/api/v1/seasons";
+const adminSeasonsUrl = "/api/v1/admin/seasons";
+
+export const getSeasonCurrent = async (): Promise<IGetSeasonCurrentResponse> => {
+  return await requestApi.get<IGetSeasonCurrentResponse>(`${seasonsUrl}/current`);
+};
+
+export const useGetSeasonCurrent = (
+  options?: Omit<UseGetOptions<IGetSeasonCurrentResponse>, "queryKey" | "queryFn">,
+) => {
+  return useGet({
+    queryKey: ["gamification", "season-current"],
+    queryFn: () => getSeasonCurrent(),
+    ...options,
+  });
+};
+
+export const getSeasonById = async (id: string): Promise<IGetSeasonByIdResponse> => {
+  return await requestApi.get<IGetSeasonByIdResponse>(`${seasonsUrl}/${id}`);
+};
+
+export const useGetSeasonById = (
+  id: string | undefined,
+  options?: Omit<UseGetOptions<IGetSeasonByIdResponse>, "queryKey" | "queryFn">,
+) => {
+  return useGet({
+    queryKey: ["gamification", "season", id],
+    queryFn: () => getSeasonById(id as string),
+    enabled: Boolean(id),
+    ...options,
+  });
+};
+
+export const getAdminSeasons = async (
+  req: IAdminSeasonsQuery,
+): Promise<IGetAdminSeasonsResponse> => {
+  return await requestApi.get<IGetAdminSeasonsResponse>(adminSeasonsUrl, req);
+};
+
+export const useGetAdminSeasons = (
+  req: IAdminSeasonsQuery,
+  options?: Omit<UseGetOptions<IGetAdminSeasonsResponse>, "queryKey" | "queryFn">,
+) => {
+  return useGet({
+    queryKey: ["gamification", "admin", "seasons", req],
+    queryFn: () => getAdminSeasons(req),
+    ...options,
+  });
+};
+
+export const createAdminSeason = async (
+  body: ICreateSeasonBody,
+): Promise<ICreateAdminSeasonResponse> => {
+  return await requestApi.post<ICreateAdminSeasonResponse>(adminSeasonsUrl, body);
+};
+
+export const patchAdminSeason = async (req: {
+  id: string;
+  body: IPatchSeasonBody;
+}): Promise<IPatchAdminSeasonResponse> => {
+  const { id, body } = req;
+  return await requestApi.patch<IPatchAdminSeasonResponse>(
+    `${adminSeasonsUrl}/${id}`,
+    body,
+  );
+};
+
+export const freezeAdminSeason = async (id: string): Promise<IAdminFreezeSeasonResponse> => {
+  return await requestApi.post<IAdminFreezeSeasonResponse>(
+    `${adminSeasonsUrl}/${id}/freeze`,
+    {},
+  );
+};
+
+export const closeAdminSeasonAndOpenNext = async (req: {
+  id: string;
+  body?: ICloseSeasonOpenNextBody;
+}): Promise<IAdminCloseSeasonAndOpenNextResponse> => {
+  const { id, body } = req;
+  return await requestApi.post<IAdminCloseSeasonAndOpenNextResponse>(
+    `${adminSeasonsUrl}/${id}/close-and-open-next`,
+    body ?? {},
+  );
+};
+
+export const useCreateAdminSeason = (
+  options?: UsePostOptions<ICreateAdminSeasonResponse, ICreateSeasonBody>,
+) => {
+  const { t } = useTranslation();
+  return usePost({
+    mutationFn: createAdminSeason,
+    queryKey: ["gamification", "admin", "seasons"],
+    messageSuccess: { content: t("Season created successfully"), type: MessageType.Toast },
+    messageError: { type: MessageType.Toast },
+    ...options,
+  });
+};
+
+export const usePatchAdminSeason = (
+  options?: UsePostOptions<IPatchAdminSeasonResponse, { id: string; body: IPatchSeasonBody }>,
+) => {
+  const { t } = useTranslation();
+  return usePost({
+    mutationFn: patchAdminSeason,
+    queryKey: ["gamification", "admin", "seasons"],
+    messageSuccess: { content: t("Season updated successfully"), type: MessageType.Toast },
+    messageError: { type: MessageType.Toast },
+    ...options,
+  });
+};
+
+export const useFreezeAdminSeason = (
+  options?: UsePostOptions<IAdminFreezeSeasonResponse, string>,
+) => {
+  const { t } = useTranslation();
+  return usePost({
+    mutationFn: freezeAdminSeason,
+    queryKey: ["gamification", "admin", "seasons"],
+    messageSuccess: { content: t("Season frozen successfully"), type: MessageType.Toast },
+    messageError: { type: MessageType.Toast },
+    ...options,
+  });
+};
+
+export const useCloseAdminSeasonAndOpenNext = (
+  options?: UsePostOptions<
+    IAdminCloseSeasonAndOpenNextResponse,
+    { id: string; body?: ICloseSeasonOpenNextBody }
+  >,
+) => {
+  const { t } = useTranslation();
+  return usePost({
+    mutationFn: closeAdminSeasonAndOpenNext,
+    queryKey: ["gamification", "admin", "seasons"],
+    messageSuccess: { content: t("Season rotated successfully"), type: MessageType.Toast },
+    messageError: { type: MessageType.Toast },
+    ...options,
+  });
+};
