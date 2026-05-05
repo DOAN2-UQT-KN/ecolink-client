@@ -43,18 +43,17 @@ type BadgeFormValues = {
   name: string;
   symbol: string;
   ruleType: string;
+  metric: string;
   threshold: string;
   rankTopN: string;
-  rankMetric: string;
   rewardJson: string;
   isActive: boolean;
+  publishNow: boolean;
 };
 
-const RULE_TYPES = ["CRP", "VRP", "RANK"] as const;
+const RULE_TYPES = ["THRESHOLD", "RANK"] as const;
 
-const RANK_METRICS = ["CRP", "VRP", "ORG_AGGREGATE"] as const;
-
-const METRIC_NONE = "__none__";
+const METRICS = ["CRP", "VRP", "ORG_AGGREGATE"] as const;
 
 const INPUT_CLASS =
   "border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50";
@@ -90,12 +89,13 @@ function defaultValuesFromBadge(
       slug: "",
       name: "",
       symbol: "",
-      ruleType: "CRP",
+      ruleType: "THRESHOLD",
+      metric: "CRP",
       threshold: "",
       rankTopN: "",
-      rankMetric: "",
       rewardJson: "",
       isActive: true,
+      publishNow: false,
     };
   }
   return {
@@ -103,12 +103,13 @@ function defaultValuesFromBadge(
     name: badge.name,
     symbol: badge.symbol ?? "",
     ruleType: badge.ruleType,
+    metric: badge.metric,
     threshold: badge.threshold != null ? String(badge.threshold) : "",
     rankTopN: badge.rankTopN != null ? String(badge.rankTopN) : "",
-    rankMetric: badge.rankMetric ?? "",
     rewardJson:
       badge.reward != null ? JSON.stringify(badge.reward, null, 2) : "",
     isActive: badge.isActive,
+    publishNow: false,
   };
 }
 
@@ -182,20 +183,54 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
         return;
       }
 
-      const rankMetric = data.rankMetric.trim() || null;
+      if (!data.metric.trim()) {
+        setError("metric", { message: t("Metric is required") });
+        return;
+      }
+
+      if (data.ruleType === "THRESHOLD") {
+        if (threshold === null) {
+          setError("threshold", { message: t("Threshold is required") });
+          return;
+        }
+        if (data.rankTopN.trim()) {
+          setError("rankTopN", {
+            message: t("Rank top N must be empty for threshold badges"),
+          });
+          return;
+        }
+      }
+
+      if (data.ruleType === "RANK") {
+        if (rankTopN === null || rankTopN < 1) {
+          setError("rankTopN", { message: t("Rank top N is required") });
+          return;
+        }
+        if (data.threshold.trim()) {
+          setError("threshold", {
+            message: t("Threshold must be empty for rank badges"),
+          });
+          return;
+        }
+      }
+
+      const metric = data.metric.trim();
 
       try {
         if (isCreate) {
           await createMutate({
-            slug: data.slug.trim(),
+            ...(data.slug.trim() ? { slug: data.slug.trim() } : {}),
             name: data.name.trim(),
             ruleType: data.ruleType,
+            metric,
             isActive: data.isActive,
             symbol: data.symbol.trim() || null,
             threshold,
             rankTopN,
-            rankMetric,
             ...(parsed.value !== null ? { reward: parsed.value } : {}),
+            ...(data.publishNow
+              ? { publishedAt: new Date().toISOString() }
+              : {}),
           });
           return;
         }
@@ -205,10 +240,10 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
           body: {
             name: data.name.trim(),
             ruleType: data.ruleType,
+            metric,
             symbol: data.symbol.trim() || null,
             threshold,
             rankTopN,
-            rankMetric,
             reward: parsed.value,
             isActive: data.isActive,
           },
@@ -237,9 +272,9 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
     [],
   );
 
-  const rankMetricOptions = useMemo(
+  const metricOptions = useMemo(
     () =>
-      RANK_METRICS.map((value) => ({
+      METRICS.map((value) => ({
         value,
         label: value,
       })),
@@ -287,16 +322,11 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
           <div className="flex flex-col gap-6">
             <Field>
               <FieldLabel className="text-foreground-tertiary font-display-3">
-                {t("Slug")}{" "}
-                <span className="text-destructive">*</span>
+                {t("Slug")}
               </FieldLabel>
               <Input
-                {...register("slug", {
-                  required: t("Slug is required"),
-                  validate: (v) =>
-                    v.trim().length > 0 || t("Slug is required"),
-                })}
-                placeholder={t("unique-badge-slug")}
+                {...register("slug")}
+                placeholder={t("Leave empty to generate from name")}
                 className={cn("h-[48px]", INPUT_CLASS)}
                 disabled={busy || !isCreate}
               />
@@ -365,6 +395,37 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
               <FieldError errors={[errors.ruleType]} />
             </Field>
 
+            <Field>
+              <FieldLabel className="text-foreground-tertiary font-display-3">
+                {t("Metric")}{" "}
+                <span className="text-destructive">*</span>
+              </FieldLabel>
+              <Controller
+                control={control}
+                name="metric"
+                rules={{ required: true }}
+                render={({ field }) => (
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    disabled={busy}
+                  >
+                    <SelectTrigger className={cn("w-full !h-[48px]", INPUT_CLASS)}>
+                      <SelectValue placeholder={t("Metric")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {metricOptions.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              <FieldError errors={[errors.metric]} />
+            </Field>
+
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <Field>
                 <FieldLabel className="text-foreground-tertiary font-display-3">
@@ -373,7 +434,7 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
                 <Input
                   type="number"
                   {...register("threshold")}
-                  placeholder={t("RP threshold (optional)")}
+                  placeholder={t("RP threshold (threshold badges)")}
                   className={cn("h-[48px]", INPUT_CLASS)}
                   disabled={busy}
                 />
@@ -387,45 +448,13 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
                 <Input
                   type="number"
                   {...register("rankTopN")}
-                  placeholder={t("Top N rank (optional)")}
+                  placeholder={t("Top N rank (rank badges)")}
                   className={cn("h-[48px]", INPUT_CLASS)}
                   disabled={busy}
                 />
                 <FieldError errors={[errors.rankTopN]} />
               </Field>
             </div>
-
-            <Field>
-              <FieldLabel className="text-foreground-tertiary font-display-3">
-                {t("Rank metric")}
-              </FieldLabel>
-              <Controller
-                control={control}
-                name="rankMetric"
-                render={({ field }) => (
-                  <Select
-                    value={field.value?.trim() ? field.value : METRIC_NONE}
-                    onValueChange={(v) =>
-                      field.onChange(v === METRIC_NONE ? "" : v)
-                    }
-                    disabled={busy}
-                  >
-                    <SelectTrigger className={cn("w-full !h-[48px]", INPUT_CLASS)}>
-                      <SelectValue placeholder={t("Rank metric")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={METRIC_NONE}>{t("None")}</SelectItem>
-                      {rankMetricOptions.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              <FieldError errors={[errors.rankMetric]} />
-            </Field>
 
             <Field>
               <FieldLabel className="text-foreground-tertiary font-display-3">
@@ -464,6 +493,27 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
               </label>
               <FieldError errors={[errors.isActive]} />
             </Field>
+
+            {isCreate ? (
+              <Field>
+                <label className="flex cursor-pointer items-center gap-2 pt-1">
+                  <Controller
+                    control={control}
+                    name="publishNow"
+                    render={({ field }) => (
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={(c) => field.onChange(c === true)}
+                        disabled={busy}
+                      />
+                    )}
+                  />
+                  <span className="text-foreground-tertiary font-display-3">
+                    {t("Publish immediately (locks slug)")}
+                  </span>
+                </label>
+              </Field>
+            ) : null}
           </div>
 
           <DialogFooter className="h-[50px] gap-2 space-x-2 pt-2 sm:gap-0">

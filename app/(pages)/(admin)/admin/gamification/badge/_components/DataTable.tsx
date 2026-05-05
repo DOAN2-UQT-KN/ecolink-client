@@ -24,9 +24,9 @@ const COLUMN_KEYS = {
   NAME: "name",
   SYMBOL: "symbol",
   RULE_TYPE: "rule_type",
+  METRIC: "metric",
   THRESHOLD: "threshold",
   RANK_TOP_N: "rank_top_n",
-  RANK_METRIC: "rank_metric",
   REWARD: "reward",
   ACTIVE: "active",
   CREATED_AT: "created_at",
@@ -157,12 +157,10 @@ export function DataTable({
         ),
       },
       {
-        key: COLUMN_KEYS.RANK_METRIC,
-        title: t("Rank metric"),
+        key: COLUMN_KEYS.METRIC,
+        title: t("Metric"),
         className: "w-[120px]",
-        render: (_, row) => (
-          <span>{row.rankMetric ?? "—"}</span>
-        ),
+        render: (_, row) => <span>{row.metric}</span>,
       },
       {
         key: COLUMN_KEYS.REWARD,

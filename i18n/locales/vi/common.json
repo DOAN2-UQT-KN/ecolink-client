@@ -481,5 +481,8 @@
   "Security": "Bảo mật",
   "If you suspect your account is compromised, please logout and login again.": "Nếu bạn tin rằng tài khoản của bạn bị đánh cắp, vui lòng đăng xuất và đăng nhập lại.",
   "Logout successfully": "Đăng xuất thành công",
-  "Logout failed": "Đăng xuất thất bại"
+  "Logout failed": "Đăng xuất thất bại",
+  "Start": "Bắt đầu",
+  "End": "Kết thúc",
+  "Campaign duration": "Thời gian tổ chức"
 }

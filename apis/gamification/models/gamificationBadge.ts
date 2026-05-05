@@ -7,15 +7,17 @@ export interface IBadgeDefinition {
   name: string;
   symbol?: string | null;
   ruleType: string;
+  metric: string;
   threshold: number | null;
   rankTopN: number | null;
-  rankMetric: string | null;
   reward?: Record<string, unknown> | null;
 }
 
 /** Full admin list row — matches reward-service `BadgeDefinition` JSON. */
 export interface IAdminBadgeDefinition extends IBadgeDefinition {
   isActive: boolean;
+  publishedAt: string | null;
+  slugLockedAt: string | null;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
@@ -53,15 +55,16 @@ export type IGetAdminGamificationBadgesResponse = IBaseResponse<{
 
 /** POST /api/v1/admin/gamification/badges */
 export interface ICreateAdminBadgeBody {
-  slug: string;
+  slug?: string;
   name: string;
   symbol?: string | null;
   ruleType: string;
+  metric: string;
   threshold?: number | null;
   rankTopN?: number | null;
-  rankMetric?: string | null;
   reward?: Record<string, unknown> | null;
   isActive?: boolean;
+  publishedAt?: string | null;
 }
 
 export type ICreateAdminBadgeResponse = IBaseResponse<{
@@ -73,12 +76,13 @@ export interface IPatchAdminBadgeBody {
   name?: string;
   symbol?: string | null;
   ruleType?: string;
+  metric?: string;
   threshold?: number | null;
   rankTopN?: number | null;
-  rankMetric?: string | null;
   reward?: Record<string, unknown> | null;
   isActive?: boolean;
   deletedAt?: string | null;
+  publishedAt?: string;
 }
 
 export type IPatchAdminBadgeResponse = IBaseResponse<{
