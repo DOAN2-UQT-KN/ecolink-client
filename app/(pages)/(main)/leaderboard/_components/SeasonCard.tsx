@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import type { Season } from './types';
+import defaultAvatar from '@/public/default-avatar.png';
 
 type SeasonCardProps = {
   season: Season;
@@ -10,9 +11,9 @@ type SeasonCardProps = {
 };
 
 function getStatusClass(status: Season['status']) {
-  if (status === 'ACTIVE') return 'bg-emerald-500/20 text-emerald-300';
-  if (status === 'FROZEN') return 'bg-amber-500/20 text-amber-300';
-  return 'bg-zinc-500/20 text-zinc-300';
+  if (status === 'ACTIVE') return 'bg-[#9cab84]/30 text-[#556329]';
+  if (status === 'FROZEN') return 'bg-[#c5d89d]/40 text-[#665814]';
+  return 'bg-muted text-foreground-secondary';
 }
 
 export default function SeasonCard({ season, selected, onSelect }: SeasonCardProps) {
@@ -23,23 +24,23 @@ export default function SeasonCard({ season, selected, onSelect }: SeasonCardPro
       className={[
         'w-full rounded-2xl border p-3 text-left transition-all',
         selected
-          ? 'border-emerald-400/40 bg-emerald-500/10'
-          : 'border-white/10 bg-zinc-900/50 hover:border-white/30 hover:bg-zinc-800/70',
+          ? 'border-[rgba(136,122,71,0.45)] bg-[#887A47]/10 shadow-primary-200'
+          : 'border-[rgba(136,122,71,0.25)] bg-background hover:border-[rgba(136,122,71,0.45)] hover:bg-[#887A47]/5',
       ].join(' ')}
     >
       <div className="flex gap-3">
-        <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-zinc-800">
-          {/* <Image
-            src={season.thumbnail || "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=300&q=60"}
+        <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-[rgba(136,122,71,0.25)] bg-[#887A47]/10">
+          <Image
+            src={season.thumbnail || defaultAvatar}
             alt={season.label}
             fill
             sizes="56px"
             className="object-cover"
-          /> */}
+          />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-zinc-100">{season.label}</p>
-          <p className="mt-0.5 text-xs text-zinc-400">
+          <p className="truncate text-sm font-semibold text-foreground">{season.label}</p>
+          <p className="mt-0.5 text-xs text-foreground-tertiary">
             {new Date(season.startsAt).toLocaleDateString()} -{' '}
             {new Date(season.endsAt).toLocaleDateString()}
           </p>
@@ -52,7 +53,7 @@ export default function SeasonCard({ season, selected, onSelect }: SeasonCardPro
             >
               {season.status}
             </span>
-            <span className="text-xs text-zinc-400">{season.progressText ?? '0/4'}</span>
+            <span className="text-xs text-foreground-tertiary">{season.progressText ?? '0/4'}</span>
           </div>
         </div>
       </div>

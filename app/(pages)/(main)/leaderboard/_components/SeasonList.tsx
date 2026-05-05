@@ -21,10 +21,10 @@ export default function SeasonList({
   onPageChange,
 }: SeasonListProps) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
+    <div className="rounded-2xl border border-[rgba(136,122,71,0.25)] bg-background p-4 shadow-primary-100">
       <div className="mb-3">
-        <h2 className="text-lg font-semibold text-zinc-100">Seasons</h2>
-        <p className="text-xs text-zinc-400">Select a season to refresh leaderboard ranking.</p>
+        <h2 className="text-lg font-semibold text-foreground">Seasons</h2>
+        <p className="text-xs text-foreground-tertiary">Select a season to refresh leaderboard ranking.</p>
       </div>
 
       <div className="space-y-3">
@@ -33,7 +33,9 @@ export default function SeasonList({
             <SeasonCard key={season.id} season={season} selected={season.id === selectedSeasonId} onSelect={onSelectSeason} />
           ))
         ) : (
-          <div className="rounded-xl border border-white/10 bg-zinc-900/50 p-4 text-sm text-zinc-400">No seasons found.</div>
+          <div className="rounded-xl border border-[rgba(136,122,71,0.25)] bg-background p-4 text-sm text-foreground-tertiary">
+            No seasons found.
+          </div>
         )}
       </div>
 
@@ -42,18 +44,18 @@ export default function SeasonList({
           type="button"
           disabled={page <= 1}
           onClick={() => onPageChange(page - 1)}
-          className="rounded-lg bg-zinc-900 px-3 py-1.5 text-xs text-zinc-300 disabled:opacity-40"
+          className="rounded-lg border border-[rgba(136,122,71,0.35)] bg-[#887A47]/10 px-3 py-1.5 text-xs text-button-accent hover:bg-[#887A47]/20 disabled:opacity-40"
         >
           Prev
         </button>
-        <p className="text-xs text-zinc-400">
+        <p className="text-xs text-foreground-tertiary">
           Page {page} / {Math.max(totalPages, 1)}
         </p>
         <button
           type="button"
           disabled={page >= totalPages}
           onClick={() => onPageChange(page + 1)}
-          className="rounded-lg bg-zinc-900 px-3 py-1.5 text-xs text-zinc-300 disabled:opacity-40"
+          className="rounded-lg border border-[rgba(136,122,71,0.35)] bg-[#887A47]/10 px-3 py-1.5 text-xs text-button-accent hover:bg-[#887A47]/20 disabled:opacity-40"
         >
           Next
         </button>

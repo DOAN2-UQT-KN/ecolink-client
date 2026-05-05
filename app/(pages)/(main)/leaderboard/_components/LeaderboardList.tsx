@@ -12,7 +12,7 @@ type LeaderboardListProps = {
 export default function LeaderboardList({ items, metricLabel, myUserId }: LeaderboardListProps) {
   if (!items.length) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-zinc-900/50 p-6 text-center text-sm text-zinc-400">
+      <div className="rounded-2xl border border-[rgba(136,122,71,0.25)] bg-background p-6 text-center text-sm text-foreground-tertiary shadow-primary-100">
         No ranking data available for this season.
       </div>
     );

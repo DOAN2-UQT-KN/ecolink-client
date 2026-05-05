@@ -1,6 +1,7 @@
-"use client";
+'use client';
 
-import type { MetricValue, ScopeValue } from "./types";
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import type { MetricValue, ScopeValue } from './types';
 
 type MetricTabsProps = {
   metric: MetricValue;
@@ -10,52 +11,59 @@ type MetricTabsProps = {
 };
 
 const metricOptions: { label: string; value: MetricValue }[] = [
-  { label: "CRP", value: "crp" },
-  { label: "VRP", value: "vrp" },
-  { label: "ORG", value: "org_aggregate" },
+  { label: 'CRP', value: 'crp' },
+  { label: 'VRP', value: 'vrp' },
+  { label: 'ORG', value: 'org_aggregate' },
 ];
 
 const scopeOptions: { label: string; value: ScopeValue }[] = [
-  { label: "Global", value: "global" },
-  { label: "My Rank", value: "my_rank" },
+  { label: 'Global', value: 'global' },
+  { label: 'My Rank', value: 'my_rank' },
 ];
 
-export default function MetricTabs({ metric, scope, onMetricChange, onScopeChange }: MetricTabsProps) {
+export default function MetricTabs({
+  metric,
+  scope,
+  onMetricChange,
+  onScopeChange,
+}: MetricTabsProps) {
   return (
-    <div className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl md:flex-row md:items-center md:justify-between">
-      <div className="flex flex-wrap gap-2">
-        {metricOptions.map((option) => (
-          <button
-            key={option.value}
-            type="button"
-            onClick={() => onMetricChange(option.value)}
-            className={[
-              "rounded-xl px-4 py-2 text-sm font-medium transition-all",
-              option.value === metric
-                ? "bg-emerald-500 text-zinc-950 shadow-[0_0_20px_rgba(16,185,129,0.35)]"
-                : "bg-zinc-900/70 text-zinc-300 hover:bg-zinc-800",
-            ].join(" ")}
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
+    <div className="flex flex-col gap-4 rounded-2xl border border-[rgba(136,122,71,0.25)] bg-background p-4 shadow-primary-100 md:flex-row md:items-center md:justify-between">
+      <Tabs
+        value={metric}
+        onValueChange={(value) => onMetricChange(value as MetricValue)}
+        className="w-full md:w-auto"
+      >
+        <TabsList className="bg-[#887A47]/10 border-none h-12 rounded-[5px] w-full md:w-auto overflow-x-auto overflow-y-hidden no-scrollbar gap-3">
+          {metricOptions.map((option) => (
+            <TabsTrigger
+              key={option.value}
+              value={option.value}
+              className="rounded-[5px] px-4 py-2 h-full data-active:bg-background data-active:text-button-accent data-active:shadow-sm transition-all !font-display-1"
+            >
+              {option.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
 
-      <div className="flex flex-wrap gap-2">
-        {scopeOptions.map((option) => (
-          <button
-            key={option.value}
-            type="button"
-            onClick={() => onScopeChange(option.value)}
-            className={[
-              "rounded-xl px-4 py-2 text-sm font-medium transition-colors",
-              option.value === scope ? "bg-white text-zinc-900" : "bg-zinc-900/70 text-zinc-300 hover:bg-zinc-800",
-            ].join(" ")}
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
+      <Tabs
+        value={scope}
+        onValueChange={(value) => onScopeChange(value as ScopeValue)}
+        className="w-full md:w-auto"
+      >
+        <TabsList className="bg-[#887A47]/10 border-none h-12 rounded-[5px] w-full md:w-auto overflow-x-auto overflow-y-hidden no-scrollbar gap-3">
+          {scopeOptions.map((option) => (
+            <TabsTrigger
+              key={option.value}
+              value={option.value}
+              className="rounded-[5px] px-4 py-2 h-full data-active:bg-background data-active:text-button-accent data-active:shadow-sm transition-all !font-display-1"
+            >
+              {option.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
     </div>
   );
 }
