@@ -7,11 +7,7 @@ import { Loader2 } from 'lucide-react';
 
 import type { IAdminBadgeDefinition } from '@/apis/gamification/models/gamificationBadge';
 import { useCreateAdminBadge, usePatchAdminBadge } from '@/apis/gamification/adminBadge';
-import {
-  BADGE_METRIC_LABEL,
-  BADGE_METRIC_UI_KEYS,
-  type BadgeMetricUiKey,
-} from '@/constants/badgeMetric';
+import { BADGE_METRIC_UI_KEYS, type BadgeMetricUiKey } from '@/constants/badgeMetric';
 import { useAdminLayout } from '@/app/(pages)/(admin)/_context/AdminLayoutContext';
 import { Button } from '@/components/ui/button';
 import {
@@ -54,10 +50,16 @@ type BadgeFormValues = {
   threshold: string;
   rankTopN: string;
   discountBps: string;
-  partnerTierCodes: string;
+  bonusSp: string;
   isActive: boolean;
   publishNow: boolean;
 };
+
+const BADGE_METRIC_I18N_KEY = {
+  CRP: 'Badge metric CRP',
+  VRP: 'Badge metric VRP',
+  RANK: 'Badge metric RANK',
+} as const satisfies Record<BadgeMetricUiKey, string>;
 
 function metricUiFromBadge(badge: IAdminBadgeDefinition): MetricUi {
   if (badge.ruleType === 'RANK') return 'RANK';
@@ -67,15 +69,15 @@ function metricUiFromBadge(badge: IAdminBadgeDefinition): MetricUi {
 
 function rewardFieldsFromBadge(
   reward: Record<string, unknown> | null | undefined,
-): Pick<BadgeFormValues, 'discountBps' | 'partnerTierCodes'> {
-  if (!reward) return { discountBps: '', partnerTierCodes: '' };
-  const rawBps = reward.discount_bps ?? reward.discountBps;
-  const discountBps = typeof rawBps === 'number' && Number.isFinite(rawBps) ? String(rawBps) : '';
-  const codesRaw = reward.partner_tier_codes;
-  const partnerTierCodes = Array.isArray(codesRaw)
-    ? codesRaw.filter((c): c is string => typeof c === 'string').join(', ')
-    : '';
-  return { discountBps, partnerTierCodes };
+): Pick<BadgeFormValues, 'discountBps' | 'bonusSp'> {
+  if (!reward) return { discountBps: '', bonusSp: '' };
+  const rawDiscount = reward.discount_bps ?? reward.discountBps;
+  const discountBps =
+    typeof rawDiscount === 'number' && Number.isFinite(rawDiscount) ? String(rawDiscount) : '';
+  const rawBonusSp = reward.bonus_sp;
+  const bonusSp =
+    typeof rawBonusSp === 'number' && Number.isFinite(rawBonusSp) ? String(rawBonusSp) : '';
+  return { discountBps, bonusSp };
 }
 
 function parseOptionalNonNegativeInt(raw: string): number | null | 'invalid' {
@@ -96,28 +98,16 @@ function parseRankTopN(raw: string): number | null | 'invalid' {
 
 function buildRewardPayload(
   discountBpsStr: string,
-  partnerTierCodesStr: string,
+  bonusSpStr: string,
 ): { ok: true; value: Record<string, unknown> | null } | { ok: false } {
-  const codes = partnerTierCodesStr
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean);
-  const dTrim = discountBpsStr.trim();
-  let discount_bps: number | undefined;
-  if (dTrim !== '') {
-    const n = Number(dTrim);
-    if (!Number.isFinite(n) || !Number.isInteger(n) || n < 0 || n > 10000) {
-      return { ok: false };
-    }
-    discount_bps = n;
-  }
-  if (discount_bps === undefined && codes.length === 0) {
-    return { ok: true, value: null };
-  }
-  const value: Record<string, unknown> = {};
-  if (discount_bps !== undefined) value.discount_bps = discount_bps;
-  if (codes.length) value.partner_tier_codes = codes;
-  return { ok: true, value };
+  const discountParsed = parseOptionalNonNegativeInt(discountBpsStr);
+  const bonusSpParsed = parseOptionalNonNegativeInt(bonusSpStr);
+  if (discountParsed === 'invalid' || bonusSpParsed === 'invalid') return { ok: false };
+  if (discountParsed === null && bonusSpParsed === null) return { ok: true, value: null };
+  const payload: Record<string, unknown> = {};
+  if (discountParsed !== null) payload.discount_bps = discountParsed;
+  if (bonusSpParsed !== null) payload.bonus_sp = bonusSpParsed;
+  return { ok: true, value: payload };
 }
 
 function defaultValuesFromBadge(badge?: IAdminBadgeDefinition | null): BadgeFormValues {
@@ -129,7 +119,7 @@ function defaultValuesFromBadge(badge?: IAdminBadgeDefinition | null): BadgeForm
       threshold: '',
       rankTopN: '',
       discountBps: '',
-      partnerTierCodes: '',
+      bonusSp: '',
       isActive: true,
       publishNow: false,
     };
@@ -142,7 +132,7 @@ function defaultValuesFromBadge(badge?: IAdminBadgeDefinition | null): BadgeForm
     threshold: badge.threshold != null ? String(badge.threshold) : '',
     rankTopN: badge.rankTopN != null ? String(badge.rankTopN) : '',
     discountBps: rf.discountBps,
-    partnerTierCodes: rf.partnerTierCodes,
+    bonusSp: rf.bonusSp,
     isActive: badge.isActive,
     publishNow: false,
   };
@@ -207,7 +197,7 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
   const metricSelectItems = useMemo(() => {
     const base = BADGE_METRIC_UI_KEYS.map((key) => ({
       value: key,
-      label: BADGE_METRIC_LABEL[key],
+      label: t(BADGE_METRIC_I18N_KEY[key]),
     }));
     if (badge?.ruleType === 'THRESHOLD' && badge.metric === 'ORG_AGGREGATE') {
       return [
@@ -227,13 +217,16 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
 
   const onValidSubmit = useCallback(
     async (data: BadgeFormValues) => {
-      clearErrors(['discountBps', 'partnerTierCodes', 'threshold', 'rankTopN']);
+      clearErrors(['discountBps', 'bonusSp', 'threshold', 'rankTopN']);
 
-      const rewardParsed = buildRewardPayload(data.discountBps, data.partnerTierCodes);
+      const rewardParsed = buildRewardPayload(data.discountBps, data.bonusSp);
       if (!rewardParsed.ok) {
-        setError('discountBps', {
-          message: t('Discount (bps) must be an integer from 0 to 10000'),
-        });
+        if (parseOptionalNonNegativeInt(data.discountBps) === 'invalid') {
+          setError('discountBps', { message: t('Reward value must be >= 0') });
+        }
+        if (parseOptionalNonNegativeInt(data.bonusSp) === 'invalid') {
+          setError('bonusSp', { message: t('Reward value must be >= 0') });
+        }
         return;
       }
 
@@ -282,7 +275,7 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
             symbol: data.symbol.trim() || null,
             threshold,
             rankTopN,
-            ...(rewardParsed.value !== null ? { reward: rewardParsed.value } : {}),
+            reward: rewardParsed.value,
             ...(data.publishNow ? { publishedAt: new Date().toISOString() } : {}),
           });
           return;
@@ -443,28 +436,34 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
             ) : null}
 
             <Field>
-              <FieldLabel>{t('Discount (bps)')}</FieldLabel>
-              <Input
-                type="number"
-                min={0}
-                max={10000}
-                {...register('discountBps')}
-                placeholder={t('Basis points (optional)')}
-                className="h-10 !border !border-zinc-300"
-                disabled={busy}
-              />
-              <FieldError errors={[errors.discountBps]} />
-            </Field>
-
-            <Field>
-              <FieldLabel>{t('Partner tier codes')}</FieldLabel>
-              <Input
-                {...register('partnerTierCodes')}
-                placeholder={t('Comma-separated, e.g. GOLD, ECO')}
-                className="h-10 !border !border-zinc-300"
-                disabled={busy}
-              />
-              <FieldError errors={[errors.partnerTierCodes]} />
+              <FieldLabel>{t('Reward')}</FieldLabel>
+              <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <div className="text-sm font-medium mb-1 italic">{t('Discount (bps)')}</div>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={10000}
+                    {...register('discountBps')}
+                    placeholder={t('Discount (bps)')}
+                    className="h-10 !border !border-zinc-300"
+                    disabled={busy}
+                  />
+                  <FieldError errors={[errors.discountBps]} />
+                </div>
+                <div>
+                  <div className="text-sm font-medium mb-1 italic">{t('Bonus Points (SP)')}</div>
+                  <Input
+                    type="number"
+                    min={0}
+                    {...register('bonusSp')}
+                    placeholder={t('Bonus Points (SP)')}
+                    className="h-10 !border !border-zinc-300"
+                    disabled={busy}
+                  />
+                  <FieldError errors={[errors.bonusSp]} />
+                </div>
+              </div>
             </Field>
 
             {!isCreate ? (

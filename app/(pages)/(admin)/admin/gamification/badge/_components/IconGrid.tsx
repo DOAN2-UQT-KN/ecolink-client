@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { Field, FieldLabel } from '@/components/ui/field';
@@ -43,6 +44,7 @@ export type IconGridProps = {
 };
 
 export function IconGrid({ value, onChange, disabled = false }: IconGridProps) {
+  const { t } = useTranslation();
   const [extraIcons, setExtraIcons] = useState<string[]>([]);
   const [customInput, setCustomInput] = useState('');
 
@@ -88,7 +90,7 @@ export function IconGrid({ value, onChange, disabled = false }: IconGridProps) {
       <div
         className="grid grid-cols-6 gap-2 sm:grid-cols-7 md:grid-cols-8"
         role="listbox"
-        aria-label="Badge icon picker"
+        aria-label={t('Badge icon picker')}
       >
         {gridIcons.map((icon) => {
           const selected = value === icon;
@@ -119,7 +121,7 @@ export function IconGrid({ value, onChange, disabled = false }: IconGridProps) {
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:gap-3">
         <Field className="min-w-0 flex-1">
-          <FieldLabel className="sr-only">Custom icon</FieldLabel>
+          <FieldLabel className="sr-only">{t('Custom icon')}</FieldLabel>
           <Input
             value={customInput}
             onChange={(e) => setCustomInput(e.target.value)}
@@ -129,7 +131,7 @@ export function IconGrid({ value, onChange, disabled = false }: IconGridProps) {
                 handleAddCustom();
               }
             }}
-            placeholder="Add your own icon (emoji)"
+            placeholder={t('Add your own icon (emoji)')}
             className="h-10 !border !border-zinc-300"
             disabled={disabled}
           />
@@ -141,7 +143,7 @@ export function IconGrid({ value, onChange, disabled = false }: IconGridProps) {
           disabled={disabled || !canAdd}
           onClick={handleAddCustom}
         >
-          Add Icon
+          {t('Add Icon')}
         </Button>
       </div>
     </div>
