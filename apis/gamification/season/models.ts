@@ -30,8 +30,10 @@ export interface IPatchSeasonBody {
   kind?: string;
 }
 
-export interface ICloseSeasonOpenNextBody {
+export interface IFinalizeSeasonBody {
   nextLabel?: string;
+  startsAt?: string;
+  endsAt?: string;
 }
 
 export type IGetSeasonCurrentResponse = IBaseResponse<{
@@ -58,11 +60,8 @@ export type IPatchAdminSeasonResponse = IBaseResponse<{
   season: ISeason;
 }>;
 
-export type IAdminFreezeSeasonResponse = IBaseResponse<{
+export type IAdminFinalizeSeasonResponse = IBaseResponse<{
   snapshotsWritten: number;
-}>;
-
-export type IAdminCloseSeasonAndOpenNextResponse = IBaseResponse<{
-  closed: ISeason;
-  next: ISeason;
+  closed?: ISeason;
+  next?: ISeason;
 }>;
