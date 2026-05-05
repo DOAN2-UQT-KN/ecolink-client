@@ -139,7 +139,9 @@ function defaultValuesFromBadge(badge?: IAdminBadgeDefinition | null): BadgeForm
         ? 'RANK'
         : 'CONTRIBUTION') as BadgeCategory,
     metric: (badge.metric in BADGE_METRIC_LABEL ? badge.metric : 'CRP') as BadgeMetric,
-    ruleType: (badge.ruleType in BADGE_RULE_TYPE_LABEL ? badge.ruleType : 'THRESHOLD') as BadgeRuleType,
+    ruleType: (badge.ruleType in BADGE_RULE_TYPE_LABEL
+      ? badge.ruleType
+      : 'THRESHOLD') as BadgeRuleType,
     threshold: badge.threshold != null ? String(badge.threshold) : '',
     rankTopN: badge.rankTopN != null ? String(badge.rankTopN) : '',
     discountBps: rf.discountBps,
@@ -416,7 +418,7 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
 
             <Field>
               <FieldLabel>{t('Symbol')}</FieldLabel>
-              <div className="mb-3 inline-flex rounded-md border border-zinc-300 p-1">
+              <div className="mb-3 inline-flex rounded-md border border-zinc-300 p-1 gap-1">
                 <Button
                   type="button"
                   variant={symbolMode === 'emoji' ? 'default' : 'outline'}
@@ -528,7 +530,7 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
                     }}
                     disabled={busy}
                   >
-                    <SelectTrigger className="h-10 !border !border-zinc-300">
+                    <SelectTrigger className="!h-10 !border !border-zinc-300">
                       <SelectValue placeholder={t('Category')} />
                     </SelectTrigger>
                     <SelectContent>
@@ -562,7 +564,7 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
                     }}
                     disabled={busy}
                   >
-                    <SelectTrigger className="h-10 !border !border-zinc-300">
+                    <SelectTrigger className="!h-10 !border !border-zinc-300">
                       <SelectValue placeholder={t('Metric')} />
                     </SelectTrigger>
                     <SelectContent>
@@ -603,7 +605,7 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
                     }}
                     disabled={busy}
                   >
-                    <SelectTrigger className="h-10 !border !border-zinc-300">
+                    <SelectTrigger className="!h-10 !border !border-zinc-300">
                       <SelectValue placeholder={t('Rule type')} />
                     </SelectTrigger>
                     <SelectContent>
@@ -696,7 +698,7 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
                       onValueChange={(value) => field.onChange(value === 'active')}
                       disabled={busy}
                     >
-                      <SelectTrigger className="h-10 !border !border-zinc-300">
+                      <SelectTrigger className="!h-10 !border !border-zinc-300">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>

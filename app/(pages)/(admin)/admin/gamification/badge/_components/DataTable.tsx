@@ -107,26 +107,26 @@ export function DataTable({ onEdit }: { onEdit: (badge: IAdminBadgeDefinition) =
         title: t('Badge'),
         className: 'min-w-[160px]',
         render: (_, row) => (
-          <div className="flex items-center gap-2 justify-start flex-col">
-            <div className="flex items-center gap-2 justify-start">
-              {row.symbol?.trim() ? (
-                isImageSymbol(row.symbol) ? (
-                  <img
-                    src={row.symbol}
-                    alt={t('Badge symbol')}
-                    className="h-8 w-8 rounded-full object-cover border border-zinc-300"
-                  />
-                ) : (
-                  <div className="h-8 w-8 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-lg leading-none">
-                    {row.symbol}
-                  </div>
-                )
+          <div className="flex items-center gap-2 justify-start flex-row">
+            {row.symbol?.trim() ? (
+              isImageSymbol(row.symbol) ? (
+                <img
+                  src={row.symbol}
+                  alt={t('Badge symbol')}
+                  className="h-8 w-8 rounded-full object-cover border border-zinc-300"
+                />
               ) : (
-                '—'
-              )}
+                <div className="h-8 w-8 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-lg leading-none">
+                  {row.symbol}
+                </div>
+              )
+            ) : (
+              '—'
+            )}
+            <div className="flex items-start justify-start flex-col">
               <span className={cn(isDark ? 'text-zinc-200' : 'text-zinc-800')}>{row.name}</span>
+              <span className="text-xs text-zinc-500">#{row.slug}</span>
             </div>
-            <span className="text-xs text-zinc-500">#{row.slug}</span>
           </div>
         ),
       },
@@ -135,9 +135,7 @@ export function DataTable({ onEdit }: { onEdit: (badge: IAdminBadgeDefinition) =
         title: t('Category'),
         className: 'w-[140px]',
         render: (_, row) => (
-          <span>
-            {BADGE_CATEGORY_LABEL[row.category as BadgeCategory] ?? row.category}
-          </span>
+          <span>{BADGE_CATEGORY_LABEL[row.category as BadgeCategory] ?? row.category}</span>
         ),
       },
       {
@@ -145,9 +143,7 @@ export function DataTable({ onEdit }: { onEdit: (badge: IAdminBadgeDefinition) =
         title: t('Rule type'),
         className: 'w-[120px]',
         render: (_, row) => (
-          <span>
-            {BADGE_RULE_TYPE_LABEL[row.ruleType as BadgeRuleType] ?? row.ruleType}
-          </span>
+          <span>{BADGE_RULE_TYPE_LABEL[row.ruleType as BadgeRuleType] ?? row.ruleType}</span>
         ),
       },
       {
