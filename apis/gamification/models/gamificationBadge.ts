@@ -6,6 +6,7 @@ export interface IBadgeDefinition {
   slug: string;
   name: string;
   symbol?: string | null;
+  category: string;
   ruleType: string;
   metric: string;
   threshold: number | null;
@@ -58,6 +59,7 @@ export interface ICreateAdminBadgeBody {
   slug?: string;
   name: string;
   symbol?: string | null;
+  category: string;
   ruleType: string;
   metric: string;
   threshold?: number | null;
@@ -75,6 +77,7 @@ export type ICreateAdminBadgeResponse = IBaseResponse<{
 export interface IPatchAdminBadgeBody {
   name?: string;
   symbol?: string | null;
+  category?: string;
   ruleType?: string;
   metric?: string;
   threshold?: number | null;

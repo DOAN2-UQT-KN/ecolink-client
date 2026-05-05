@@ -1,13 +1,23 @@
 'use client';
 
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Loader2 } from 'lucide-react';
 
 import type { IAdminBadgeDefinition } from '@/apis/gamification/models/gamificationBadge';
 import { useCreateAdminBadge, usePatchAdminBadge } from '@/apis/gamification/adminBadge';
-import { BADGE_METRIC_UI_KEYS, type BadgeMetricUiKey } from '@/constants/badgeMetric';
+import {
+  BADGE_CATEGORY_KEYS,
+  BADGE_CATEGORY_LABEL,
+  BADGE_METRIC_LABEL,
+  BADGE_METRICS_BY_CATEGORY,
+  BADGE_RULE_TYPE_KEYS,
+  BADGE_RULE_TYPE_LABEL,
+  type BadgeCategory,
+  type BadgeMetric,
+  type BadgeRuleType,
+} from '@/constants/badge';
 import { useAdminLayout } from '@/app/(pages)/(admin)/_context/AdminLayoutContext';
 import { uploadToCloudinary } from '@/app/(pages)/(main)/incidents/create/_services/upload.service';
 import { Button } from '@/components/ui/button';
@@ -40,16 +50,15 @@ export interface CreateUpdateBadgeProps {
   onSuccess: () => void;
 }
 
-type ApiLeaderboardMetric = 'CRP' | 'VRP' | 'ORG_AGGREGATE';
+type ApiLeaderboardMetric = BadgeMetric;
 type SymbolMode = 'emoji' | 'image';
-
-/** Form value: UX metric (includes `RANK`) or legacy threshold metric. */
-type MetricUi = BadgeMetricUiKey | 'ORG_AGGREGATE';
 
 type BadgeFormValues = {
   name: string;
   symbol: string;
-  metricUi: MetricUi;
+  category: BadgeCategory;
+  metric: BadgeMetric;
+  ruleType: BadgeRuleType;
   threshold: string;
   rankTopN: string;
   discountBps: string;
@@ -58,20 +67,8 @@ type BadgeFormValues = {
   publishNow: boolean;
 };
 
-const BADGE_METRIC_I18N_KEY = {
-  CRP: 'Badge metric CRP',
-  VRP: 'Badge metric VRP',
-  RANK: 'Badge metric RANK',
-} as const satisfies Record<BadgeMetricUiKey, string>;
-
 const SYMBOL_IMAGE_ACCEPT = 'image/png,image/jpeg,image/jpg,image/webp';
 const SYMBOL_IMAGE_MAX_SIZE_BYTES = 2 * 1024 * 1024;
-
-function metricUiFromBadge(badge: IAdminBadgeDefinition): MetricUi {
-  if (badge.ruleType === 'RANK') return 'RANK';
-  if (badge.metric === 'ORG_AGGREGATE') return 'ORG_AGGREGATE';
-  return badge.metric as 'CRP' | 'VRP';
-}
 
 function rewardFieldsFromBadge(
   reward: Record<string, unknown> | null | undefined,
@@ -121,7 +118,9 @@ function defaultValuesFromBadge(badge?: IAdminBadgeDefinition | null): BadgeForm
     return {
       name: '',
       symbol: '',
-      metricUi: 'CRP',
+      category: 'CONTRIBUTION',
+      metric: 'CRP',
+      ruleType: 'THRESHOLD',
       threshold: '',
       rankTopN: '',
       discountBps: '',
@@ -134,7 +133,13 @@ function defaultValuesFromBadge(badge?: IAdminBadgeDefinition | null): BadgeForm
   return {
     name: badge.name,
     symbol: badge.symbol ?? '',
-    metricUi: metricUiFromBadge(badge),
+    category: (badge.category in BADGE_CATEGORY_LABEL
+      ? badge.category
+      : badge.ruleType === 'RANK'
+        ? 'RANK'
+        : 'CONTRIBUTION') as BadgeCategory,
+    metric: (badge.metric in BADGE_METRIC_LABEL ? badge.metric : 'CRP') as BadgeMetric,
+    ruleType: (badge.ruleType in BADGE_RULE_TYPE_LABEL ? badge.ruleType : 'THRESHOLD') as BadgeRuleType,
     threshold: badge.threshold != null ? String(badge.threshold) : '',
     rankTopN: badge.rankTopN != null ? String(badge.rankTopN) : '',
     discountBps: rf.discountBps,
@@ -154,8 +159,6 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
   const { theme } = useAdminLayout();
   const isDark = theme === 'dark';
   const isCreate = !badge;
-
-  const rankLeaderboardMetricRef = useRef<ApiLeaderboardMetric>('CRP');
   const [symbolMode, setSymbolMode] = useState<SymbolMode>('emoji');
 
   const form = useForm<BadgeFormValues>({
@@ -173,18 +176,15 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
     formState: { errors },
   } = form;
 
-  const metricUi = useWatch({ control, name: 'metricUi' });
+  const category = useWatch({ control, name: 'category' });
+  const metric = useWatch({ control, name: 'metric' });
+  const ruleType = useWatch({ control, name: 'ruleType' });
   const symbolValue = useWatch({ control, name: 'symbol' });
 
   useEffect(() => {
     if (!open) return;
     reset(defaultValuesFromBadge(badge));
     setSymbolMode(isImageSymbol(badge?.symbol) ? 'image' : 'emoji');
-    if (badge?.ruleType === 'RANK') {
-      rankLeaderboardMetricRef.current = badge.metric as ApiLeaderboardMetric;
-    } else {
-      rankLeaderboardMetricRef.current = 'CRP';
-    }
   }, [open, badge, reset]);
 
   const { mutateAsync: createMutate, isPending: isCreating } = useCreateAdminBadge({
@@ -203,30 +203,30 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
 
   const busy = isCreating || isPatching || form.formState.isSubmitting;
 
-  const metricSelectItems = useMemo(() => {
-    const base = BADGE_METRIC_UI_KEYS.map((key) => ({
-      value: key,
-      label: t(BADGE_METRIC_I18N_KEY[key]),
-    }));
-    if (badge?.ruleType === 'THRESHOLD' && badge.metric === 'ORG_AGGREGATE') {
-      return [
-        ...base,
-        {
-          value: 'ORG_AGGREGATE' as const,
-          label: t('Organization aggregate'),
-        },
-      ];
-    }
-    return base;
-  }, [badge, t]);
+  const metricSelectItems = useMemo(
+    () =>
+      BADGE_METRICS_BY_CATEGORY[category ?? 'CONTRIBUTION'].map((key) => ({
+        value: key,
+        label: BADGE_METRIC_LABEL[key],
+      })),
+    [category],
+  );
 
-  const showThresholdInput =
-    metricUi === 'CRP' || metricUi === 'VRP' || metricUi === 'ORG_AGGREGATE';
-  const showRankTopNInput = metricUi === 'RANK';
+  const showThresholdInput = ruleType === 'THRESHOLD';
+  const showRankTopNInput = ruleType === 'RANK';
 
   const onValidSubmit = useCallback(
     async (data: BadgeFormValues) => {
-      clearErrors(['symbol', 'discountBps', 'bonusSp', 'threshold', 'rankTopN']);
+      clearErrors([
+        'symbol',
+        'category',
+        'metric',
+        'ruleType',
+        'discountBps',
+        'bonusSp',
+        'threshold',
+        'rankTopN',
+      ]);
 
       if (!data.symbol.trim()) {
         setError('symbol', { message: t('Symbol is required') });
@@ -258,18 +258,34 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
         return;
       }
 
-      const ruleType = data.metricUi === 'RANK' ? 'RANK' : 'THRESHOLD';
-      const apiMetric: ApiLeaderboardMetric =
-        data.metricUi === 'RANK'
-          ? rankLeaderboardMetricRef.current
-          : data.metricUi === 'ORG_AGGREGATE'
-            ? 'ORG_AGGREGATE'
-            : data.metricUi;
+      if (!(data.category in BADGE_CATEGORY_LABEL)) {
+        setError('category', { message: t('Category is required') });
+        return;
+      }
+      if (!(data.metric in BADGE_METRIC_LABEL)) {
+        setError('metric', { message: t('Metric is required') });
+        return;
+      }
+      if (!(data.ruleType in BADGE_RULE_TYPE_LABEL)) {
+        setError('ruleType', { message: t('Rule type is required') });
+        return;
+      }
+
+      const allowedMetrics = BADGE_METRICS_BY_CATEGORY[data.category];
+      if (!allowedMetrics.includes(data.metric)) {
+        setError('metric', { message: t('Metric does not match category') });
+        return;
+      }
+
+      if (data.category === 'RANK' && data.ruleType !== 'RANK') {
+        setError('ruleType', { message: t('Ranking category must use Top Ranking rule') });
+        return;
+      }
 
       let threshold: number | null = null;
       let rankTopN: number | null = null;
 
-      if (ruleType === 'THRESHOLD') {
+      if (data.ruleType === 'THRESHOLD') {
         const th = parseOptionalNonNegativeInt(data.threshold);
         if (th === 'invalid') {
           setError('threshold', { message: t('Invalid number') });
@@ -280,6 +296,10 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
           return;
         }
         threshold = th;
+        if (data.rankTopN.trim().length > 0) {
+          setError('rankTopN', { message: t('Rank top N must be empty for threshold rule') });
+          return;
+        }
       } else {
         const rn = parseRankTopN(data.rankTopN);
         if (rn === 'invalid') {
@@ -291,14 +311,19 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
           return;
         }
         rankTopN = rn;
+        if (data.threshold.trim().length > 0) {
+          setError('threshold', { message: t('Threshold must be empty for Top Ranking rule') });
+          return;
+        }
       }
 
       try {
         if (isCreate) {
           await createMutate({
             name: data.name.trim(),
-            ruleType,
-            metric: apiMetric,
+            category: data.category,
+            ruleType: data.ruleType,
+            metric: data.metric as ApiLeaderboardMetric,
             isActive: true,
             symbol: resolvedSymbol || null,
             threshold,
@@ -313,8 +338,9 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
           id: badge.id,
           body: {
             name: data.name.trim(),
-            ruleType,
-            metric: apiMetric,
+            category: data.category,
+            ruleType: data.ruleType,
+            metric: data.metric as ApiLeaderboardMetric,
             symbol: resolvedSymbol || null,
             threshold,
             rankTopN,
@@ -479,17 +505,58 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
 
             <Field>
               <FieldLabel>
+                {t('Category')} <span className="text-destructive">*</span>
+              </FieldLabel>
+              <Controller
+                control={control}
+                name="category"
+                rules={{ required: true }}
+                render={({ field }) => (
+                  <Select
+                    value={field.value}
+                    onValueChange={(value) => {
+                      const nextCategory = value as BadgeCategory;
+                      field.onChange(nextCategory);
+                      const allowed = BADGE_METRICS_BY_CATEGORY[nextCategory];
+                      if (!allowed.includes(metric)) {
+                        setValue('metric', allowed[0], { shouldDirty: true, shouldValidate: true });
+                      }
+                      if (nextCategory === 'RANK') {
+                        setValue('ruleType', 'RANK', { shouldDirty: true, shouldValidate: true });
+                        setValue('threshold', '');
+                      }
+                    }}
+                    disabled={busy}
+                  >
+                    <SelectTrigger className="h-10 !border !border-zinc-300">
+                      <SelectValue placeholder={t('Category')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {BADGE_CATEGORY_KEYS.map((key) => (
+                        <SelectItem key={key} value={key}>
+                          {BADGE_CATEGORY_LABEL[key]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              <FieldError errors={[errors.category]} />
+            </Field>
+
+            <Field>
+              <FieldLabel>
                 {t('Metric')} <span className="text-destructive">*</span>
               </FieldLabel>
               <Controller
                 control={control}
-                name="metricUi"
+                name="metric"
                 rules={{ required: true }}
                 render={({ field }) => (
                   <Select
                     value={field.value}
                     onValueChange={(v) => {
-                      field.onChange(v as MetricUi);
+                      field.onChange(v as BadgeMetric);
                       setValue('threshold', '');
                       setValue('rankTopN', '');
                     }}
@@ -508,7 +575,52 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
                   </Select>
                 )}
               />
-              <FieldError errors={[errors.metricUi]} />
+              <FieldError errors={[errors.metric]} />
+            </Field>
+
+            <Field>
+              <FieldLabel>
+                {t('Rule type')} <span className="text-destructive">*</span>
+              </FieldLabel>
+              <Controller
+                control={control}
+                name="ruleType"
+                rules={{ required: true }}
+                render={({ field }) => (
+                  <Select
+                    value={field.value}
+                    onValueChange={(value) => {
+                      const nextRuleType = value as BadgeRuleType;
+                      if (category === 'RANK' && nextRuleType !== 'RANK') {
+                        return;
+                      }
+                      field.onChange(nextRuleType);
+                      if (nextRuleType === 'THRESHOLD') {
+                        setValue('rankTopN', '');
+                      } else {
+                        setValue('threshold', '');
+                      }
+                    }}
+                    disabled={busy}
+                  >
+                    <SelectTrigger className="h-10 !border !border-zinc-300">
+                      <SelectValue placeholder={t('Rule type')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {BADGE_RULE_TYPE_KEYS.map((key) => (
+                        <SelectItem
+                          key={key}
+                          value={key}
+                          disabled={category === 'RANK' && key !== 'RANK'}
+                        >
+                          {BADGE_RULE_TYPE_LABEL[key]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              <FieldError errors={[errors.ruleType]} />
             </Field>
 
             {showThresholdInput ? (

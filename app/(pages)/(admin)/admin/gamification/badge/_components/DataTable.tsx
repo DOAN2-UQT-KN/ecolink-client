@@ -15,7 +15,14 @@ import { cn } from '@/libs/utils';
 import { formattedDate } from '@/utils/formattedDate';
 import { TbPencil } from 'react-icons/tb';
 
-import { BADGE_METRIC_LABEL, type BadgeMetricUiKey } from '@/constants/badgeMetric';
+import {
+  BADGE_CATEGORY_LABEL,
+  BADGE_METRIC_LABEL,
+  BADGE_RULE_TYPE_LABEL,
+  type BadgeCategory,
+  type BadgeMetric,
+  type BadgeRuleType,
+} from '@/constants/badge';
 import { useBadgeAdminContext } from '../_context/BadgeAdminContext';
 import { isImageSymbol } from './symbol';
 
@@ -24,7 +31,9 @@ const COLUMN_KEYS = {
   SLUG: 'slug',
   NAME: 'name',
   SYMBOL: 'symbol',
+  CATEGORY: 'category',
   METRIC: 'metric',
+  RULE_TYPE: 'rule_type',
   THRESHOLD: 'threshold',
   RANK_TOP_N: 'rank_top_n',
   REWARD: 'reward',
@@ -64,14 +73,6 @@ function rewardPreview(
   } catch {
     return '—';
   }
-}
-
-function metricCellLabel(ruleType: string, metric: string): string {
-  if (ruleType === 'RANK') {
-    return BADGE_METRIC_LABEL.RANK;
-  }
-  const m = metric as BadgeMetricUiKey;
-  return BADGE_METRIC_LABEL[m] ?? metric;
 }
 
 export function DataTable({ onEdit }: { onEdit: (badge: IAdminBadgeDefinition) => void }) {
@@ -130,6 +131,26 @@ export function DataTable({ onEdit }: { onEdit: (badge: IAdminBadgeDefinition) =
         ),
       },
       {
+        key: COLUMN_KEYS.CATEGORY,
+        title: t('Category'),
+        className: 'w-[140px]',
+        render: (_, row) => (
+          <span>
+            {BADGE_CATEGORY_LABEL[row.category as BadgeCategory] ?? row.category}
+          </span>
+        ),
+      },
+      {
+        key: COLUMN_KEYS.RULE_TYPE,
+        title: t('Rule type'),
+        className: 'w-[120px]',
+        render: (_, row) => (
+          <span>
+            {BADGE_RULE_TYPE_LABEL[row.ruleType as BadgeRuleType] ?? row.ruleType}
+          </span>
+        ),
+      },
+      {
         key: COLUMN_KEYS.THRESHOLD,
         title: t('Threshold'),
         className: 'w-[100px] tabular-nums',
@@ -144,8 +165,10 @@ export function DataTable({ onEdit }: { onEdit: (badge: IAdminBadgeDefinition) =
       {
         key: COLUMN_KEYS.METRIC,
         title: t('Metric'),
-        className: 'w-[120px]',
-        render: (_, row) => <span>{metricCellLabel(row.ruleType, row.metric)}</span>,
+        className: 'w-[180px]',
+        render: (_, row) => (
+          <span>{BADGE_METRIC_LABEL[row.metric as BadgeMetric] ?? row.metric}</span>
+        ),
       },
       {
         key: COLUMN_KEYS.REWARD,
