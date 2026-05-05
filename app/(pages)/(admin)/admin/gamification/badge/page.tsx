@@ -9,7 +9,7 @@ import {
   type BreadcrumbItemProps,
 } from "@/components/client/shared/Breadcrumbs";
 import { Button } from "@/components/ui/button";
-import type { IAdminBadgeDefinition } from "@/apis/gamification/models/gamificationBadge";
+import type { IAdminBadgeDefinition } from "@/apis/gamification/badges/models";
 
 import { BadgeAdminProvider } from "./_context/BadgeAdminContext";
 import { useBadgeAdminContext } from "./_hooks/useBadgeAdminContext";

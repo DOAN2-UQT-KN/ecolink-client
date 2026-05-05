@@ -1,4 +1,4 @@
-import type { IAdminBadgeDefinition } from "@/apis/gamification/models/gamificationBadge";
+import type { IAdminBadgeDefinition } from "@/apis/gamification/badges/models";
 
 import type { BadgeAdminFilterValues } from "../_context/BadgeAdminContext";
 

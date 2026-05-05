@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import type { IAdminBadgeDefinition } from '@/apis/gamification/models/gamificationBadge';
+import type { IAdminBadgeDefinition } from '@/apis/gamification/badges/models';
 import { useAdminLayout } from '@/app/(pages)/(admin)/_context/AdminLayoutContext';
 import {
   DataTable as SharedDataTable,

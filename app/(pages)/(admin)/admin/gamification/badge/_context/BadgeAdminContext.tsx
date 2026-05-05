@@ -9,8 +9,8 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 
-import { useGetAdminGamificationBadges } from "@/apis/gamification/getGamificationBadges";
-import type { IAdminBadgeDefinition } from "@/apis/gamification/models/gamificationBadge";
+import { useGetAdminGamificationBadges } from "@/apis/gamification/badges/list";
+import type { IAdminBadgeDefinition } from "@/apis/gamification/badges/models";
 import {
   filterBadges,
   normalizeBadgePageSize,

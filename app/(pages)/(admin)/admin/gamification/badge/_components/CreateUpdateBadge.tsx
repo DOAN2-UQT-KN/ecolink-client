@@ -5,8 +5,8 @@ import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Loader2 } from 'lucide-react';
 
-import type { IAdminBadgeDefinition } from '@/apis/gamification/models/gamificationBadge';
-import { useCreateAdminBadge, usePatchAdminBadge } from '@/apis/gamification/adminBadge';
+import type { IAdminBadgeDefinition } from '@/apis/gamification/badges/models';
+import { useCreateAdminBadge, usePatchAdminBadge } from '@/apis/gamification/badges/list';
 import {
   BADGE_CATEGORY_KEYS,
   BADGE_CATEGORY_LABEL,
