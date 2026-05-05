@@ -1,35 +1,39 @@
-"use client";
+'use client';
 
-import { memo, useCallback, useEffect, useMemo } from "react";
-import { Controller, useForm } from "react-hook-form";
-import { useTranslation } from "react-i18next";
+import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
+import { Controller, useForm, useWatch } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+import { Loader2 } from 'lucide-react';
 
-import type { IAdminBadgeDefinition } from "@/apis/gamification/models/gamificationBadge";
+import type { IAdminBadgeDefinition } from '@/apis/gamification/models/gamificationBadge';
+import { useCreateAdminBadge, usePatchAdminBadge } from '@/apis/gamification/adminBadge';
 import {
-  useCreateAdminBadge,
-  usePatchAdminBadge,
-} from "@/apis/gamification/adminBadge";
-import { Button } from "@/components/client/shared/Button";
+  BADGE_METRIC_LABEL,
+  BADGE_METRIC_UI_KEYS,
+  type BadgeMetricUiKey,
+} from '@/constants/badgeMetric';
+import { useAdminLayout } from '@/app/(pages)/(admin)/_context/AdminLayoutContext';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
+} from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Field, FieldError, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { useAdminLayout } from "@/app/(pages)/(admin)/_context/AdminLayoutContext";
-import { cn } from "@/libs/utils";
+} from '@/components/ui/select';
+import { cn } from '@/libs/utils';
+
+import { IconGrid } from './IconGrid';
 
 export interface CreateUpdateBadgeProps {
   open: boolean;
@@ -38,76 +42,107 @@ export interface CreateUpdateBadgeProps {
   onSuccess: () => void;
 }
 
+type ApiLeaderboardMetric = 'CRP' | 'VRP' | 'ORG_AGGREGATE';
+
+/** Form value: UX metric (includes `RANK`) or legacy threshold metric. */
+type MetricUi = BadgeMetricUiKey | 'ORG_AGGREGATE';
+
 type BadgeFormValues = {
-  slug: string;
   name: string;
   symbol: string;
-  ruleType: string;
-  metric: string;
+  metricUi: MetricUi;
   threshold: string;
   rankTopN: string;
-  rewardJson: string;
+  discountBps: string;
+  partnerTierCodes: string;
   isActive: boolean;
   publishNow: boolean;
 };
 
-const RULE_TYPES = ["THRESHOLD", "RANK"] as const;
+function metricUiFromBadge(badge: IAdminBadgeDefinition): MetricUi {
+  if (badge.ruleType === 'RANK') return 'RANK';
+  if (badge.metric === 'ORG_AGGREGATE') return 'ORG_AGGREGATE';
+  return badge.metric as 'CRP' | 'VRP';
+}
 
-const METRICS = ["CRP", "VRP", "ORG_AGGREGATE"] as const;
+function rewardFieldsFromBadge(
+  reward: Record<string, unknown> | null | undefined,
+): Pick<BadgeFormValues, 'discountBps' | 'partnerTierCodes'> {
+  if (!reward) return { discountBps: '', partnerTierCodes: '' };
+  const rawBps = reward.discount_bps ?? reward.discountBps;
+  const discountBps = typeof rawBps === 'number' && Number.isFinite(rawBps) ? String(rawBps) : '';
+  const codesRaw = reward.partner_tier_codes;
+  const partnerTierCodes = Array.isArray(codesRaw)
+    ? codesRaw.filter((c): c is string => typeof c === 'string').join(', ')
+    : '';
+  return { discountBps, partnerTierCodes };
+}
 
-const INPUT_CLASS =
-  "border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50";
-
-function parseOptionalInt(raw: string): number | null {
+function parseOptionalNonNegativeInt(raw: string): number | null | 'invalid' {
   const t = raw.trim();
   if (!t) return null;
   const n = Number(t);
-  return Number.isFinite(n) ? n : null;
+  if (!Number.isFinite(n) || !Number.isInteger(n) || n < 0) return 'invalid';
+  return n;
 }
 
-function parseRewardJson(raw: string):
-  | { ok: true; value: Record<string, unknown> | null }
-  | { ok: false } {
+function parseRankTopN(raw: string): number | null | 'invalid' {
   const t = raw.trim();
-  if (!t) return { ok: true, value: null };
-  try {
-    const v = JSON.parse(t) as unknown;
-    if (v !== null && typeof v === "object" && !Array.isArray(v)) {
-      return { ok: true, value: v as Record<string, unknown> };
-    }
-    return { ok: false };
-  } catch {
-    return { ok: false };
-  }
+  if (!t) return null;
+  const n = Number(t);
+  if (!Number.isFinite(n) || !Number.isInteger(n) || n < 1) return 'invalid';
+  return n;
 }
 
-function defaultValuesFromBadge(
-  badge?: IAdminBadgeDefinition | null,
-): BadgeFormValues {
+function buildRewardPayload(
+  discountBpsStr: string,
+  partnerTierCodesStr: string,
+): { ok: true; value: Record<string, unknown> | null } | { ok: false } {
+  const codes = partnerTierCodesStr
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const dTrim = discountBpsStr.trim();
+  let discount_bps: number | undefined;
+  if (dTrim !== '') {
+    const n = Number(dTrim);
+    if (!Number.isFinite(n) || !Number.isInteger(n) || n < 0 || n > 10000) {
+      return { ok: false };
+    }
+    discount_bps = n;
+  }
+  if (discount_bps === undefined && codes.length === 0) {
+    return { ok: true, value: null };
+  }
+  const value: Record<string, unknown> = {};
+  if (discount_bps !== undefined) value.discount_bps = discount_bps;
+  if (codes.length) value.partner_tier_codes = codes;
+  return { ok: true, value };
+}
+
+function defaultValuesFromBadge(badge?: IAdminBadgeDefinition | null): BadgeFormValues {
   if (!badge) {
     return {
-      slug: "",
-      name: "",
-      symbol: "",
-      ruleType: "THRESHOLD",
-      metric: "CRP",
-      threshold: "",
-      rankTopN: "",
-      rewardJson: "",
+      name: '',
+      symbol: '',
+      metricUi: 'CRP',
+      threshold: '',
+      rankTopN: '',
+      discountBps: '',
+      partnerTierCodes: '',
       isActive: true,
       publishNow: false,
     };
   }
+  const rf = rewardFieldsFromBadge(badge.reward ?? undefined);
   return {
-    slug: badge.slug,
     name: badge.name,
-    symbol: badge.symbol ?? "",
-    ruleType: badge.ruleType,
-    metric: badge.metric,
-    threshold: badge.threshold != null ? String(badge.threshold) : "",
-    rankTopN: badge.rankTopN != null ? String(badge.rankTopN) : "",
-    rewardJson:
-      badge.reward != null ? JSON.stringify(badge.reward, null, 2) : "",
+    symbol: badge.symbol ?? '',
+    metricUi: metricUiFromBadge(badge),
+    threshold: badge.threshold != null ? String(badge.threshold) : '',
+    rankTopN: badge.rankTopN != null ? String(badge.rankTopN) : '',
+    discountBps: rf.discountBps,
+    partnerTierCodes: rf.partnerTierCodes,
     isActive: badge.isActive,
     publishNow: false,
   };
@@ -121,8 +156,10 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
 }: CreateUpdateBadgeProps) {
   const { t } = useTranslation();
   const { theme } = useAdminLayout();
-  const isDark = theme === "dark";
+  const isDark = theme === 'dark';
   const isCreate = !badge;
+
+  const rankLeaderboardMetricRef = useRef<ApiLeaderboardMetric>('CRP');
 
   const form = useForm<BadgeFormValues>({
     defaultValues: defaultValuesFromBadge(badge),
@@ -135,102 +172,118 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
     reset,
     setError,
     clearErrors,
+    setValue,
     formState: { errors },
   } = form;
+
+  const metricUi = useWatch({ control, name: 'metricUi' });
 
   useEffect(() => {
     if (!open) return;
     reset(defaultValuesFromBadge(badge));
+    if (badge?.ruleType === 'RANK') {
+      rankLeaderboardMetricRef.current = badge.metric as ApiLeaderboardMetric;
+    } else {
+      rankLeaderboardMetricRef.current = 'CRP';
+    }
   }, [open, badge, reset]);
 
-  const { mutateAsync: createMutate, isPending: isCreating } =
-    useCreateAdminBadge({
-      onSuccess: () => {
-        onSuccess();
-        onClose();
-      },
-    });
+  const { mutateAsync: createMutate, isPending: isCreating } = useCreateAdminBadge({
+    onSuccess: () => {
+      onSuccess();
+      onClose();
+    },
+  });
 
-  const { mutateAsync: patchMutate, isPending: isPatching } =
-    usePatchAdminBadge({
-      onSuccess: () => {
-        onSuccess();
-        onClose();
-      },
-    });
+  const { mutateAsync: patchMutate, isPending: isPatching } = usePatchAdminBadge({
+    onSuccess: () => {
+      onSuccess();
+      onClose();
+    },
+  });
 
-  const busy = isCreating || isPatching;
+  const busy = isCreating || isPatching || form.formState.isSubmitting;
+
+  const metricSelectItems = useMemo(() => {
+    const base = BADGE_METRIC_UI_KEYS.map((key) => ({
+      value: key,
+      label: BADGE_METRIC_LABEL[key],
+    }));
+    if (badge?.ruleType === 'THRESHOLD' && badge.metric === 'ORG_AGGREGATE') {
+      return [
+        ...base,
+        {
+          value: 'ORG_AGGREGATE' as const,
+          label: t('Organization aggregate'),
+        },
+      ];
+    }
+    return base;
+  }, [badge, t]);
+
+  const showThresholdInput =
+    metricUi === 'CRP' || metricUi === 'VRP' || metricUi === 'ORG_AGGREGATE';
+  const showRankTopNInput = metricUi === 'RANK';
 
   const onValidSubmit = useCallback(
     async (data: BadgeFormValues) => {
-      clearErrors("rewardJson");
-      const parsed = parseRewardJson(data.rewardJson);
-      if (!parsed.ok) {
-        setError("rewardJson", {
-          message: t("Invalid reward JSON"),
+      clearErrors(['discountBps', 'partnerTierCodes', 'threshold', 'rankTopN']);
+
+      const rewardParsed = buildRewardPayload(data.discountBps, data.partnerTierCodes);
+      if (!rewardParsed.ok) {
+        setError('discountBps', {
+          message: t('Discount (bps) must be an integer from 0 to 10000'),
         });
         return;
       }
 
-      const threshold = parseOptionalInt(data.threshold);
-      const rankTopN = parseOptionalInt(data.rankTopN);
-      if (data.threshold.trim() && threshold === null) {
-        setError("threshold", { message: t("Invalid number") });
-        return;
-      }
-      if (data.rankTopN.trim() && rankTopN === null) {
-        setError("rankTopN", { message: t("Invalid number") });
-        return;
-      }
+      const ruleType = data.metricUi === 'RANK' ? 'RANK' : 'THRESHOLD';
+      const apiMetric: ApiLeaderboardMetric =
+        data.metricUi === 'RANK'
+          ? rankLeaderboardMetricRef.current
+          : data.metricUi === 'ORG_AGGREGATE'
+            ? 'ORG_AGGREGATE'
+            : data.metricUi;
 
-      if (!data.metric.trim()) {
-        setError("metric", { message: t("Metric is required") });
-        return;
-      }
+      let threshold: number | null = null;
+      let rankTopN: number | null = null;
 
-      if (data.ruleType === "THRESHOLD") {
-        if (threshold === null) {
-          setError("threshold", { message: t("Threshold is required") });
+      if (ruleType === 'THRESHOLD') {
+        const th = parseOptionalNonNegativeInt(data.threshold);
+        if (th === 'invalid') {
+          setError('threshold', { message: t('Invalid number') });
           return;
         }
-        if (data.rankTopN.trim()) {
-          setError("rankTopN", {
-            message: t("Rank top N must be empty for threshold badges"),
-          });
+        if (th === null) {
+          setError('threshold', { message: t('Threshold is required') });
           return;
         }
+        threshold = th;
+      } else {
+        const rn = parseRankTopN(data.rankTopN);
+        if (rn === 'invalid') {
+          setError('rankTopN', { message: t('Invalid number') });
+          return;
+        }
+        if (rn === null) {
+          setError('rankTopN', { message: t('Rank top N is required') });
+          return;
+        }
+        rankTopN = rn;
       }
-
-      if (data.ruleType === "RANK") {
-        if (rankTopN === null || rankTopN < 1) {
-          setError("rankTopN", { message: t("Rank top N is required") });
-          return;
-        }
-        if (data.threshold.trim()) {
-          setError("threshold", {
-            message: t("Threshold must be empty for rank badges"),
-          });
-          return;
-        }
-      }
-
-      const metric = data.metric.trim();
 
       try {
         if (isCreate) {
           await createMutate({
-            ...(data.slug.trim() ? { slug: data.slug.trim() } : {}),
             name: data.name.trim(),
-            ruleType: data.ruleType,
-            metric,
-            isActive: data.isActive,
+            ruleType,
+            metric: apiMetric,
+            isActive: true,
             symbol: data.symbol.trim() || null,
             threshold,
             rankTopN,
-            ...(parsed.value !== null ? { reward: parsed.value } : {}),
-            ...(data.publishNow
-              ? { publishedAt: new Date().toISOString() }
-              : {}),
+            ...(rewardParsed.value !== null ? { reward: rewardParsed.value } : {}),
+            ...(data.publishNow ? { publishedAt: new Date().toISOString() } : {}),
           });
           return;
         }
@@ -239,12 +292,12 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
           id: badge.id,
           body: {
             name: data.name.trim(),
-            ruleType: data.ruleType,
-            metric,
+            ruleType,
+            metric: apiMetric,
             symbol: data.symbol.trim() || null,
             threshold,
             rankTopN,
-            reward: parsed.value,
+            reward: rewardParsed.value,
             isActive: data.isActive,
           },
         });
@@ -252,33 +305,7 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
         /* surfaced by usePost */
       }
     },
-    [
-      badge,
-      clearErrors,
-      createMutate,
-      isCreate,
-      patchMutate,
-      setError,
-      t,
-    ],
-  );
-
-  const ruleTypeOptions = useMemo(
-    () =>
-      RULE_TYPES.map((value) => ({
-        value,
-        label: value,
-      })),
-    [],
-  );
-
-  const metricOptions = useMemo(
-    () =>
-      METRICS.map((value) => ({
-        value,
-        label: value,
-      })),
-    [],
+    [badge, clearErrors, createMutate, isCreate, patchMutate, setError, t],
   );
 
   return (
@@ -291,8 +318,8 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
       <DialogContent
         showCloseButton
         className={cn(
-          "max-h-[90vh] max-w-lg gap-4 overflow-y-auto sm:max-w-xl",
-          isDark ? "bg-zinc-900 text-zinc-100" : "bg-zinc-50 text-zinc-900",
+          'max-h-[90vh] max-w-lg gap-4 overflow-y-auto sm:max-w-xl',
+          isDark ? 'bg-zinc-900 text-zinc-100' : 'bg-zinc-50 text-zinc-900',
         )}
         onPointerDownOutside={(e) => {
           if (busy) e.preventDefault();
@@ -303,12 +330,9 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
       >
         <DialogHeader>
           <DialogTitle
-            className={cn(
-              "text-left font-semibold",
-              isDark ? "text-zinc-100" : "text-zinc-900",
-            )}
+            className={cn('text-left font-semibold', isDark ? 'text-zinc-100' : 'text-zinc-900')}
           >
-            {isCreate ? t("Create badge") : t("Edit badge")}
+            {isCreate ? t('Create badge') : t('Edit badge')}
           </DialogTitle>
         </DialogHeader>
 
@@ -319,71 +343,64 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
             void handleSubmit(onValidSubmit)(e);
           }}
         >
-          <div className="flex flex-col gap-6">
-            <Field>
-              <FieldLabel className="text-foreground-tertiary font-display-3">
-                {t("Slug")}
-              </FieldLabel>
-              <Input
-                {...register("slug")}
-                placeholder={t("Leave empty to generate from name")}
-                className={cn("h-[48px]", INPUT_CLASS)}
-                disabled={busy || !isCreate}
-              />
-              <FieldError errors={[errors.slug]} />
-            </Field>
+          <div className="flex flex-col gap-4">
+            {!isCreate && badge ? (
+              <Field>
+                <FieldLabel>{t('Slug')}</FieldLabel>
+                <Input value={badge.slug} className="h-10 !border !border-zinc-300" disabled />
+              </Field>
+            ) : null}
 
             <Field>
-              <FieldLabel className="text-foreground-tertiary font-display-3">
-                {t("Name")}{" "}
-                <span className="text-destructive">*</span>
+              <FieldLabel>
+                {t('Name')} <span className="text-destructive">*</span>
               </FieldLabel>
               <Input
-                {...register("name", {
-                  required: t("Name is required"),
-                  validate: (v) =>
-                    v.trim().length > 0 || t("Name is required"),
+                {...register('name', {
+                  required: t('Name is required'),
+                  validate: (v) => v.trim().length > 0 || t('Name is required'),
                 })}
-                placeholder={t("Badge display name")}
-                className={cn("h-[48px]", INPUT_CLASS)}
+                placeholder={t('Badge display name')}
+                className="h-10 !border !border-zinc-300"
                 disabled={busy}
               />
               <FieldError errors={[errors.name]} />
             </Field>
 
             <Field>
-              <FieldLabel className="text-foreground-tertiary font-display-3">
-                {t("Symbol")}
-              </FieldLabel>
-              <Input
-                {...register("symbol")}
-                placeholder={t("Emoji or icon key")}
-                className={cn("h-[48px]", INPUT_CLASS)}
-                disabled={busy}
+              <FieldLabel>{t('Symbol')}</FieldLabel>
+              <Controller
+                control={control}
+                name="symbol"
+                render={({ field }) => (
+                  <IconGrid value={field.value} onChange={field.onChange} disabled={busy} />
+                )}
               />
-              <FieldError errors={[errors.symbol]} />
             </Field>
 
             <Field>
-              <FieldLabel className="text-foreground-tertiary font-display-3">
-                {t("Rule type")}{" "}
-                <span className="text-destructive">*</span>
+              <FieldLabel>
+                {t('Metric')} <span className="text-destructive">*</span>
               </FieldLabel>
               <Controller
                 control={control}
-                name="ruleType"
+                name="metricUi"
                 rules={{ required: true }}
                 render={({ field }) => (
                   <Select
                     value={field.value}
-                    onValueChange={field.onChange}
+                    onValueChange={(v) => {
+                      field.onChange(v as MetricUi);
+                      setValue('threshold', '');
+                      setValue('rankTopN', '');
+                    }}
                     disabled={busy}
                   >
-                    <SelectTrigger className={cn("w-full !h-[48px]", INPUT_CLASS)}>
-                      <SelectValue placeholder={t("Rule type")} />
+                    <SelectTrigger className="h-10 !border !border-zinc-300">
+                      <SelectValue placeholder={t('Metric')} />
                     </SelectTrigger>
                     <SelectContent>
-                      {ruleTypeOptions.map((opt) => (
+                      {metricSelectItems.map((opt) => (
                         <SelectItem key={opt.value} value={opt.value}>
                           {opt.label}
                         </SelectItem>
@@ -392,107 +409,89 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
                   </Select>
                 )}
               />
-              <FieldError errors={[errors.ruleType]} />
+              <FieldError errors={[errors.metricUi]} />
             </Field>
 
-            <Field>
-              <FieldLabel className="text-foreground-tertiary font-display-3">
-                {t("Metric")}{" "}
-                <span className="text-destructive">*</span>
-              </FieldLabel>
-              <Controller
-                control={control}
-                name="metric"
-                rules={{ required: true }}
-                render={({ field }) => (
-                  <Select
-                    value={field.value}
-                    onValueChange={field.onChange}
-                    disabled={busy}
-                  >
-                    <SelectTrigger className={cn("w-full !h-[48px]", INPUT_CLASS)}>
-                      <SelectValue placeholder={t("Metric")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {metricOptions.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              <FieldError errors={[errors.metric]} />
-            </Field>
-
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            {showThresholdInput ? (
               <Field>
-                <FieldLabel className="text-foreground-tertiary font-display-3">
-                  {t("Threshold")}
-                </FieldLabel>
+                <FieldLabel>{t('Threshold')}</FieldLabel>
                 <Input
                   type="number"
-                  {...register("threshold")}
-                  placeholder={t("RP threshold (threshold badges)")}
-                  className={cn("h-[48px]", INPUT_CLASS)}
+                  min={0}
+                  {...register('threshold')}
+                  placeholder={t('Minimum points')}
+                  className="h-10 !border !border-zinc-300"
                   disabled={busy}
                 />
                 <FieldError errors={[errors.threshold]} />
               </Field>
+            ) : null}
 
+            {showRankTopNInput ? (
               <Field>
-                <FieldLabel className="text-foreground-tertiary font-display-3">
-                  {t("Rank top N")}
-                </FieldLabel>
+                <FieldLabel>{t('Rank top N')}</FieldLabel>
                 <Input
                   type="number"
-                  {...register("rankTopN")}
-                  placeholder={t("Top N rank (rank badges)")}
-                  className={cn("h-[48px]", INPUT_CLASS)}
+                  min={1}
+                  {...register('rankTopN')}
+                  placeholder={t('Top N rank')}
+                  className="h-10 !border !border-zinc-300"
                   disabled={busy}
                 />
                 <FieldError errors={[errors.rankTopN]} />
               </Field>
-            </div>
+            ) : null}
 
             <Field>
-              <FieldLabel className="text-foreground-tertiary font-display-3">
-                {t("Reward JSON")}
-              </FieldLabel>
-              <Textarea
-                {...register("rewardJson")}
-                rows={6}
-                placeholder='{"discountBps": 500}'
-                className={cn(
-                  INPUT_CLASS,
-                  "min-h-[140px] font-mono text-sm",
-                  isDark && "border-zinc-700 bg-zinc-800 text-zinc-100",
-                )}
+              <FieldLabel>{t('Discount (bps)')}</FieldLabel>
+              <Input
+                type="number"
+                min={0}
+                max={10000}
+                {...register('discountBps')}
+                placeholder={t('Basis points (optional)')}
+                className="h-10 !border !border-zinc-300"
                 disabled={busy}
               />
-              <FieldError errors={[errors.rewardJson]} />
+              <FieldError errors={[errors.discountBps]} />
             </Field>
 
             <Field>
-              <label className="flex cursor-pointer items-center gap-2 pt-1">
+              <FieldLabel>{t('Partner tier codes')}</FieldLabel>
+              <Input
+                {...register('partnerTierCodes')}
+                placeholder={t('Comma-separated, e.g. GOLD, ECO')}
+                className="h-10 !border !border-zinc-300"
+                disabled={busy}
+              />
+              <FieldError errors={[errors.partnerTierCodes]} />
+            </Field>
+
+            {!isCreate ? (
+              <Field>
+                <FieldLabel>{t('Status')}</FieldLabel>
                 <Controller
                   control={control}
                   name="isActive"
                   render={({ field }) => (
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={(c) => field.onChange(c === true)}
+                    <Select
+                      value={field.value ? 'active' : 'inactive'}
+                      onValueChange={(value) => field.onChange(value === 'active')}
                       disabled={busy}
-                    />
+                    >
+                      <SelectTrigger className="h-10 !border !border-zinc-300">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">{t('Active')}</SelectItem>
+                        <SelectItem value="inactive">{t('Inactive')}</SelectItem>
+                      </SelectContent>
+                    </Select>
                   )}
                 />
-                <span className="text-foreground-tertiary font-display-3">
-                  {t("Active")}
-                </span>
-              </label>
-              <FieldError errors={[errors.isActive]} />
-            </Field>
+                <FieldError errors={[errors.isActive]} />
+              </Field>
+            ) : null}
 
             {isCreate ? (
               <Field>
@@ -508,32 +507,24 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
                       />
                     )}
                   />
-                  <span className="text-foreground-tertiary font-display-3">
-                    {t("Publish immediately (locks slug)")}
-                  </span>
+                  <span className="text-sm">{t('Publish immediately (locks slug)')}</span>
                 </label>
               </Field>
             ) : null}
           </div>
 
-          <DialogFooter className="h-[50px] gap-2 space-x-2 pt-2 sm:gap-0">
+          <DialogFooter className="gap-2 sm:gap-3">
             <Button
               type="button"
-              variant="outlined-brown"
-              size="medium"
-              onClick={onClose}
-              isDisabled={busy}
+              variant="outline"
+              onClick={() => onClose()}
+              disabled={busy}
+              className="px-4 !h-[45px] cursor-pointer"
             >
-              {t("Cancel")}
+              {t('Cancel')}
             </Button>
-            <Button
-              type="submit"
-              variant="brown"
-              size="medium"
-              isLoading={busy}
-              isDisabled={busy}
-            >
-              {t("Confirm")}
+            <Button type="submit" disabled={busy} className="px-4 !h-[45px] cursor-pointer">
+              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : t('Confirm')}
             </Button>
           </DialogFooter>
         </form>

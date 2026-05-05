@@ -15,8 +15,6 @@ import type { IAdminBadgeDefinition } from "@/apis/gamification/models/gamificat
 
 export type BadgeAdminFilterValues = {
   search: string;
-  /** Maps to API `includeInactive` (backend includes soft-deleted definitions when true). */
-  includeInactive: boolean;
 };
 
 type PaginationState = {
@@ -33,7 +31,6 @@ type BadgeAdminContextType = {
   errorMessage: string | undefined;
   onRetry: () => void;
   onFilterChange: (next: Partial<BadgeAdminFilterValues>) => void;
-  onResetFilters: () => void;
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
 };
@@ -55,16 +52,13 @@ export function BadgeAdminProvider({ children }: { children: React.ReactNode }) 
   const { t } = useTranslation();
   const [filters, setFilters] = useState<BadgeAdminFilterValues>({
     search: "",
-    includeInactive: false,
   });
   const [pagination, setPagination] = useState<PaginationState>({
     current: 1,
     pageSize: 10,
   });
 
-  const query = useGetAdminGamificationBadges({
-    includeInactive: filters.includeInactive ? true : undefined,
-  });
+  const query = useGetAdminGamificationBadges({});
 
   const rawBadges = query.data?.data?.badges ?? [];
 
@@ -91,7 +85,7 @@ export function BadgeAdminProvider({ children }: { children: React.ReactNode }) 
 
   useEffect(() => {
     setPagination((p) => ({ ...p, current: 1 }));
-  }, [filters.search, filters.includeInactive]);
+  }, [filters.search]);
 
   useEffect(() => {
     const maxPage = Math.max(1, Math.ceil(total / pagination.pageSize) || 1);
@@ -102,11 +96,6 @@ export function BadgeAdminProvider({ children }: { children: React.ReactNode }) 
 
   const onFilterChange = useCallback((next: Partial<BadgeAdminFilterValues>) => {
     setFilters((prev) => ({ ...prev, ...next }));
-  }, []);
-
-  const onResetFilters = useCallback(() => {
-    setFilters({ search: "", includeInactive: false });
-    setPagination((p) => ({ ...p, current: 1 }));
   }, []);
 
   const onPageChange = useCallback((page: number) => {
@@ -130,7 +119,6 @@ export function BadgeAdminProvider({ children }: { children: React.ReactNode }) 
       errorMessage: query.isError ? t("Failed to load badges") : undefined,
       onRetry: () => void query.refetch(),
       onFilterChange,
-      onResetFilters,
       onPageChange,
       onPageSizeChange,
     }),
@@ -140,7 +128,6 @@ export function BadgeAdminProvider({ children }: { children: React.ReactNode }) 
       onFilterChange,
       onPageChange,
       onPageSizeChange,
-      onResetFilters,
       pagination,
       query.isError,
       query.isLoading,

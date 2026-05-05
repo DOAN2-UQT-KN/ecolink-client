@@ -15,11 +15,11 @@ import { cn } from "@/libs/utils";
 import { formattedDate } from "@/utils/formattedDate";
 import { TbPencil } from "react-icons/tb";
 
+import { BADGE_METRIC_LABEL, type BadgeMetricUiKey } from "@/constants/badgeMetric";
 import { useBadgeAdminContext } from "../_context/BadgeAdminContext";
 
 const COLUMN_KEYS = {
   NO: "no",
-  ID: "id",
   SLUG: "slug",
   NAME: "name",
   SYMBOL: "symbol",
@@ -45,8 +45,12 @@ function rewardPreview(reward: Record<string, unknown> | null | undefined): stri
   }
 }
 
-function stripUuid(id: string): string {
-  return id.length > 13 ? `${id.slice(0, 8)}…${id.slice(-4)}` : id;
+function metricCellLabel(ruleType: string, metric: string): string {
+  if (ruleType === "RANK") {
+    return BADGE_METRIC_LABEL.RANK;
+  }
+  const m = metric as BadgeMetricUiKey;
+  return BADGE_METRIC_LABEL[m] ?? metric;
 }
 
 export function DataTable({
@@ -78,14 +82,6 @@ export function DataTable({
           <span className="tabular-nums">
             {(pagination.current - 1) * pagination.pageSize + index + 1}
           </span>
-        ),
-      },
-      {
-        key: COLUMN_KEYS.ID,
-        title: t("Id"),
-        className: "min-w-[120px] font-mono text-xs",
-        render: (_, row) => (
-          <span title={row.id}>{stripUuid(row.id)}</span>
         ),
       },
       {
@@ -160,7 +156,9 @@ export function DataTable({
         key: COLUMN_KEYS.METRIC,
         title: t("Metric"),
         className: "w-[120px]",
-        render: (_, row) => <span>{row.metric}</span>,
+        render: (_, row) => (
+          <span>{metricCellLabel(row.ruleType, row.metric)}</span>
+        ),
       },
       {
         key: COLUMN_KEYS.REWARD,
