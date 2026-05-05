@@ -1,14 +1,13 @@
-"use client";
+'use client';
 
-import { useEffect, useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { TbZoom } from "react-icons/tb";
+import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { TbZoom } from 'react-icons/tb';
 
-import { useBadgeAdminContext } from "../_context/BadgeAdminContext";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Field, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { useDebounce } from "@/hooks/useDebounce";
+import { useBadgeAdminContext } from '../_hooks/useBadgeAdminContext';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { useDebounce } from '@/hooks/useDebounce';
 
 export function FormFilter() {
   const { t } = useTranslation();
@@ -30,37 +29,22 @@ export function FormFilter() {
   const fields = useMemo(
     () => [
       {
-        key: "search",
-        label: t("Search"),
+        key: 'search',
+        label: t('Search'),
         render: () => (
           <div className="relative">
             <TbZoom className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               className="!h-10 !border !border-zinc-300 pl-10"
-              placeholder={t("Badge slug or name...")}
+              placeholder={t('Badge slug or name...')}
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
             />
           </div>
         ),
       },
-      {
-        key: "includeInactive",
-        label: t("Include deleted definitions"),
-        render: () => (
-          <label className="flex cursor-pointer items-center gap-2 pt-2">
-            <Checkbox
-              checked={filters.includeInactive}
-              onCheckedChange={(checked) =>
-                onFilterChange({ includeInactive: checked === true })
-              }
-            />
-            <span className="text-sm text-foreground">{t("Show soft-deleted rows")}</span>
-          </label>
-        ),
-      },
     ],
-    [filters.includeInactive, onFilterChange, searchInput, t],
+    [searchInput, t],
   );
 
   return (

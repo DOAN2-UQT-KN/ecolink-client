@@ -154,7 +154,7 @@ export const DataTable = memo(function DataTable() {
       },
       {
         key: COLUMN_KEYS.DATE_RANGE,
-        title: t('Start — End'),
+        title: t('Campaign duration'),
         className: 'min-w-[180px]',
         render: (_, record) => (
           <div className="space-y-0.5">
