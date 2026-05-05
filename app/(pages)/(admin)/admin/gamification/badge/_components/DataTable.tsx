@@ -17,6 +17,7 @@ import { TbPencil } from 'react-icons/tb';
 
 import { BADGE_METRIC_LABEL, type BadgeMetricUiKey } from '@/constants/badgeMetric';
 import { useBadgeAdminContext } from '../_context/BadgeAdminContext';
+import { isImageSymbol } from './symbol';
 
 const COLUMN_KEYS = {
   NO: 'no',
@@ -107,7 +108,21 @@ export function DataTable({ onEdit }: { onEdit: (badge: IAdminBadgeDefinition) =
         render: (_, row) => (
           <div className="flex items-center gap-2 justify-start flex-col">
             <div className="flex items-center gap-2 justify-start">
-              {row.symbol?.trim() ? row.symbol : '—'}
+              {row.symbol?.trim() ? (
+                isImageSymbol(row.symbol) ? (
+                  <img
+                    src={row.symbol}
+                    alt={t('Badge symbol')}
+                    className="h-8 w-8 rounded-full object-cover border border-zinc-300"
+                  />
+                ) : (
+                  <div className="h-8 w-8 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-lg leading-none">
+                    {row.symbol}
+                  </div>
+                )
+              ) : (
+                '—'
+              )}
               <span className={cn(isDark ? 'text-zinc-200' : 'text-zinc-800')}>{row.name}</span>
             </div>
             <span className="text-xs text-zinc-500">#{row.slug}</span>

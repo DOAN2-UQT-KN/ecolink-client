@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Loader2 } from 'lucide-react';
@@ -9,6 +9,7 @@ import type { IAdminBadgeDefinition } from '@/apis/gamification/models/gamificat
 import { useCreateAdminBadge, usePatchAdminBadge } from '@/apis/gamification/adminBadge';
 import { BADGE_METRIC_UI_KEYS, type BadgeMetricUiKey } from '@/constants/badgeMetric';
 import { useAdminLayout } from '@/app/(pages)/(admin)/_context/AdminLayoutContext';
+import { uploadToCloudinary } from '@/app/(pages)/(main)/incidents/create/_services/upload.service';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -30,6 +31,7 @@ import {
 import { cn } from '@/libs/utils';
 
 import { IconGrid } from './IconGrid';
+import { isImageSymbol } from './symbol';
 
 export interface CreateUpdateBadgeProps {
   open: boolean;
@@ -39,6 +41,7 @@ export interface CreateUpdateBadgeProps {
 }
 
 type ApiLeaderboardMetric = 'CRP' | 'VRP' | 'ORG_AGGREGATE';
+type SymbolMode = 'emoji' | 'image';
 
 /** Form value: UX metric (includes `RANK`) or legacy threshold metric. */
 type MetricUi = BadgeMetricUiKey | 'ORG_AGGREGATE';
@@ -60,6 +63,9 @@ const BADGE_METRIC_I18N_KEY = {
   VRP: 'Badge metric VRP',
   RANK: 'Badge metric RANK',
 } as const satisfies Record<BadgeMetricUiKey, string>;
+
+const SYMBOL_IMAGE_ACCEPT = 'image/png,image/jpeg,image/jpg,image/webp';
+const SYMBOL_IMAGE_MAX_SIZE_BYTES = 2 * 1024 * 1024;
 
 function metricUiFromBadge(badge: IAdminBadgeDefinition): MetricUi {
   if (badge.ruleType === 'RANK') return 'RANK';
@@ -150,6 +156,7 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
   const isCreate = !badge;
 
   const rankLeaderboardMetricRef = useRef<ApiLeaderboardMetric>('CRP');
+  const [symbolMode, setSymbolMode] = useState<SymbolMode>('emoji');
 
   const form = useForm<BadgeFormValues>({
     defaultValues: defaultValuesFromBadge(badge),
@@ -167,10 +174,12 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
   } = form;
 
   const metricUi = useWatch({ control, name: 'metricUi' });
+  const symbolValue = useWatch({ control, name: 'symbol' });
 
   useEffect(() => {
     if (!open) return;
     reset(defaultValuesFromBadge(badge));
+    setSymbolMode(isImageSymbol(badge?.symbol) ? 'image' : 'emoji');
     if (badge?.ruleType === 'RANK') {
       rankLeaderboardMetricRef.current = badge.metric as ApiLeaderboardMetric;
     } else {
@@ -217,7 +226,26 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
 
   const onValidSubmit = useCallback(
     async (data: BadgeFormValues) => {
-      clearErrors(['discountBps', 'bonusSp', 'threshold', 'rankTopN']);
+      clearErrors(['symbol', 'discountBps', 'bonusSp', 'threshold', 'rankTopN']);
+
+      if (!data.symbol.trim()) {
+        setError('symbol', { message: t('Symbol is required') });
+        return;
+      }
+      if (symbolMode === 'image' && !isImageSymbol(data.symbol)) {
+        setError('symbol', { message: t('Please upload an image symbol') });
+        return;
+      }
+
+      let resolvedSymbol = data.symbol.trim();
+      if (symbolMode === 'image') {
+        try {
+          resolvedSymbol = await uploadToCloudinary(resolvedSymbol);
+        } catch {
+          setError('symbol', { message: t('Failed to upload image') });
+          return;
+        }
+      }
 
       const rewardParsed = buildRewardPayload(data.discountBps, data.bonusSp);
       if (!rewardParsed.ok) {
@@ -272,7 +300,7 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
             ruleType,
             metric: apiMetric,
             isActive: true,
-            symbol: data.symbol.trim() || null,
+            symbol: resolvedSymbol || null,
             threshold,
             rankTopN,
             reward: rewardParsed.value,
@@ -287,7 +315,7 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
             name: data.name.trim(),
             ruleType,
             metric: apiMetric,
-            symbol: data.symbol.trim() || null,
+            symbol: resolvedSymbol || null,
             threshold,
             rankTopN,
             reward: rewardParsed.value,
@@ -298,7 +326,7 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
         /* surfaced by usePost */
       }
     },
-    [badge, clearErrors, createMutate, isCreate, patchMutate, setError, t],
+    [badge, clearErrors, createMutate, isCreate, patchMutate, setError, symbolMode, t],
   );
 
   return (
@@ -362,13 +390,91 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
 
             <Field>
               <FieldLabel>{t('Symbol')}</FieldLabel>
-              <Controller
-                control={control}
-                name="symbol"
-                render={({ field }) => (
-                  <IconGrid value={field.value} onChange={field.onChange} disabled={busy} />
-                )}
-              />
+              <div className="mb-3 inline-flex rounded-md border border-zinc-300 p-1">
+                <Button
+                  type="button"
+                  variant={symbolMode === 'emoji' ? 'default' : 'outline'}
+                  size="sm"
+                  className="h-8 px-3"
+                  disabled={busy}
+                  onClick={() => {
+                    if (symbolMode === 'emoji') return;
+                    setSymbolMode('emoji');
+                    setValue('symbol', '', { shouldDirty: true, shouldValidate: true });
+                  }}
+                >
+                  {t('Emoji')}
+                </Button>
+                <Button
+                  type="button"
+                  variant={symbolMode === 'image' ? 'default' : 'outline'}
+                  size="sm"
+                  className="h-8 px-3"
+                  disabled={busy}
+                  onClick={() => {
+                    if (symbolMode === 'image') return;
+                    setSymbolMode('image');
+                    setValue('symbol', '', { shouldDirty: true, shouldValidate: true });
+                  }}
+                >
+                  {t('Image')}
+                </Button>
+              </div>
+              {symbolMode === 'emoji' ? (
+                <Controller
+                  control={control}
+                  name="symbol"
+                  render={({ field }) => (
+                    <IconGrid value={field.value} onChange={field.onChange} disabled={busy} />
+                  )}
+                />
+              ) : (
+                <div className="space-y-3">
+                  <Input
+                    type="file"
+                    accept={SYMBOL_IMAGE_ACCEPT}
+                    className="h-10 !border !border-zinc-300 file:mr-3 file:rounded-md file:border-0 file:bg-zinc-100 file:px-3 file:py-1.5 file:text-sm"
+                    disabled={busy}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const allowed = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+                      if (!allowed.includes(file.type)) {
+                        setError('symbol', { message: t('Only png, jpg, jpeg, webp are allowed') });
+                        e.currentTarget.value = '';
+                        return;
+                      }
+                      if (file.size > SYMBOL_IMAGE_MAX_SIZE_BYTES) {
+                        setError('symbol', { message: t('Image size must be <= 2MB') });
+                        e.currentTarget.value = '';
+                        return;
+                      }
+                      const reader = new FileReader();
+                      reader.onload = () => {
+                        const result = typeof reader.result === 'string' ? reader.result : '';
+                        if (!result.startsWith('data:image')) {
+                          setError('symbol', { message: t('Invalid image data') });
+                          return;
+                        }
+                        clearErrors('symbol');
+                        setValue('symbol', result, { shouldDirty: true, shouldValidate: true });
+                      };
+                      reader.onerror = () => {
+                        setError('symbol', { message: t('Failed to read image file') });
+                      };
+                      reader.readAsDataURL(file);
+                    }}
+                  />
+                  {isImageSymbol(symbolValue) ? (
+                    <img
+                      src={symbolValue}
+                      alt={t('Symbol preview')}
+                      className="h-10 w-10 rounded-full object-cover border border-zinc-300"
+                    />
+                  ) : null}
+                </div>
+              )}
+              <FieldError errors={[errors.symbol]} />
             </Field>
 
             <Field>
