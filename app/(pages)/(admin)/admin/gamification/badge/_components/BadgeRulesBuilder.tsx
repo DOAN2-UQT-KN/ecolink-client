@@ -79,8 +79,7 @@ const LeafConditionRow = memo(function LeafConditionRow({
   onRemove,
 }: LeafRowProps) {
   const { t } = useTranslation();
-  const presets =
-    isRuleTargetId(leaf.target) ? TARGET_FIELD_PRESETS[leaf.target] : [];
+  const presets = isRuleTargetId(leaf.target) ? TARGET_FIELD_PRESETS[leaf.target] : [];
   const datalistId = `badge-rule-field-${path.join('-') || 'root'}`;
 
   return (
@@ -103,7 +102,7 @@ const LeafConditionRow = memo(function LeafConditionRow({
             onValueChange={(v) => onUpdate({ target: v })}
             disabled={disabled}
           >
-            <SelectTrigger className="h-9 text-xs !border-zinc-300 dark:!border-zinc-600">
+            <SelectTrigger className="!h-9 text-xs !border-zinc-300 dark:!border-zinc-600">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -124,7 +123,7 @@ const LeafConditionRow = memo(function LeafConditionRow({
             onValueChange={(v) => onUpdate({ agg: v as AggOp })}
             disabled={disabled}
           >
-            <SelectTrigger className="h-9 text-xs !border-zinc-300 dark:!border-zinc-600">
+            <SelectTrigger className="!h-9 text-xs !border-zinc-300 dark:!border-zinc-600">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -165,7 +164,7 @@ const LeafConditionRow = memo(function LeafConditionRow({
             onValueChange={(v) => onUpdate({ operator: v as CompareOperator })}
             disabled={disabled}
           >
-            <SelectTrigger className="h-9 text-xs !border-zinc-300 dark:!border-zinc-600">
+            <SelectTrigger className="!h-9 text-xs !border-zinc-300 dark:!border-zinc-600">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -266,7 +265,7 @@ const RulesGroupCard = memo(function RulesGroupCard({
             onValueChange={(v) => setGroupOp(v as LogicalOperator)}
             disabled={disabled}
           >
-            <SelectTrigger className="h-8 w-[140px] text-xs !border-zinc-300 dark:!border-zinc-600">
+            <SelectTrigger className="!h-8 w-[140px] text-xs !border-zinc-300 dark:!border-zinc-600">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -349,9 +348,7 @@ const RulesGroupCard = memo(function RulesGroupCard({
           className="h-8 gap-1 text-xs"
           disabled={disabled || !canNestMore}
           onClick={addNested}
-          title={
-            !canNestMore ? t('Maximum nesting depth reached') : t('Add nested group')
-          }
+          title={!canNestMore ? t('Maximum nesting depth reached') : t('Add nested group')}
         >
           <Plus className="size-3.5" />
           {t('Add nested group')}
@@ -403,7 +400,7 @@ export const BadgeRulesBuilder = memo(function BadgeRulesBuilder({
 
   return (
     <div className="space-y-3">
-      <div
+      {/* <div
         className={cn(
           'rounded-md border px-3 py-2',
           isDark ? 'border-zinc-700 bg-zinc-950/50' : 'border-zinc-300 bg-white',
@@ -412,7 +409,7 @@ export const BadgeRulesBuilder = memo(function BadgeRulesBuilder({
         <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
           {t('Badge rules configuration')}
         </h3>
-      </div>
+      </div> */}
 
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <span className="text-muted-foreground">{t('Match')}</span>
@@ -421,7 +418,7 @@ export const BadgeRulesBuilder = memo(function BadgeRulesBuilder({
           onValueChange={(v) => setRootOp(v as LogicalOperator)}
           disabled={disabled}
         >
-          <SelectTrigger className="h-9 w-[148px] text-xs !border-zinc-300 dark:!border-zinc-600">
+          <SelectTrigger className="!h-9 w-[148px] text-xs !border-zinc-300 dark:!border-zinc-600">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -433,9 +430,32 @@ export const BadgeRulesBuilder = memo(function BadgeRulesBuilder({
             </SelectItem>
           </SelectContent>
         </Select>
-        <span className="text-muted-foreground">
-          {t('of the following groups/conditions:')}
-        </span>
+        <span className="text-muted-foreground">{t('of the following groups/conditions:')}</span>
+      </div>
+
+      <div className="flex flex-wrap gap-2 pt-2 border-t border-zinc-200 dark:border-zinc-700">
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          className="h-9 gap-1 text-xs"
+          disabled={disabled}
+          onClick={addTopLevelCondition}
+        >
+          <Plus className="size-3.5" />
+          {t('Add condition')}
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          className="h-9 gap-1 text-xs"
+          disabled={disabled}
+          onClick={addTopLevelGroup}
+        >
+          <Plus className="size-3.5" />
+          {t('Add group')}
+        </Button>
       </div>
 
       <div className="space-y-2">
@@ -474,31 +494,6 @@ export const BadgeRulesBuilder = memo(function BadgeRulesBuilder({
             </div>
           );
         })}
-      </div>
-
-      <div className="flex flex-wrap gap-2 pt-2 border-t border-zinc-200 dark:border-zinc-700">
-        <Button
-          type="button"
-          variant="secondary"
-          size="sm"
-          className="h-9 gap-1 text-xs"
-          disabled={disabled}
-          onClick={addTopLevelCondition}
-        >
-          <Plus className="size-3.5" />
-          {t('Add condition')}
-        </Button>
-        <Button
-          type="button"
-          variant="secondary"
-          size="sm"
-          className="h-9 gap-1 text-xs"
-          disabled={disabled}
-          onClick={addTopLevelGroup}
-        >
-          <Plus className="size-3.5" />
-          {t('Add group')}
-        </Button>
       </div>
     </div>
   );

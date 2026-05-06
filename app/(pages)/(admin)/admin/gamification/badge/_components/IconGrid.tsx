@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/libs/utils';
+import { PlusIcon } from 'lucide-react';
 
 const DEFAULT_ICONS = [
   '🌱',
@@ -24,7 +25,6 @@ const DEFAULT_ICONS = [
   '🚮',
   '🛠️',
   '🤝',
-  '📍',
   '📸',
   '📝',
   '🔍',
@@ -88,7 +88,7 @@ export function IconGrid({ value, onChange, disabled = false }: IconGridProps) {
   return (
     <div className="flex flex-col gap-4">
       <div
-        className="grid grid-cols-6 gap-2 sm:grid-cols-7 md:grid-cols-8"
+        className="grid grid-cols-6 gap-2 sm:grid-cols-7 md:grid-cols-12"
         role="listbox"
         aria-label={t('Badge icon picker')}
       >
@@ -143,7 +143,8 @@ export function IconGrid({ value, onChange, disabled = false }: IconGridProps) {
           disabled={disabled || !canAdd}
           onClick={handleAddCustom}
         >
-          {t('Add Icon')}
+          {/* {t('Add')} */}
+          <PlusIcon className="size-4" />
         </Button>
       </div>
     </div>

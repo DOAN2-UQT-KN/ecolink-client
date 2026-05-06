@@ -366,7 +366,7 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
                   <Input
                     type="file"
                     accept={SYMBOL_IMAGE_ACCEPT}
-                    className="h-10 !border !border-zinc-300 file:mr-3 file:rounded-md file:border-0 file:bg-zinc-100 file:px-3 file:py-1.5 file:text-sm"
+                    className="h-10 !border !border-transparent bg-white file:mr-3 file:rounded-md file:border-0 file:bg-zinc-100 file:px-3 file:py-1.5 file:text-sm"
                     disabled={busy}
                     onChange={handleSymbolFileChange}
                   />
