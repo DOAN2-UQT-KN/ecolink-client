@@ -4,7 +4,8 @@ export type CompareOperator = 'gt' | 'gte' | 'lt' | 'lte' | 'eq' | 'neq';
 
 export interface RuleLeaf {
   target: string;
-  agg: AggOp;
+  /** Empty string = unset in UI; API payload coerces to COUNT. */
+  agg: AggOp | '';
   field: string;
   operator: CompareOperator;
   value: number;
@@ -14,33 +15,6 @@ export interface RuleGroup {
   logical_operator: LogicalOperator;
   conditions: Array<RuleLeaf | RuleGroup>;
 }
-
-export const RULE_TARGETS = [
-  'orders',
-  'reviews',
-  'reports',
-  'votes',
-  'user_point_transactions',
-] as const;
-
-export type RuleTargetId = (typeof RULE_TARGETS)[number];
-
-export const TARGET_LABEL: Record<RuleTargetId, string> = {
-  orders: 'Orders',
-  reviews: 'Reviews',
-  reports: 'Reports',
-  votes: 'Votes',
-  user_point_transactions: 'Point ledger',
-};
-
-/** Suggested Prisma field names per target (admin may type others). */
-export const TARGET_FIELD_PRESETS: Record<RuleTargetId, string[]> = {
-  orders: ['id', 'totalAmount', 'total_amount'],
-  reviews: ['id'],
-  reports: ['id'],
-  votes: ['id'],
-  user_point_transactions: ['id', 'amount'],
-};
 
 export const AGG_OPTIONS: { value: AggOp; label: string }[] = [
   { value: 'COUNT', label: 'COUNT' },
@@ -64,9 +38,9 @@ export function emptyRoot(): RuleGroup {
 
 export function defaultLeaf(): RuleLeaf {
   return {
-    target: 'orders',
-    agg: 'COUNT',
-    field: 'id',
+    target: '',
+    agg: '',
+    field: '',
     operator: 'gt',
     value: 0,
   };
@@ -84,18 +58,22 @@ function normalizeCompareOp(v: unknown): CompareOperator {
   return 'gte';
 }
 
+function normalizeAgg(v: unknown): AggOp | '' {
+  const s = typeof v === 'string' ? v.trim().toUpperCase() : '';
+  if (s === 'SUM') return 'SUM';
+  if (s === 'COUNT') return 'COUNT';
+  return '';
+}
+
 function normalizeLeaf(node: Record<string, unknown>): RuleLeaf {
-  const agg: AggOp = node.agg === 'SUM' ? 'SUM' : 'COUNT';
+  const agg = normalizeAgg(node.agg);
   const operator = normalizeCompareOp(node.operator);
   const value =
     typeof node.value === 'number' && Number.isFinite(node.value)
       ? node.value
       : Number(node.value) || 0;
-  const rawTarget = typeof node.target === 'string' ? node.target : 'orders';
-  const target = RULE_TARGETS.includes(rawTarget as RuleTargetId)
-    ? rawTarget
-    : rawTarget;
-  const field = typeof node.field === 'string' ? node.field : 'id';
+  const target = typeof node.target === 'string' ? node.target : '';
+  const field = typeof node.field === 'string' ? node.field : '';
   return { target, agg, field, operator, value };
 }
 
@@ -121,11 +99,31 @@ export function normalizeRuleGroup(raw: unknown): RuleGroup {
   return { logical_operator, conditions };
 }
 
-function serializeGroup(g: RuleGroup): Record<string, unknown> {
+function serializeLeaf(node: RuleLeaf, forApi: boolean): Record<string, unknown> {
+  const aggForApi: AggOp = node.agg === 'SUM' ? 'SUM' : 'COUNT';
+  if (forApi) {
+    return {
+      target: node.target,
+      agg: aggForApi,
+      field: node.field,
+      operator: node.operator,
+      value: node.value,
+    };
+  }
+  return {
+    target: node.target,
+    agg: node.agg,
+    field: node.field,
+    operator: node.operator,
+    value: node.value,
+  };
+}
+
+function serializeGroup(g: RuleGroup, forApi: boolean): Record<string, unknown> {
   return {
     logical_operator: g.logical_operator,
     conditions: g.conditions.map((c) =>
-      'conditions' in c ? serializeGroup(c as RuleGroup) : { ...(c as RuleLeaf) },
+      'conditions' in c ? serializeGroup(c as RuleGroup, forApi) : serializeLeaf(c as RuleLeaf, forApi),
     ),
   };
 }
@@ -150,14 +148,14 @@ export function pruneRuleTree(group: RuleGroup): RuleGroup | null {
 
 /** Serialize live editor state (keeps empty groups). */
 export function serializeRuleTreeLive(root: RuleGroup): Record<string, unknown> {
-  return serializeGroup(root);
+  return serializeGroup(root, false);
 }
 
 /** Payload for API; null when no conditions (same as legacy “no rules”). */
 export function rulesPayloadFromRoot(root: RuleGroup): Record<string, unknown> | null {
   const pruned = pruneRuleTree(root);
   if (!pruned) return null;
-  return serializeGroup(pruned);
+  return serializeGroup(pruned, true);
 }
 
 /** Normalize stored JSON and prune empty groups for PATCH/POST. */
@@ -275,8 +273,4 @@ export function updateLeafAt(
   if (!node || 'conditions' in node) return root;
   Object.assign(node as RuleLeaf, patch);
   return copy;
-}
-
-export function isRuleTargetId(s: string): s is RuleTargetId {
-  return (RULE_TARGETS as readonly string[]).includes(s);
 }

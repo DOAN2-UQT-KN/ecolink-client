@@ -4,6 +4,8 @@ import { memo, useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { GripVertical, Plus, Trash2, X } from 'lucide-react';
 
+import SelectListMetricColumns from '@/components/form/SelectListMetricColumns';
+import SelectListMetricTables from '@/components/form/SelectListMetricTables';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -24,16 +26,11 @@ import {
   maxBranchGroupDepth,
   type RuleGroup,
   type RuleLeaf,
-  RULE_TARGETS,
   OPERATOR_OPTIONS,
-  type RuleTargetId,
-  TARGET_FIELD_PRESETS,
-  TARGET_LABEL,
   addLeafAt,
   addNestedGroupAt,
   addRootGroup,
   addRootLeaf,
-  isRuleTargetId,
   normalizeRuleGroup,
   removeConditionAt,
   serializeRuleTreeLive,
@@ -41,6 +38,9 @@ import {
   updateLeafAt,
   updateRootOperator,
 } from '../_services/badgeRulesAst';
+
+/** Radix Select requires non-empty values for optional Agg placeholder. */
+const AGG_SENTINEL = '__badge_rule_agg_none__';
 
 export interface BadgeRulesBuilderProps {
   value: Record<string, unknown> | null;
@@ -79,8 +79,6 @@ const LeafConditionRow = memo(function LeafConditionRow({
   onRemove,
 }: LeafRowProps) {
   const { t } = useTranslation();
-  const presets = isRuleTargetId(leaf.target) ? TARGET_FIELD_PRESETS[leaf.target] : [];
-  const datalistId = `badge-rule-field-${path.join('-') || 'root'}`;
 
   return (
     <div
@@ -97,36 +95,32 @@ const LeafConditionRow = memo(function LeafConditionRow({
           <span className="mb-1 block text-[10px] font-medium uppercase text-muted-foreground">
             {t('Table')}
           </span>
-          <Select
+          <SelectListMetricTables
             value={leaf.target}
-            onValueChange={(v) => onUpdate({ target: v })}
+            onChange={(tableKey) => onUpdate({ target: tableKey, field: '' })}
             disabled={disabled}
-          >
-            <SelectTrigger className="!h-9 text-xs !border-zinc-300 dark:!border-zinc-600">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {RULE_TARGETS.map((id) => (
-                <SelectItem key={id} value={id} className="text-xs">
-                  {t(TARGET_LABEL[id])}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          />
         </div>
         <div className="sm:col-span-1">
           <span className="mb-1 block text-[10px] font-medium uppercase text-muted-foreground">
             {t('Agg')}
           </span>
           <Select
-            value={leaf.agg}
-            onValueChange={(v) => onUpdate({ agg: v as AggOp })}
+            value={leaf.agg === '' ? AGG_SENTINEL : leaf.agg}
+            onValueChange={(v) =>
+              onUpdate({
+                agg: v === AGG_SENTINEL ? '' : (v as AggOp),
+              })
+            }
             disabled={disabled}
           >
             <SelectTrigger className="!h-9 text-xs !border-zinc-300 dark:!border-zinc-600">
-              <SelectValue />
+              <SelectValue placeholder={t('Optional')} />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value={AGG_SENTINEL} className="text-xs text-muted-foreground">
+                {t('Optional')}
+              </SelectItem>
               {AGG_OPTIONS.map((o) => (
                 <SelectItem key={o.value} value={o.value} className="text-xs">
                   {o.label}
@@ -139,21 +133,12 @@ const LeafConditionRow = memo(function LeafConditionRow({
           <span className="mb-1 block text-[10px] font-medium uppercase text-muted-foreground">
             {t('Field')}
           </span>
-          <Input
-            className="h-9 font-mono text-xs !border-zinc-300 dark:!border-zinc-600"
+          <SelectListMetricColumns
+            tableKey={leaf.target}
             value={leaf.field}
-            onChange={(e) => onUpdate({ field: e.target.value })}
-            placeholder="id"
+            onChange={(fieldKey) => onUpdate({ field: fieldKey })}
             disabled={disabled}
-            list={presets.length > 0 ? datalistId : undefined}
           />
-          {presets.length > 0 ? (
-            <datalist id={datalistId}>
-              {presets.map((f) => (
-                <option key={f} value={f} />
-              ))}
-            </datalist>
-          ) : null}
         </div>
         <div className="sm:col-span-1">
           <span className="mb-1 block text-[10px] font-medium uppercase text-muted-foreground">
@@ -365,6 +350,7 @@ export const BadgeRulesBuilder = memo(function BadgeRulesBuilder({
   isDark,
 }: BadgeRulesBuilderProps) {
   const { t } = useTranslation();
+
   const [draft, setDraft] = useState<RuleGroup>(() => normalizeRuleGroup(value ?? null));
 
   useEffect(() => {
