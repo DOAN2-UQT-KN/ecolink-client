@@ -10,19 +10,12 @@ import {
   type DataTableColumn,
 } from '@/components/admin/shared/DataTable';
 import ChangeStatus from '@/components/ui/ChangeStatus';
+import { BADGE_CATEGORY_LABEL, BADGE_SCOPE_LABEL, type BadgeCategory, type BadgeScope } from '@/constants/badge';
 import { STATUS } from '@/constants/status';
 import { cn } from '@/libs/utils';
 import { formattedDate } from '@/utils/formattedDate';
 import { TbPencil } from 'react-icons/tb';
 
-import {
-  BADGE_CATEGORY_LABEL,
-  BADGE_METRIC_LABEL,
-  BADGE_RULE_TYPE_LABEL,
-  type BadgeCategory,
-  type BadgeMetric,
-  type BadgeRuleType,
-} from '@/constants/badge';
 import { useBadgeAdminContext } from '../_hooks/useBadgeAdminContext';
 import { isImageSymbol } from './symbol';
 
@@ -32,10 +25,9 @@ const COLUMN_KEYS = {
   NAME: 'name',
   SYMBOL: 'symbol',
   CATEGORY: 'category',
-  METRIC: 'metric',
-  RULE_TYPE: 'rule_type',
-  THRESHOLD: 'threshold',
-  RANK_TOP_N: 'rank_top_n',
+  SCOPE: 'scope',
+  REPEAT: 'repeat',
+  RULES: 'rules',
   REWARD: 'reward',
   ACTIVE: 'active',
   TIMESTAMPS: 'timestamps',
@@ -73,6 +65,28 @@ function rewardPreview(
   } catch {
     return '—';
   }
+}
+
+function rulesPreview(rules: Record<string, unknown> | null | undefined): string {
+  if (rules == null) return '—';
+  try {
+    const s = JSON.stringify(rules);
+    return s.length > 80 ? `${s.slice(0, 77)}…` : s;
+  } catch {
+    return '—';
+  }
+}
+
+function repeatSummary(row: IAdminBadgeDefinition, t: (key: string) => string): string {
+  const parts: string[] = [];
+  parts.push(row.isRepeatable ? t('Repeatable') : t('Once'));
+  if (row.maxGrantsPerUser != null) {
+    parts.push(`${t('Max')}: ${row.maxGrantsPerUser}`);
+  }
+  if (row.cooldownSeconds > 0) {
+    parts.push(`${t('Cooldown')}: ${row.cooldownSeconds}s`);
+  }
+  return parts.join(' · ');
 }
 
 export function DataTable({ onEdit }: { onEdit: (badge: IAdminBadgeDefinition) => void }) {
@@ -139,31 +153,35 @@ export function DataTable({ onEdit }: { onEdit: (badge: IAdminBadgeDefinition) =
         ),
       },
       {
-        key: COLUMN_KEYS.RULE_TYPE,
-        title: t('Rule type'),
-        className: 'w-[120px]',
+        key: COLUMN_KEYS.SCOPE,
+        title: t('Scope'),
+        className: 'w-[100px]',
         render: (_, row) => (
-          <span>{BADGE_RULE_TYPE_LABEL[row.ruleType as BadgeRuleType] ?? row.ruleType}</span>
+          <span>{BADGE_SCOPE_LABEL[row.scope as BadgeScope] ?? row.scope}</span>
         ),
       },
       {
-        key: COLUMN_KEYS.THRESHOLD,
-        title: t('Threshold'),
-        className: 'w-[100px] tabular-nums',
-        render: (_, row) => <span>{row.threshold == null ? '—' : row.threshold}</span>,
-      },
-      {
-        key: COLUMN_KEYS.RANK_TOP_N,
-        title: t('Rank top N'),
-        className: 'w-[100px] tabular-nums',
-        render: (_, row) => <span>{row.rankTopN == null ? '—' : row.rankTopN}</span>,
-      },
-      {
-        key: COLUMN_KEYS.METRIC,
-        title: t('Metric'),
-        className: 'w-[180px]',
+        key: COLUMN_KEYS.REPEAT,
+        title: t('Repeat'),
+        className: 'min-w-[140px]',
         render: (_, row) => (
-          <span>{BADGE_METRIC_LABEL[row.metric as BadgeMetric] ?? row.metric}</span>
+          <span className="text-sm">{repeatSummary(row, t)}</span>
+        ),
+      },
+      {
+        key: COLUMN_KEYS.RULES,
+        title: t('Rules'),
+        className: 'min-w-[180px] max-w-[240px]',
+        render: (_, row) => (
+          <code
+            className={cn(
+              'block truncate text-xs',
+              isDark ? 'text-zinc-400' : 'text-muted-foreground',
+            )}
+            title={rulesPreview(row.rulesConfig ?? undefined)}
+          >
+            {rulesPreview(row.rulesConfig ?? undefined)}
+          </code>
         ),
       },
       {

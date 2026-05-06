@@ -148,7 +148,7 @@
   "Badge": "Badge",
   "Config": "Config",
   "Gamification season admin placeholder": "Manage seasons, freeze windows, and leaderboard rotations.",
-  "Gamification badge admin placeholder": "Define badge rules, thresholds, and store benefits.",
+  "Gamification badge admin placeholder": "Define badges with JSON rules (scopes, repeat grants), rewards, and store benefits.",
   "Gamification config admin placeholder": "Point rules, multipliers, SP expiry, schedules, and payout tiers.",
   "Badge slug or name...": "Badge slug, name, symbol, or id…",
   "Include deleted definitions": "Include deleted definitions",

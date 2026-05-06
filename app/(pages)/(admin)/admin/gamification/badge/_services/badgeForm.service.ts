@@ -1,11 +1,9 @@
 import type { IAdminBadgeDefinition } from "@/apis/gamification/badges/models";
 import {
   BADGE_CATEGORY_LABEL,
-  BADGE_METRIC_LABEL,
-  BADGE_RULE_TYPE_LABEL,
+  BADGE_SCOPE_LABEL,
   type BadgeCategory,
-  type BadgeMetric,
-  type BadgeRuleType,
+  type BadgeScope,
 } from "@/constants/badge";
 
 export const SYMBOL_IMAGE_ACCEPT = "image/png,image/jpeg,image/jpg,image/webp";
@@ -15,10 +13,11 @@ export type BadgeFormValues = {
   name: string;
   symbol: string;
   category: BadgeCategory;
-  metric: BadgeMetric;
-  ruleType: BadgeRuleType;
-  threshold: string;
-  rankTopN: string;
+  scope: BadgeScope;
+  isRepeatable: boolean;
+  cooldownSeconds: string;
+  maxGrantsPerUser: string;
+  rulesConfigJson: string;
   discountBps: string;
   bonusSp: string;
   isActive: boolean;
@@ -46,11 +45,48 @@ export function parseOptionalNonNegativeInt(raw: string): number | null | "inval
   return n;
 }
 
-export function parseRankTopN(raw: string): number | null | "invalid" {
+export function formatRulesConfigJson(
+  rulesConfig: Record<string, unknown> | null | undefined,
+): string {
+  if (rulesConfig == null) return "";
+  try {
+    return JSON.stringify(rulesConfig, null, 2);
+  } catch {
+    return "";
+  }
+}
+
+export function parseRulesConfigJson(
+  raw: string,
+): { ok: true; value: Record<string, unknown> | null } | { ok: false } {
+  const t = raw.trim();
+  if (!t) return { ok: true, value: null };
+  try {
+    const parsed: unknown = JSON.parse(t);
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+      return { ok: false };
+    }
+    return { ok: true, value: parsed as Record<string, unknown> };
+  } catch {
+    return { ok: false };
+  }
+}
+
+/** Empty string → 0. Must be non‑negative integer. */
+export function parseCooldownSecondsField(raw: string): number | "invalid" {
+  const t = raw.trim();
+  if (!t) return 0;
+  const n = Number(t);
+  if (!Number.isFinite(n) || !Number.isInteger(n) || n < 0) return "invalid";
+  return n;
+}
+
+/** Empty string → null (no cap). Otherwise positive integer. */
+export function parseMaxGrantsPerUserField(raw: string): number | null | "invalid" {
   const t = raw.trim();
   if (!t) return null;
   const n = Number(t);
-  if (!Number.isFinite(n) || !Number.isInteger(n) || n < 1) return "invalid";
+  if (!Number.isFinite(n) || !Number.isInteger(n) || n <= 0) return "invalid";
   return n;
 }
 
@@ -77,10 +113,11 @@ export function defaultValuesFromBadge(
       name: "",
       symbol: "",
       category: "CONTRIBUTION",
-      metric: "CRP",
-      ruleType: "THRESHOLD",
-      threshold: "",
-      rankTopN: "",
+      scope: "SEASON",
+      isRepeatable: false,
+      cooldownSeconds: "0",
+      maxGrantsPerUser: "",
+      rulesConfigJson: "",
       discountBps: "",
       bonusSp: "",
       isActive: true,
@@ -89,20 +126,22 @@ export function defaultValuesFromBadge(
   }
 
   const rf = rewardFieldsFromBadge(badge.reward ?? undefined);
+  const scope =
+    badge.scope in BADGE_SCOPE_LABEL ? (badge.scope as BadgeScope) : "SEASON";
+
   return {
     name: badge.name,
     symbol: badge.symbol ?? "",
     category: (badge.category in BADGE_CATEGORY_LABEL
       ? badge.category
-      : badge.ruleType === "RANK"
-        ? "RANK"
-        : "CONTRIBUTION") as BadgeCategory,
-    metric: (badge.metric in BADGE_METRIC_LABEL ? badge.metric : "CRP") as BadgeMetric,
-    ruleType: (badge.ruleType in BADGE_RULE_TYPE_LABEL
-      ? badge.ruleType
-      : "THRESHOLD") as BadgeRuleType,
-    threshold: badge.threshold != null ? String(badge.threshold) : "",
-    rankTopN: badge.rankTopN != null ? String(badge.rankTopN) : "",
+      : "CONTRIBUTION") as BadgeCategory,
+    scope,
+    isRepeatable: badge.isRepeatable,
+    cooldownSeconds:
+      badge.cooldownSeconds != null ? String(badge.cooldownSeconds) : "0",
+    maxGrantsPerUser:
+      badge.maxGrantsPerUser != null ? String(badge.maxGrantsPerUser) : "",
+    rulesConfigJson: formatRulesConfigJson(badge.rulesConfig ?? undefined),
     discountBps: rf.discountBps,
     bonusSp: rf.bonusSp,
     isActive: badge.isActive,

@@ -1,7 +1,7 @@
 'use client';
 
-import { memo, useCallback, useEffect, useMemo, useState, type ChangeEvent } from 'react';
-import { Controller, useForm, useWatch } from 'react-hook-form';
+import { memo, useCallback, useEffect, useState, type ChangeEvent } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Loader2 } from 'lucide-react';
 
@@ -10,13 +10,10 @@ import { useCreateAdminBadge, usePatchAdminBadge } from '@/apis/gamification/bad
 import {
   BADGE_CATEGORY_KEYS,
   BADGE_CATEGORY_LABEL,
-  BADGE_METRIC_LABEL,
-  BADGE_METRICS_BY_CATEGORY,
-  BADGE_RULE_TYPE_KEYS,
-  BADGE_RULE_TYPE_LABEL,
+  BADGE_SCOPE_KEYS,
+  BADGE_SCOPE_LABEL,
   type BadgeCategory,
-  type BadgeMetric,
-  type BadgeRuleType,
+  type BadgeScope,
 } from '@/constants/badge';
 import { useAdminLayout } from '@/app/(pages)/(admin)/_context/AdminLayoutContext';
 import { uploadToCloudinary } from '@/app/(pages)/(main)/incidents/create/_services/upload.service';
@@ -38,12 +35,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/libs/utils';
 import {
   buildRewardPayload,
   defaultValuesFromBadge,
+  parseCooldownSecondsField,
+  parseMaxGrantsPerUserField,
   parseOptionalNonNegativeInt,
-  parseRankTopN,
+  parseRulesConfigJson,
   SYMBOL_IMAGE_ACCEPT,
   SYMBOL_IMAGE_MAX_SIZE_BYTES,
   type BadgeFormValues,
@@ -59,19 +59,14 @@ export interface CreateUpdateBadgeProps {
   onSuccess: () => void;
 }
 
-type ApiLeaderboardMetric = BadgeMetric;
 type SymbolMode = 'emoji' | 'image';
 
 function isValidBadgeCategory(value: string): value is BadgeCategory {
   return value in BADGE_CATEGORY_LABEL;
 }
 
-function isValidBadgeMetric(value: string): value is BadgeMetric {
-  return value in BADGE_METRIC_LABEL;
-}
-
-function isValidBadgeRuleType(value: string): value is BadgeRuleType {
-  return value in BADGE_RULE_TYPE_LABEL;
+function isValidBadgeScope(value: string): value is BadgeScope {
+  return value in BADGE_SCOPE_LABEL;
 }
 
 export const CreateUpdateBadge = memo(function CreateUpdateBadge({
@@ -101,10 +96,7 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
     formState: { errors },
   } = form;
 
-  const category = useWatch({ control, name: 'category' });
-  const metric = useWatch({ control, name: 'metric' });
-  const ruleType = useWatch({ control, name: 'ruleType' });
-  const symbolValue = useWatch({ control, name: 'symbol' });
+  const symbolValue = form.watch('symbol');
 
   useEffect(() => {
     if (!open) return;
@@ -128,18 +120,6 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
 
   const busy = isCreating || isPatching || form.formState.isSubmitting;
 
-  const metricSelectItems = useMemo(
-    () =>
-      BADGE_METRICS_BY_CATEGORY[category ?? 'CONTRIBUTION'].map((key) => ({
-        value: key,
-        label: BADGE_METRIC_LABEL[key],
-      })),
-    [category],
-  );
-
-  const showThresholdInput = ruleType === 'THRESHOLD';
-  const showRankTopNInput = ruleType === 'RANK';
-
   const handleSymbolModeChange = useCallback(
     (nextMode: SymbolMode) => {
       if (symbolMode === nextMode) return;
@@ -147,36 +127,6 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
       setValue('symbol', '', { shouldDirty: true, shouldValidate: true });
     },
     [setValue, symbolMode],
-  );
-
-  const handleCategoryChange = useCallback(
-    (value: string, onChange: (value: BadgeCategory) => void) => {
-      const nextCategory = value as BadgeCategory;
-      onChange(nextCategory);
-      const allowed = BADGE_METRICS_BY_CATEGORY[nextCategory];
-      if (!allowed.includes(metric)) {
-        setValue('metric', allowed[0], { shouldDirty: true, shouldValidate: true });
-      }
-      if (nextCategory === 'RANK') {
-        setValue('ruleType', 'RANK', { shouldDirty: true, shouldValidate: true });
-        setValue('threshold', '');
-      }
-    },
-    [metric, setValue],
-  );
-
-  const handleRuleTypeChange = useCallback(
-    (value: string, onChange: (value: BadgeRuleType) => void) => {
-      const nextRuleType = value as BadgeRuleType;
-      if (category === 'RANK' && nextRuleType !== 'RANK') return;
-      onChange(nextRuleType);
-      if (nextRuleType === 'THRESHOLD') {
-        setValue('rankTopN', '');
-      } else {
-        setValue('threshold', '');
-      }
-    },
-    [category, setValue],
   );
 
   const handleSymbolFileChange = useCallback(
@@ -201,7 +151,7 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
           setError('symbol', { message: t('Invalid image data') });
           return;
         }
-        clearErrors('symbol');
+        form.clearErrors('symbol');
         setValue('symbol', result, { shouldDirty: true, shouldValidate: true });
       };
       reader.onerror = () => {
@@ -209,7 +159,7 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
       };
       reader.readAsDataURL(file);
     },
-    [clearErrors, setError, setValue, t],
+    [form, setError, setValue, t],
   );
 
   const onValidSubmit = useCallback(
@@ -217,12 +167,12 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
       clearErrors([
         'symbol',
         'category',
-        'metric',
-        'ruleType',
+        'scope',
+        'rulesConfigJson',
         'discountBps',
         'bonusSp',
-        'threshold',
-        'rankTopN',
+        'cooldownSeconds',
+        'maxGrantsPerUser',
       ]);
 
       if (!data.symbol.trim()) {
@@ -259,59 +209,33 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
         setError('category', { message: t('Category is required') });
         return;
       }
-      if (!isValidBadgeMetric(data.metric)) {
-        setError('metric', { message: t('Metric is required') });
-        return;
-      }
-      if (!isValidBadgeRuleType(data.ruleType)) {
-        setError('ruleType', { message: t('Rule type is required') });
+      if (!isValidBadgeScope(data.scope)) {
+        setError('scope', { message: t('Scope is required') });
         return;
       }
 
-      const allowedMetrics = BADGE_METRICS_BY_CATEGORY[data.category];
-      if (!allowedMetrics.includes(data.metric)) {
-        setError('metric', { message: t('Metric does not match category') });
+      const cooldownParsed = parseCooldownSecondsField(data.cooldownSeconds);
+      if (cooldownParsed === 'invalid') {
+        setError('cooldownSeconds', {
+          message: t('Cooldown must be a non‑negative whole number of seconds'),
+        });
         return;
       }
 
-      if (data.category === 'RANK' && data.ruleType !== 'RANK') {
-        setError('ruleType', { message: t('Ranking category must use Top Ranking rule') });
+      const maxGrantsParsed = parseMaxGrantsPerUserField(data.maxGrantsPerUser);
+      if (maxGrantsParsed === 'invalid') {
+        setError('maxGrantsPerUser', {
+          message: t('Max grants must be empty or a positive whole number'),
+        });
         return;
       }
 
-      let threshold: number | null = null;
-      let rankTopN: number | null = null;
-
-      if (data.ruleType === 'THRESHOLD') {
-        const th = parseOptionalNonNegativeInt(data.threshold);
-        if (th === 'invalid') {
-          setError('threshold', { message: t('Invalid number') });
-          return;
-        }
-        if (th === null) {
-          setError('threshold', { message: t('Threshold is required') });
-          return;
-        }
-        threshold = th;
-        if (data.rankTopN.trim().length > 0) {
-          setError('rankTopN', { message: t('Rank top N must be empty for threshold rule') });
-          return;
-        }
-      } else {
-        const rn = parseRankTopN(data.rankTopN);
-        if (rn === 'invalid') {
-          setError('rankTopN', { message: t('Invalid number') });
-          return;
-        }
-        if (rn === null) {
-          setError('rankTopN', { message: t('Rank top N is required') });
-          return;
-        }
-        rankTopN = rn;
-        if (data.threshold.trim().length > 0) {
-          setError('threshold', { message: t('Threshold must be empty for Top Ranking rule') });
-          return;
-        }
+      const rulesParsed = parseRulesConfigJson(data.rulesConfigJson);
+      if (!rulesParsed.ok) {
+        setError('rulesConfigJson', {
+          message: t('Rules must be valid JSON object (logical_operator + conditions)'),
+        });
+        return;
       }
 
       try {
@@ -319,12 +243,13 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
           await createMutate({
             name: data.name.trim(),
             category: data.category,
-            ruleType: data.ruleType,
-            metric: data.metric as ApiLeaderboardMetric,
+            scope: data.scope,
+            isRepeatable: data.isRepeatable,
+            cooldownSeconds: cooldownParsed,
+            maxGrantsPerUser: maxGrantsParsed,
+            rulesConfig: rulesParsed.value ?? undefined,
             isActive: true,
             symbol: resolvedSymbol || null,
-            threshold,
-            rankTopN,
             reward: rewardParsed.value,
             ...(data.publishNow ? { publishedAt: new Date().toISOString() } : {}),
           });
@@ -336,11 +261,12 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
           body: {
             name: data.name.trim(),
             category: data.category,
-            ruleType: data.ruleType,
-            metric: data.metric as ApiLeaderboardMetric,
+            scope: data.scope,
+            isRepeatable: data.isRepeatable,
+            cooldownSeconds: cooldownParsed,
+            maxGrantsPerUser: maxGrantsParsed,
+            rulesConfig: rulesParsed.value,
             symbol: resolvedSymbol || null,
-            threshold,
-            rankTopN,
             reward: rewardParsed.value,
             isActive: data.isActive,
           },
@@ -475,7 +401,7 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
                 render={({ field }) => (
                   <Select
                     value={field.value}
-                    onValueChange={(value) => handleCategoryChange(value, field.onChange)}
+                    onValueChange={(value) => field.onChange(value as BadgeCategory)}
                     disabled={busy}
                   >
                     <SelectTrigger className="!h-10 !border !border-zinc-300">
@@ -496,101 +422,103 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
 
             <Field>
               <FieldLabel>
-                {t('Metric')} <span className="text-destructive">*</span>
+                {t('Scope')} <span className="text-destructive">*</span>
               </FieldLabel>
               <Controller
                 control={control}
-                name="metric"
+                name="scope"
                 rules={{ required: true }}
                 render={({ field }) => (
                   <Select
                     value={field.value}
-                    onValueChange={(v) => {
-                      field.onChange(v as BadgeMetric);
-                      setValue('threshold', '');
-                      setValue('rankTopN', '');
-                    }}
+                    onValueChange={(value) => field.onChange(value as BadgeScope)}
                     disabled={busy}
                   >
                     <SelectTrigger className="!h-10 !border !border-zinc-300">
-                      <SelectValue placeholder={t('Metric')} />
+                      <SelectValue placeholder={t('Scope')} />
                     </SelectTrigger>
                     <SelectContent>
-                      {metricSelectItems.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
+                      {BADGE_SCOPE_KEYS.map((key) => (
+                        <SelectItem key={key} value={key}>
+                          {BADGE_SCOPE_LABEL[key]}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 )}
               />
-              <FieldError errors={[errors.metric]} />
+              <FieldError errors={[errors.scope]} />
+              <p className="mt-1 text-xs text-muted-foreground">
+                {t(
+                  'Season badges evaluate metrics within the active season window; lifetime badges use all‑time data.',
+                )}
+              </p>
             </Field>
 
             <Field>
-              <FieldLabel>
-                {t('Rule type')} <span className="text-destructive">*</span>
-              </FieldLabel>
-              <Controller
-                control={control}
-                name="ruleType"
-                rules={{ required: true }}
-                render={({ field }) => (
-                  <Select
-                    value={field.value}
-                    onValueChange={(value) => handleRuleTypeChange(value, field.onChange)}
-                    disabled={busy}
-                  >
-                    <SelectTrigger className="!h-10 !border !border-zinc-300">
-                      <SelectValue placeholder={t('Rule type')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {BADGE_RULE_TYPE_KEYS.map((key) => (
-                        <SelectItem
-                          key={key}
-                          value={key}
-                          disabled={category === 'RANK' && key !== 'RANK'}
-                        >
-                          {BADGE_RULE_TYPE_LABEL[key]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              <FieldError errors={[errors.ruleType]} />
+              <label className="flex cursor-pointer items-center gap-2 pt-1">
+                <Controller
+                  control={control}
+                  name="isRepeatable"
+                  render={({ field }) => (
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={(c) => field.onChange(c === true)}
+                      disabled={busy}
+                    />
+                  )}
+                />
+                <span className="text-sm">{t('Repeatable badge (multiple grants per user)')}</span>
+              </label>
             </Field>
 
-            {showThresholdInput ? (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Field>
-                <FieldLabel>{t('Threshold')}</FieldLabel>
+                <FieldLabel>{t('Cooldown (seconds)')}</FieldLabel>
                 <Input
                   type="number"
                   min={0}
-                  {...register('threshold')}
-                  placeholder={t('Minimum points')}
+                  {...register('cooldownSeconds')}
+                  placeholder="0"
                   className="h-10 !border !border-zinc-300"
                   disabled={busy}
                 />
-                <FieldError errors={[errors.threshold]} />
+                <FieldError errors={[errors.cooldownSeconds]} />
               </Field>
-            ) : null}
-
-            {showRankTopNInput ? (
               <Field>
-                <FieldLabel>{t('Rank top N')}</FieldLabel>
+                <FieldLabel>{t('Max grants per user')}</FieldLabel>
                 <Input
                   type="number"
                   min={1}
-                  {...register('rankTopN')}
-                  placeholder={t('Top N rank')}
+                  {...register('maxGrantsPerUser')}
+                  placeholder={t('Empty = no cap')}
                   className="h-10 !border !border-zinc-300"
                   disabled={busy}
                 />
-                <FieldError errors={[errors.rankTopN]} />
+                <FieldError errors={[errors.maxGrantsPerUser]} />
               </Field>
-            ) : null}
+            </div>
+
+            <Field>
+              <FieldLabel>{t('Rules (JSON)')}</FieldLabel>
+              <Textarea
+                {...register('rulesConfigJson')}
+                rows={12}
+                spellCheck={false}
+                className={cn(
+                  'font-mono text-xs',
+                  isDark ? 'border-zinc-700 bg-zinc-950' : 'border-zinc-300 bg-white',
+                )}
+                placeholder={`{\n  "logical_operator": "AND",\n  "conditions": [\n    {\n      "target": "user_point_transactions",\n      "agg": "COUNT",\n      "field": "id",\n      "operator": "gte",\n      "value": 10\n    }\n  ]\n}`}
+                disabled={busy}
+              />
+              <FieldError errors={[errors.rulesConfigJson]} />
+              <p className="mt-1 text-xs text-muted-foreground">
+                {t(
+                  'AST with logical_operator AND/OR and leaf conditions (target, agg, field, operator, value). Leave empty to clear rules on save.',
+                )}
+              </p>
+            </Field>
 
             <Field>
               <FieldLabel>{t('Reward')}</FieldLabel>

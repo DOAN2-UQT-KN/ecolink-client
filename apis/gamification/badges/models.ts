@@ -6,10 +6,11 @@ export interface IBadgeDefinition {
   name: string;
   symbol?: string | null;
   category: string;
-  ruleType: string;
-  metric: string;
-  threshold: number | null;
-  rankTopN: number | null;
+  scope: string;
+  isRepeatable: boolean;
+  maxGrantsPerUser: number | null;
+  cooldownSeconds: number;
+  rulesConfig?: Record<string, unknown> | null;
   reward?: Record<string, unknown> | null;
 }
 
@@ -31,7 +32,7 @@ export interface IGamificationBadgeGrant {
     label: string | null;
     kind: string;
     status: string;
-  };
+  } | null;
   badge: IBadgeDefinition;
 }
 
@@ -48,10 +49,11 @@ export interface ICreateAdminBadgeBody {
   name: string;
   symbol?: string | null;
   category: string;
-  ruleType: string;
-  metric: string;
-  threshold?: number | null;
-  rankTopN?: number | null;
+  scope?: string;
+  isRepeatable?: boolean;
+  maxGrantsPerUser?: number | null;
+  cooldownSeconds?: number;
+  rulesConfig?: Record<string, unknown> | null;
   reward?: Record<string, unknown> | null;
   isActive?: boolean;
   publishedAt?: string | null;
@@ -61,10 +63,11 @@ export interface IPatchAdminBadgeBody {
   name?: string;
   symbol?: string | null;
   category?: string;
-  ruleType?: string;
-  metric?: string;
-  threshold?: number | null;
-  rankTopN?: number | null;
+  scope?: string;
+  isRepeatable?: boolean;
+  maxGrantsPerUser?: number | null;
+  cooldownSeconds?: number;
+  rulesConfig?: Record<string, unknown> | null;
   reward?: Record<string, unknown> | null;
   isActive?: boolean;
   deletedAt?: string | null;
