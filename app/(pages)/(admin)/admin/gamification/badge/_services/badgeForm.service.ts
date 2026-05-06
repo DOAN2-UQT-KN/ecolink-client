@@ -17,7 +17,8 @@ export type BadgeFormValues = {
   isRepeatable: boolean;
   cooldownSeconds: string;
   maxGrantsPerUser: string;
-  rulesConfigJson: string;
+  /** Built by BadgeRulesBuilder; null = no rules saved. */
+  rulesConfig: Record<string, unknown> | null;
   discountBps: string;
   bonusSp: string;
   isActive: boolean;
@@ -43,33 +44,6 @@ export function parseOptionalNonNegativeInt(raw: string): number | null | "inval
   const n = Number(t);
   if (!Number.isFinite(n) || !Number.isInteger(n) || n < 0) return "invalid";
   return n;
-}
-
-export function formatRulesConfigJson(
-  rulesConfig: Record<string, unknown> | null | undefined,
-): string {
-  if (rulesConfig == null) return "";
-  try {
-    return JSON.stringify(rulesConfig, null, 2);
-  } catch {
-    return "";
-  }
-}
-
-export function parseRulesConfigJson(
-  raw: string,
-): { ok: true; value: Record<string, unknown> | null } | { ok: false } {
-  const t = raw.trim();
-  if (!t) return { ok: true, value: null };
-  try {
-    const parsed: unknown = JSON.parse(t);
-    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-      return { ok: false };
-    }
-    return { ok: true, value: parsed as Record<string, unknown> };
-  } catch {
-    return { ok: false };
-  }
 }
 
 /** Empty string → 0. Must be non‑negative integer. */
@@ -117,7 +91,7 @@ export function defaultValuesFromBadge(
       isRepeatable: false,
       cooldownSeconds: "0",
       maxGrantsPerUser: "",
-      rulesConfigJson: "",
+      rulesConfig: null,
       discountBps: "",
       bonusSp: "",
       isActive: true,
@@ -141,7 +115,7 @@ export function defaultValuesFromBadge(
       badge.cooldownSeconds != null ? String(badge.cooldownSeconds) : "0",
     maxGrantsPerUser:
       badge.maxGrantsPerUser != null ? String(badge.maxGrantsPerUser) : "",
-    rulesConfigJson: formatRulesConfigJson(badge.rulesConfig ?? undefined),
+    rulesConfig: badge.rulesConfig ?? null,
     discountBps: rf.discountBps,
     bonusSp: rf.bonusSp,
     isActive: badge.isActive,

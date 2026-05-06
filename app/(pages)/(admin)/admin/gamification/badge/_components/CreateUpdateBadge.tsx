@@ -35,7 +35,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/libs/utils';
 import {
   buildRewardPayload,
@@ -43,12 +42,13 @@ import {
   parseCooldownSecondsField,
   parseMaxGrantsPerUserField,
   parseOptionalNonNegativeInt,
-  parseRulesConfigJson,
   SYMBOL_IMAGE_ACCEPT,
   SYMBOL_IMAGE_MAX_SIZE_BYTES,
   type BadgeFormValues,
 } from '../_services/badgeForm.service';
+import { ruleTreeToApiPayload } from '../_services/badgeRulesAst';
 
+import { BadgeRulesBuilder } from './BadgeRulesBuilder';
 import { IconGrid } from './IconGrid';
 import { isImageSymbol } from './symbol';
 
@@ -168,7 +168,7 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
         'symbol',
         'category',
         'scope',
-        'rulesConfigJson',
+        'rulesConfig',
         'discountBps',
         'bonusSp',
         'cooldownSeconds',
@@ -230,14 +230,6 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
         return;
       }
 
-      const rulesParsed = parseRulesConfigJson(data.rulesConfigJson);
-      if (!rulesParsed.ok) {
-        setError('rulesConfigJson', {
-          message: t('Rules must be valid JSON object (logical_operator + conditions)'),
-        });
-        return;
-      }
-
       try {
         if (isCreate) {
           await createMutate({
@@ -247,7 +239,7 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
             isRepeatable: data.isRepeatable,
             cooldownSeconds: cooldownParsed,
             maxGrantsPerUser: maxGrantsParsed,
-            rulesConfig: rulesParsed.value ?? undefined,
+            rulesConfig: ruleTreeToApiPayload(data.rulesConfig) ?? undefined,
             isActive: true,
             symbol: resolvedSymbol || null,
             reward: rewardParsed.value,
@@ -265,7 +257,7 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
             isRepeatable: data.isRepeatable,
             cooldownSeconds: cooldownParsed,
             maxGrantsPerUser: maxGrantsParsed,
-            rulesConfig: rulesParsed.value,
+            rulesConfig: ruleTreeToApiPayload(data.rulesConfig),
             symbol: resolvedSymbol || null,
             reward: rewardParsed.value,
             isActive: data.isActive,
@@ -288,7 +280,7 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
       <DialogContent
         showCloseButton
         className={cn(
-          'max-h-[90vh] max-w-lg gap-4 overflow-y-auto sm:max-w-xl scrollbar-hide',
+          'max-h-[90vh] max-w-lg gap-4 overflow-y-auto sm:max-w-4xl scrollbar-hide',
           isDark ? 'bg-zinc-900 text-zinc-100' : 'bg-zinc-50 text-zinc-900',
         )}
         onPointerDownOutside={(e) => {
@@ -500,24 +492,20 @@ export const CreateUpdateBadge = memo(function CreateUpdateBadge({
             </div>
 
             <Field>
-              <FieldLabel>{t('Rules (JSON)')}</FieldLabel>
-              <Textarea
-                {...register('rulesConfigJson')}
-                rows={12}
-                spellCheck={false}
-                className={cn(
-                  'font-mono text-xs',
-                  isDark ? 'border-zinc-700 bg-zinc-950' : 'border-zinc-300 bg-white',
+              <FieldLabel>{t('Badge rules')}</FieldLabel>
+              <Controller
+                control={control}
+                name="rulesConfig"
+                render={({ field }) => (
+                  <BadgeRulesBuilder
+                    value={field.value}
+                    onChange={field.onChange}
+                    disabled={busy}
+                    isDark={isDark}
+                  />
                 )}
-                placeholder={`{\n  "logical_operator": "AND",\n  "conditions": [\n    {\n      "target": "user_point_transactions",\n      "agg": "COUNT",\n      "field": "id",\n      "operator": "gte",\n      "value": 10\n    }\n  ]\n}`}
-                disabled={busy}
               />
-              <FieldError errors={[errors.rulesConfigJson]} />
-              <p className="mt-1 text-xs text-muted-foreground">
-                {t(
-                  'AST with logical_operator AND/OR and leaf conditions (target, agg, field, operator, value). Leave empty to clear rules on save.',
-                )}
-              </p>
+              <FieldError errors={[errors.rulesConfig]} />
             </Field>
 
             <Field>
