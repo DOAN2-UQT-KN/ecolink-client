@@ -12,10 +12,19 @@ import {
 } from '@/components/ui/dialog';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { PAYOUT_METRIC_OPTIONS } from '@/constants/gamification';
 import { useTranslation } from 'react-i18next';
 import { useConfigContext } from '../_hooks/useConfigContext';
 import type { PayoutTierItem } from '../_services/config.service';
 import { DataTable } from './DataTable';
+import { HiPlusCircle } from 'react-icons/hi2';
 
 export function LeaderboardPayoutTab() {
   const { t } = useTranslation();
@@ -23,10 +32,10 @@ export function LeaderboardPayoutTab() {
   const [editing, setEditing] = useState<PayoutTierItem | null>(null);
   const [creating, setCreating] = useState(false);
   const form = useForm<PayoutTierItem>({
-    values: editing ?? { id: '', rankMin: 1, rankMax: 1, spAmount: 0 },
+    values: editing ?? { id: '', metric: 'CRP', rankMin: 1, rankMax: 1, spAmount: 0 },
   });
   const createForm = useForm<Omit<PayoutTierItem, 'id'>>({
-    defaultValues: { rankMin: 1, rankMax: 1, spAmount: 0 },
+    defaultValues: { metric: 'CRP', rankMin: 1, rankMax: 1, spAmount: 0 },
   });
 
   const hasOverlap = (values: { rankMin: number; rankMax: number }, id?: string) => {
@@ -39,8 +48,15 @@ export function LeaderboardPayoutTab() {
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <Button type="button" onClick={() => setCreating(true)}>
-          {t('Create tier')}
+        <Button
+          type="button"
+          onClick={() => setCreating(true)}
+          className="!h-[45px] cursor-pointer px-4"
+        >
+          <div className="flex items-center gap-2">
+            <HiPlusCircle className="size-5" />
+            {t('Create tier')}
+          </div>
         </Button>
       </div>
       <DataTable
@@ -68,6 +84,24 @@ export function LeaderboardPayoutTab() {
               setEditing(null);
             })}
           >
+            <Field>
+              <FieldLabel>{t('Metric')}</FieldLabel>
+              <Select
+                value={form.watch('metric')}
+                onValueChange={(value) => form.setValue('metric', value as PayoutTierItem['metric'])}
+              >
+                <SelectTrigger className="!h-10 !border !border-zinc-300">
+                  <SelectValue placeholder={t('Select metric')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAYOUT_METRIC_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {t(option.label)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
             <Field>
               <FieldLabel>{t('Rank min')}</FieldLabel>
               <Input
@@ -118,6 +152,26 @@ export function LeaderboardPayoutTab() {
               setCreating(false);
             })}
           >
+            <Field>
+              <FieldLabel>{t('Metric')}</FieldLabel>
+              <Select
+                value={createForm.watch('metric')}
+                onValueChange={(value) =>
+                  createForm.setValue('metric', value as Omit<PayoutTierItem, 'id'>['metric'])
+                }
+              >
+                <SelectTrigger className="!h-10 !border !border-zinc-300">
+                  <SelectValue placeholder={t('Select metric')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAYOUT_METRIC_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {t(option.label)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
             <Field>
               <FieldLabel>{t('Rank min')}</FieldLabel>
               <Input

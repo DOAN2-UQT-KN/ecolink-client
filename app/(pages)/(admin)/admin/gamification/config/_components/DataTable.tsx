@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { DataTable as SharedDataTable, type DataTableColumn } from "@/components/admin/shared/DataTable";
 import { useTranslation } from "react-i18next";
+import { TbPencil, TbTrash } from "react-icons/tb";
 import type {
   ConfigTabKey,
   DifficultyItem,
@@ -56,14 +57,15 @@ export function DataTable({
         {
           key: "action",
           title: t("Action"),
-          className: "w-[120px]",
+          className: "w-[90px]",
           render: (_, row) => (
             <button
               type="button"
-              className="rounded-md border border-zinc-300 px-3 py-1 text-xs hover:bg-zinc-100"
+              className="rounded-md border border-zinc-300 px-1.5 py-1.5 text-xs transition-colors cursor-pointer duration-200 hover:bg-zinc-100 hover:text-blue-700"
+              aria-label={t("Edit")}
               onClick={() => onEdit?.(row)}
             >
-              {t("Edit")}
+              <TbPencil className="size-5" />
             </button>
           ),
         },
@@ -77,14 +79,15 @@ export function DataTable({
         {
           key: "action",
           title: t("Action"),
-          className: "w-[120px]",
+          className: "w-[90px]",
           render: (_, row) => (
             <button
               type="button"
-              className="rounded-md border border-zinc-300 px-3 py-1 text-xs hover:bg-zinc-100"
+              className="rounded-md border border-zinc-300 px-1.5 py-1.5 text-xs transition-colors cursor-pointer duration-200 hover:bg-zinc-100 hover:text-blue-700"
+              aria-label={t("Edit")}
               onClick={() => onEdit?.(row)}
             >
-              {t("Edit")}
+              <TbPencil className="size-5" />
             </button>
           ),
         },
@@ -111,22 +114,24 @@ export function DataTable({
       {
         key: "action",
         title: t("Action"),
-        className: "w-[180px]",
+        className: "w-[110px]",
         render: (_, row) => (
           <div className="flex items-center gap-2">
             <button
               type="button"
-              className="rounded-md border border-zinc-300 px-3 py-1 text-xs hover:bg-zinc-100"
+              className="rounded-md border border-zinc-300 px-1.5 py-1.5 text-xs transition-colors cursor-pointer duration-200 hover:bg-zinc-100 hover:text-blue-700"
+              aria-label={t("Edit")}
               onClick={() => onEdit?.(row)}
             >
-              {t("Edit")}
+              <TbPencil className="size-5" />
             </button>
             <button
               type="button"
-              className="rounded-md border border-red-300 px-3 py-1 text-xs text-red-600 hover:bg-red-50"
+              className="rounded-md border border-red-300 px-1.5 py-1.5 text-xs text-red-600 transition-colors cursor-pointer duration-200 hover:bg-red-50 hover:text-red-700"
+              aria-label={t("Delete")}
               onClick={() => onDelete?.(row)}
             >
-              {t("Delete")}
+              <TbTrash className="size-5" />
             </button>
           </div>
         ),

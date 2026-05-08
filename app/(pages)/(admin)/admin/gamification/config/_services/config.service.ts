@@ -13,6 +13,7 @@ import {
   patchAdminSpRules,
   putAdminMultiplier,
 } from "@/apis/gamification/config/list";
+import type { PayoutMetric } from "@/constants/gamification";
 
 export type ConfigTabKey =
   | "point-rules"
@@ -46,6 +47,7 @@ export type DifficultyItem = {
 
 export type PayoutTierItem = {
   id: string;
+  metric: PayoutMetric;
   rankMin: number;
   rankMax: number;
   spAmount: number;
@@ -97,6 +99,7 @@ export async function loadTabData(tab: ConfigTabKey) {
   const res = await listAdminPayoutTiers({});
   return (res.data?.tiers ?? []).map((row) => ({
     id: String((row as Record<string, unknown>).id ?? ""),
+    metric: String((row as Record<string, unknown>).metric ?? "CRP") as PayoutMetric,
     rankMin: Number((row as Record<string, unknown>).rankMin ?? 0),
     rankMax: Number((row as Record<string, unknown>).rankMax ?? 0),
     spAmount: Number((row as Record<string, unknown>).spAmount ?? 0),
@@ -128,7 +131,7 @@ export async function updateDifficulty(payload: DifficultyItem) {
 
 export async function createPayoutTier(payload: Omit<PayoutTierItem, "id">) {
   return createAdminPayoutTier({
-    metric: "green_points",
+    metric: payload.metric,
     rankMin: payload.rankMin,
     rankMax: payload.rankMax,
     spAmount: payload.spAmount,
@@ -139,6 +142,7 @@ export async function updatePayoutTier(payload: PayoutTierItem) {
   return patchAdminPayoutTier({
     id: payload.id,
     body: {
+      metric: payload.metric,
       rankMin: payload.rankMin,
       rankMax: payload.rankMax,
       spAmount: payload.spAmount,
