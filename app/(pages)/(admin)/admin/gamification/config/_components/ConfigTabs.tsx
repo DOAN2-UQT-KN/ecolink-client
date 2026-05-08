@@ -34,12 +34,14 @@ function PointRulesTab() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pending, setPending] = useState<PointRulesData | null>(null);
   const [editingVolunteerCard, setEditingVolunteerCard] = useState(false);
+  const [editingCitizenCard, setEditingCitizenCard] = useState(false);
+  const defaultPointRules: PointRulesData = pointRules ?? {
+    baseReportPoint: 0,
+    reportMilestoneThresholds: [],
+    volunteerBonusCapByDifficulty: {},
+  };
   const form = useForm<PointRulesData>({
-    values: pointRules ?? {
-      baseReportPoint: 0,
-      reportMilestoneThresholds: [],
-      volunteerBonusCapByDifficulty: {},
-    },
+    values: defaultPointRules,
   });
 
   const milestones = form.watch('reportMilestoneThresholds');
@@ -98,11 +100,7 @@ function PointRulesTab() {
                   variant="outline"
                   onClick={() => {
                     form.reset(
-                      pointRules ?? {
-                        baseReportPoint: 0,
-                        reportMilestoneThresholds: [],
-                        volunteerBonusCapByDifficulty: {},
-                      },
+                      defaultPointRules,
                     );
                     setMilestoneInput('');
                     setEditingVolunteerCard(false);
@@ -168,7 +166,37 @@ function PointRulesTab() {
         </div>
 
         <div className="rounded-xl border p-4 md:p-5">
-          <h3 className="mb-4 text-sm font-semibold md:text-base">{t('Citizen Green Points')}</h3>
+          <div className="mb-4 flex items-center justify-between gap-2">
+            <h3 className="text-sm font-semibold md:text-base">{t('Citizen Green Points')}</h3>
+            {!editingCitizenCard ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => setEditingCitizenCard(true)}
+                aria-label={t('Edit citizen green points')}
+              >
+                <TbPencil className="size-4" />
+              </Button>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    form.setValue(
+                      'volunteerBonusCapByDifficulty',
+                      defaultPointRules.volunteerBonusCapByDifficulty ?? {},
+                    );
+                    setEditingCitizenCard(false);
+                  }}
+                >
+                  {t('Cancel')}
+                </Button>
+                <Button type="submit">{t('Save')}</Button>
+              </div>
+            )}
+          </div>
           <Field>
             <FieldLabel>{t('Volunteer bonus cap by difficulty')}</FieldLabel>
             <div className="space-y-3">
@@ -183,6 +211,7 @@ function PointRulesTab() {
                   <Input
                     type="number"
                     value={String(row.cap ?? 0)}
+                    disabled={!editingCitizenCard}
                     onChange={(e) => {
                       const nextValue = Number(e.target.value);
                       form.setValue(
@@ -190,7 +219,7 @@ function PointRulesTab() {
                         Number.isFinite(nextValue) ? nextValue : 0,
                       );
                     }}
-                    className="!h-10 !border !border-zinc-300 pl-3"
+                    className="!h-10 !border !border-zinc-300 pl-3 disabled:cursor-not-allowed disabled:bg-zinc-100"
                   />
                 </div>
               ))}
@@ -199,9 +228,6 @@ function PointRulesTab() {
               {t('Configure bonus cap for each difficulty level (level key from backend).')}
             </FieldDescription>
           </Field>
-          <div className="mt-4">
-            <Button type="submit">{t('Apply changes')}</Button>
-          </div>
         </div>
       </form>
       <ConfirmApplyDialog
@@ -211,6 +237,7 @@ function PointRulesTab() {
           if (!pending) return;
           setConfirmOpen(false);
           setEditingVolunteerCard(false);
+          setEditingCitizenCard(false);
           void savePointRules(pending);
         }}
       />
