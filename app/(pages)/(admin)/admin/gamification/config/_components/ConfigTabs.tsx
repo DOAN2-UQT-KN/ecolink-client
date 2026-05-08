@@ -14,7 +14,7 @@ import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTranslation } from 'react-i18next';
-import { TbPencil } from 'react-icons/tb';
+import { TbPencil, TbX } from 'react-icons/tb';
 import { ConfirmApplyDialog } from './ConfirmApplyDialog';
 import { DataTable } from './DataTable';
 import { useConfigContext } from '../_hooks/useConfigContext';
@@ -99,9 +99,7 @@ function PointRulesTab() {
                   type="button"
                   variant="outline"
                   onClick={() => {
-                    form.reset(
-                      defaultPointRules,
-                    );
+                    form.reset(defaultPointRules);
                     setMilestoneInput('');
                     setEditingVolunteerCard(false);
                   }}
@@ -124,40 +122,45 @@ function PointRulesTab() {
             </Field>
             <Field>
               <FieldLabel>{t('Report milestone thresholds')}</FieldLabel>
-              <div className="flex gap-2">
-                <Input
-                  value={milestoneInput}
-                  disabled={!editingVolunteerCard}
-                  onChange={(e) => setMilestoneInput(e.target.value)}
-                  placeholder={t('Add milestone')}
-                  type="number"
-                  className="!h-10 !border !border-zinc-300 pl-3 disabled:cursor-not-allowed disabled:bg-zinc-100"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={!editingVolunteerCard}
-                  onClick={onAddMilestone}
-                >
-                  {t('Add')}
-                </Button>
-              </div>
+              {editingVolunteerCard && (
+                <div className="flex gap-2">
+                  <Input
+                    value={milestoneInput}
+                    onChange={(e) => setMilestoneInput(e.target.value)}
+                    placeholder={t('Add milestone')}
+                    type="number"
+                    className="!h-10 !border !border-zinc-300 pl-3"
+                  />
+                  <Button type="button" variant="outline" onClick={onAddMilestone}>
+                    {t('Add')}
+                  </Button>
+                </div>
+              )}
               <div className="flex flex-wrap gap-2">
                 {(milestones ?? []).map((item) => (
-                  <button
+                  <div
                     key={item}
-                    type="button"
-                    disabled={!editingVolunteerCard}
-                    className="rounded-full border px-3 py-1 text-xs disabled:cursor-not-allowed disabled:bg-zinc-100"
-                    onClick={() =>
-                      form.setValue(
-                        'reportMilestoneThresholds',
-                        (milestones ?? []).filter((value) => value !== item),
-                      )
-                    }
+                    className={`inline-flex items-center rounded-full border ${
+                      editingVolunteerCard ? 'px-4 py-2 text-sm' : 'px-3 py-1 text-xs'
+                    }`}
                   >
                     {item}
-                  </button>
+                    {editingVolunteerCard && (
+                      <button
+                        type="button"
+                        className="ml-2 rounded-full cursor-pointer p-1 text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-red-600"
+                        aria-label={t('Remove threshold {{value}}', { value: item })}
+                        onClick={() =>
+                          form.setValue(
+                            'reportMilestoneThresholds',
+                            (milestones ?? []).filter((value) => value !== item),
+                          )
+                        }
+                      >
+                        <TbX className="size-4" />
+                      </button>
+                    )}
+                  </div>
                 ))}
               </div>
               <FieldError errors={[form.formState.errors.reportMilestoneThresholds]} />
