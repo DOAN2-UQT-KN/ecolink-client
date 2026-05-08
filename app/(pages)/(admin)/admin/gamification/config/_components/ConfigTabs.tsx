@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import {
@@ -41,15 +41,23 @@ function PointRulesTab() {
     volunteerBonusCapByDifficulty: {},
   };
   const form = useForm<PointRulesData>({
-    values: defaultPointRules,
+    defaultValues: defaultPointRules,
   });
+  const lastPointRulesSnapshotRef = useRef<string>('');
+
+  useEffect(() => {
+    const snapshot = JSON.stringify(defaultPointRules);
+    if (snapshot === lastPointRulesSnapshotRef.current) return;
+    lastPointRulesSnapshotRef.current = snapshot;
+    form.reset(defaultPointRules);
+  }, [form, pointRules]);
 
   const milestones = form.watch('reportMilestoneThresholds');
   const caps = form.watch('volunteerBonusCapByDifficulty');
   const capRows = useMemo(() => {
     const entries = Object.entries(caps ?? {});
     if (!entries.length) {
-      return ['1', '2', '3'].map((difficulty) => ({ difficulty, cap: 0 }));
+      return ['1', '2', '3', '4'].map((difficulty) => ({ difficulty, cap: 0 }));
     }
     return entries
       .map(([difficulty, cap]) => ({ difficulty, cap }))
@@ -202,7 +210,7 @@ function PointRulesTab() {
           </div>
           <Field>
             <FieldLabel>{t('Volunteer bonus cap by difficulty')}</FieldLabel>
-            <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-4">
               {capRows.map((row) => (
                 <div
                   key={row.difficulty}
@@ -213,15 +221,16 @@ function PointRulesTab() {
                   </span>
                   <Input
                     type="number"
-                    value={String(row.cap ?? 0)}
+                    value={Number(
+                      form.watch(`volunteerBonusCapByDifficulty.${row.difficulty}`) ?? 0,
+                    )}
                     disabled={!editingCitizenCard}
-                    onChange={(e) => {
-                      const nextValue = Number(e.target.value);
+                    onChange={(e) =>
                       form.setValue(
                         `volunteerBonusCapByDifficulty.${row.difficulty}`,
-                        Number.isFinite(nextValue) ? nextValue : 0,
-                      );
-                    }}
+                        Number(e.target.value),
+                      )
+                    }
                     className="!h-10 !border !border-zinc-300 pl-3 disabled:cursor-not-allowed disabled:bg-zinc-100"
                   />
                 </div>
