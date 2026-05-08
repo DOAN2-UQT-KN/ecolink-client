@@ -1,22 +1,23 @@
-"use client";
+'use client';
 
-import { useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
-import { Button } from "@/components/ui/button";
+import { useMemo, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useTranslation } from "react-i18next";
-import { ConfirmApplyDialog } from "./ConfirmApplyDialog";
-import { DataTable } from "./DataTable";
-import { useConfigContext } from "../_hooks/useConfigContext";
+} from '@/components/ui/dialog';
+import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useTranslation } from 'react-i18next';
+import { TbPencil } from 'react-icons/tb';
+import { ConfirmApplyDialog } from './ConfirmApplyDialog';
+import { DataTable } from './DataTable';
+import { useConfigContext } from '../_hooks/useConfigContext';
 import type {
   ConfigTabKey,
   DifficultyItem,
@@ -24,14 +25,15 @@ import type {
   PayoutTierItem,
   PointRulesData,
   SpRulesData,
-} from "../_services/config.service";
+} from '../_services/config.service';
 
 function PointRulesTab() {
   const { t } = useTranslation();
   const { pointRules, savePointRules, loading } = useConfigContext();
-  const [milestoneInput, setMilestoneInput] = useState("");
+  const [milestoneInput, setMilestoneInput] = useState('');
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pending, setPending] = useState<PointRulesData | null>(null);
+  const [editingVolunteerCard, setEditingVolunteerCard] = useState(false);
   const form = useForm<PointRulesData>({
     values: pointRules ?? {
       baseReportPoint: 0,
@@ -40,25 +42,30 @@ function PointRulesTab() {
     },
   });
 
-  const milestones = form.watch("reportMilestoneThresholds");
-  const caps = form.watch("volunteerBonusCapByDifficulty");
-  const capRows = useMemo(
-    () => Object.entries(caps ?? {}).map(([difficulty, cap]) => ({ difficulty, cap })),
-    [caps],
-  );
+  const milestones = form.watch('reportMilestoneThresholds');
+  const caps = form.watch('volunteerBonusCapByDifficulty');
+  const capRows = useMemo(() => {
+    const entries = Object.entries(caps ?? {});
+    if (!entries.length) {
+      return ['1', '2', '3'].map((difficulty) => ({ difficulty, cap: 0 }));
+    }
+    return entries
+      .map(([difficulty, cap]) => ({ difficulty, cap }))
+      .sort((a, b) => Number(a.difficulty) - Number(b.difficulty));
+  }, [caps]);
 
   const onAddMilestone = () => {
     const value = Number(milestoneInput);
     if (!Number.isFinite(value)) return;
     const next = [...(milestones ?? []), value].sort((a, b) => a - b);
-    form.setValue("reportMilestoneThresholds", next);
-    setMilestoneInput("");
+    form.setValue('reportMilestoneThresholds', next);
+    setMilestoneInput('');
   };
 
   const onSubmit = form.handleSubmit((values) => {
     const sorted = [...values.reportMilestoneThresholds].sort((a, b) => a - b);
     if (JSON.stringify(sorted) !== JSON.stringify(values.reportMilestoneThresholds)) {
-      form.setError("reportMilestoneThresholds", { message: t("Milestones must be ascending") });
+      form.setError('reportMilestoneThresholds', { message: t('Milestones must be ascending') });
       return;
     }
     setPending(values);
@@ -68,59 +75,134 @@ function PointRulesTab() {
   return (
     <div className="space-y-4">
       <div className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-700">
-        {t("Changes affect leaderboard in real-time")}
+        {t('Changes affect leaderboard in real-time')}
       </div>
       <form className="space-y-4" onSubmit={(e) => void onSubmit(e)}>
-        <Field>
-          <FieldLabel>{t("Base report point")}</FieldLabel>
-          <Input type="number" {...form.register("baseReportPoint", { valueAsNumber: true })} />
-        </Field>
-        <Field>
-          <FieldLabel>{t("Report milestone thresholds")}</FieldLabel>
-          <div className="flex gap-2">
-            <Input
-              value={milestoneInput}
-              onChange={(e) => setMilestoneInput(e.target.value)}
-              placeholder={t("Add milestone")}
-              type="number"
-            />
-            <Button type="button" variant="outline" onClick={onAddMilestone}>
-              {t("Add")}
-            </Button>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {(milestones ?? []).map((item) => (
-              <button
-                key={item}
+        <div className="rounded-xl border p-4 md:p-5">
+          <div className="mb-4 flex items-center justify-between gap-2">
+            <h3 className="text-sm font-semibold md:text-base">{t('Volunteer Green Points')}</h3>
+            {!editingVolunteerCard ? (
+              <Button
                 type="button"
-                className="rounded-full border px-3 py-1 text-xs"
-                onClick={() =>
-                  form.setValue(
-                    "reportMilestoneThresholds",
-                    (milestones ?? []).filter((value) => value !== item),
-                  )
-                }
+                variant="outline"
+                size="icon"
+                onClick={() => setEditingVolunteerCard(true)}
+                aria-label={t('Edit volunteer green points')}
               >
-                {item}
-              </button>
-            ))}
+                <TbPencil className="size-4" />
+              </Button>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    form.reset(
+                      pointRules ?? {
+                        baseReportPoint: 0,
+                        reportMilestoneThresholds: [],
+                        volunteerBonusCapByDifficulty: {},
+                      },
+                    );
+                    setMilestoneInput('');
+                    setEditingVolunteerCard(false);
+                  }}
+                >
+                  {t('Cancel')}
+                </Button>
+                <Button type="submit">{t('Save')}</Button>
+              </div>
+            )}
           </div>
-          <FieldError errors={[form.formState.errors.reportMilestoneThresholds]} />
-        </Field>
-        <Field>
-          <FieldLabel>{t("Volunteer bonus cap by difficulty")}</FieldLabel>
-          <DataTable
-            tab="point-rules"
-            data={capRows}
-            loading={loading}
-            onInlineValueChange={(row, value) => {
-              const key = String((row as { difficulty: string }).difficulty);
-              form.setValue(`volunteerBonusCapByDifficulty.${key}`, Number.isFinite(value) ? value : 0);
-            }}
-          />
-          <FieldDescription>{t("Inline editable cap values by difficulty.")}</FieldDescription>
-        </Field>
-        <Button type="submit">{t("Apply changes")}</Button>
+          <div className="space-y-4">
+            <Field>
+              <FieldLabel>{t('Base report point')}</FieldLabel>
+              <Input
+                type="number"
+                disabled={!editingVolunteerCard}
+                {...form.register('baseReportPoint', { valueAsNumber: true })}
+                className="!h-10 !border !border-zinc-300 pl-3 disabled:cursor-not-allowed disabled:bg-zinc-100"
+              />
+            </Field>
+            <Field>
+              <FieldLabel>{t('Report milestone thresholds')}</FieldLabel>
+              <div className="flex gap-2">
+                <Input
+                  value={milestoneInput}
+                  disabled={!editingVolunteerCard}
+                  onChange={(e) => setMilestoneInput(e.target.value)}
+                  placeholder={t('Add milestone')}
+                  type="number"
+                  className="!h-10 !border !border-zinc-300 pl-3 disabled:cursor-not-allowed disabled:bg-zinc-100"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={!editingVolunteerCard}
+                  onClick={onAddMilestone}
+                >
+                  {t('Add')}
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {(milestones ?? []).map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    disabled={!editingVolunteerCard}
+                    className="rounded-full border px-3 py-1 text-xs disabled:cursor-not-allowed disabled:bg-zinc-100"
+                    onClick={() =>
+                      form.setValue(
+                        'reportMilestoneThresholds',
+                        (milestones ?? []).filter((value) => value !== item),
+                      )
+                    }
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+              <FieldError errors={[form.formState.errors.reportMilestoneThresholds]} />
+            </Field>
+          </div>
+        </div>
+
+        <div className="rounded-xl border p-4 md:p-5">
+          <h3 className="mb-4 text-sm font-semibold md:text-base">{t('Citizen Green Points')}</h3>
+          <Field>
+            <FieldLabel>{t('Volunteer bonus cap by difficulty')}</FieldLabel>
+            <div className="space-y-3">
+              {capRows.map((row) => (
+                <div
+                  key={row.difficulty}
+                  className="grid grid-cols-1 items-center gap-2 rounded-md border p-3 md:grid-cols-[200px,1fr]"
+                >
+                  <span className="text-sm font-medium">
+                    {t('Difficulty level {{level}}', { level: row.difficulty })}
+                  </span>
+                  <Input
+                    type="number"
+                    value={String(row.cap ?? 0)}
+                    onChange={(e) => {
+                      const nextValue = Number(e.target.value);
+                      form.setValue(
+                        `volunteerBonusCapByDifficulty.${row.difficulty}`,
+                        Number.isFinite(nextValue) ? nextValue : 0,
+                      );
+                    }}
+                    className="!h-10 !border !border-zinc-300 pl-3"
+                  />
+                </div>
+              ))}
+            </div>
+            <FieldDescription>
+              {t('Configure bonus cap for each difficulty level (level key from backend).')}
+            </FieldDescription>
+          </Field>
+          <div className="mt-4">
+            <Button type="submit">{t('Apply changes')}</Button>
+          </div>
+        </div>
       </form>
       <ConfirmApplyDialog
         open={confirmOpen}
@@ -128,6 +210,7 @@ function PointRulesTab() {
         onConfirm={() => {
           if (!pending) return;
           setConfirmOpen(false);
+          setEditingVolunteerCard(false);
           void savePointRules(pending);
         }}
       />
@@ -143,7 +226,7 @@ function SpRulesTab() {
   const form = useForm<SpRulesData>({
     values: spRules ?? { expirationDays: 0 },
   });
-  const expirationDays = form.watch("expirationDays");
+  const expirationDays = form.watch('expirationDays');
 
   return (
     <div className="space-y-4">
@@ -155,14 +238,18 @@ function SpRulesTab() {
         })}
       >
         <Field>
-          <FieldLabel>{t("Expiration days")}</FieldLabel>
-          <Input type="number" {...form.register("expirationDays", { valueAsNumber: true, min: 1 })} />
+          <FieldLabel>{t('Expiration days')}</FieldLabel>
+          <Input
+            type="number"
+            {...form.register('expirationDays', { valueAsNumber: true, min: 1 })}
+            className="!h-10 !border !border-zinc-300 pl-3"
+          />
           <FieldDescription>
-            {t("Points expire after {{days}} days", { days: Number(expirationDays || 0) })}
+            {t('Points expire after {{days}} days', { days: Number(expirationDays || 0) })}
           </FieldDescription>
           <FieldError errors={[form.formState.errors.expirationDays]} />
         </Field>
-        <Button type="submit">{t("Apply changes")}</Button>
+        <Button type="submit">{t('Apply changes')}</Button>
       </form>
       <ConfirmApplyDialog
         open={confirmOpen}
@@ -182,7 +269,7 @@ function VolunteerMultipliersTab() {
   const { multipliers, saveMultiplier, loading } = useConfigContext();
   const [editing, setEditing] = useState<MultiplierItem | null>(null);
   const form = useForm<MultiplierItem>({
-    values: editing ?? { code: "", description: "", multiplier: 0 },
+    values: editing ?? { code: '', description: '', multiplier: 0 },
   });
 
   return (
@@ -196,13 +283,13 @@ function VolunteerMultipliersTab() {
       <Dialog open={Boolean(editing)} onOpenChange={(next) => !next && setEditing(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{t("Edit multiplier")}</DialogTitle>
+            <DialogTitle>{t('Edit multiplier')}</DialogTitle>
           </DialogHeader>
           <form
             className="space-y-4"
             onSubmit={form.handleSubmit(async (values) => {
               if (values.multiplier < 0) {
-                form.setError("multiplier", { message: t("Multiplier must be >= 0") });
+                form.setError('multiplier', { message: t('Multiplier must be >= 0') });
                 return;
               }
               await saveMultiplier(values);
@@ -210,28 +297,33 @@ function VolunteerMultipliersTab() {
             })}
           >
             <Field>
-              <FieldLabel>{t("Code")}</FieldLabel>
-              <Input {...form.register("code")} disabled />
+              <FieldLabel>{t('Code')}</FieldLabel>
+              <Input {...form.register('code')} disabled />
             </Field>
             <Field>
-              <FieldLabel>{t("Description")}</FieldLabel>
-              <Input {...form.register("description")} disabled />
+              <FieldLabel>{t('Description')}</FieldLabel>
+              <Input {...form.register('description')} disabled />
             </Field>
             <Field>
-              <FieldLabel>{t("Multiplier")}</FieldLabel>
-              <Input type="number" step="0.1" {...form.register("multiplier", { valueAsNumber: true })} />
-              {Number(form.watch("multiplier") ?? 0) > 3 && (
+              <FieldLabel>{t('Multiplier')}</FieldLabel>
+              <Input
+                type="number"
+                step="0.1"
+                {...form.register('multiplier', { valueAsNumber: true })}
+                className="!h-10 !border !border-zinc-300 pl-3"
+              />
+              {Number(form.watch('multiplier') ?? 0) > 3 && (
                 <FieldDescription className="text-amber-600">
-                  {t("Warning: multiplier above 3 is unusually high.")}
+                  {t('Warning: multiplier above 3 is unusually high.')}
                 </FieldDescription>
               )}
               <FieldError errors={[form.formState.errors.multiplier]} />
             </Field>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setEditing(null)}>
-                {t("Cancel")}
+                {t('Cancel')}
               </Button>
-              <Button type="submit">{t("Save")}</Button>
+              <Button type="submit">{t('Save')}</Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -245,7 +337,7 @@ function DifficultySettingsTab() {
   const { difficulties, saveDifficulty, loading } = useConfigContext();
   const [editing, setEditing] = useState<DifficultyItem | null>(null);
   const form = useForm<DifficultyItem>({
-    values: editing ?? { id: "", level: 1, name: "", greenPointsReward: 0 },
+    values: editing ?? { id: '', level: 1, name: '', greenPointsReward: 0 },
   });
 
   return (
@@ -259,7 +351,7 @@ function DifficultySettingsTab() {
       <Dialog open={Boolean(editing)} onOpenChange={(next) => !next && setEditing(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{t("Edit difficulty setting")}</DialogTitle>
+            <DialogTitle>{t('Edit difficulty setting')}</DialogTitle>
           </DialogHeader>
           <form
             className="space-y-4"
@@ -269,22 +361,33 @@ function DifficultySettingsTab() {
             })}
           >
             <Field>
-              <FieldLabel>{t("Difficulty level")}</FieldLabel>
-              <Input type="number" {...form.register("level", { valueAsNumber: true })} />
+              <FieldLabel>{t('Difficulty level')}</FieldLabel>
+              <Input
+                type="number"
+                {...form.register('level', { valueAsNumber: true })}
+                className="!h-10 !border !border-zinc-300 pl-3"
+              />
             </Field>
             <Field>
-              <FieldLabel>{t("Name")}</FieldLabel>
-              <Input {...form.register("name", { required: true })} />
+              <FieldLabel>{t('Name')}</FieldLabel>
+              <Input
+                {...form.register('name', { required: true })}
+                className="!h-10 !border !border-zinc-300 pl-3"
+              />
             </Field>
             <Field>
-              <FieldLabel>{t("GreenPoints reward")}</FieldLabel>
-              <Input type="number" {...form.register("greenPointsReward", { valueAsNumber: true })} />
+              <FieldLabel>{t('GreenPoints reward')}</FieldLabel>
+              <Input
+                type="number"
+                {...form.register('greenPointsReward', { valueAsNumber: true })}
+                className="!h-10 !border !border-zinc-300 pl-3"
+              />
             </Field>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setEditing(null)}>
-                {t("Cancel")}
+                {t('Cancel')}
               </Button>
-              <Button type="submit">{t("Save")}</Button>
+              <Button type="submit">{t('Save')}</Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -299,9 +402,9 @@ function LeaderboardPayoutTab() {
   const [editing, setEditing] = useState<PayoutTierItem | null>(null);
   const [creating, setCreating] = useState(false);
   const form = useForm<PayoutTierItem>({
-    values: editing ?? { id: "", rankMin: 1, rankMax: 1, spAmount: 0 },
+    values: editing ?? { id: '', rankMin: 1, rankMax: 1, spAmount: 0 },
   });
-  const createForm = useForm<Omit<PayoutTierItem, "id">>({
+  const createForm = useForm<Omit<PayoutTierItem, 'id'>>({
     defaultValues: { rankMin: 1, rankMax: 1, spAmount: 0 },
   });
 
@@ -316,7 +419,7 @@ function LeaderboardPayoutTab() {
     <div className="space-y-4">
       <div className="flex justify-end">
         <Button type="button" onClick={() => setCreating(true)}>
-          {t("Create tier")}
+          {t('Create tier')}
         </Button>
       </div>
       <DataTable
@@ -331,13 +434,13 @@ function LeaderboardPayoutTab() {
       <Dialog open={Boolean(editing)} onOpenChange={(next) => !next && setEditing(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{t("Edit payout tier")}</DialogTitle>
+            <DialogTitle>{t('Edit payout tier')}</DialogTitle>
           </DialogHeader>
           <form
             className="space-y-4"
             onSubmit={form.handleSubmit(async (values) => {
               if (hasOverlap(values, values.id)) {
-                form.setError("rankMax", { message: t("Rank range overlaps existing tier") });
+                form.setError('rankMax', { message: t('Rank range overlaps existing tier') });
                 return;
               }
               await savePayoutTier(values);
@@ -345,23 +448,35 @@ function LeaderboardPayoutTab() {
             })}
           >
             <Field>
-              <FieldLabel>{t("Rank min")}</FieldLabel>
-              <Input type="number" {...form.register("rankMin", { valueAsNumber: true })} />
+              <FieldLabel>{t('Rank min')}</FieldLabel>
+              <Input
+                type="number"
+                {...form.register('rankMin', { valueAsNumber: true })}
+                className="!h-10 !border !border-zinc-300 pl-3"
+              />
             </Field>
             <Field>
-              <FieldLabel>{t("Rank max")}</FieldLabel>
-              <Input type="number" {...form.register("rankMax", { valueAsNumber: true })} />
+              <FieldLabel>{t('Rank max')}</FieldLabel>
+              <Input
+                type="number"
+                {...form.register('rankMax', { valueAsNumber: true })}
+                className="!h-10 !border !border-zinc-300 pl-3"
+              />
               <FieldError errors={[form.formState.errors.rankMax]} />
             </Field>
             <Field>
-              <FieldLabel>{t("SP amount")}</FieldLabel>
-              <Input type="number" {...form.register("spAmount", { valueAsNumber: true })} />
+              <FieldLabel>{t('SP amount')}</FieldLabel>
+              <Input
+                type="number"
+                {...form.register('spAmount', { valueAsNumber: true })}
+                className="!h-10 !border !border-zinc-300 pl-3"
+              />
             </Field>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setEditing(null)}>
-                {t("Cancel")}
+                {t('Cancel')}
               </Button>
-              <Button type="submit">{t("Save")}</Button>
+              <Button type="submit">{t('Save')}</Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -369,13 +484,13 @@ function LeaderboardPayoutTab() {
       <Dialog open={creating} onOpenChange={(next) => !next && setCreating(false)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{t("Create payout tier")}</DialogTitle>
+            <DialogTitle>{t('Create payout tier')}</DialogTitle>
           </DialogHeader>
           <form
             className="space-y-4"
             onSubmit={createForm.handleSubmit(async (values) => {
               if (hasOverlap(values)) {
-                createForm.setError("rankMax", { message: t("Rank range overlaps existing tier") });
+                createForm.setError('rankMax', { message: t('Rank range overlaps existing tier') });
                 return;
               }
               await savePayoutTier(values);
@@ -383,23 +498,35 @@ function LeaderboardPayoutTab() {
             })}
           >
             <Field>
-              <FieldLabel>{t("Rank min")}</FieldLabel>
-              <Input type="number" {...createForm.register("rankMin", { valueAsNumber: true })} />
+              <FieldLabel>{t('Rank min')}</FieldLabel>
+              <Input
+                type="number"
+                {...createForm.register('rankMin', { valueAsNumber: true })}
+                className="!h-10 !border !border-zinc-300 pl-3"
+              />
             </Field>
             <Field>
-              <FieldLabel>{t("Rank max")}</FieldLabel>
-              <Input type="number" {...createForm.register("rankMax", { valueAsNumber: true })} />
+              <FieldLabel>{t('Rank max')}</FieldLabel>
+              <Input
+                type="number"
+                {...createForm.register('rankMax', { valueAsNumber: true })}
+                className="!h-10 !border !border-zinc-300 pl-3"
+              />
               <FieldError errors={[createForm.formState.errors.rankMax]} />
             </Field>
             <Field>
-              <FieldLabel>{t("SP amount")}</FieldLabel>
-              <Input type="number" {...createForm.register("spAmount", { valueAsNumber: true })} />
+              <FieldLabel>{t('SP amount')}</FieldLabel>
+              <Input
+                type="number"
+                {...createForm.register('spAmount', { valueAsNumber: true })}
+                className="!h-10 !border !border-zinc-300 pl-3"
+              />
             </Field>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setCreating(false)}>
-                {t("Cancel")}
+                {t('Cancel')}
               </Button>
-              <Button type="submit">{t("Create")}</Button>
+              <Button type="submit">{t('Create')}</Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -413,17 +540,26 @@ export function ConfigTabs() {
   const { activeTab, setActiveTab, loading } = useConfigContext();
 
   return (
-    <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ConfigTabKey)} className="space-y-4">
-      <TabsList className="h-auto w-full flex-wrap justify-start gap-2 bg-transparent p-0" variant="line">
-        <TabsTrigger value="point-rules">{t("Point Rules")}</TabsTrigger>
-        <TabsTrigger value="sp-rules">{t("Spendable Points (SP) Rules")}</TabsTrigger>
-        <TabsTrigger value="multipliers">{t("Volunteer Multipliers")}</TabsTrigger>
-        <TabsTrigger value="difficulty-settings">{t("Difficulty Settings")}</TabsTrigger>
-        <TabsTrigger value="payout-tiers">{t("Leaderboard Payout Tiers")}</TabsTrigger>
+    <Tabs
+      value={activeTab}
+      onValueChange={(v) => setActiveTab(v as ConfigTabKey)}
+      className="space-y-4"
+    >
+      <TabsList
+        className="h-auto w-full flex-wrap justify-start gap-2 bg-transparent p-0"
+        variant="line"
+      >
+        <TabsTrigger value="point-rules">{t('Point Rules')}</TabsTrigger>
+        <TabsTrigger value="sp-rules">{t('Spendable Points (SP) Rules')}</TabsTrigger>
+        <TabsTrigger value="multipliers">{t('Volunteer Multipliers')}</TabsTrigger>
+        <TabsTrigger value="difficulty-settings">{t('Difficulty Settings')}</TabsTrigger>
+        <TabsTrigger value="payout-tiers">{t('Leaderboard Payout Tiers')}</TabsTrigger>
       </TabsList>
 
       <div className="rounded-xl border bg-card p-4 md:p-6">
-        {loading && <p className="text-sm text-muted-foreground">{t("Loading configuration...")}</p>}
+        {loading && (
+          <p className="text-sm text-muted-foreground">{t('Loading configuration...')}</p>
+        )}
         <TabsContent value="point-rules">
           <PointRulesTab />
         </TabsContent>
