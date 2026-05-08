@@ -55,13 +55,14 @@ function PointRulesTab() {
   const milestones = form.watch('reportMilestoneThresholds');
   const caps = form.watch('volunteerBonusCapByDifficulty');
   const capRows = useMemo(() => {
-    const entries = Object.entries(caps ?? {});
-    if (!entries.length) {
-      return ['1', '2', '3', '4'].map((difficulty) => ({ difficulty, cap: 0 }));
-    }
-    return entries
-      .map(([difficulty, cap]) => ({ difficulty, cap }))
-      .sort((a, b) => Number(a.difficulty) - Number(b.difficulty));
+    const defaultLevels = ['1', '2', '3', '4'];
+    const normalizedCaps = Object.fromEntries(
+      Object.entries(caps ?? {}).map(([difficulty, cap]) => [difficulty, Number(cap ?? 0)]),
+    );
+    return defaultLevels.map((difficulty) => ({
+      difficulty,
+      cap: Number.isFinite(normalizedCaps[difficulty]) ? normalizedCaps[difficulty] : 0,
+    }));
   }, [caps]);
 
   const onAddMilestone = () => {
