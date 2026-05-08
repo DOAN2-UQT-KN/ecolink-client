@@ -23,6 +23,7 @@ import { PAYOUT_METRIC_OPTIONS } from '@/constants/gamification';
 import { useTranslation } from 'react-i18next';
 import { useConfigContext } from '../_hooks/useConfigContext';
 import type { PayoutTierItem } from '../_services/config.service';
+import { ConfirmApplyDialog } from './ConfirmApplyDialog';
 import { DataTable } from './DataTable';
 import { HiPlusCircle } from 'react-icons/hi2';
 
@@ -31,6 +32,7 @@ export function LeaderboardPayoutTab() {
   const { payoutTiers, savePayoutTier, deletePayoutTierById, loading } = useConfigContext();
   const [editing, setEditing] = useState<PayoutTierItem | null>(null);
   const [creating, setCreating] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const form = useForm<PayoutTierItem>({
     values: editing ?? { id: '', metric: 'CRP', rankMin: 1, rankMax: 1, spAmount: 0 },
   });
@@ -65,7 +67,7 @@ export function LeaderboardPayoutTab() {
         loading={loading}
         onEdit={(row) => setEditing(row as PayoutTierItem)}
         onDelete={(row) => {
-          void deletePayoutTierById(String((row as PayoutTierItem).id));
+          setDeleteTargetId(String((row as PayoutTierItem).id));
         }}
       />
       <Dialog open={Boolean(editing)} onOpenChange={(next) => !next && setEditing(null)}>
@@ -206,6 +208,18 @@ export function LeaderboardPayoutTab() {
           </form>
         </DialogContent>
       </Dialog>
+      <ConfirmApplyDialog
+        open={Boolean(deleteTargetId)}
+        title={t('Delete payout tier?')}
+        description={t('This action cannot be undone.')}
+        onCancel={() => setDeleteTargetId(null)}
+        onConfirm={() => {
+          if (!deleteTargetId) return;
+          const targetId = deleteTargetId;
+          setDeleteTargetId(null);
+          void deletePayoutTierById(targetId);
+        }}
+      />
     </div>
   );
 }

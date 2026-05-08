@@ -1,34 +1,48 @@
-"use client";
+'use client';
 
-import { useMemo, useState } from "react";
-import { format } from "date-fns";
-import { CalendarIcon, Loader2 } from "lucide-react";
-import { type DateRange } from "react-day-picker";
-import { useTranslation } from "react-i18next";
-import { TbPlayerPlay, TbPencil } from "react-icons/tb";
+import { useMemo, useState } from 'react';
+import { format } from 'date-fns';
+import { CalendarIcon, Loader2 } from 'lucide-react';
+import { type DateRange } from 'react-day-picker';
+import { useTranslation } from 'react-i18next';
+import { TbPlayerPlay, TbPencil } from 'react-icons/tb';
 
-import type { ISeason } from "@/apis/gamification/season/models";
-import { useFinalizeAdminSeason } from "@/apis/gamification/season/list";
-import { DataTable as SharedDataTable, type DataTableColumn } from "@/components/admin/shared/DataTable";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+import type { ISeason } from '@/apis/gamification/season/models';
+import { useFinalizeAdminSeason } from '@/apis/gamification/season/list';
+import {
+  DataTable as SharedDataTable,
+  type DataTableColumn,
+} from '@/components/admin/shared/DataTable';
+import ChangeStatus from '@/components/ui/ChangeStatus';
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useSeasonContext } from "../_hooks/useSeasonContext";
+} from '@/components/ui/dialog';
+import { Field, FieldError, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { STATUS } from '@/constants/status';
+import { useSeasonContext } from '../_hooks/useSeasonContext';
 import {
   isActiveSeason,
   parseIsoToDate,
   toIsoEndOfDay,
   toIsoStartOfDay,
-} from "../_services/seasonAdmin.service";
+} from '../_services/seasonAdmin.service';
+
+function mapSeasonStatusToType(status: string): STATUS | null {
+  const normalized = status
+    .trim()
+    .toUpperCase()
+    .replace(/[\s-]+/g, '_');
+  const mapped = STATUS[normalized as keyof typeof STATUS];
+  return typeof mapped === 'number' ? mapped : null;
+}
 
 function FinalizeDialog({
   season,
@@ -42,8 +56,8 @@ function FinalizeDialog({
   onSuccess: () => void;
 }) {
   const { t } = useTranslation();
-  const [openNext, setOpenNext] = useState<"yes" | "no">("no");
-  const [nextLabel, setNextLabel] = useState("");
+  const [openNext, setOpenNext] = useState<'yes' | 'no'>('no');
+  const [nextLabel, setNextLabel] = useState('');
   const [startsAt, setStartsAt] = useState<Date | undefined>(undefined);
   const [endsAt, setEndsAt] = useState<Date | undefined>(undefined);
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -58,8 +72,8 @@ function FinalizeDialog({
 
   const dateLabel =
     startsAt && endsAt
-      ? `${format(startsAt, "PPP")} - ${format(endsAt, "PPP")}`
-      : t("Pick a date range");
+      ? `${format(startsAt, 'PPP')} - ${format(endsAt, 'PPP')}`
+      : t('Pick a date range');
 
   return (
     <Dialog
@@ -70,43 +84,47 @@ function FinalizeDialog({
     >
       <DialogContent showCloseButton className="max-w-xl">
         <DialogHeader>
-          <DialogTitle>{t("Finalize season")}</DialogTitle>
+          <DialogTitle>{t('Finalize season')}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           <Field>
-            <FieldLabel>{t("Season")}</FieldLabel>
-            <Input disabled value={season?.label || season?.id || ""} className="h-10 border border-zinc-300" />
+            <FieldLabel>{t('Season')}</FieldLabel>
+            <Input
+              disabled
+              value={season?.label || season?.id || ''}
+              className="h-10 border border-zinc-300"
+            />
           </Field>
 
           <Field>
-            <FieldLabel>{t("Open next season?")}</FieldLabel>
-            <RadioGroup value={openNext} onValueChange={(v) => setOpenNext(v as "yes" | "no")}>
+            <FieldLabel>{t('Open next season?')}</FieldLabel>
+            <RadioGroup value={openNext} onValueChange={(v) => setOpenNext(v as 'yes' | 'no')}>
               <label className="flex items-center gap-2 text-sm">
                 <RadioGroupItem value="no" />
-                {t("No")}
+                {t('No')}
               </label>
               <label className="flex items-center gap-2 text-sm">
                 <RadioGroupItem value="yes" />
-                {t("Yes")}
+                {t('Yes')}
               </label>
             </RadioGroup>
           </Field>
 
-          {openNext === "yes" ? (
+          {openNext === 'yes' ? (
             <>
               <Field>
-                <FieldLabel>{t("Next label")}</FieldLabel>
+                <FieldLabel>{t('Next label')}</FieldLabel>
                 <Input
                   value={nextLabel}
                   onChange={(e) => setNextLabel(e.target.value)}
-                  placeholder={t("Season 2026-06")}
+                  placeholder={t('Season 2026-06')}
                   className="h-10 border border-zinc-300"
                   disabled={isPending}
                 />
               </Field>
               <Field>
-                <FieldLabel>{t("Next season schedule")}</FieldLabel>
+                <FieldLabel>{t('Next season schedule')}</FieldLabel>
                 <div className="relative">
                   <Button
                     type="button"
@@ -147,7 +165,7 @@ function FinalizeDialog({
             onClick={onClose}
             className="h-[45px] px-4"
           >
-            {t("Cancel")}
+            {t('Cancel')}
           </Button>
           <Button
             type="button"
@@ -157,14 +175,14 @@ function FinalizeDialog({
               if (!season) return;
               setFormError(null);
 
-              const willOpenNext = openNext === "yes";
+              const willOpenNext = openNext === 'yes';
               if (willOpenNext) {
                 if (!startsAt || !endsAt) {
-                  setFormError(t("Start and end date are required"));
+                  setFormError(t('Start and end date are required'));
                   return;
                 }
                 if (startsAt >= endsAt) {
-                  setFormError(t("End date must be after start date"));
+                  setFormError(t('End date must be after start date'));
                   return;
                 }
               }
@@ -185,7 +203,7 @@ function FinalizeDialog({
               });
             }}
           >
-            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : t("Finalize")}
+            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : t('Finalize')}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -210,9 +228,9 @@ export function DataTable({ onEdit }: { onEdit: (season: ISeason) => void }) {
   const columns: DataTableColumn<ISeason>[] = useMemo(
     () => [
       {
-        key: "no",
-        title: t("No"),
-        className: "w-[64px]",
+        key: 'no',
+        title: t('No'),
+        className: 'w-[64px]',
         render: (_, __, index) => (
           <span className="tabular-nums">
             {(pagination.current - 1) * pagination.pageSize + index + 1}
@@ -220,45 +238,42 @@ export function DataTable({ onEdit }: { onEdit: (season: ISeason) => void }) {
         ),
       },
       {
-        key: "id",
-        title: t("Id"),
-        className: "min-w-[190px]",
-        render: (_, row) => <code className="text-xs">{row.id}</code>,
+        key: 'label',
+        title: t('Label'),
+        className: 'min-w-[140px]',
+        dataIndex: 'label',
       },
       {
-        key: "label",
-        title: t("Label"),
-        className: "min-w-[140px]",
-        render: (_, row) => row.label || "—",
+        key: 'kind',
+        title: t('Kind'),
+        className: 'w-[130px]',
+        dataIndex: 'kind',
       },
       {
-        key: "kind",
-        title: t("Kind"),
-        className: "w-[130px]",
-        render: (_, row) => (row.kind === "MONTHLY" ? t("Monthly") : t("Quarterly")),
+        key: 'status',
+        title: t('Status'),
+        className: 'w-[120px]',
+        render: (_, row) => {
+          const statusType = mapSeasonStatusToType(row.status);
+          if (!statusType) return row.status || '—';
+          return (
+            <div className="w-fit">
+              <ChangeStatus type={statusType} enabledDropdown={false} />
+            </div>
+          );
+        },
       },
       {
-        key: "status",
-        title: t("Status"),
-        className: "w-[120px]",
-        render: (_, row) => row.status,
+        key: 'duration',
+        title: t('Duration'),
+        className: 'min-w-[260px]',
+        render: (_, row) =>
+          `${format(new Date(row.startsAt), 'PPP')} - ${format(new Date(row.endsAt), 'PPP')}`,
       },
       {
-        key: "startsAt",
-        title: t("Starts at"),
-        className: "min-w-[150px]",
-        render: (_, row) => format(new Date(row.startsAt), "PPP"),
-      },
-      {
-        key: "endsAt",
-        title: t("Ends at"),
-        className: "min-w-[150px]",
-        render: (_, row) => format(new Date(row.endsAt), "PPP"),
-      },
-      {
-        key: "action",
-        title: t("Action"),
-        className: "w-[160px]",
+        key: 'action',
+        title: t('Action'),
+        className: 'w-[120px]',
         render: (_, row) => (
           <div className="flex items-center gap-2">
             <button
@@ -270,15 +285,14 @@ export function DataTable({ onEdit }: { onEdit: (season: ISeason) => void }) {
             </button>
             <button
               type="button"
-              className="cursor-pointer rounded-md border border-zinc-300 px-2 py-1 text-xs font-medium hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
+              className="cursor-pointer rounded-md border border-zinc-300 px-1.5 py-1.5 text-xs font-medium hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
               onClick={() => setFinalizeSeason(row)}
               disabled={!isActiveSeason(row)}
-              title={!isActiveSeason(row) ? t("Only ACTIVE seasons can be finalized") : undefined}
+              title={
+                !isActiveSeason(row) ? t('Only ACTIVE seasons can be finalized') : t('Finalize')
+              }
             >
-              <span className="inline-flex items-center gap-1">
-                <TbPlayerPlay className="size-4" />
-                {t("Finalize")}
-              </span>
+              <TbPlayerPlay className="size-5" />
             </button>
           </div>
         ),
@@ -296,8 +310,8 @@ export function DataTable({ onEdit }: { onEdit: (season: ISeason) => void }) {
         error={errorMessage}
         onRetry={onRetry}
         rowKey="id"
-        emptyTitle={t("No seasons found")}
-        emptyDescription={t("No seasons match the current filters.")}
+        emptyTitle={t('No seasons found')}
+        emptyDescription={t('No seasons match the current filters.')}
         pagination={{
           page: pagination.current,
           pageSize: pagination.pageSize,
