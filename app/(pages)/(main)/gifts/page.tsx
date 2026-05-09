@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, Suspense, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Breadcrumbs, type BreadcrumbItemProps } from "@/components/client/shared/Breadcrumbs";
@@ -49,8 +49,10 @@ const GiftsPageContent = memo(function GiftsPageContent() {
 
 export default function GiftsPage() {
   return (
-    <GiftProvider>
-      <GiftsPageContent />
-    </GiftProvider>
+    <Suspense fallback={null}>
+      <GiftProvider>
+        <GiftsPageContent />
+      </GiftProvider>
+    </Suspense>
   );
 }

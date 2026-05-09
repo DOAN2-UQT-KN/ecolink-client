@@ -8,6 +8,12 @@ import axios, {
 } from "axios"
 import queryString from "query-string"
 
+const getBaseUrl = (): string => {
+    if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL
+    if (typeof window !== "undefined") return window.location.origin
+    return ""
+}
+
 const onRequest = (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
     const accessToken = useAuthStore.getState().accessToken
     const refreshToken = useAuthStore.getState().refreshToken
@@ -38,7 +44,7 @@ const onResponseError = async (error: any): Promise<any> => {
             try {
                 // Call refresh token API directly with raw axios to avoid interceptor loop
                 const response = await axios.post(
-                    (process.env.NEXT_PUBLIC_API_URL || window.location.origin) + "/auth/refresh-token",
+                    `${getBaseUrl()}/auth/refresh-token`,
                     { refreshToken: refreshTokenVal }
                 )
                 
@@ -50,7 +56,9 @@ const onResponseError = async (error: any): Promise<any> => {
                     useAuthStore.getState().setRefreshToken(newRefreshToken || refreshTokenVal)
                     
                     // Update cookie
-                    document.cookie = `refresh_token=${newRefreshToken || refreshTokenVal}; path=/; Max-Age=2592000; Secure; SameSite=Lax`
+                    if (typeof document !== "undefined") {
+                        document.cookie = `refresh_token=${newRefreshToken || refreshTokenVal}; path=/; Max-Age=2592000; Secure; SameSite=Lax`
+                    }
                     
                     // Update current request and retry
                     originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
@@ -60,7 +68,9 @@ const onResponseError = async (error: any): Promise<any> => {
             } catch (refreshError) {
                 // If refresh fails, log out
                 useAuthStore.getState().setLogoutSuccess()
-                document.cookie = "refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+                if (typeof document !== "undefined") {
+                    document.cookie = "refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+                }
                 if (typeof window !== "undefined") {
                     const redirect = encodeURIComponent(window.location.pathname + window.location.search)
                     window.location.href = `/sign-in?redirect=${redirect}`
@@ -85,7 +95,7 @@ const onResponseError = async (error: any): Promise<any> => {
 }
 
 const config: CreateAxiosDefaults = {
-    baseURL: process.env.NEXT_PUBLIC_API_URL || window.location.origin,
+    baseURL: getBaseUrl(),
     timeout: 120000,
     headers: {
         "Content-Type": "application/json",
