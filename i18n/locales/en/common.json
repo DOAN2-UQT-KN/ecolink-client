@@ -396,5 +396,21 @@
   "Upload evidence (images or video)": "Upload evidence (images or video)",
   "Uploaded evidence": "Uploaded evidence",
   "Add more files": "Add more files",
-  "Task evidence video": "Task evidence video"
+  "Task evidence video": "Task evidence video",
+  "Profile location": "Location",
+  "Profile location hint": "Tap the map or use your device location, then save. This helps us notify you about nearby campaigns and community verification.",
+  "Use current location": "Use current location",
+  "Save location": "Save location",
+  "Saving...": "Saving...",
+  "Clear saved location": "Clear saved location",
+  "Reset map selection": "Reset selection",
+  "Location last updated": "Last updated",
+  "Click map to set location": "Click the map to choose a point",
+  "Geolocation is not supported": "Geolocation is not supported in this browser",
+  "No location on device": "Could not read your location. Check browser permissions.",
+  "Pick a location on the map first": "Choose a point on the map or use current location first",
+  "Failed to save location": "Could not save location",
+  "Failed to clear location": "Could not clear location",
+  "Please login again.": "Please sign in again.",
+  "Updated successfully": "Updated successfully"
 }

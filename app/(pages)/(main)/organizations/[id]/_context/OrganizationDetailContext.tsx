@@ -16,7 +16,6 @@ import {
 } from "@/apis/organization/joinRequest";
 import { useLeaveOrganization } from "@/apis/organization/leaveOrganization";
 import type { IOrganization } from "@/apis/organization/models/organization";
-import { STATUS } from "@/constants/status";
 import { invalidateOrganizationListsQuery } from "@/modules/OrganizationCard/services/invalidateOrganizationLists";
 import {
   joinListingShowsCancelButton,

@@ -9,7 +9,6 @@ import {
 } from 'react';
 
 import { useGetMyGamificationBadges } from '@/apis/gamification/badges/list';
-import type { IBadgeDefinition } from '@/apis/gamification/badges/models';
 
 import {
   DEFAULT_BADGE_FILTERS,

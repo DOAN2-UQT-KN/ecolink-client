@@ -59,7 +59,7 @@ const FormFilter = memo(function FormFilter() {
   useEffect(() => {
     if (!context) return;
     // Keep input in sync when filters.search changes externally (e.g. browser back).
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- mirror filters → local input
+     
     setSearchValue(filters.search || "");
   }, [context, filters.search]);
 

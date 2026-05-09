@@ -1,15 +1,8 @@
 'use client';
 
-import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
+
+
 
 import { BadgesProvider } from './_context/BadgesContext';
 import BadgesSummary from './_components/BadgesSummary';

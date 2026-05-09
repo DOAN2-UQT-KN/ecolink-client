@@ -642,5 +642,21 @@
   "Upload evidence (images or video)": "Tải minh chứng (ảnh hoặc video)",
   "Uploaded evidence": "Minh chứng đã tải",
   "Add more files": "Thêm tệp",
-  "Task evidence video": "Video minh chứng nhiệm vụ"
+  "Task evidence video": "Video minh chứng nhiệm vụ",
+  "Profile location": "Vị trí",
+  "Profile location hint": "Chạm bản đồ hoặc dùng vị trí thiết bị, rồi lưu. Giúp chúng tôi gửi thông báo về chiến dịch gần bạn và xác minh cộng đồng.",
+  "Use current location": "Dùng vị trí hiện tại",
+  "Save location": "Lưu vị trí",
+  "Saving...": "Đang lưu...",
+  "Clear saved location": "Xóa vị trí đã lưu",
+  "Reset map selection": "Bỏ chọn trên bản đồ",
+  "Location last updated": "Cập nhật lần cuối",
+  "Click map to set location": "Nhấn bản đồ để chọn điểm",
+  "Geolocation is not supported": "Trình duyệt không hỗ trợ định vị",
+  "No location on device": "Không đọc được vị trí. Kiểm tra quyền trình duyệt.",
+  "Pick a location on the map first": "Hãy chọn điểm trên bản đồ hoặc dùng vị trí hiện tại",
+  "Failed to save location": "Không lưu được vị trí",
+  "Failed to clear location": "Không xóa được vị trí",
+  "Please login again.": "Vui lòng đăng nhập lại.",
+  "Updated successfully": "Cập nhật thành công"
 }

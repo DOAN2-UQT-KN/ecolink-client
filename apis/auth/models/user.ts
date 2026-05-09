@@ -10,6 +10,10 @@ export interface IUser {
   emailVerified: boolean;
   createdAt: string;
   updatedAt: string;
+  /** Last-known location (self profile / auth me only; omitted for other users). */
+  latitude?: number | null;
+  longitude?: number | null;
+  locationUpdatedAt?: string | null;
 }
 
 export interface IGetMeResponse extends IBaseResponse<{ user: IUser }> {}

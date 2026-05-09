@@ -21,7 +21,6 @@ import { useTranslation } from 'react-i18next';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { invalidateOrganizationListsQuery } from './services/invalidateOrganizationLists';
-import { STATUS } from '@/constants/status';
 import {
   joinListingShowsCancelButton,
   joinListingShowsJoinButton,

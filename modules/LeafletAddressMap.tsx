@@ -25,6 +25,19 @@ const LocationMarker = memo(function LocationMarker({ setPosition }: Pick<Leafle
   return null;
 });
 
+/** Recenters the map when `position` is set or changes (e.g. GPS). */
+const FlyToPosition = memo(function FlyToPosition({ position }: { position: LatLngLiteral | null }) {
+  const map = useMap();
+  const lat = position?.lat;
+  const lng = position?.lng;
+  useEffect(() => {
+    if (lat == null || lng == null) return;
+    const z = map.getZoom();
+    map.flyTo({ lat, lng }, z < 14 ? 14 : z, { duration: 0.6 });
+  }, [map, lat, lng]);
+  return null;
+});
+
 const MapContent = memo(function MapContent({
   position,
   setPosition,
@@ -51,6 +64,7 @@ const MapContent = memo(function MapContent({
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
+      <FlyToPosition position={position} />
       <LocationMarker setPosition={setPosition} />
       {position && (
         <Marker position={position}>

@@ -11,7 +11,6 @@ import {
   type DataTableColumn,
 } from '@/components/admin/shared/DataTable';
 import ChangeStatus from '@/components/ui/ChangeStatus';
-import { Button } from '@/components/ui/button';
 import { STATUS } from '@/constants/status';
 import { cn } from '@/libs/utils';
 import { useGiftContext } from '../_context/GiftContext';
