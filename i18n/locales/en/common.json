@@ -384,5 +384,17 @@
   "Reject completion request?": "Reject completion request?",
   "Reject completion request": "Reject completion request",
   "The campaign will return to in review. Managers will be notified.": "The campaign will return to in review. Managers will be notified.",
-  "Completion request rejected; campaign returned to in review": "Completion request rejected; campaign returned to in review"
+  "Completion request rejected; campaign returned to in review": "Completion request rejected; campaign returned to in review",
+  "Maximum {{max}} evidence files allowed.": "Maximum {{max}} evidence files allowed.",
+  "Only {{count}} files were added because of the limit.": "Only {{count}} files were added because of the limit.",
+  "Unsupported file type. Use images or video.": "Unsupported file type. Use images or video.",
+  "Video must be at most {{mb}} MB.": "Video must be at most {{mb}} MB.",
+  "Failed to process some files.": "Failed to process some files.",
+  "Failed to upload some media.": "Failed to upload some media.",
+  "Drag and drop images or videos": "Drag and drop images or videos",
+  "Images (JPEG, PNG, WebP) and video (MP4, WebM, …). Videos up to {{mb}} MB. Max {{max}} files.": "Images (JPEG, PNG, WebP) and video (MP4, WebM, …). Videos up to {{mb}} MB. Max {{max}} files.",
+  "Upload evidence (images or video)": "Upload evidence (images or video)",
+  "Uploaded evidence": "Uploaded evidence",
+  "Add more files": "Add more files",
+  "Task evidence video": "Task evidence video"
 }

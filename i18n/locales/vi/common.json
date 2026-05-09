@@ -630,5 +630,17 @@
   "Notifications": "Thông báo",
   "No notifications yet": "Chưa có thông báo",
   "Open": "Mở",
-  "Only approved organization members receive this. You will not see it in your own notification list as the creator.": "Chỉ thành viên đã được duyệt vào tổ chức mới nhận thông báo. Bạn (người tạo chiến dịch) sẽ không thấy thông báo này trong danh sách của chính mình."
+  "Only approved organization members receive this. You will not see it in your own notification list as the creator.": "Chỉ thành viên đã được duyệt vào tổ chức mới nhận thông báo. Bạn (người tạo chiến dịch) sẽ không thấy thông báo này trong danh sách của chính mình.",
+  "Maximum {{max}} evidence files allowed.": "Tối đa {{max}} tệp minh chứng.",
+  "Only {{count}} files were added because of the limit.": "Chỉ thêm được {{count}} tệp do giới hạn.",
+  "Unsupported file type. Use images or video.": "Định dạng không hỗ trợ. Chỉ dùng ảnh hoặc video.",
+  "Video must be at most {{mb}} MB.": "Video tối đa {{mb}} MB.",
+  "Failed to process some files.": "Xử lý một số tệp thất bại.",
+  "Failed to upload some media.": "Tải lên một số tệp thất bại.",
+  "Drag and drop images or videos": "Kéo thả ảnh hoặc video",
+  "Images (JPEG, PNG, WebP) and video (MP4, WebM, …). Videos up to {{mb}} MB. Max {{max}} files.": "Ảnh (JPEG, PNG, WebP) và video (MP4, WebM, …). Video tối đa {{mb}} MB. Tối đa {{max}} tệp.",
+  "Upload evidence (images or video)": "Tải minh chứng (ảnh hoặc video)",
+  "Uploaded evidence": "Minh chứng đã tải",
+  "Add more files": "Thêm tệp",
+  "Task evidence video": "Video minh chứng nhiệm vụ"
 }

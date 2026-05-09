@@ -21,6 +21,7 @@ import { parseScheduledTimeRange } from '@/utils/scheduledTimeRange';
 import ChangeStatus from '@/components/ui/ChangeStatus';
 import { STATUS } from '@/constants/status';
 import { cn } from '@/libs/utils';
+import { isVideoUrl } from '@/utils/campaignTaskMedia';
 
 export interface CampaignTaskCardProps {
   task: ICampaignTask;
@@ -142,24 +143,33 @@ export function CampaignTaskCard({ task, onEdit, onDelete, isOwner }: CampaignTa
                   )}
 
                   {resultImages.length > 0 && (
-                    <AntdImage.PreviewGroup>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2 w-full overflow-hidden">
-                        {resultImages.map((img, idx) => (
-                          <div
-                            key={img || idx}
-                            className="relative aspect-[4/3] overflow-hidden  bg-muted group cursor-pointer"
-                          >
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 w-full overflow-hidden">
+                      {resultImages.map((mediaUrl, idx) => (
+                        <div
+                          key={mediaUrl || idx}
+                          className="relative aspect-[4/3] overflow-hidden bg-muted group"
+                        >
+                          {isVideoUrl(mediaUrl) ? (
+                            <video
+                              src={mediaUrl}
+                              className="h-full w-full object-cover"
+                              controls
+                              playsInline
+                              preload="metadata"
+                              aria-label={t('Task evidence video')}
+                            />
+                          ) : (
                             <AntdImage
-                              src={img}
+                              src={mediaUrl}
                               alt={task.title || ''}
-                              className="object-cover transition-transform duration-300 group-hover:scale-105 w-[220px] h-[220px]"
+                              className="object-cover transition-transform duration-300 group-hover:scale-105 w-[220px] h-[220px] cursor-pointer"
                               width="220px"
                               height="220px"
                             />
-                          </div>
-                        ))}
-                      </div>
-                    </AntdImage.PreviewGroup>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
               )}
