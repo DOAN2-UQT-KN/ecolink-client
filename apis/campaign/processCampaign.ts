@@ -29,12 +29,36 @@ export const rejectCampaign = async (id: string): Promise<IBaseResponse<unknown>
   return await requestApi.put<IBaseResponse<unknown>>(`${url}/${id}/reject`, {});
 };
 
+/** Admin: finalize campaign after manager submitted completion (same route as volunteer-facing submit). */
+export const finalizeCampaignCompletion = async (
+  id: string,
+): Promise<IBaseResponse<unknown>> => {
+  return await requestApi.put<IBaseResponse<unknown>>(`${url}/${id}/mark-done`, {});
+};
+
 export const useRejectCampaign = (options?: UsePostOptions<IBaseResponse<unknown>, string>) => {
   const { t } = useTranslation();
   return usePost({
     mutationFn: rejectCampaign,
     messageSuccess: {
       content: t('Campaign rejected successfully'),
+      type: MessageType.Toast,
+    },
+    messageError: {
+      type: MessageType.Toast,
+    },
+    ...options,
+  });
+};
+
+export const useFinalizeCampaignCompletion = (
+  options?: UsePostOptions<IBaseResponse<unknown>, string>,
+) => {
+  const { t } = useTranslation();
+  return usePost({
+    mutationFn: finalizeCampaignCompletion,
+    messageSuccess: {
+      content: t('Campaign marked as done successfully'),
       type: MessageType.Toast,
     },
     messageError: {

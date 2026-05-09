@@ -35,7 +35,7 @@ const onResponse = (response: AxiosResponse): AxiosResponse => {
 const onResponseError = async (error: any): Promise<any> => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
     // Check for 401 and not a retry, and not the refresh-token URL itself
-    if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url?.includes("/auth/refresh-token")) {
+    if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url?.includes("/api/v1/auth/refresh-token")) {
         originalRequest._retry = true
         
         const refreshTokenVal = useAuthStore.getState().refreshToken
@@ -44,7 +44,7 @@ const onResponseError = async (error: any): Promise<any> => {
             try {
                 // Call refresh token API directly with raw axios to avoid interceptor loop
                 const response = await axios.post(
-                    `${getBaseUrl()}/auth/refresh-token`,
+                    `${getBaseUrl()}/api/v1/auth/refresh-token`,
                     { refreshToken: refreshTokenVal }
                 )
                 

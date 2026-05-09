@@ -17,6 +17,7 @@ import { GoArrowUpRight } from 'react-icons/go';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import Logo from './Logo';
 import LanguageSwitcher from '../shared/LanguageSwitcher';
+import { NotificationMenu } from './NotificationMenu';
 import SpotlightCard from '../shared/SpotlightCard';
 import useAuthStore from '@/stores/useAuthStore';
 import { useRouter } from 'next/navigation';
@@ -325,7 +326,10 @@ const Header: React.FC<CardNavProps> = ({ ease = 'power3.out', menuColor }) => {
           : 'hidden md:inline-flex h-full px-4'
       }`}
     >
-      <LanguageSwitcher />
+      <div className="flex items-center gap-2">
+        <LanguageSwitcher />
+        {user ? <NotificationMenu /> : null}
+      </div>
 
       {user ? (
         <DropdownMenu>
