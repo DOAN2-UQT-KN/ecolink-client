@@ -43,6 +43,11 @@ import { parseScheduledTimeRange } from '@/utils/scheduledTimeRange';
 import { compressImage } from '@/libs/compressImage';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { uploadMultipleImages } from '@/app/(pages)/(main)/incidents/create/_services/upload.service';
+import { isVideoFileLike, isVideoUrl } from '@/utils/campaignTaskMedia';
+
+/** Max attachments per task result (images + videos). */
+const MAX_RESULT_MEDIA = 20;
+const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
 
 export interface PopoverCreateUpdateTaskProps {
   open: boolean;
@@ -73,32 +78,33 @@ function hasMeaningfulRichTextContent(value?: string): boolean {
   return plainText.length > 0;
 }
 
-const ImagePreviewItem = memo(function ImagePreviewItem({
-  image,
+const MediaPreviewItem = memo(function MediaPreviewItem({
+  item,
   index,
   onRemove,
 }: {
-  image: string | Blob;
+  item: string | Blob;
   index: number;
   onRemove: (index: number) => void;
 }) {
   const [previewUrl, setPreviewUrl] = useState('');
+  const isVideo = typeof item === 'string' ? isVideoUrl(item) : isVideoFileLike(item);
 
   useEffect(() => {
     let url = '';
-    if (typeof image === 'string') {
-      url = image;
+    if (typeof item === 'string') {
+      url = item;
     } else {
-      url = URL.createObjectURL(image);
+      url = URL.createObjectURL(item);
     }
     setPreviewUrl(url);
 
     return () => {
-      if (typeof image !== 'string' && url) {
+      if (typeof item !== 'string' && url) {
         URL.revokeObjectURL(url);
       }
     };
-  }, [image]);
+  }, [item]);
 
   if (!previewUrl) {
     return (
@@ -108,20 +114,31 @@ const ImagePreviewItem = memo(function ImagePreviewItem({
 
   return (
     <div className="relative w-[120px] h-[120px] rounded-xl group shadow-sm ring-1 ring-black/5">
-      <AntdImage
-        src={previewUrl}
-        alt={`Uploaded ${index}`}
-        width={120}
-        height={120}
-        className="object-cover transition-transform duration-300 w-full h-full rounded-xl"
-        preview={{
-          cover: (
-            <div className="absolute inset-0 bg-black/20 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-              <FaEye size={24} />
-            </div>
-          ),
-        }}
-      />
+      {isVideo ? (
+        <video
+          src={previewUrl}
+          className="w-full h-full object-cover rounded-xl bg-black"
+          controls
+          playsInline
+          preload="metadata"
+          aria-label={`Video ${index + 1}`}
+        />
+      ) : (
+        <AntdImage
+          src={previewUrl}
+          alt={`Uploaded ${index}`}
+          width={120}
+          height={120}
+          className="object-cover transition-transform duration-300 w-full h-full rounded-xl"
+          preview={{
+            cover: (
+              <div className="absolute inset-0 bg-black/20 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <FaEye size={24} />
+              </div>
+            ),
+          }}
+        />
+      )}
       <button
         type="button"
         onClick={(e) => {
@@ -224,16 +241,18 @@ const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
       const files = e.target.files;
       if (!files || files.length === 0) return;
 
-      const remainingSlots = 10 - resultImages.length;
+      const remainingSlots = MAX_RESULT_MEDIA - resultImages.length;
       if (remainingSlots <= 0) {
-        toast.error(t('Maximum 10 images allowed.'));
+        toast.error(
+          t('Maximum {{max}} evidence files allowed.', { max: MAX_RESULT_MEDIA }),
+        );
         return;
       }
 
       const filesToProcess = Array.from(files).slice(0, remainingSlots);
       if (files.length > remainingSlots) {
         toast.warning(
-          t('Only {{count}} images were added because of the limit.', {
+          t('Only {{count}} files were added because of the limit.', {
             count: remainingSlots,
           }),
         );
@@ -242,11 +261,28 @@ const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
       setCompressingResultImages(true);
 
       try {
-        const newImages = await Promise.all(filesToProcess.map((file) => compressImage(file)));
-        form.setValue('result_images', [...resultImages, ...newImages], { shouldDirty: true });
+        const newItems: (Blob | File)[] = [];
+        const maxMb = Math.round(MAX_VIDEO_BYTES / (1024 * 1024));
+        for (const file of filesToProcess) {
+          if (file.type.startsWith('video/')) {
+            if (file.size > MAX_VIDEO_BYTES) {
+              toast.error(t('Video must be at most {{mb}} MB.', { mb: maxMb }));
+              continue;
+            }
+            newItems.push(file);
+          } else if (file.type.startsWith('image/')) {
+            const compressed = await compressImage(file);
+            newItems.push(compressed);
+          } else {
+            toast.warning(t('Unsupported file type. Use images or video.'));
+          }
+        }
+        if (newItems.length > 0) {
+          form.setValue('result_images', [...resultImages, ...newItems], { shouldDirty: true });
+        }
       } catch (error) {
-        console.error('Error compressing files:', error);
-        toast.error(t('Failed to compress some images.'));
+        console.error('Error processing evidence files:', error);
+        toast.error(t('Failed to process some files.'));
       } finally {
         setCompressingResultImages(false);
         e.target.value = '';
@@ -311,8 +347,8 @@ const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
           setUploadingResultImages(true);
           resultImageUrls = await uploadMultipleImages(data.result_images);
         } catch (error) {
-          console.error('Error uploading result images:', error);
-          toast.error(t('Failed to upload some images.'));
+          console.error('Error uploading task evidence:', error);
+          toast.error(t('Failed to upload some media.'));
           return;
         } finally {
           setUploadingResultImages(false);
@@ -616,14 +652,16 @@ const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
                   </div>
 
                   <div>
-                    <span className="text-sm text-foreground-tertiary">{t('Upload Images')}</span>
+                    <span className="text-sm text-foreground-tertiary">
+                      {t('Upload evidence (images or video)')}
+                    </span>
                     <div className="mt-2 ">
                       <input
                         type="file"
                         ref={resultImageInputRef}
                         onChange={handleResultImagesChange}
                         multiple
-                        accept="image/*"
+                        accept="image/*,video/*"
                         className="hidden"
                         disabled={busy || compressingResultImages}
                       />
@@ -636,10 +674,16 @@ const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
                           <IoDocumentAttachOutline size={32} className="text-button-accent" />
                           <div className="flex flex-col gap-1 items-center text-center">
                             <span className="font-display-3 font-semibold text-button-accent">
-                              {t('Drag and drop your images')}
+                              {t('Drag and drop images or videos')}
                             </span>
                             <span className="font-display-2 text-button-accent-hover">
-                              {t('JPEG, PNG, and WEBP formats, up to 50MB')}
+                              {t(
+                                'Images (JPEG, PNG, WebP) and video (MP4, WebM, …). Videos up to {{mb}} MB. Max {{max}} files.',
+                                {
+                                  mb: Math.round(MAX_VIDEO_BYTES / (1024 * 1024)),
+                                  max: MAX_RESULT_MEDIA,
+                                },
+                              )}
                             </span>
                           </div>
                           <Button
@@ -654,7 +698,7 @@ const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
                         <div className="flex flex-col gap-4">
                           <div className="flex items-center justify-between">
                             <span className="font-display-3 font-semibold text-button-accent">
-                              {t('Uploaded Images')}
+                              {t('Uploaded evidence')}
                             </span>
                             <button
                               type="button"
@@ -667,18 +711,16 @@ const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
                           </div>
 
                           <div className="flex flex-wrap gap-3">
-                            <AntdImage.PreviewGroup>
-                              {resultImages.map((image, index) => (
-                                <ImagePreviewItem
-                                  key={`${typeof image === 'string' ? image : index}`}
-                                  image={image}
-                                  index={index}
-                                  onRemove={removeResultImage}
-                                />
-                              ))}
-                            </AntdImage.PreviewGroup>
+                            {resultImages.map((item, index) => (
+                              <MediaPreviewItem
+                                key={`${typeof item === 'string' ? item : index}-${index}`}
+                                item={item}
+                                index={index}
+                                onRemove={removeResultImage}
+                              />
+                            ))}
 
-                            {resultImages.length < 10 && (
+                            {resultImages.length < MAX_RESULT_MEDIA && (
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <button
@@ -694,14 +736,14 @@ const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                  <p>{t('Add more images')}</p>
+                                  <p>{t('Add more files')}</p>
                                 </TooltipContent>
                               </Tooltip>
                             )}
                           </div>
 
                           <span className="text-sm text-button-accent-hover font-medium">
-                            {resultImages.length}/10
+                            {resultImages.length}/{MAX_RESULT_MEDIA}
                           </span>
                         </div>
                       )}

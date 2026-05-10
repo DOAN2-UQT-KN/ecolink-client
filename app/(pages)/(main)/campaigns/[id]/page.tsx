@@ -48,6 +48,13 @@ function CampaignDetailBody() {
   const isPending = requestStatus === STATUS.PENDING;
   const showJoinCta = !isApproved && !isPending;
 
+  const canOwnerSubmitCompletion =
+    isCampaignOwner &&
+    (campaign?.status === STATUS.INREVIEW || campaign?.status === STATUS.ACTIVE);
+
+  const showAwaitingAdminCompletion =
+    isCampaignOwner && campaign?.status === STATUS.WAITING_CONFIRMED;
+
   const queryClient = useQueryClient();
   const { mutate: markDoneMutate, isPending: isMarkingDone } = useMarkDoneCampaign({
     onSuccess: () => {
@@ -166,13 +173,22 @@ function CampaignDetailBody() {
           </div>
         )}
 
-        {(isCampaignOwner && campaign?.status !== STATUS.COMPLETED) ||
+        {showAwaitingAdminCompletion ? (
+          <div
+            className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
+            role="status"
+          >
+            {t('Campaign awaiting admin completion')}
+          </div>
+        ) : null}
+
+        {canOwnerSubmitCompletion ||
         (campaign?.can_manage_campaign && campaign?.status === STATUS.ACTIVE) ? (
           <div className="flex flex-wrap justify-end gap-2">
             {campaign?.can_manage_campaign && campaign?.status === STATUS.ACTIVE ? (
               <CampaignAttendanceQrButton />
             ) : null}
-            {isCampaignOwner && campaign?.status !== STATUS.COMPLETED ? (
+            {canOwnerSubmitCompletion ? (
               <ConfirmPopover
                 title={t('Mark Campaign as Done')}
                 description={t(

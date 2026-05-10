@@ -7,6 +7,9 @@ export interface IUpdateUserRequest {
   avatar?: string;
   bio?: string;
   roleId?: string;
+  /** Set together; use `null` for both to clear saved location. */
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 export const updateUser = async (

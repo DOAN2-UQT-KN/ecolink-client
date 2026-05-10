@@ -91,9 +91,7 @@ const Address = memo(function Address() {
           setValue("latitude", newPos.lat);
           setValue("longitude", newPos.lng);
         },
-        (error) => {
-          console.error("Error getting location:", error);
-        },
+        () => {},
       );
     }
   }, [setValue]);

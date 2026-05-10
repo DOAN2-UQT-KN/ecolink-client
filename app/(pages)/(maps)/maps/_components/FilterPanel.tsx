@@ -1,7 +1,7 @@
 'use client';
 
 import { memo, type ReactNode } from 'react';
-import { RefreshCw, Activity } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import { cn } from '@/libs/utils';
 import { useTranslation } from 'react-i18next';
 

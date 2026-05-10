@@ -12,6 +12,7 @@ import { clearAuthStorage } from '@/utils/logout';
 import defaultAvatar from '@/public/default-avatar.png';
 import { uploadToCloudinary } from '@/app/(pages)/(main)/incidents/create/_services/upload.service';
 import { updateUser } from '@/apis/user/updateUser';
+import { ProfileLocationSection } from './_components/ProfileLocationSection';
 
 export default function AccountPage() {
   const { t } = useTranslation();
@@ -132,6 +133,8 @@ export default function AccountPage() {
           </div>
         </div>
       </section>
+
+      <ProfileLocationSection />
 
       <section className="rounded-xl border border-[rgba(136,122,71,0.35)] bg-white p-5 sm:p-6">
         <h2 className="text-lg font-semibold text-button-accent">{t('Security')}</h2>

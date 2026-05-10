@@ -3,6 +3,15 @@ import axios from "axios";
 const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "example";
 const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "example";
 
+function cloudinaryResourceForPayload(file: File | Blob | string): "image" | "video" {
+  if (typeof file === "string") {
+    if (file.startsWith("data:video/")) return "video";
+    return "image";
+  }
+  if (file.type.startsWith("video/")) return "video";
+  return "image";
+}
+
 export const uploadToCloudinary = async (
   file: File | Blob | string,
 ): Promise<string> => {
@@ -16,18 +25,21 @@ export const uploadToCloudinary = async (
     formData.append("file", file);
     formData.append("upload_preset", UPLOAD_PRESET);
 
+    const resource = cloudinaryResourceForPayload(file);
+
     const response = await axios.post(
-      `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+      `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${resource}/upload`,
       formData,
     );
 
     return response.data.secure_url;
   } catch (error) {
     console.error("Error uploading to Cloudinary:", error);
-    throw new Error("Failed to upload image to Cloudinary");
+    throw new Error("Failed to upload media to Cloudinary");
   }
 };
 
+/** Uploads images and/or videos (Cloudinary `image/upload` vs `video/upload`). */
 export const uploadMultipleImages = async (
   files: (File | Blob | string)[],
 ): Promise<string[]> => {

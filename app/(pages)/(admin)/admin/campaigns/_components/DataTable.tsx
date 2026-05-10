@@ -16,6 +16,9 @@ import { cn } from '@/libs/utils';
 import { useCampaignContext } from '../_context/CampaignContext';
 import { VerifyCampaignConfirm } from './VerifyCampaignConfirm';
 import { formattedDate } from '@/utils/formattedDate';
+import { STATUS } from '@/constants/status';
+import { FinalizeCampaignCompletionConfirm } from './FinalizeCampaignCompletionConfirm';
+import { RejectCampaignCompletionConfirm } from './RejectCampaignCompletionConfirm';
 
 const COLUMN_KEYS = {
   NO: 'no',
@@ -154,7 +157,7 @@ export const DataTable = memo(function DataTable() {
       },
       {
         key: COLUMN_KEYS.DATE_RANGE,
-        title: t('Start — End'),
+        title: t('Campaign duration'),
         className: 'min-w-[180px]',
         render: (_, record) => (
           <div className="space-y-0.5">
@@ -245,12 +248,30 @@ export const DataTable = memo(function DataTable() {
               <TbExternalLink className="size-5" />
             </a>
 
-            {/* Verify / Reject */}
-            <VerifyCampaignConfirm
-              campaignId={record.id}
-              campaignTitle={record.title}
-              theme={isDark ? 'dark' : 'light'}
-            />
+            {[STATUS.PENDING, STATUS.DRAFT, STATUS.NEW].includes(
+              record.status ?? STATUS.INACTIVE,
+            ) ? (
+              <VerifyCampaignConfirm
+                campaignId={record.id}
+                campaignTitle={record.title}
+                theme={isDark ? 'dark' : 'light'}
+              />
+            ) : null}
+
+            {record.status === STATUS.WAITING_CONFIRMED ? (
+              <>
+                <FinalizeCampaignCompletionConfirm
+                  campaignId={record.id}
+                  campaignTitle={record.title}
+                  theme={isDark ? 'dark' : 'light'}
+                />
+                <RejectCampaignCompletionConfirm
+                  campaignId={record.id}
+                  campaignTitle={record.title}
+                  theme={isDark ? 'dark' : 'light'}
+                />
+              </>
+            ) : null}
           </div>
         ),
       },

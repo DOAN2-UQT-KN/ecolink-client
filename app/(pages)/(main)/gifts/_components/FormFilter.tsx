@@ -2,9 +2,8 @@
 
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { TbZoom, TbZoomReset } from 'react-icons/tb';
+import { TbZoom } from 'react-icons/tb';
 
-import { Button } from '@/components/client/shared/Button';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
