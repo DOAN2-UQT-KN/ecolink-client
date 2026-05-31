@@ -4,12 +4,16 @@ import { useTranslation } from "react-i18next";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
+import { I18N_STORAGE_KEY } from "@/constants/i18n";
+import { useQueryClient } from "@tanstack/react-query";
+
 interface LanguageSwitcherProps {
   showName?: boolean;
 }
 
 const LanguageSwitcher = ({ showName = false }: LanguageSwitcherProps) => {
   const { i18n } = useTranslation();
+  const queryClient = useQueryClient();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -20,11 +24,12 @@ const LanguageSwitcher = ({ showName = false }: LanguageSwitcherProps) => {
   const nextLang = currentLang === "vi" ? "en" : "vi";
 
   const handleChange = () => {
-    i18n.changeLanguage(nextLang);
+    localStorage.setItem(I18N_STORAGE_KEY, nextLang);
+    void i18n.changeLanguage(nextLang).then(() => {
+      void queryClient.invalidateQueries();
+    });
   };
 
-  // Before hydration is complete, render a stable placeholder that matches
-  // whatever the server rendered so React reconciliation succeeds.
   if (!mounted) {
     return (
       <button
