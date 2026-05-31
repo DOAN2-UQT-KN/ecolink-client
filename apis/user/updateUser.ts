@@ -10,6 +10,7 @@ export interface IUpdateUserRequest {
   /** Set together; use `null` for both to clear saved location. */
   latitude?: number | null;
   longitude?: number | null;
+  notification_preferences?: Record<string, boolean>;
 }
 
 export const updateUser = async (

@@ -4,6 +4,8 @@ export interface IOrganization {
   id: string;
   name: string;
   description: string | null;
+  description_vi?: string | null;
+  description_en?: string | null;
   logo_url: string | null;
   background_url: string | null;
   contact_email: string | null;

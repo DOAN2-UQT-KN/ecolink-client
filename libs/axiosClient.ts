@@ -1,4 +1,5 @@
 import useAuthStore from "@/stores/useAuthStore"
+import { acceptLanguageHeader, getApiLocale } from "@/libs/getApiLocale"
 import axios, {
     AxiosError,
     HttpStatusCode,
@@ -20,7 +21,21 @@ const onRequest = (config: InternalAxiosRequestConfig): InternalAxiosRequestConf
 
     if (refreshToken) config.headers["X-Refresh-Token"] = refreshToken
     if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`
-    // config.headers["Accept-Language"] = layoutState;
+
+    const locale = getApiLocale()
+    config.headers["Accept-Language"] = acceptLanguageHeader(locale)
+
+    if (config.method?.toLowerCase() === "get") {
+      const params =
+        config.params && typeof config.params === "object"
+          ? { ...(config.params as Record<string, unknown>) }
+          : {}
+      if (params.lang === undefined) {
+        params.lang = locale
+      }
+      config.params = params
+    }
+
     return config
 }
 

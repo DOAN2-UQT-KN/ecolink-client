@@ -11,6 +11,7 @@ import { STATUS } from "@/constants/status";
 
 import { CampaignList } from "./CampaignList";
 import { OrganizationJoinRequests } from "./OrganizationJoinRequests";
+import { OrganizationLeaderboard } from "./OrganizationLeaderboard";
 import { OrganizationMembers } from "./OrganizationMembers";
 import { useOrganizationDetail } from "../_hooks/useOrganizationDetail";
 
@@ -22,6 +23,7 @@ function formatApprovalRequestBadgeCount(total: number): string {
 const ALL_ORGANIZATION_DETAIL_TAB_ITEMS = [
   { value: "campaign", labelKey: "Campaign" },
   { value: "members", labelKey: "Members" },
+  { value: "leaderboard", labelKey: "Leaderboard" },
   { value: "join-requests", labelKey: "Join requests" },
 ] as const;
 
@@ -95,6 +97,9 @@ export const OrganizationDetailTabs = memo(function OrganizationDetailTabs() {
       </TabsContent>
       <TabsContent value="members" className="mt-0">
         <OrganizationMembers enabled={tab === "members"} />
+      </TabsContent>
+      <TabsContent value="leaderboard" className="mt-0">
+        <OrganizationLeaderboard enabled={tab === "leaderboard"} />
       </TabsContent>
       <TabsContent value="join-requests" className="mt-0">
         <OrganizationJoinRequests enabled={tab === "join-requests"} />

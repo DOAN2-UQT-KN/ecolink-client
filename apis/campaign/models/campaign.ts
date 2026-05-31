@@ -5,7 +5,11 @@ export interface ICampaign {
   id: string;
   organization_id?: string;
   title: string;
+  title_vi?: string | null;
+  title_en?: string | null;
   description: string;
+  description_vi?: string | null;
+  description_en?: string | null;
 
   status?: number;
   difficulty?: number;
@@ -22,10 +26,16 @@ export interface ICampaign {
   report_ids?: string[];
   manager_ids?: string[];
 
-  votes: {
-    upvote_count: number;
-    downvote_count: number;
-    my_vote: number;
+  votes?: {
+    upvote_count?: number;
+    downvote_count?: number;
+    my_vote?: number | null;
+  };
+
+  completion_verification?: {
+    clean_count?: number;
+    not_clean_count?: number;
+    my_verification?: number | null;
   };
 
   saved?: boolean;

@@ -9,12 +9,15 @@ import { RichTextContent } from '@/components/ui/RichTextContent';
 import { cn } from '@/libs/utils';
 
 import { useCampaignDetail } from '../_hooks/useCampaignDetail';
+import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
 import Image from 'next/image';
 import { Tag } from '@/components/client/shared/Tag';
 import { formattedDate } from '@/utils/formattedDate';
 import { HiMapPin } from 'react-icons/hi2';
 import { TooltipTruncatedText } from '@/components/ui/TooltipTruncatedText';
 import ReportSummaryCard from '@/modules/ReportSummaryCard';
+
+import { STATUS } from '@/constants/status';
 
 const DEFAULT_BANNER = '/banner-default.jpg';
 
@@ -25,20 +28,35 @@ export const DetailInformation = memo(function DetailInformation() {
   const { t } = useTranslation('common');
   const { campaign, currentMembers, maxMembers, memberProgress, handleJoinCampaign } =
     useCampaignDetail();
+  const { title: localizedTitle, description: localizedDescription } =
+    useLocalizedDisplay();
 
   const bannerUrl = useMemo(
     () => (campaign?.banner?.trim() ? campaign.banner : DEFAULT_BANNER),
     [campaign?.banner],
   );
 
-  const displayTitle = useMemo(
-    () => (campaign?.title?.trim() ? campaign.title : t('Campaign')),
-    [campaign?.title, t],
+  const displayTitle = useMemo(() => {
+    if (!campaign) {
+      return t('Campaign');
+    }
+    const picked = localizedTitle(campaign).trim();
+    return picked || t('Campaign');
+  }, [campaign, localizedTitle, t]);
+
+  const displayDescription = useMemo(
+    () => (campaign ? localizedDescription(campaign) : ''),
+    [campaign, localizedDescription],
   );
 
   if (!campaign) {
     return null;
   }
+
+  const showCompletionVerification =
+    campaign.status === STATUS.WAITING_CONFIRMED ||
+    campaign.status === STATUS.COMPLETED;
+  const verification = campaign.completion_verification;
 
   return (
     <div className="flex flex-col gap-4 sm:gap-5">
@@ -47,12 +65,25 @@ export const DetailInformation = memo(function DetailInformation() {
           <div className="flex min-w-0 flex-1 flex-col p-5 sm:p-6">
             <div className="flex flex-row items-center justify-between w-full">
               <Tag variant="green">
-                {campaign.green_points ?? ''} {t('Green points')}
+                {campaign.green_points ?? ''} {t('Reward (GP & SP)')}
               </Tag>
               <span className="font-display-1 text-muted-foreground">
                 {formattedDate(campaign?.created_at)}
               </span>
             </div>
+
+            {showCompletionVerification ? (
+              <p className="mt-3 font-display-2 text-sm text-foreground-secondary">
+                {t('Verification points')}:{' '}
+                <span className="font-semibold text-emerald-700">
+                  {verification?.clean_count ?? 0} {t('Clean')}
+                </span>
+                {' · '}
+                <span className="font-semibold text-rose-700">
+                  {verification?.not_clean_count ?? 0} {t('Not clean')}
+                </span>
+              </p>
+            ) : null}
             <div className="mt-4 text-button-accent font-display-7 font-semibold leading-tight text-foreground sm:mt-3 sm:text-2xl lg:text-3xl">
               {displayTitle}
             </div>
@@ -63,7 +94,7 @@ export const DetailInformation = memo(function DetailInformation() {
             </div>
 
             <RichTextContent
-              value={campaign.description}
+              value={displayDescription}
               className="!font-display-2 text-foreground-secondary"
               maxLines={8}
               showMoreLabel={t('See more')}
@@ -81,6 +112,7 @@ export const DetailInformation = memo(function DetailInformation() {
                 {formattedDate(campaign?.start_date)} - {formattedDate(campaign?.end_date)}
               </span>
             </div>
+
           </div>
 
           <div className="w-[300px] h-[100px] flex items-center justify-center">

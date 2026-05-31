@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { getMe } from "@/apis/auth/getMe";
+import useAuthStore from "@/stores/useAuthStore";
 import HeroSection from "./_components/HeroSection";
 import { Divider } from "@/components/client/shared/Divider";
 import ProblemAndSolution from "./_components/ProblemAndSolution";
@@ -11,7 +12,13 @@ import CallToAction from "./_components/CallToAction";
 
 export default function Home() {
   useEffect(() => {
-    void getMe().catch(() => undefined);
+    if (!useAuthStore.getState().accessToken) return;
+    void getMe()
+      .then((res) => {
+        const nextUser = res?.data?.user;
+        if (nextUser) useAuthStore.getState().setUser(nextUser);
+      })
+      .catch(() => undefined);
   }, []);
 
   return (
