@@ -12,6 +12,7 @@ import { RichTextContent } from '@/components/ui/RichTextContent';
 import { cn } from '@/libs/utils';
 
 import { useOrganizationDetail } from '../_hooks/useOrganizationDetail';
+import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
 
 function formatCreatedAt(iso: string | undefined): string {
   if (!iso?.trim()) return '—';
@@ -26,9 +27,12 @@ export const GeneralInformation = memo(function GeneralInformation() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { organization, organizationId, showYourGroupTag } = useOrganizationDetail();
+  const { description: localizedDescription } = useLocalizedDisplay();
 
   const contactEmail = organization?.contact_email?.trim() ?? '';
-  const description = organization?.description?.trim() ?? '';
+  const description = organization
+    ? localizedDescription(organization).trim()
+    : '';
   const isEmailVerified = Boolean(organization?.is_email_verified);
 
   const { mutate: resendVerificationEmail, isPending: isResendPending } = useResendContactEmail({

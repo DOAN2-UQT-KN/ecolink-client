@@ -36,10 +36,10 @@ import {
 } from '../_services/seasonAdmin.service';
 
 function mapSeasonStatusToType(status: string): STATUS | null {
-  const normalized = status
-    .trim()
-    .toUpperCase()
-    .replace(/[\s-]+/g, '_');
+  const normalized = (status.toString() ?? '')
+    ?.trim()
+    ?.toUpperCase()
+    ?.replace(/[\s-]+/g, '_') ?? null;
   const mapped = STATUS[normalized as keyof typeof STATUS];
   return typeof mapped === 'number' ? mapped : null;
 }

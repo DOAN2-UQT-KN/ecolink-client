@@ -14,9 +14,11 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { useOrganizationSearch } from "../_context/OrganizationSearchContext";
+import { useLocalizedDisplay } from "@/hooks/useLocalizedDisplay";
 
 export const OrganizationList = memo(function OrganizationList() {
   const { t } = useTranslation();
+  const { description: localizedDescription } = useLocalizedDisplay();
   const { organizations, isLoading, total, pagination, setPagination } =
     useOrganizationSearch();
 
@@ -80,7 +82,7 @@ export const OrganizationList = memo(function OrganizationList() {
           <OrganizationCard
             key={org.id}
             name={org.name}
-            description={org.description ?? ""}
+            description={localizedDescription(org)}
             logoUrl={org.logo_url ?? ""}
             backgroundUrl={org.background_url ?? ""}
             contactEmail={org.contact_email ?? ""}
