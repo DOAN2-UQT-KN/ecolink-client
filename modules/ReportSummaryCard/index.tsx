@@ -17,6 +17,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { cn } from '@/libs/utils';
 import RichTextContent from '@/components/ui/RichTextContent';
+import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
 
 interface ReportSummaryCardProps {
   incident: IIncident;
@@ -32,6 +33,8 @@ const ReportSummaryCard = memo(function ReportSummaryCard({
   setSelectedReports,
 }: ReportSummaryCardProps) {
   const { t } = useTranslation();
+  const { title: localizedTitle, description: localizedDescription } =
+    useLocalizedDisplay();
   const [isOpen, setIsOpen] = useState(false);
 
   const isChecked = useMemo(
@@ -104,7 +107,7 @@ const ReportSummaryCard = memo(function ReportSummaryCard({
           <div className="pl-5 flex flex-col gap-3">
             <div className="space-y-1">
               <h4 className="font-semibold text-black leading-tight line-clamp-2">
-                {incident.title || t('Untitled report')}
+                {localizedTitle(incident) || t('Untitled report')}
               </h4>
               {incident.detail_address && (
                 <div className="flex items-center gap-2 font-display-1 text-foreground-tertiary overflow-hidden">
@@ -114,7 +117,7 @@ const ReportSummaryCard = memo(function ReportSummaryCard({
               )}
             </div>
             <RichTextContent
-              value={incident.description}
+              value={localizedDescription(incident)}
               className="!font-display-1 text-foreground-secondary "
               maxLines={2}
               // showMoreLabel={t('See more')}

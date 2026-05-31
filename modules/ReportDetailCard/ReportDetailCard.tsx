@@ -8,6 +8,7 @@ import { ReportFooter } from "./components/ReportFooter";
 import { ReportActions } from "./components/ReportActions";
 import { cn } from "@/libs/utils";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { useLocalizedDisplay } from "@/hooks/useLocalizedDisplay";
 
 interface ReportDetailCardProps {
   incident: IIncident;
@@ -28,6 +29,8 @@ const ReportDetailCard = memo(function ReportDetailCard({
 }: ReportDetailCardProps) {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const handlePreviewOpenChange = onPreviewOpenChange ?? setIsPreviewOpen;
+  const { title: localizedTitle, description: localizedDescription } =
+    useLocalizedDisplay();
 
   const images = useMemo(
     () => incident?.image_urls || incident?.media_files?.map((m) => m.url) || [],
@@ -63,9 +66,9 @@ const ReportDetailCard = memo(function ReportDetailCard({
           />
 
           <ReportContent
-            title={incident.title}
+            title={localizedTitle(incident) || incident.title}
             address={incident.detail_address || null}
-            description={incident.description}
+            description={localizedDescription(incident) || incident.description}
             aiRecommendation={incident.ai_recommendation ?? null}
             images={images}
             isExpanded={isExpanded}

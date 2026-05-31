@@ -25,7 +25,11 @@ export interface IIncident {
   id: string;
   user_id: string | null;
   title: string | null;
+  title_vi?: string | null;
+  title_en?: string | null;
   description: string | null;
+  description_vi?: string | null;
+  description_en?: string | null;
   waste_type: string | null;
   severity_level: number | null;
   latitude: number | null;
