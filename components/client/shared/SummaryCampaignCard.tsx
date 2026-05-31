@@ -8,6 +8,7 @@ import { RichTextContent } from '@/components/ui/RichTextContent';
 import { formattedDate } from '@/utils/formattedDate';
 import { TbCalendarClock, TbArrowRight } from 'react-icons/tb';
 import { useTranslation } from 'react-i18next';
+import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
 import { Button } from './Button';
 import { useRouter } from 'next/navigation';
 import useAuthStore from '@/stores/useAuthStore';
@@ -24,6 +25,10 @@ export default function SummaryCampaignCard({
   exploreMode = false,
 }: SummaryCampaignCardProps) {
   const { t } = useTranslation('common');
+  const { title: localizedTitle, description: localizedDescription } =
+    useLocalizedDisplay();
+  const displayTitle = localizedTitle(campaign);
+  const displayDescription = localizedDescription(campaign);
   const maxMembers = 50;
   const currentMembers = 18;
   const memberProgress = (currentMembers / maxMembers) * 100;
@@ -40,7 +45,7 @@ export default function SummaryCampaignCard({
     >
       <Image
         src={campaign.banner ?? '/banner-default.jpg'}
-        alt={campaign.title}
+        alt={displayTitle}
         className="w-[300px] h-[300px] rounded-lg object-cover"
         width={300}
         height={300}
@@ -50,7 +55,7 @@ export default function SummaryCampaignCard({
         <div className="flex flex-row items-center justify-between w-full">
           <div className="flex flex-row items-center gap-2">
             <Tag variant="green">
-              {campaign.green_points ?? ''} {t('Green points')}
+              {campaign.green_points ?? ''} {t('Reward (GP & SP)')}
             </Tag>
             {showYourCampaignTag ? (
               <span
@@ -68,7 +73,7 @@ export default function SummaryCampaignCard({
 
         <div className="flex flex-col gap-1 w-full">
           <div className="flex flex-row items-center gap-3 w-full">
-            <h3 className="font-semibold text-button-accent font-display-6">{campaign.title}</h3>
+            <h3 className="font-semibold text-button-accent font-display-6">{displayTitle}</h3>
             {campaign.status != null ? (
               <div onClick={(e) => e.stopPropagation()}>
                 <ChangeStatus type={campaign.status} enabledDropdown={false} />
@@ -113,7 +118,7 @@ export default function SummaryCampaignCard({
         ) : null}
 
         <RichTextContent
-          value={campaign.description}
+          value={displayDescription}
           className="!font-display-1 text-foreground-secondary"
           maxLines={4}
           showMoreLabel={t('See more')}

@@ -19,6 +19,7 @@ import { formattedDate } from '@/utils/formattedDate';
 import { STATUS } from '@/constants/status';
 import { FinalizeCampaignCompletionConfirm } from './FinalizeCampaignCompletionConfirm';
 import { RejectCampaignCompletionConfirm } from './RejectCampaignCompletionConfirm';
+import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
 
 const COLUMN_KEYS = {
   NO: 'no',
@@ -94,6 +95,8 @@ const OrgCell = memo(function OrgCell({
 
 export const DataTable = memo(function DataTable() {
   const { t } = useTranslation();
+  const { title: localizedTitle, description: localizedDescription, locale } =
+    useLocalizedDisplay();
   const { campaigns, loading, pagination, total, onPageChange, onPageSizeChange } =
     useCampaignContext();
   const { theme } = useAdminLayout();
@@ -121,7 +124,7 @@ export const DataTable = memo(function DataTable() {
           <span
             className={cn('font-medium line-clamp-2', isDark ? 'text-zinc-100' : 'text-zinc-900')}
           >
-            {record.title}
+            {localizedTitle(record)}
           </span>
         ),
       },
@@ -131,7 +134,7 @@ export const DataTable = memo(function DataTable() {
         className: 'min-w-[220px] max-w-[300px]',
         render: (_, record) => (
           <RichTextContent
-            value={record.description}
+            value={localizedDescription(record)}
             className="text-sm text-foreground whitespace-pre-wrap break-words !font-display-1"
             maxLines={2}
             showMoreLabel={t('See more')}
@@ -253,7 +256,7 @@ export const DataTable = memo(function DataTable() {
             ) ? (
               <VerifyCampaignConfirm
                 campaignId={record.id}
-                campaignTitle={record.title}
+                campaignTitle={localizedTitle(record)}
                 theme={isDark ? 'dark' : 'light'}
               />
             ) : null}
@@ -262,12 +265,12 @@ export const DataTable = memo(function DataTable() {
               <>
                 <FinalizeCampaignCompletionConfirm
                   campaignId={record.id}
-                  campaignTitle={record.title}
+                  campaignTitle={localizedTitle(record)}
                   theme={isDark ? 'dark' : 'light'}
                 />
                 <RejectCampaignCompletionConfirm
                   campaignId={record.id}
-                  campaignTitle={record.title}
+                  campaignTitle={localizedTitle(record)}
                   theme={isDark ? 'dark' : 'light'}
                 />
               </>
@@ -276,7 +279,7 @@ export const DataTable = memo(function DataTable() {
         ),
       },
     ],
-    [isDark, pagination.current, pagination.pageSize, t],
+    [isDark, pagination.current, pagination.pageSize, t, locale, localizedTitle, localizedDescription],
   );
 
   return (

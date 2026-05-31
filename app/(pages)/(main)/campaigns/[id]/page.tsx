@@ -25,12 +25,15 @@ import { STATUS } from '@/constants/status';
 import { ConfirmPopover } from '@/components/admin/shared/ConfirmPopover';
 import { useMarkDoneCampaign } from '@/apis/campaign/campaignById';
 import { useQueryClient } from '@tanstack/react-query';
+import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
 
 import { CampaignAttendanceCheckInHandler } from './_components/CampaignAttendanceCheckInHandler';
 import { CampaignAttendanceQrButton } from './_components/CampaignAttendanceQrButton';
+import { CampaignCompletionVerifyButton } from './_components/CampaignCompletionVerifyButton';
 
 function CampaignDetailBody() {
   const { t } = useTranslation('common');
+  const { title: localizedTitle } = useLocalizedDisplay();
   const {
     campaignId,
     campaign,
@@ -54,6 +57,12 @@ function CampaignDetailBody() {
 
   const showAwaitingAdminCompletion =
     isCampaignOwner && campaign?.status === STATUS.WAITING_CONFIRMED;
+
+  const showCompletionVerification =
+    campaign?.status === STATUS.WAITING_CONFIRMED ||
+    campaign?.status === STATUS.COMPLETED;
+
+  const completionVerification = campaign?.completion_verification;
 
   const queryClient = useQueryClient();
   const { mutate: markDoneMutate, isPending: isMarkingDone } = useMarkDoneCampaign({
@@ -83,12 +92,14 @@ function CampaignDetailBody() {
         type: 'link',
       },
       {
-        label: campaign?.title?.trim() ? campaign.title : t('Campaign'),
+        label: campaign
+          ? localizedTitle(campaign).trim() || t('Campaign')
+          : t('Campaign'),
         path: `/campaigns/${campaignId}`,
         type: 'page',
       },
     ],
-    [t, campaign, campaignId],
+    [t, campaign, campaignId, localizedTitle],
   );
 
   if (isLoading) {
@@ -146,29 +157,40 @@ function CampaignDetailBody() {
       <Breadcrumbs breadcrumbs={breadcrumbs} />
 
       <div className="pt-5 space-y-6">
-        {!isApproved && !isCampaignOwner && (
-          <div className="flex justify-end">
-            {isPending ? (
-              <Button
-                type="button"
-                variant="outlined-brown"
-                size="medium"
-                isLoading={isCancelling}
-                onClick={handleCancelJoinRequest}
-              >
-                {t('Cancel')}
-              </Button>
-            ) : showJoinCta ? (
-              <Button
-                type="button"
-                variant="brown"
-                size="medium"
-                iconRight={<TbArrowRight className="size-4" aria-hidden />}
-                isLoading={isJoining}
-                onClick={handleJoinCampaign}
-              >
-                {t('Join')}
-              </Button>
+        {(showCompletionVerification ||
+          (!isApproved && !isCampaignOwner)) && (
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            {showCompletionVerification ? (
+              <CampaignCompletionVerifyButton
+                campaignId={campaignId}
+                cleanCount={completionVerification?.clean_count ?? 0}
+                notCleanCount={completionVerification?.not_clean_count ?? 0}
+                myVerification={completionVerification?.my_verification ?? null}
+              />
+            ) : null}
+            {!isApproved && !isCampaignOwner ? (
+              isPending ? (
+                <Button
+                  type="button"
+                  variant="outlined-brown"
+                  size="medium"
+                  isLoading={isCancelling}
+                  onClick={handleCancelJoinRequest}
+                >
+                  {t('Cancel')}
+                </Button>
+              ) : showJoinCta ? (
+                <Button
+                  type="button"
+                  variant="brown"
+                  size="medium"
+                  iconRight={<TbArrowRight className="size-4" aria-hidden />}
+                  isLoading={isJoining}
+                  onClick={handleJoinCampaign}
+                >
+                  {t('Join')}
+                </Button>
+              ) : null
             ) : null}
           </div>
         )}
@@ -178,7 +200,9 @@ function CampaignDetailBody() {
             className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
             role="status"
           >
-            {t('Campaign awaiting admin completion')}
+            {t(
+              'Campaign awaiting admin completion hint',
+            )}
           </div>
         ) : null}
 
@@ -191,9 +215,7 @@ function CampaignDetailBody() {
             {canOwnerSubmitCompletion ? (
               <ConfirmPopover
                 title={t('Mark Campaign as Done')}
-                description={t(
-                  'Are you sure you want to mark this campaign as done? This action cannot be undone.',
-                )}
+                description={t('Mark campaign done confirmation')}
                 onConfirm={handleMarkDone}
                 cancelLabel={t('Cancel')}
                 confirmLabel={t('Mark done')}

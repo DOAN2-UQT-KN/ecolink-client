@@ -12,7 +12,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
-import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/libs/utils';
 import SelectListOrganization from '@/components/form/SelectListOrganization';
 
@@ -52,7 +51,6 @@ const GeneralInformation = memo(function GeneralInformation({
 
   const startDateValue = watch('start_date');
   const endDateValue = watch('end_date');
-
   const inputClassName = useMemo(
     () =>
       'border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50',
@@ -210,32 +208,6 @@ const GeneralInformation = memo(function GeneralInformation({
             <UploadBanner />
           </Field>
 
-          <Field className="col-span-2">
-            <Controller
-              name="notify_members"
-              control={control}
-              render={({ field }) => (
-                <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-[rgba(136,122,71,0.5)] bg-white/5 px-4 py-3">
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={(v) => field.onChange(v === true)}
-                    aria-label={t('Notify organization members')}
-                    className="mt-0.5"
-                  />
-                  <span className="text-sm text-foreground-tertiary leading-snug">
-                    {t(
-                      'Send an in-app notification to all members of this organization about this new campaign.',
-                    )}
-                    <span className="mt-1 block text-xs text-muted-foreground">
-                      {t(
-                        'Only approved organization members receive this. You will not see it in your own notification list as the creator.',
-                      )}
-                    </span>
-                  </span>
-                </label>
-              )}
-            />
-          </Field>
         </div>
       </div>
     </div>

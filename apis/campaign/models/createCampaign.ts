@@ -14,8 +14,6 @@ export interface ICreateCampaignRequest {
   longitude?: number;
   detail_address?: string;
   banner?: string;
-  /** When true, notify all active organization members (in-app). Owner-only. */
-  notify_members?: boolean;
 }
 
 export interface ICreateCampaignResponse extends IBaseResponse<{

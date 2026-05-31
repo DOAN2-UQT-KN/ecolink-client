@@ -4,6 +4,7 @@ import { memo, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useGetAllCampaigns } from '@/apis/campaign/getCampaigns';
+import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
 import {
   Select,
   SelectContent,
@@ -32,6 +33,7 @@ const SelectListCampaign = memo(function SelectListCampaign({
   ...props
 }: SelectListCampaignProps) {
   const { t } = useTranslation();
+  const { title: localizedTitle } = useLocalizedDisplay();
 
   const params = useMemo(() => ({ page: 1, limit: 100 }), []);
 
@@ -59,7 +61,7 @@ const SelectListCampaign = memo(function SelectListCampaign({
         )}
         {campaigns.map((campaign) => (
           <SelectItem key={campaign.id} value={campaign.id}>
-            <span className="text-sm">{campaign.title}</span>
+            <span className="text-sm">{localizedTitle(campaign)}</span>
           </SelectItem>
         ))}
       </SelectContent>
