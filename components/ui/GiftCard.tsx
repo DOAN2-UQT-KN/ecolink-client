@@ -8,7 +8,6 @@ import { cn } from '@/libs/utils';
 import bannerDefault from '@/public/banner-default.jpg';
 import { Button } from '../client/shared/Button';
 import { TbCoinFilled } from 'react-icons/tb';
-import { ConfirmPopover } from '@/components/admin/shared/ConfirmPopover';
 import { useTranslation } from 'react-i18next';
 
 type GiftCardProps = {
@@ -27,13 +26,13 @@ export const GiftCard = memo(function GiftCard({
   const { t } = useTranslation();
   const imageSrc = useMemo(
     () => (gift?.media?.url?.startsWith('http') ? gift.media?.url : bannerDefault),
-    [gift.mediaId],
+    [gift.media?.url],
   );
 
   const stockLabel = useMemo(() => {
-    if (gift.stockRemaining === null) return 'Unlimited';
-    return `${gift.stockRemaining} left`;
-  }, [gift.stockRemaining]);
+    if (gift.stockRemaining === null) return t('Unlimited');
+    return t('{{count}} left', { count: gift.stockRemaining });
+  }, [gift.stockRemaining, t]);
 
   const handleExchange = useCallback(() => onExchange(gift), [gift, onExchange]);
 
@@ -70,6 +69,7 @@ export const GiftCard = memo(function GiftCard({
       </div>
 
       <div className="mt-auto flex items-left justify-end gap-3 pt-1">
+<<<<<<< Updated upstream
         <ConfirmPopover
           theme="light"
           title={t('Exchange this reward?')}
@@ -92,6 +92,17 @@ export const GiftCard = memo(function GiftCard({
             </Button>
           }
         />
+=======
+        <Button
+          variant="brown"
+          size="medium"
+          className="!h-[45px]"
+          isDisabled={exchangePending}
+          onClick={handleExchange}
+        >
+          {t('Exchange')}
+        </Button>
+>>>>>>> Stashed changes
       </div>
     </article>
   );

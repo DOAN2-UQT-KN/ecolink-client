@@ -1,9 +1,10 @@
 'use client';
 
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, Gift } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+import type { IGift, IRedeemGiftRequest } from '@/apis/gift/models/gift';
 import { GiftCard } from '@/components/ui/GiftCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -15,11 +16,13 @@ import {
 } from '@/components/ui/empty';
 
 import { useGiftContext } from '../_hooks/useGiftContext';
+import { RedeemGiftDialog } from './RedeemGiftDialog';
 
 export const GiftList = memo(function GiftList() {
   const { t } = useTranslation();
   const { gifts, isLoading, isRedeeming, totalPages, pagination, setPagination, onRedeem } =
     useGiftContext();
+  const [selectedGift, setSelectedGift] = useState<IGift | null>(null);
 
   const handlePageChange = useCallback(
     (newPage: number) => {
@@ -33,6 +36,13 @@ export const GiftList = memo(function GiftList() {
   const canGoNext = useMemo(
     () => pagination.current < totalPages,
     [pagination.current, totalPages],
+  );
+
+  const handleRedeemSubmit = useCallback(
+    async (payload: IRedeemGiftRequest) => {
+      await onRedeem(payload);
+    },
+    [onRedeem],
   );
 
   if (isLoading) {
@@ -74,7 +84,12 @@ export const GiftList = memo(function GiftList() {
     <div className="space-y-8">
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {gifts.map((gift) => (
-          <GiftCard key={gift.id} gift={gift} onExchange={onRedeem} exchangePending={isRedeeming} />
+          <GiftCard
+            key={gift.id}
+            gift={gift}
+            onExchange={setSelectedGift}
+            exchangePending={isRedeeming}
+          />
         ))}
       </div>
 
@@ -105,6 +120,16 @@ export const GiftList = memo(function GiftList() {
           </button>
         </div>
       )}
+
+      <RedeemGiftDialog
+        gift={selectedGift}
+        open={Boolean(selectedGift)}
+        pending={isRedeeming}
+        onOpenChange={(open) => {
+          if (!open) setSelectedGift(null);
+        }}
+        onSubmit={handleRedeemSubmit}
+      />
     </div>
   );
 });
