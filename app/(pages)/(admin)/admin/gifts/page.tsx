@@ -7,6 +7,7 @@ import {
   type BreadcrumbItemProps,
 } from "@/components/client/shared/Breadcrumbs";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import type { IGift } from "@/apis/gift/models/gift";
 import { GiftProvider } from "./_context/GiftContext";
@@ -14,6 +15,7 @@ import { FormFilter } from "./_components/FormFilter";
 import { DataTable } from "./_components/DataTable";
 import { GiftFormDialog } from "./_components/GiftFormDialog";
 import { HiPlusCircle } from "react-icons/hi2";
+import { RedeemsTable } from "./_components/RedeemsTable";
 
 function GiftsContent() {
   const { t } = useTranslation();
@@ -40,8 +42,21 @@ function GiftsContent() {
         </Button>
       </div>
 
-      <FormFilter />
-      <DataTable onEdit={(g) => setEditGift(g)} />
+      <Tabs defaultValue="catalog" className="gap-4">
+        <TabsList className="h-10 border border-zinc-200 bg-white">
+          <TabsTrigger value="catalog">{t("Catalog")}</TabsTrigger>
+          <TabsTrigger value="redeems">{t("Redeems")}</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="catalog" className="space-y-4">
+          <FormFilter />
+          <DataTable onEdit={(g) => setEditGift(g)} />
+        </TabsContent>
+
+        <TabsContent value="redeems">
+          <RedeemsTable />
+        </TabsContent>
+      </Tabs>
 
       <GiftFormDialog mode="create" open={createOpen} onOpenChange={setCreateOpen} />
       <GiftFormDialog

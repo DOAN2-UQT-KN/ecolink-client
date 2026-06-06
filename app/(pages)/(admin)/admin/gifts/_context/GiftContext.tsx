@@ -145,7 +145,7 @@ export function GiftProvider({ children }: { children: React.ReactNode }) {
   const { data, isLoading } = useGetGifts(request);
 
   const gifts = data?.data?.gifts ?? [];
-  const total = data?.data?.meta?.total ?? 0;
+  const total = data?.data?.meta?.total ?? data?.data?.total ?? 0;
 
   const onFilterChange = useCallback(
     (next: Partial<GiftFormFilterValues>) => {

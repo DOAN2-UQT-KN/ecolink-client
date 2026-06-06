@@ -10,8 +10,9 @@ import React, {
   useState,
 } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 
-import type { IGift } from '@/apis/gift/models/gift';
+import type { IGift, IRedeemGiftRequest } from '@/apis/gift/models/gift';
 import { useGetGifts } from '@/apis/gift/getGifts';
 import { useRedeemGift } from '@/apis/gift/redeemGift';
 import useGetParam from '@/hooks/useGetParam';
@@ -40,7 +41,7 @@ type GiftContextType = {
   filters: GiftFilters;
   setFilters: (filters: Partial<GiftFilters>) => void;
   resetFilters: () => void;
-  onRedeem: (gift: IGift) => void;
+  onRedeem: (payload: IRedeemGiftRequest) => Promise<void>;
   onViewMore: (gift: IGift) => void;
 };
 
@@ -52,6 +53,7 @@ export const GiftProvider = React.memo(function GiftProvider({
   children: ReactNode;
 }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -123,9 +125,15 @@ export const GiftProvider = React.memo(function GiftProvider({
     return sorted;
   }, [filters.sortBy, rawGifts]);
 
-  const total = useMemo(() => data?.data?.meta?.total ?? 0, [data]);
+  const total = useMemo(() => data?.data?.meta?.total ?? data?.data?.total ?? 0, [data]);
   const totalPages = useMemo(
-    () => Math.max(1, data?.data?.meta?.totalPages ?? Math.ceil(total / pagination.pageSize || 1)),
+    () =>
+      Math.max(
+        1,
+        data?.data?.meta?.totalPages ??
+          data?.data?.totalPages ??
+          Math.ceil(total / pagination.pageSize || 1),
+      ),
     [data, pagination.pageSize, total],
   );
 
@@ -196,11 +204,12 @@ export const GiftProvider = React.memo(function GiftProvider({
   }, [updateURL]);
 
   const onRedeem = useCallback(
-    (gift: IGift) => {
+    async (payload: IRedeemGiftRequest) => {
       if (isRedeeming) return;
-      void redeemGiftMutateAsync({ id: gift.id });
+      await redeemGiftMutateAsync(payload);
+      await queryClient.invalidateQueries({ queryKey: ['gift-redemptions'] });
     },
-    [isRedeeming, redeemGiftMutateAsync],
+    [isRedeeming, queryClient, redeemGiftMutateAsync],
   );
 
   const onViewMore = useCallback(

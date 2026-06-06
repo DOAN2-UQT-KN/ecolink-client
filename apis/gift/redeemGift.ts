@@ -6,8 +6,15 @@ import { MessageType } from '@/utils/showMessage';
 
 const baseurl = '/api/v1/gifts';
 
-export const redeemGift = async ({ id }: { id: string }): Promise<IRedeemGiftResponse> => {
-  return await requestApi.post<IRedeemGiftResponse>(`${baseurl}/${id}/redeem`, {});
+export const redeemGift = async ({
+  id,
+  phoneNumber,
+  pickupLocation,
+}: IRedeemGiftRequest): Promise<IRedeemGiftResponse> => {
+  return await requestApi.post<IRedeemGiftResponse>(`${baseurl}/${id}/redeem`, {
+    phoneNumber,
+    pickupLocation,
+  });
 };
 
 export const useRedeemGift = (
