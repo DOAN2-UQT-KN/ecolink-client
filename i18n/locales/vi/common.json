@@ -54,6 +54,12 @@
   "Join Environmental Campaigns": "Tham gia chiến dịch môi trường",
   "Become a Volunteer": "Đăng ký làm tình nguyện viên",
   "Community Leaderboard": "Bảng xếp hạng cộng đồng",
+  "GamificationCitizen": "Công dân",
+  "GamificationVolunteer": "Tình nguyện viên",
+  "No leaderboard entries yet": "Chưa có dữ liệu bảng xếp hạng.",
+  "My Rank": "Hạng của tôi",
+  "Global": "Toàn hệ thống",
+  "Organizations": "Tổ chức",
   "Total Trash Collected": "Tổng lượng rác đã thu gom",
   "Environmental Impact Map": "Bản đồ tác động môi trường",
   "EcoLink Success Stories": "Những câu chuyện từ EcoLink",
@@ -394,6 +400,9 @@
   "Edit gift": "Sửa quà",
   "Save": "Lưu",
   "Green points": "Điểm xanh",
+  "Spendable points (SP)": "Điểm chi tiêu (SP)",
+  "Reward (GP & SP)": "Thưởng (GP & SP)",
+  "You will spend {{points}} SP to redeem «{{name}}».": "Bạn sẽ dùng {{points}} SP để đổi «{{name}}».",
   "Stock": "Tồn kho",
   "Unlimited": "Không giới hạn",
   "Unlimited stock": "Tồn kho không giới hạn",
@@ -514,7 +523,9 @@
   "Mark done": "Gửi duyệt hoàn tất",
   "Mark Campaign as Done": "Hoàn tất chiến dịch (gửi admin)",
   "Are you sure you want to mark this campaign as done? This action cannot be undone.": "Gửi chiến dịch để admin phê duyệt hoàn tất. Sau khi gửi, vui lòng chờ admin xác nhận.",
+  "Mark campaign done confirmation": "Gửi admin duyệt hoàn tất. Người dùng gần chiến dịch có thể được mời bình chọn xác minh. Điểm xanh chỉ được cộng sau khi admin phê duyệt.",
   "Campaign awaiting admin completion": "Chiến dịch đang chờ quản trị viên phê duyệt hoàn tất.",
+  "Campaign awaiting admin completion hint": "Đã gửi chờ admin duyệt. Cộng đồng gần chiến dịch có thể bình chọn xác minh. Phần thưởng chỉ được cấp sau khi admin phê duyệt.",
   "Finalize completion (admin)": "Xác nhận hoàn tất",
   "Approve campaign completion?": "Phê duyệt hoàn tất chiến dịch?",
   "This will mark the campaign as completed, grant rewards, and notify volunteers.": "Chiến dịch sẽ chuyển sang hoàn thành, cộng điểm và thông báo cho tình nguyện viên.",
@@ -586,6 +597,8 @@
   "Reviews": "Đánh giá",
   "Reports": "Báo cáo",
   "Votes": "Bình chọn",
+  "Upvote": "Bình chọn lên",
+  "Downvote": "Bình chọn xuống",
   "Apply changes?": "Áp dụng thay đổi?",
   "This action updates live gamification settings.": "Hành động này sẽ cập nhật cấu hình trò chơi hóa đang hoạt động.",
   "Difficulty": "Độ khó",
@@ -658,9 +671,6 @@
   "Failed to save location": "Không lưu được vị trí",
   "Failed to clear location": "Không xóa được vị trí",
   "Please login again.": "Vui lòng đăng nhập lại.",
-<<<<<<< Updated upstream
-  "Updated successfully": "Cập nhật thành công"
-=======
   "Updated successfully": "Cập nhật thành công",
   "Notification preferences": "Tùy chọn thông báo",
   "Notification preferences hint": "Chọn loại thông báo trong ứng dụng bạn muốn nhận.",
@@ -707,5 +717,4 @@
   "Created at": "Ngày tạo",
   "No actions": "Không có thao tác",
   "Redemption status updated": "Đã cập nhật trạng thái đơn"
->>>>>>> Stashed changes
 }

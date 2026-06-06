@@ -73,7 +73,7 @@ export const GiftCard = memo(function GiftCard({
         <ConfirmPopover
           theme="light"
           title={t('Exchange this reward?')}
-          description={t('You will spend {{points}} GP to redeem «{{name}}».', {
+          description={t('You will spend {{points}} SP to redeem «{{name}}».', {
             points: gift.greenPoints,
             name: gift.name,
           })}

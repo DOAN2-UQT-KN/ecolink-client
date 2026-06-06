@@ -20,6 +20,7 @@ import {
 import useCampaignMeContext from '../_hooks/useCampaignMeContext';
 import FormFilter from './FormFilter';
 import { UpdateCampaignPopover } from './UpdateCampaignPopover';
+import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
 
 const defaultPagination = { current: 1, pageSize: 10 };
 
@@ -55,6 +56,8 @@ function difficultyColor(difficulty?: number | null): string {
 export const DataTable = memo(function DataTable() {
   const router = useRouter();
   const { t } = useTranslation();
+  const { title: localizedTitle, description: localizedDescription, locale } =
+    useLocalizedDisplay();
   const { campaigns, isLoading, pagination, setPagination, total, refetch } =
     useCampaignMeContext();
   const [selectedCampaign, setSelectedCampaign] = useState<ICampaign | null>(null);
@@ -85,7 +88,9 @@ export const DataTable = memo(function DataTable() {
       {
         key: COLUMN_KEYS.TITLE,
         title: t('Title'),
-        render: (_, record) => <span className="font-medium line-clamp-2">{record.title}</span>,
+        render: (_, record) => (
+          <span className="font-medium line-clamp-2">{localizedTitle(record)}</span>
+        ),
         width: 220,
       },
       {
@@ -94,7 +99,7 @@ export const DataTable = memo(function DataTable() {
         render: (_, record) => (
           <div className="w-[280px]">
             <RichTextContent
-              value={record.description}
+              value={localizedDescription(record)}
               className="text-sm text-foreground whitespace-pre-wrap break-words !font-display-1 w-full"
               maxLines={2}
               showMoreLabel={t('See more')}
@@ -223,7 +228,7 @@ export const DataTable = memo(function DataTable() {
         width: 90,
       },
     ],
-    [openEdit, pagination.current, pagination.pageSize, t],
+    [openEdit, pagination.current, pagination.pageSize, t, locale, localizedTitle, localizedDescription],
   );
 
   const handleTableChange = useCallback(

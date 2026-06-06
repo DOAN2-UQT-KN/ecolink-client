@@ -14,8 +14,6 @@ export interface CampaignFormValues {
   longitude?: number;
   detail_address: string;
   selectedReports: IIncident[];
-  /** Notify all org members (in-app) when the owner creates this campaign. */
-  notify_members: boolean;
 }
 
 export const DEFAULT_CAMPAIGN_FORM_VALUES: CampaignFormValues = {
@@ -30,7 +28,6 @@ export const DEFAULT_CAMPAIGN_FORM_VALUES: CampaignFormValues = {
   longitude: undefined,
   detail_address: "",
   selectedReports: [],
-  notify_members: false,
 };
 
 export const difficultyOptions = [1, 2, 3, 4, 5];
@@ -50,7 +47,6 @@ export const transformToApiData = (
     longitude: data.longitude,
     detail_address: data.detail_address.trim() || undefined,
     report_ids: data.selectedReports.map((report) => report.id),
-    ...(data.notify_members ? { notify_members: true } : {}),
   };
 };
 

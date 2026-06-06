@@ -1,6 +1,7 @@
 "use client";
 
 import i18n from "@/i18n";
+import { I18N_STORAGE_KEY, resolveUiLanguage } from "@/constants/i18n";
 import { I18nextProvider } from "react-i18next";
 import { useEffect } from "react";
 
@@ -10,17 +11,12 @@ export default function I18nProvider({
   children: React.ReactNode;
 }) {
   useEffect(() => {
-    const stored = localStorage.getItem("i18nextLng");
-    const cookieMatch = document.cookie.match(/(?:^|;\s*)i18next=([^;]+)/);
-    const cookieLang = cookieMatch?.[1];
-    const browserLang = navigator.language?.split("-")[0];
-    const htmlLang = document.documentElement.lang?.split("-")[0];
+    const stored = localStorage.getItem(I18N_STORAGE_KEY);
+    const nextLang = resolveUiLanguage(stored);
 
-    const detected = (stored || cookieLang || browserLang || htmlLang || "en")
-      .split("-")[0]
-      .toLowerCase();
-
-    const nextLang = detected === "vi" ? "vi" : "en";
+    if (!stored) {
+      localStorage.setItem(I18N_STORAGE_KEY, nextLang);
+    }
 
     if (i18n.language !== nextLang) {
       void i18n.changeLanguage(nextLang);

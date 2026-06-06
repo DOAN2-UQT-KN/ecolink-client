@@ -27,11 +27,13 @@ export interface IGetGamificationLeaderboardRequest {
   page?: number;
   limit?: number;
   seasonId?: string;
+  organizationId?: string;
 }
 
 export interface IGetGamificationLeaderboardMeRequest {
   metric: Exclude<IGamificationLeaderboardMetric, "org_aggregate">;
   seasonId?: string;
+  organizationId?: string;
 }
 
 export interface IGamificationRankingPoints {
