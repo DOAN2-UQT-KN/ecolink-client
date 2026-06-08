@@ -470,5 +470,8 @@
   "Unknown user": "Unknown user",
   "Created at": "Created at",
   "No actions": "No actions",
-  "Redemption status updated": "Redemption status updated"
+  "Redemption status updated": "Redemption status updated",
+  "notFound.title": "Page not found",
+  "notFound.message": "The page you are looking for does not exist or may have been moved.",
+  "notFound.backHome": "Back to homepage"
 }

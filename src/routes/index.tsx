@@ -7,6 +7,7 @@ import AuthLayout from "@/src/layouts/AuthLayout";
 import AdminLayout from "@/src/layouts/AdminLayout";
 import MapsLayout from "@/src/layouts/MapsLayout";
 import ProfileLayout from "@/src/layouts/ProfileLayout";
+import NotFound from "@/src/pages/NotFound";
 import PageSuspense from "@/components/client/shared/PageSuspense";
 
 function lazyPage(
@@ -54,6 +55,7 @@ export const router = createBrowserRouter([
               { path: "orders", element: lazyPage(() => import("@/app/(pages)/(main)/profile/orders/page"), "profile-orders") },
             ],
           },
+          { path: "*", element: <NotFound /> },
         ],
       },
       {
@@ -87,6 +89,7 @@ export const router = createBrowserRouter([
           { path: "gamification/badge", element: lazyPage(() => import("@/app/(pages)/(admin)/admin/gamification/badge/page"), "admin-gamification-badge") },
           { path: "gamification/season", element: lazyPage(() => import("@/app/(pages)/(admin)/admin/gamification/season/page"), "admin-gamification-season") },
           { path: "settings", element: lazyPage(() => import("@/app/(pages)/(admin)/admin/settings/page"), "admin-settings") },
+          { path: "*", element: <NotFound /> },
         ],
       },
     ],

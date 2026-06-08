@@ -716,5 +716,8 @@
   "Unknown user": "Người dùng không xác định",
   "Created at": "Ngày tạo",
   "No actions": "Không có thao tác",
-  "Redemption status updated": "Đã cập nhật trạng thái đơn"
+  "Redemption status updated": "Đã cập nhật trạng thái đơn",
+  "notFound.title": "Không tìm thấy trang",
+  "notFound.message": "Trang bạn đang tìm không tồn tại hoặc có thể đã được di chuyển.",
+  "notFound.backHome": "Về trang chủ"
 }
