@@ -1,0 +1,1 @@
+import{t as u}from"./index-DS7As6Rj.js";var n=(r=>(r.Toast="toast",r))(n||{}),c=(r=>(r.Info="info",r.Success="success",r.Warning="warning",r.Error="error",r))(c||{});const w=({type:r,level:o,title:t,content:s,onClose:a,duration:i})=>{r==="toast"?u[o](s||t,{onAutoClose:a,closeButton:!0}):u[o](s||t,{onAutoClose:a,closeButton:!0})};export{n as M,c as a,w as s};

@@ -1,1 +1,0 @@
-import{c as a,o}from"./index-burHAwU4.js";import{u as r}from"./reactQuery-DXwSsmBV.js";import{M as s}from"./showMessage-Cf06Irx2.js";const n=async e=>await o.delete(`/api/v1/organizations/${e.id}/members/me`),c=e=>{const{t}=a();return r({mutationFn:n,messageSuccess:{content:t("Left organization successfully"),type:s.Toast},messageError:{type:s.Toast},...e})};export{c as u};
