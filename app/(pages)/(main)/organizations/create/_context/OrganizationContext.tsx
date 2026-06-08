@@ -8,7 +8,7 @@ import {
   toCreateOrganizationRequest,
 } from "../_services/organization.service";
 import { uploadToCloudinary } from "../_services/upload.service";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/libs/router";
 import { queryClient } from "@/libs/queryClient";
 
 interface OrganizationContextType {

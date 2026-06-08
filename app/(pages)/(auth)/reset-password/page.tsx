@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/client/shared/Button";
 import { useTranslation } from "react-i18next";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "@/libs/router";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";

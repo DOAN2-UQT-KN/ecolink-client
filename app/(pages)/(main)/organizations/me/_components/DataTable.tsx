@@ -7,7 +7,7 @@ import { Button } from "@/components/client/shared/Button";
 import { useTranslation } from "react-i18next";
 import { OrganizationMeContext } from "../_context/OrganizationMeContext";
 import { IOrganization } from "@/apis/organization/models/organization";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/libs/router";
 import {
   DropdownMenu,
   DropdownMenuContent,

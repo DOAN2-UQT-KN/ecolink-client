@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, memo } from "react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "@/libs/router";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { HiOutlineSortAscending, HiOutlineSortDescending } from "react-icons/hi";

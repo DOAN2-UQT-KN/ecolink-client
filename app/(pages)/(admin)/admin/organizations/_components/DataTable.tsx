@@ -17,7 +17,7 @@ import { ApproveOrganizationConfirm } from './ApproveOrganizationConfirm';
 import { TbScanEye } from 'react-icons/tb';
 import { RichTextContent } from '@/components/ui/RichTextContent';
 import { formattedDate } from '@/utils/formattedDate';
-import Image from 'next/image';
+import Image from '@/components/ui/AppImage';
 import defaultAvatar from '@/public/default-avatar.png';
 
 const COLUMN_KEYS = {

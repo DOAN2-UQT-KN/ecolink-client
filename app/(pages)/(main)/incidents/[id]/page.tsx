@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useParams } from "next/navigation";
+import { useParams } from "@/libs/router";
 import { useGetReportDetail } from "@/apis/incident/getReportDetail";
 import ReportDetailCard from "@/modules/ReportDetailCard/ReportDetailCard";
 import {

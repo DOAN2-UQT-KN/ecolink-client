@@ -1,7 +1,7 @@
 "use client";
 
 import React, { memo, useCallback, useMemo } from "react";
-import Image from "next/image";
+import Image from "@/components/ui/AppImage";
 import { formattedDate } from "@/utils/formattedDate";
 import { IUser } from "@/apis/auth/models/user";
 import { useTranslation } from "react-i18next";

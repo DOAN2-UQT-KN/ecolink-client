@@ -2,7 +2,7 @@
 
 import { memo, useMemo } from 'react';
 import { Award } from 'lucide-react';
-import Link from 'next/link';
+import Link from '@/libs/router';
 import { useTranslation } from 'react-i18next';
 
 import {

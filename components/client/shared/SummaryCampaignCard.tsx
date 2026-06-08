@@ -1,6 +1,6 @@
 import type { ICampaign } from '@/apis/campaign/models/campaign';
 import { Progress } from '@/components/ui/progress';
-import Image from 'next/image';
+import Image from '@/components/ui/AppImage';
 import { Tag } from './Tag';
 import { HiMapPin } from 'react-icons/hi2';
 import { TooltipTruncatedText } from '@/components/ui/TooltipTruncatedText';
@@ -10,7 +10,7 @@ import { TbCalendarClock, TbArrowRight } from 'react-icons/tb';
 import { useTranslation } from 'react-i18next';
 import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
 import { Button } from './Button';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/libs/router';
 import useAuthStore from '@/stores/useAuthStore';
 import ChangeStatus from '@/components/ui/ChangeStatus';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';

@@ -10,7 +10,7 @@ import { cn } from '@/libs/utils';
 
 import { useCampaignDetail } from '../_hooks/useCampaignDetail';
 import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
-import Image from 'next/image';
+import Image from '@/components/ui/AppImage';
 import { Tag } from '@/components/client/shared/Tag';
 import { formattedDate } from '@/utils/formattedDate';
 import { HiMapPin } from 'react-icons/hi2';

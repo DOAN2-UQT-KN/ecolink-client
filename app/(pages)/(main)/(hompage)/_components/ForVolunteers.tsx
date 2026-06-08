@@ -3,7 +3,7 @@
 import CollapseCard from "@/components/client/shared/CollapseCard";
 import { Tag } from "@/components/client/shared/Tag";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
-import Image from "next/image";
+import Image from "@/components/ui/AppImage";
 import { useCallback } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { motion } from "framer-motion";

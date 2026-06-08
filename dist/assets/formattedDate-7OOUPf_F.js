@@ -1,0 +1,1 @@
+import{bp as e}from"./index-burHAwU4.js";const o=(t,a=!1)=>{if(!t)return"-";const n=(e.resolvedLanguage??e.language??"en").startsWith("vi")?"vi-VN":"en-US";return new Date(t).toLocaleDateString(n,{day:"2-digit",month:"short",year:"numeric",...a?{hour:"2-digit",minute:"2-digit"}:{}})};export{o as f};

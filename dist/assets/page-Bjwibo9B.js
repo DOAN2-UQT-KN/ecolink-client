@@ -1,0 +1,1 @@
+import{j as a,r as e,aP as o}from"./index-burHAwU4.js";import{G as s}from"./GoogleCallbackView-B_xGx2K9.js";import"./getMe-CJXKuCF7.js";import"./auth.service-DUm57z10.js";function c(){return a.jsx(e.Suspense,{fallback:a.jsx(o,{pageName:"google-callback"}),children:a.jsx(s,{})})}export{c as default};

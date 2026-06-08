@@ -1,7 +1,7 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
-import Link from 'next/link';
+import { usePathname } from '@/libs/router';
+import Link from '@/libs/router';
 import { useTranslation } from 'react-i18next';
 
 type TabValue = 'account' | 'points' | 'badges' | 'orders';

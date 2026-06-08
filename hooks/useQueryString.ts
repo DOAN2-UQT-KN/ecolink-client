@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "@/libs/router";
 
 const useQueryString = () => {
   const pathname = usePathname();

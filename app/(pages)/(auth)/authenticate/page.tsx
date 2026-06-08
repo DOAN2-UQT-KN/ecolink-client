@@ -1,9 +1,9 @@
 "use client";
 
 import { Button } from "@/components/client/shared/Button";
-import Image from "next/image";
+import Image from "@/components/ui/AppImage";
 import { Trans, useTranslation } from "react-i18next";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/libs/router";
 
 export default function Authenticate() {
   const { t } = useTranslation();

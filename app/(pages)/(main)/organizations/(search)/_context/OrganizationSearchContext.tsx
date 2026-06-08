@@ -8,7 +8,7 @@ import React, {
   useEffect,
   useContext,
 } from 'react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from '@/libs/router';
 import { useGetOrganizations } from '@/apis/organization/getOrganizations';
 import { useGetMyOrganizations } from '@/apis/organization/getMyOrganizations';
 import type { IOrganization } from '@/apis/organization/models/organization';

@@ -26,7 +26,7 @@ import {
 import { registerChatMedia } from "@/apis/chat-media/registerChatMedia"
 import { uploadToCloudinary } from "@/app/(pages)/(main)/incidents/create/_services/upload.service"
 import { compressImage } from "@/libs/compressImage"
-import { usePathname } from "next/navigation"
+import { usePathname } from "@/libs/router"
 
 const MAX_CHAT_IMAGES = 8
 
@@ -249,7 +249,7 @@ export default function AiChatWidget() {
             return
         }
         if (!baseConfigured) {
-            toast.error("API URL is not configured (NEXT_PUBLIC_API_URL).")
+            toast.error("API URL is not configured (VITE_API_URL).")
             return
         }
         abortRef.current?.abort()
@@ -279,7 +279,7 @@ export default function AiChatWidget() {
         if ((!text && pendingImages.length === 0) || streaming || isUploading || !accessToken)
             return
         if (!baseConfigured) {
-            toast.error("API URL is not configured (NEXT_PUBLIC_API_URL).")
+            toast.error("API URL is not configured (VITE_API_URL).")
             return
         }
 
@@ -454,7 +454,7 @@ export default function AiChatWidget() {
             if (!content) return
             if (streaming || isUploading || booting || !accessToken) return
             if (!baseConfigured) {
-                toast.error("API URL is not configured (NEXT_PUBLIC_API_URL).")
+                toast.error("API URL is not configured (VITE_API_URL).")
                 return
             }
 
@@ -594,7 +594,7 @@ export default function AiChatWidget() {
                             <p className="text-sm font-semibold">EcoLink assistant</p>
                             {!baseConfigured && (
                                 <p className="text-xs text-muted-foreground">
-                                    Set NEXT_PUBLIC_API_URL
+                                    Set VITE_API_URL
                                 </p>
                             )}
                         </div>
@@ -625,7 +625,7 @@ export default function AiChatWidget() {
                                     : !accessToken
                                       ? "Please sign in to chat with EcoLink assistant."
                                       : !baseConfigured
-                                        ? "Set NEXT_PUBLIC_API_URL to connect via API Gateway."
+                                        ? "Set VITE_API_URL to connect via API Gateway."
                                         : "Ask about EcoLink, your organizations, or reports. Send a message to begin — a conversation is created automatically."}
                             </p>
                         )}

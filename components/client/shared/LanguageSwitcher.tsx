@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslation } from "react-i18next";
-import Image from "next/image";
+import Image from "@/components/ui/AppImage";
 import { useEffect, useState } from "react";
 
 import { I18N_STORAGE_KEY } from "@/constants/i18n";

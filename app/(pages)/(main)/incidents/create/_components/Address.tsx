@@ -2,7 +2,7 @@
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { LatLngLiteral } from "leaflet";
-import dynamic from "next/dynamic";
+import dynamic from "@/libs/dynamic";
 import { Textarea } from "@/components/ui/textarea";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { useIncident } from "../_hooks/useIncident";

@@ -2,7 +2,7 @@
 
 import { createContext, memo, ReactNode, useEffect, useCallback, useMemo, useState } from 'react';
 import { FormProvider, useForm, UseFormReturn } from 'react-hook-form';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/libs/router';
 
 import { IIncident } from '@/apis/incident/models/incident';
 import { queryClient } from '@/libs/queryClient';
