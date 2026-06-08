@@ -1,0 +1,1 @@
+import{t as e}from"./index-DY1sND3x.js";import{a as r}from"./reactQuery-DTFEsNLx.js";const i="/api/v1/gifts",u=async t=>await e.get(i,t),n=(t,s)=>r({queryKey:["gifts",t],queryFn:()=>u(t),...s});export{n as u};

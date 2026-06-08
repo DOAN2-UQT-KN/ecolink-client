@@ -1,0 +1,1 @@
+import{j as t}from"./index-DY1sND3x.js";function s(){return t.jsxs("div",{className:"space-y-2",children:[t.jsx("h1",{className:"font-semibold text-2xl tracking-tight",children:"Settings"}),t.jsx("p",{className:"text-muted-foreground text-sm",children:"Admin settings placeholder."})]})}export{s as default};

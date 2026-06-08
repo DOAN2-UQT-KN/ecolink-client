@@ -1,1 +1,0 @@
-import{f as n}from"./index-DS7As6Rj.js";const h=(e,t,o)=>{if(e.data){const{access_token:a,refresh_token:s,user:c}=e.data;n.getState().setLoginSuccess(a,c,s),document.cookie=`refresh_token=${s}; path=/; Max-Age=2592000; Secure; SameSite=Lax`,t.push(o)}};export{h};

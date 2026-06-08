@@ -1,0 +1,1 @@
+import{t as r}from"./index-DY1sND3x.js";import{a as n}from"./reactQuery-DTFEsNLx.js";const o="/api/v1/organizations/my",s=async t=>await r.get(o,t),u=(t,a)=>n({queryKey:["my-organizations",t],queryFn:()=>s(t),...a});export{u};

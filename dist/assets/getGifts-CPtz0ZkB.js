@@ -1,1 +1,0 @@
-import{o as e}from"./index-DS7As6Rj.js";import{a as r}from"./reactQuery-BjyMZaEf.js";const i="/api/v1/gifts",o=async t=>await e.get(i,t),n=(t,s)=>r({queryKey:["gifts",t],queryFn:()=>o(t),...s});export{n as u};
