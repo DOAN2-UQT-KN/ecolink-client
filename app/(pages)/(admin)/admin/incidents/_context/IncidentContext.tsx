@@ -9,7 +9,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "@/libs/router";
 
 import { useGetIncidents } from "@/apis/incident/getIncidents";
 import type { IGetReportsRequest } from "@/apis/incident/models/getReport";

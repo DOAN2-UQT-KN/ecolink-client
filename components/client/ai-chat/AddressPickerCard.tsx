@@ -1,6 +1,6 @@
 "use client"
 
-import dynamic from "next/dynamic"
+import dynamic from "@/libs/dynamic"
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { LatLngLiteral } from "leaflet"
 import { Textarea } from "@/components/ui/textarea"

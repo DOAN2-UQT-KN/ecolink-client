@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import Image from 'next/image';
+import Image from '@/components/ui/AppImage';
 import { Image as AntdImage } from 'antd';
 import { useTranslation } from 'react-i18next';
 

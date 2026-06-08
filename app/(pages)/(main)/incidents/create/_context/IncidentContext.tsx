@@ -5,7 +5,7 @@ import { useForm, FormProvider, UseFormReturn } from 'react-hook-form';
 import { useCreateReport } from '@/apis/incident/createReport';
 import { IncidentFormValues, transformToApiData } from '../_services/incident.service';
 import { uploadMultipleImages } from '../_services/upload.service';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/libs/router';
 import { queryClient } from '@/libs/queryClient';
 
 interface IncidentContextType {

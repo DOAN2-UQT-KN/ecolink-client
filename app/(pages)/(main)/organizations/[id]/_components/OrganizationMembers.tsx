@@ -25,7 +25,7 @@ import { cn } from "@/libs/utils";
 import useAuthStore from "@/stores/useAuthStore";
 
 import { useOrganizationDetail } from "../_hooks/useOrganizationDetail";
-import Image from "next/image";
+import Image from "@/components/ui/AppImage";
 import defaultAvatar from "@/public/default-avatar.png";
 
 const FILTER_PANEL_CLASS =

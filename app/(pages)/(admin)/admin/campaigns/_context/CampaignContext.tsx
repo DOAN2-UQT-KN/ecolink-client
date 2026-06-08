@@ -9,7 +9,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from '@/libs/router';
 
 import { useGetCampaigns } from '@/apis/campaign/getCampaigns';
 import type { IGetCampaignsRequest } from '@/apis/campaign/models/getCampaigns';

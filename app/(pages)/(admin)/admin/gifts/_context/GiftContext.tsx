@@ -9,7 +9,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "@/libs/router";
 
 import { useGetGifts } from "@/apis/gift/getGifts";
 import type { IGift, IGetGiftsRequest } from "@/apis/gift/models/gift";

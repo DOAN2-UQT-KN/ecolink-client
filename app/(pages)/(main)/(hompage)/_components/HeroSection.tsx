@@ -3,7 +3,7 @@
 import { Button } from "@/components/client/shared/Button";
 import { Divider } from "@/components/client/shared/Divider";
 import { Tag } from "@/components/client/shared/Tag";
-import Image from "next/image";
+import Image from "@/components/ui/AppImage";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 

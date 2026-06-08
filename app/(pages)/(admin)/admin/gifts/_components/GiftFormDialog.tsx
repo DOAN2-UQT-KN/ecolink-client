@@ -87,7 +87,7 @@ export function GiftFormDialog({ mode, gift, open, onOpenChange }: GiftFormDialo
     let resolvedImageUrl = '';
     try {
       if (mode === 'edit' && gift && !hasNewImage) {
-        resolvedImageUrl = gift.mediaId;
+        resolvedImageUrl = gift.mediaId ?? '';
       } else if (hasNewImage) {
         resolvedImageUrl = await uploadToCloudinary(data.giftImage);
         if (!resolvedImageUrl) {

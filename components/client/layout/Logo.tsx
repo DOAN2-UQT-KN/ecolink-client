@@ -1,5 +1,5 @@
-import Image from "next/image";
-import Link from "next/link";
+import Image from "@/components/ui/AppImage";
+import Link from "@/libs/router";
 
 type LogoSize = "medium" | "small";
 

@@ -9,7 +9,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { OrganizationMeProvider } from "./_context/OrganizationMeContext";
 import { Button } from "@/components/client/shared/Button";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/libs/router";
 import { HiOutlinePlusCircle } from "react-icons/hi";
 
 function MyOrganizationsPage() {

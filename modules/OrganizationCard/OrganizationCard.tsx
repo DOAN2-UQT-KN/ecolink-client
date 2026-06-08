@@ -18,7 +18,7 @@ import {
 import { useLeaveOrganization } from '@/apis/organization/leaveOrganization';
 import useAuthStore from '@/stores/useAuthStore';
 import { useTranslation } from 'react-i18next';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/libs/router';
 import { useQueryClient } from '@tanstack/react-query';
 import { invalidateOrganizationListsQuery } from './services/invalidateOrganizationLists';
 import {

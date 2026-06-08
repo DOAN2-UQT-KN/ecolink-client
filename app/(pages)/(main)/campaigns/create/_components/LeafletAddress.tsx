@@ -2,7 +2,7 @@
 
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import type { LatLngLiteral } from "leaflet";
-import dynamic from "next/dynamic";
+import dynamic from "@/libs/dynamic";
 import { useTranslation } from "react-i18next";
 
 import { Input } from "@/components/ui/input";

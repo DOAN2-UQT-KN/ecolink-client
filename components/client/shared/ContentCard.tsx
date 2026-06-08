@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import Image from "next/image";
+import Image from "@/components/ui/AppImage";
 import { useTranslation } from "react-i18next";
 
 export type ContentCardProps = {

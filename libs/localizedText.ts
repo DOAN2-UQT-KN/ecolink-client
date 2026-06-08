@@ -18,14 +18,15 @@ export function pickLocalizedText(
   return text.en?.trim() || text.vi?.trim() || o || "";
 }
 
-export type LocalizableEntity = Record<string, unknown>;
+export type LocalizableEntity = object;
 
 function readStringField(
   entity: LocalizableEntity,
   ...keys: string[]
 ): string | null {
+  const record = entity as Record<string, unknown>;
   for (const key of keys) {
-    const v = entity[key];
+    const v = record[key];
     if (typeof v === "string" && v.trim()) {
       return v.trim();
     }

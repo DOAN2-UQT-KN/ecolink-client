@@ -9,7 +9,7 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "@/libs/router";
 
 import type { ICampaign } from "@/apis/campaign/models/campaign";
 import { useGetCampaigns, useGetMyCampaigns } from "@/apis/campaign/getCampaigns";

@@ -8,7 +8,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/libs/router";
 import { useTranslation } from "react-i18next";
 import React, { Fragment } from "react";
 import { cn } from "@/libs/utils";

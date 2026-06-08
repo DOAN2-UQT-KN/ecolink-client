@@ -1,6 +1,6 @@
 import { ISignInResponse } from "@/apis/auth/models/signIn";
 import useAuthStore from "@/stores/useAuthStore";
-import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
+import type { AppRouter } from "@/libs/router";
 
 export interface ISignInFormValues {
   email: string;
@@ -9,7 +9,7 @@ export interface ISignInFormValues {
 
 export const handleSignInSuccess = (
   res: ISignInResponse,
-  router: AppRouterInstance,
+  router: AppRouter,
   redirect: string,
 ) => {
   if (res.data) {

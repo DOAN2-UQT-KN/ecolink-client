@@ -1,7 +1,7 @@
 'use client';
 
-import Image from 'next/image';
-import Link from 'next/link';
+import Image from '@/components/ui/AppImage';
+import Link from '@/libs/router';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,7 +20,7 @@ import LanguageSwitcher from '../shared/LanguageSwitcher';
 import { NotificationMenu } from './NotificationMenu';
 import SpotlightCard from '../shared/SpotlightCard';
 import useAuthStore from '@/stores/useAuthStore';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/libs/router';
 import { clearAuthStorage } from '@/utils/logout';
 
 type CardNavLink = {

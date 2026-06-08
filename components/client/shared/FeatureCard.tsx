@@ -1,7 +1,7 @@
 "use client";
 
 import { useMediaQuery } from "@/hooks/useMediaQuery";
-import Image from "next/image";
+import Image from "@/components/ui/AppImage";
 import React from "react";
 
 export type FeatureCardProps = {

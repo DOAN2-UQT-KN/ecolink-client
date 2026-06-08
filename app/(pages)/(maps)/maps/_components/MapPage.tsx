@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import dynamic from 'next/dynamic';
+import dynamic from '@/libs/dynamic';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/libs/utils';
 import { getAllCampaigns } from '@/apis/campaign/getCampaigns';

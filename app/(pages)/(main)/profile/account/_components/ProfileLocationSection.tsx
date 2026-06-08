@@ -1,6 +1,6 @@
 'use client';
 
-import dynamic from 'next/dynamic';
+import dynamic from '@/libs/dynamic';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { LatLngLiteral } from 'leaflet';
 import { useTranslation } from 'react-i18next';

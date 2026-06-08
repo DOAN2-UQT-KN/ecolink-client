@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/libs/router";
 import { useTranslation } from "react-i18next";
 import { HiOutlinePlusCircle } from "react-icons/hi";
 

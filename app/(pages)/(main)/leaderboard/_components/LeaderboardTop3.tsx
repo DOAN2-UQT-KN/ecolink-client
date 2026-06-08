@@ -1,6 +1,6 @@
 'use client';
 
-import Image from 'next/image';
+import Image from '@/components/ui/AppImage';
 import { Crown } from 'lucide-react';
 import type { LeaderboardItem } from './types';
 import defaultAvatar from '@/public/default-avatar.png';
