@@ -9,10 +9,9 @@ type Props<T> = {
   column: DataTableColumn<T>;
   record: T;
   rowIndex: number;
-  theme?: "light" | "dark";
 };
 
-export function TableCell<T>({ column, record, rowIndex, theme = "dark" }: Props<T>) {
+export function TableCell<T>({ column, record, rowIndex }: Props<T>) {
   const value = useMemo(
     () => (column.dataIndex ? (record[column.dataIndex] as unknown) : record),
     [column.dataIndex, record],
@@ -21,8 +20,7 @@ export function TableCell<T>({ column, record, rowIndex, theme = "dark" }: Props
   return (
     <BaseTableCell
       className={cn(
-        "px-3 py-2.5 font-display-1",
-        theme === "dark" ? "text-zinc-100" : "text-zinc-900",
+        "px-3 py-2.5 font-display-1 text-zinc-900",
         column.className,
       )}
     >
