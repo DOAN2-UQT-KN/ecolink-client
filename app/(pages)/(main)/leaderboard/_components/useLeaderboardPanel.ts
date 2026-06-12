@@ -24,9 +24,10 @@ type UseLeaderboardPanelOptions = {
   organizationId?: string;
 };
 
-function statusToSeasonStatus(status: string): Season["status"] {
-  if (status === "ACTIVE") return "ACTIVE";
+function statusToSeasonStatus(status: string | number): Season["status"] {
+  if (status === "ACTIVE" || status === 1) return "ACTIVE";
   if (status === "FROZEN") return "FROZEN";
+  if (status === "INACTIVE" || status === 2) return "CLOSED";
   return "CLOSED";
 }
 

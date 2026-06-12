@@ -6,6 +6,7 @@ import Image from 'next/image';
 import type { IGift } from '@/apis/gift/models/gift';
 import { cn } from '@/libs/utils';
 import bannerDefault from '@/public/banner-default.jpg';
+import { ConfirmPopover } from '@/components/admin/shared/ConfirmPopover';
 import { Button } from '../client/shared/Button';
 import { TbCoinFilled } from 'react-icons/tb';
 import { useTranslation } from 'react-i18next';
@@ -69,7 +70,6 @@ export const GiftCard = memo(function GiftCard({
       </div>
 
       <div className="mt-auto flex items-left justify-end gap-3 pt-1">
-<<<<<<< Updated upstream
         <ConfirmPopover
           theme="light"
           title={t('Exchange this reward?')}
@@ -92,17 +92,6 @@ export const GiftCard = memo(function GiftCard({
             </Button>
           }
         />
-=======
-        <Button
-          variant="brown"
-          size="medium"
-          className="!h-[45px]"
-          isDisabled={exchangePending}
-          onClick={handleExchange}
-        >
-          {t('Exchange')}
-        </Button>
->>>>>>> Stashed changes
       </div>
     </article>
   );

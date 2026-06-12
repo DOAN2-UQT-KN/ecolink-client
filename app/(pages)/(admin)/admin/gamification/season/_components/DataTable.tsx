@@ -26,23 +26,14 @@ import {
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { STATUS } from '@/constants/status';
 import { useSeasonContext } from '../_hooks/useSeasonContext';
 import {
   isActiveSeason,
   parseIsoToDate,
+  seasonStatusToType,
   toIsoEndOfDay,
   toIsoStartOfDay,
 } from '../_services/seasonAdmin.service';
-
-function mapSeasonStatusToType(status: string): STATUS | null {
-  const normalized = (status.toString() ?? '')
-    ?.trim()
-    ?.toUpperCase()
-    ?.replace(/[\s-]+/g, '_') ?? null;
-  const mapped = STATUS[normalized as keyof typeof STATUS];
-  return typeof mapped === 'number' ? mapped : null;
-}
 
 function FinalizeDialog({
   season,
@@ -254,7 +245,7 @@ export function DataTable({ onEdit }: { onEdit: (season: ISeason) => void }) {
         title: t('Status'),
         className: 'w-[120px]',
         render: (_, row) => {
-          const statusType = mapSeasonStatusToType(row.status);
+          const statusType = seasonStatusToType(row.status);
           if (!statusType) return row.status || '—';
           return (
             <div className="w-fit">

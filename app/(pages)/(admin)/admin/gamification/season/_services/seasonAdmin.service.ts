@@ -1,6 +1,7 @@
 "use client";
 
 import type { ISeason } from "@/apis/gamification/season/models";
+import { STATUS } from "@/constants/status";
 
 export type SeasonKind = "MONTHLY" | "QUARTERLY";
 
@@ -36,6 +37,19 @@ export function toIsoEndOfDay(date?: Date): string | undefined {
   ).toISOString();
 }
 
+/** API returns numeric GlobalStatus (1 = ACTIVE, 2 = INACTIVE); create form may send "ACTIVE". */
+export function seasonStatusToType(status: string | number): STATUS | null {
+  if (status === "ACTIVE" || status === STATUS.ACTIVE || status === "1") {
+    return STATUS.ACTIVE;
+  }
+  if (status === "INACTIVE" || status === STATUS.INACTIVE || status === "2") {
+    return STATUS.INACTIVE;
+  }
+  const normalized = String(status).trim().toUpperCase().replace(/[\s-]+/g, "_");
+  const mapped = STATUS[normalized as keyof typeof STATUS];
+  return typeof mapped === "number" ? mapped : null;
+}
+
 export function isActiveSeason(season: ISeason): boolean {
-  return season.status === "ACTIVE";
+  return seasonStatusToType(season.status) === STATUS.ACTIVE;
 }

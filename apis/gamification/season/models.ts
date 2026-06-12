@@ -4,7 +4,7 @@ export interface ISeason {
   id: string;
   label: string | null;
   kind: string;
-  status: string;
+  status: string | number;
   startsAt: string;
   endsAt: string;
 }
