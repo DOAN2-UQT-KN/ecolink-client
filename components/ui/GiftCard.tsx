@@ -8,7 +8,6 @@ import { cn } from '@/libs/utils';
 import bannerDefault from '@/public/banner-default.jpg';
 import { ConfirmPopover } from '@/components/admin/shared/ConfirmPopover';
 import { Button } from '../client/shared/Button';
-import { ConfirmPopover } from '../admin/shared/ConfirmPopover';
 import { TbCoinFilled } from 'react-icons/tb';
 import { useTranslation } from 'react-i18next';
 
