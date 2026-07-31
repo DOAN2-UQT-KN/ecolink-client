@@ -17,7 +17,7 @@ const CHAT_CONVERSATIONS = "/api/v1/chat/conversations"
 export function isChatApiConfigured(): boolean {
     const base =
         (typeof window !== "undefined" && axiosClient.defaults.baseURL) ||
-        process.env.NEXT_PUBLIC_API_URL ||
+        import.meta.env.VITE_API_URL ||
         ""
     return !!String(base).trim()
 }
@@ -70,7 +70,7 @@ export async function createConversation(options?: {
     title?: string | null
 }): Promise<CreateConversationResult> {
     if (!isChatApiConfigured()) {
-        throw new Error("NEXT_PUBLIC_API_URL is not set")
+        throw new Error("VITE_API_URL is not set")
     }
     try {
         const data = await requestApi.post<{
@@ -89,7 +89,7 @@ export async function listMessages(
     conversationId: string
 ): Promise<ChatMessageDto[]> {
     if (!isChatApiConfigured()) {
-        throw new Error("NEXT_PUBLIC_API_URL is not set")
+        throw new Error("VITE_API_URL is not set")
     }
     try {
         const data = await requestApi.get<{ messages: ChatMessageDto[] }>(
@@ -221,7 +221,7 @@ export async function streamAssistantReply(
     options?: StreamAssistantOptions
 ): Promise<void> {
     if (!isChatApiConfigured()) {
-        throw new Error("NEXT_PUBLIC_API_URL is not set")
+        throw new Error("VITE_API_URL is not set")
     }
 
     const streamPath = `${CHAT_CONVERSATIONS}/${conversationId}/messages/stream`

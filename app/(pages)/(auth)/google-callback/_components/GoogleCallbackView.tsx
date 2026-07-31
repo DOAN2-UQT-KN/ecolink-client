@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useCallback, useRef } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "@/libs/router";
 import PageSuspense from "@/components/client/shared/PageSuspense";
 import { getMe } from "@/apis/auth/getMe";
 import { googleCallback } from "@/apis/auth/googleCallback";

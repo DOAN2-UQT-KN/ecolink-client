@@ -9,7 +9,7 @@ import React, {
   useMemo,
   useState,
 } from 'react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from '@/libs/router';
 import { useQueryClient } from '@tanstack/react-query';
 
 import type { IGift, IRedeemGiftRequest } from '@/apis/gift/models/gift';

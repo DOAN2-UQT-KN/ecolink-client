@@ -4,7 +4,7 @@ import { memo, useCallback, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
 import { Inbox } from 'lucide-react';
-import Image from 'next/image';
+import Image from '@/components/ui/AppImage';
 import { useTranslation } from 'react-i18next';
 import { HiCheck, HiOutlineX } from 'react-icons/hi';
 

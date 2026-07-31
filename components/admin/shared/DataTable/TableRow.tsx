@@ -41,11 +41,9 @@ export function DataTableRow<T>({
   inlineEdit,
   onSelect,
   onRowClick,
-  theme = "dark",
 }: Props<T>) {
   const [editingColumnKey, setEditingColumnKey] = useState<string | null>(null);
   const [draftValue, setDraftValue] = useState<unknown>(null);
-  const isDark = theme === "dark";
 
   const cellValues = useMemo(
     () =>
@@ -58,14 +56,9 @@ export function DataTableRow<T>({
   return (
     <BaseTableRow
       className={cn(
-        "group transition-colors",
-        isDark
-          ? "border-b border-zinc-700/40 hover:bg-zinc-800/50"
-          : "border-b border-zinc-200 hover:bg-zinc-100",
+        "group transition-colors border-b border-zinc-200 hover:bg-zinc-100",
         onRowClick && "cursor-pointer",
-        selected && (isDark
-          ? "bg-zinc-800 data-[state=selected]:bg-zinc-800"
-          : "bg-zinc-200 data-[state=selected]:bg-zinc-200"),
+        selected && "bg-zinc-200 data-[state=selected]:bg-zinc-200",
       )}
       data-state={selected ? "selected" : undefined}
       onClick={() => onRowClick?.(record)}
@@ -114,22 +107,12 @@ export function DataTableRow<T>({
           <TableCell
             key={column.key}
             className={cn(
-              "px-3 py-2.5 font-display-1",
-              isDark ? "text-zinc-200" : "text-zinc-900",
-              // ── Sticky column ──────────────────────────────────────────
+              "px-3 py-2.5 font-display-1 text-zinc-900",
               column.sticky === "left" && "sticky left-0 z-10",
               column.sticky === "right" && "sticky right-0 z-10",
-              // Default solid background (no selection, no hover)
-              column.sticky && !selected &&
-                (isDark ? "bg-zinc-900" : "bg-white"),
-              // Selected row background
-              column.sticky && selected &&
-                (isDark ? "bg-zinc-800" : "bg-zinc-200"),
-              // Hover – use group-hover so the cell background tracks the row
-              column.sticky && !selected &&
-                (isDark
-                  ? "group-hover:bg-zinc-800/50"
-                  : "group-hover:bg-zinc-100"),
+              column.sticky && !selected && "bg-white",
+              column.sticky && selected && "bg-zinc-200",
+              column.sticky && !selected && "group-hover:bg-zinc-100",
               column.className,
             )}
             onDoubleClick={(event) => {
@@ -165,12 +148,7 @@ export function DataTableRow<T>({
                     </button>
                     <button
                       type="button"
-                      className={cn(
-                        "text-xs cursor-pointer transition-colors",
-                        isDark
-                          ? "text-zinc-500 hover:text-zinc-400"
-                          : "text-zinc-500 hover:text-zinc-700",
-                      )}
+                      className="text-xs cursor-pointer transition-colors text-zinc-500 hover:text-zinc-700"
                       onClick={(event) => {
                         event.stopPropagation();
                         cancelEdit();

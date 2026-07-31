@@ -1,9 +1,9 @@
 'use client';
 
-import Image from 'next/image';
+import Image from '@/components/ui/AppImage';
 import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/libs/router';
 import { toast } from 'sonner';
 
 import useAuthStore from '@/stores/useAuthStore';

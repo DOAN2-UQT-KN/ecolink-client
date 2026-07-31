@@ -1,13 +1,14 @@
 'use client';
 
 import { memo, useCallback, useMemo } from 'react';
-import Image from 'next/image';
+import Image from '@/components/ui/AppImage';
 
 import type { IGift } from '@/apis/gift/models/gift';
 import { cn } from '@/libs/utils';
 import bannerDefault from '@/public/banner-default.jpg';
 import { ConfirmPopover } from '@/components/admin/shared/ConfirmPopover';
 import { Button } from '../client/shared/Button';
+import { ConfirmPopover } from '../admin/shared/ConfirmPopover';
 import { TbCoinFilled } from 'react-icons/tb';
 import { useTranslation } from 'react-i18next';
 

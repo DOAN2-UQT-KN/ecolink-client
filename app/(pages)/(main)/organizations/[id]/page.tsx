@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "@/libs/router";
 import { useTranslation } from "react-i18next";
 import { Inbox } from "lucide-react";
 import { toast } from "sonner";

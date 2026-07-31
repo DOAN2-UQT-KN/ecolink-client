@@ -23,7 +23,7 @@ import { STATUS } from '@/constants/status';
 import { useOrganizationDetail } from '../_hooks/useOrganizationDetail';
 
 import defaultAvatar from '@/public/default-avatar.png';
-import Image from 'next/image';
+import Image from '@/components/ui/AppImage';
 
 import { HiCheck, HiOutlineX } from 'react-icons/hi';
 

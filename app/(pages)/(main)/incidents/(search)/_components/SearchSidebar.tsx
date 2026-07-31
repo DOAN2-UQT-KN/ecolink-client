@@ -18,7 +18,7 @@ import {
 import { Button } from '@/components/client/shared/Button';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { TbZoomReset, TbZoom } from 'react-icons/tb';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from '@/libs/router';
 
 const wasteTypeOptions = [
   { label: 'Household waste', value: 'household' },

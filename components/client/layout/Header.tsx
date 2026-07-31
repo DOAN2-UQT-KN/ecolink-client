@@ -1,7 +1,7 @@
 'use client';
 
-import Image from 'next/image';
-import Link from 'next/link';
+import Image from '@/components/ui/AppImage';
+import Link from '@/libs/router';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,7 +20,7 @@ import LanguageSwitcher from '../shared/LanguageSwitcher';
 import { NotificationMenu } from './NotificationMenu';
 import SpotlightCard from '../shared/SpotlightCard';
 import useAuthStore from '@/stores/useAuthStore';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/libs/router';
 import { clearAuthStorage } from '@/utils/logout';
 
 type CardNavLink = {
@@ -351,7 +351,7 @@ const Header: React.FC<CardNavProps> = ({ ease = 'power3.out', menuColor }) => {
             <DropdownMenuItem asChild>
               <Link href="/profile/points">{t('Profile')}</Link>
             </DropdownMenuItem>
-            {(user as any).role_id === '11111111-1111-1111-1111-111111111111' && (
+            {(user as any).role_id === '40ed59d7-5d7c-4ab2-88a2-a24efae7931e' && (
               <DropdownMenuItem asChild>
                 <Link href="/admin">{t('Admin')}</Link>
               </DropdownMenuItem>

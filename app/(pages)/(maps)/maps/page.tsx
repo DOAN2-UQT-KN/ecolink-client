@@ -1,5 +1,5 @@
 'use client';
-import dynamic from 'next/dynamic';
+import dynamic from '@/libs/dynamic';
 
 // Leaflet requires a browser environment – skip SSR entirely for this route
 const MapPage = dynamic(() => import('./_components/MapPage'), {
