@@ -16,6 +16,7 @@ permissions:
 env:
   DOCKER_IMAGE: uqtri/ecolink-client
   ARGOCD_REPO: DOAN2-UQT-KN/ecolink-argocd
+  VITE_API_URL: https://api.ecolink.id.vn
 
 jobs:
   build-and-deploy:
@@ -36,6 +37,10 @@ jobs:
         run: npm ci
 
       - name: Build app
+        env:
+          VITE_API_URL: ${{ env.VITE_API_URL }}
+          VITE_CLOUDINARY_CLOUD_NAME: ${{ secrets.VITE_CLOUDINARY_CLOUD_NAME }}
+          VITE_CLOUDINARY_UPLOAD_PRESET: ${{ secrets.VITE_CLOUDINARY_UPLOAD_PRESET }}
         run: npm run build
 
       - name: Set image tag
@@ -63,6 +68,10 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
+          build-args: |
+            VITE_API_URL=${{ env.VITE_API_URL }}
+            VITE_CLOUDINARY_CLOUD_NAME=${{ secrets.VITE_CLOUDINARY_CLOUD_NAME }}
+            VITE_CLOUDINARY_UPLOAD_PRESET=${{ secrets.VITE_CLOUDINARY_UPLOAD_PRESET }}
           tags: |
             ${{ env.DOCKER_IMAGE }}:${{ steps.vars.outputs.IMAGE_TAG }}
             ${{ env.DOCKER_IMAGE }}:latest
