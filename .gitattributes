@@ -1,0 +1,6 @@
+# Managed by secret-guard (env_files + patterns from .secret-guard.yaml)
+.env.secret.env filter=app-secrets diff=app-secrets merge=app-secrets
+
+.secret-guard.yaml !filter !diff !merge
+.gitattributes !filter !diff !merge
+.env.example !filter !diff !merge
