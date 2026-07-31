@@ -1,1 +1,0 @@
-import{j as e}from"./index-DY1sND3x.js";function s(){return e.jsxs("div",{className:"space-y-2",children:[e.jsx("h1",{className:"font-semibold text-2xl tracking-tight",children:"Admin"}),e.jsx("p",{className:"text-muted-foreground text-sm",children:"Dashboard content goes here. Use the sidebar to navigate."})]})}export{s as default};
