@@ -1,5 +1,3 @@
-'use client';
-
 import { useMemo } from 'react';
 import Image from '@/components/ui/AppImage';
 import { Image as AntdImage } from 'antd';

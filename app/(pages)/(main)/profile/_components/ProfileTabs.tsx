@@ -1,5 +1,3 @@
-'use client';
-
 import { usePathname } from '@/libs/router';
 import Link from '@/libs/router';
 import { useTranslation } from 'react-i18next';

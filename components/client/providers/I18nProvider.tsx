@@ -1,5 +1,3 @@
-"use client";
-
 import i18n from "@/i18n";
 import { I18N_STORAGE_KEY, resolveUiLanguage } from "@/constants/i18n";
 import { I18nextProvider } from "react-i18next";

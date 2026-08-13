@@ -1,5 +1,3 @@
-'use client';
-
 import { memo, type ReactNode } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { cn } from '@/libs/utils';

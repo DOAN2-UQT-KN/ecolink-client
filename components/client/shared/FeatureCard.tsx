@@ -1,5 +1,3 @@
-"use client";
-
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import Image from "@/components/ui/AppImage";
 import React from "react";

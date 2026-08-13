@@ -1,5 +1,3 @@
-"use client";
-
 import { Button } from "@/components/client/shared/Button";
 import { Divider } from "@/components/client/shared/Divider";
 import { Tag } from "@/components/client/shared/Tag";

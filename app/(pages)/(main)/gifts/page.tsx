@@ -1,5 +1,3 @@
-"use client";
-
 import { memo, Suspense, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 

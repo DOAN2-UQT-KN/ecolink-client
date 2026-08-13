@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useMemo, useRef } from "react";
 import { useParams, useRouter, useSearchParams } from "@/libs/router";
 import { useTranslation } from "react-i18next";

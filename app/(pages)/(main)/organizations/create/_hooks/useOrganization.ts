@@ -1,5 +1,3 @@
-"use client";
-
 import { useContext } from "react";
 import { OrganizationContext } from "../_context/OrganizationContext";
 

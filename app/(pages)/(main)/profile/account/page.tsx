@@ -1,5 +1,3 @@
-'use client';
-
 import Image from '@/components/ui/AppImage';
 import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';

@@ -1,5 +1,3 @@
-'use client';
-
 import { Suspense, useMemo } from 'react';
 import { useParams } from '@/libs/router';
 import { useTranslation } from 'react-i18next';

@@ -1,5 +1,3 @@
-"use client";
-
 import { useMemo, useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import {

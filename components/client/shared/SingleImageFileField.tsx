@@ -1,5 +1,3 @@
-'use client';
-
 import { useCallback, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Control, FieldValues, Path } from 'react-hook-form';

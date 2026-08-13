@@ -1,5 +1,3 @@
-'use client';
-
 import React, { createContext, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useGetMyCampaigns } from '@/apis/campaign/getCampaigns';

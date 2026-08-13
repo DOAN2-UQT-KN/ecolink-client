@@ -1,5 +1,3 @@
-'use client';
-
 import Image from '@/components/ui/AppImage';
 import Link from '@/libs/router';
 import {

@@ -1,5 +1,3 @@
-"use client";
-
 import { Button } from "@/components/client/shared/Button";
 import Image from "@/components/ui/AppImage";
 import { Trans, useTranslation } from "react-i18next";

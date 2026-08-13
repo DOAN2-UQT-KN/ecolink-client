@@ -1,5 +1,3 @@
-"use client";
-
 import { useMemo } from "react";
 import { TableCell as BaseTableCell } from "@/components/ui/table";
 import { cn } from "@/libs/utils";

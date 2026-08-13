@@ -1,5 +1,3 @@
-'use client';
-
 import { createContext, memo, ReactNode, useEffect, useCallback, useMemo, useState } from 'react';
 import { FormProvider, useForm, UseFormReturn } from 'react-hook-form';
 import { useRouter } from '@/libs/router';

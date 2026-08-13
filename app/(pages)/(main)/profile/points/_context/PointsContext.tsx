@@ -1,5 +1,3 @@
-'use client';
-
 import { usePathname, useRouter, useSearchParams } from '@/libs/router';
 import {
   createContext,

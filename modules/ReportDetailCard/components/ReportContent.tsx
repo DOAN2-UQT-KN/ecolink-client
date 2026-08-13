@@ -1,5 +1,3 @@
-"use client";
-
 import React, { memo, useCallback, useMemo } from "react";
 import { Image as AntdImage } from "antd";
 import { HiMapPin } from "react-icons/hi2";

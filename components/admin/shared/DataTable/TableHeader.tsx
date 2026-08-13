@@ -1,5 +1,3 @@
-'use client';
-
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { TableHead, TableHeader as BaseTableHeader, TableRow } from '@/components/ui/table';

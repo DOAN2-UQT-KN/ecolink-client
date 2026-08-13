@@ -1,5 +1,3 @@
-'use client';
-
 import { useState, useEffect, useMemo, useCallback, memo } from 'react';
 
 import { Input } from '@/components/ui/input';

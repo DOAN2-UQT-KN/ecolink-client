@@ -1,5 +1,3 @@
-'use client';
-
 import { useMemo, useState } from 'react';
 import { Gift, PackageCheck, Truck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';

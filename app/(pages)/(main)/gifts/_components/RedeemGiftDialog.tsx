@@ -1,5 +1,3 @@
-'use client';
-
 import { FormEvent, memo, useEffect, useState } from 'react';
 import { MapPin, Phone } from 'lucide-react';
 import { TbCoinFilled } from 'react-icons/tb';

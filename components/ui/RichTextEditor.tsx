@@ -1,5 +1,3 @@
-"use client";
-
 import isHotkey from "is-hotkey";
 import React, {
   KeyboardEvent,

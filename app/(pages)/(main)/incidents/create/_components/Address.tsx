@@ -1,5 +1,3 @@
-"use client";
-
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { LatLngLiteral } from "leaflet";
 import dynamic from "@/libs/dynamic";

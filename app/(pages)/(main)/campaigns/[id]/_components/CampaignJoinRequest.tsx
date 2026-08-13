@@ -1,5 +1,3 @@
-'use client';
-
 import { memo, useCallback, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';

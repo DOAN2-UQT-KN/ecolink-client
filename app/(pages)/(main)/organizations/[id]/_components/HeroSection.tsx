@@ -1,5 +1,3 @@
-"use client";
-
 import { memo, useCallback, useMemo, useState } from "react";
 import { Image as AntdImage } from "antd";
 import { BiGroup } from "react-icons/bi";

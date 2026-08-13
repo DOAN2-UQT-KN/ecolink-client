@@ -1,5 +1,3 @@
-"use client";
-
 import { memo, useContext, useState, useEffect, useCallback } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";

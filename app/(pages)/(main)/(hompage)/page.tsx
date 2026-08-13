@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect } from "react";
 import { getMe } from "@/apis/auth/getMe";
 import useAuthStore from "@/stores/useAuthStore";

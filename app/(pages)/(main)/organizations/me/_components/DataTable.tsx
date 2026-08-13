@@ -1,5 +1,3 @@
-"use client";
-
 import { memo, useContext, useMemo, useCallback, useState } from "react";
 import { DataTable, ColumnType } from "@/components/client/shared/DataTable";
 import { MoreHorizontal, Building2 } from "lucide-react";

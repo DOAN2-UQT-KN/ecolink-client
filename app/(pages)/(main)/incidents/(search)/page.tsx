@@ -1,5 +1,3 @@
-'use client';
-
 import React, { useMemo, useState, useEffect, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Breadcrumbs, BreadcrumbItemProps } from '@/components/client/shared/Breadcrumbs';

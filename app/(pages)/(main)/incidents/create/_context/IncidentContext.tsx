@@ -1,5 +1,3 @@
-'use client';
-
 import React, { createContext, ReactNode, useCallback, useMemo } from 'react';
 import { useForm, FormProvider, UseFormReturn } from 'react-hook-form';
 import { useCreateReport } from '@/apis/incident/createReport';

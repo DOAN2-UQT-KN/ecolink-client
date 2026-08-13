@@ -1,5 +1,3 @@
-'use client';
-
 import React, { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { cn } from '@/libs/utils';
 import { AlignLeft, X } from 'lucide-react';

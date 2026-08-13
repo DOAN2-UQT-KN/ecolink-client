@@ -1,5 +1,3 @@
-"use client";
-
 import CollapseCard from "@/components/client/shared/CollapseCard";
 import { Tag } from "@/components/client/shared/Tag";
 import { useMediaQuery } from "@/hooks/useMediaQuery";

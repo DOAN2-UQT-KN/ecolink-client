@@ -1,5 +1,3 @@
-"use client";
-
 import React from "react";
 import { PiShareNetwork } from "react-icons/pi";
 import {

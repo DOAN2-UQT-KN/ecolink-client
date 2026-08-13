@@ -1,5 +1,3 @@
-"use client";
-
 import type { ReactNode } from "react";
 
 export type SortOrder = "asc" | "desc" | null;

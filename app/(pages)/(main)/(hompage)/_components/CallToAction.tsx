@@ -1,5 +1,3 @@
-"use client";
-
 import { Button } from "@/components/client/shared/Button";
 import { Trans, useTranslation } from "react-i18next";
 import { motion } from "framer-motion";

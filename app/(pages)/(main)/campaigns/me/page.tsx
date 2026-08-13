@@ -1,5 +1,3 @@
-"use client";
-
 import React from "react";
 import { useRouter } from "@/libs/router";
 import { useTranslation } from "react-i18next";

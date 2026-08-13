@@ -1,5 +1,3 @@
-"use client";
-
 import { useSearchParams } from "@/libs/router";
 
 import SignInForm from "./_components/SignInForm";

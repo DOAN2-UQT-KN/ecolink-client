@@ -1,5 +1,3 @@
-"use client";
-
 import { memo, useCallback, useMemo, useState, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";

@@ -1,5 +1,3 @@
-'use client';
-
 import Link from '@/libs/router';
 import { usePathname } from '@/libs/router';
 import { useEffect, useState } from 'react';

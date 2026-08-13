@@ -1,5 +1,3 @@
-"use client";
-
 import React, { memo, useMemo, useState } from "react";
 import { IIncident } from "@/apis/incident/models/incident";
 import { ReportHeader } from "./components/ReportHeader";

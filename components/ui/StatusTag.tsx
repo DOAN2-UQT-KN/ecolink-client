@@ -1,5 +1,3 @@
-"use client";
-
 import TagStatus from "./TagStatus";
 import { cn } from "@/libs/utils";
 

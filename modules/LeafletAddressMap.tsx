@@ -1,5 +1,3 @@
-"use client";
-
 import { memo, useEffect, useState } from "react";
 import type { LatLngLiteral } from "leaflet";
 import L from "leaflet";

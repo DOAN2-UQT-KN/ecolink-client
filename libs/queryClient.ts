@@ -1,5 +1,3 @@
-"use client";
-
 import { QueryClient, QueryCache, MutationCache } from "@tanstack/react-query";
 
 function handleGlobalError(error: any) {

@@ -1,5 +1,3 @@
-'use client';
-
 import { memo, useCallback, useState } from 'react';
 import QRCode from 'qrcode';
 import { useTranslation } from 'react-i18next';

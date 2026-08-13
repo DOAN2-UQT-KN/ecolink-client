@@ -1,5 +1,3 @@
-"use client";
-
 import Information from "./_components/Information";
 import Preview from "./_components/Preview";
 

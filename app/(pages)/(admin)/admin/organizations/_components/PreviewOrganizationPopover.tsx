@@ -1,5 +1,3 @@
-"use client";
-
 import { memo, useCallback, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import OrganizationCard from "@/modules/OrganizationCard/OrganizationCard";

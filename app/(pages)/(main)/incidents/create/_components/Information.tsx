@@ -1,5 +1,3 @@
-'use client';
-
 import { memo, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useIncident } from '../_hooks/useIncident';

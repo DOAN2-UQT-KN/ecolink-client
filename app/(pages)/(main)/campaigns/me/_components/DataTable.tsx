@@ -1,5 +1,3 @@
-'use client';
-
 import { memo, useCallback, useMemo, useState } from 'react';
 import { useRouter } from '@/libs/router';
 import { useTranslation } from 'react-i18next';

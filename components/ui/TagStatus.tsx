@@ -1,5 +1,3 @@
-"use client";
-
 import { Tag } from "antd";
 import React, { useCallback } from "react";
 import { useTranslation } from "react-i18next";

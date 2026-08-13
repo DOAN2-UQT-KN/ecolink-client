@@ -1,5 +1,3 @@
-"use client";
-
 import { Tag } from "@/components/client/shared/Tag";
 import { Trans, useTranslation } from "react-i18next";
 import ContentCard from "@/components/client/shared/ContentCard";

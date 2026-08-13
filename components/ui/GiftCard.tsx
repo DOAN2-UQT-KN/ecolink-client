@@ -1,5 +1,3 @@
-'use client';
-
 import { memo, useCallback, useMemo } from 'react';
 import Image from '@/components/ui/AppImage';
 

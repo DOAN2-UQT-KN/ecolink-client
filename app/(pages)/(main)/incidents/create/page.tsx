@@ -1,5 +1,3 @@
-"use client";
-
 import Address from "./_components/Address";
 import FileUpload from "./_components/FileUpload";
 import Information from "./_components/Information";

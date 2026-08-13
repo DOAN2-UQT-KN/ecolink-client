@@ -1,5 +1,3 @@
-"use client"
-
 /**
  * Chat client via api-gateway — same stack as `getMe` / other APIs:
  * JSON calls use `requestApi` (axiosClient + interceptors).

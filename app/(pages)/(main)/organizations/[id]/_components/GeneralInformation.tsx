@@ -1,5 +1,3 @@
-'use client';
-
 import React, { memo, useCallback, useMemo } from 'react';
 import { TbAlignLeft2, TbCalendarCheck, TbMailPin } from 'react-icons/tb';
 import { format, parseISO } from 'date-fns';

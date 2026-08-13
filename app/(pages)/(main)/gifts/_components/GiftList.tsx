@@ -1,5 +1,3 @@
-'use client';
-
 import { memo, useCallback, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, Gift } from 'lucide-react';
 import { useTranslation } from 'react-i18next';

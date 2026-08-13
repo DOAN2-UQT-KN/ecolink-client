@@ -1,5 +1,3 @@
-"use client";
-
 /* Blob previews need createObjectURL + revoke tied to `source`; setState in layout effect runs before paint. */
 /* eslint-disable react-hooks/set-state-in-effect -- intentional: sync blob URL with form field without stale revoke */
 import { useLayoutEffect, useState } from "react";

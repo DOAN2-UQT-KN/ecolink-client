@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect, useCallback, memo } from "react";
 import { useRouter, usePathname, useSearchParams } from "@/libs/router";
 import type { TFunction } from "i18next";

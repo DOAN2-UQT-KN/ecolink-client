@@ -1,5 +1,3 @@
-"use client";
-
 import React, { memo, useCallback, useMemo } from "react";
 import Image from "@/components/ui/AppImage";
 import { formattedDate } from "@/utils/formattedDate";

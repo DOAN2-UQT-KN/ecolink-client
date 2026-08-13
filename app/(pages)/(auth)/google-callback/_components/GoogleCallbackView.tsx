@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "@/libs/router";
 import PageSuspense from "@/components/client/shared/PageSuspense";

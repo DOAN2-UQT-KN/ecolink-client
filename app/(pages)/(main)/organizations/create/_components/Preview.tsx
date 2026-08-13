@@ -1,5 +1,3 @@
-"use client";
-
 import { memo, useMemo, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useFormContext, useWatch } from "react-hook-form";

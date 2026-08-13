@@ -1,5 +1,3 @@
-"use client";
-
 import { memo, useCallback, useMemo, useState } from "react";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
