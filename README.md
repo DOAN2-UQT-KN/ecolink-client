@@ -19,14 +19,14 @@ The system helps communities:
 - **Report incidents** (e.g. trash, pollution) with location and media
 - Manage **organizations** and membership
 - Earn and redeem **gifts** using green points
-- Track progress via **leaderboards**, **badges**, and **points**
+- Track progress via **points**
 - Explore geographic data on an interactive **map**
 
 ### 👥 Target users
 
 | User type             | Primary areas                                                    |
 | --------------------- | ---------------------------------------------------------------- |
-| Volunteers & citizens | Campaigns, incidents, organizations, gifts, leaderboard, profile |
+| Volunteers & citizens | Campaigns, incidents, organizations, gifts, profile              |
 | Authenticated members | My campaigns, my incidents, my organizations, account settings   |
 | Administrators        | Admin console under `/admin`                                     |
 
@@ -65,11 +65,10 @@ This repository contains **only the frontend**. It communicates with a separate 
 - Create organizations
 - Manage owned organizations (`/organizations/me`)
 
-### 🎁 Rewards & gamification
+### 🎁 Rewards & points
 
 - Gift catalog and redemption
-- Leaderboard and seasons
-- Profile badges and points history
+- Profile points history
 - Profile orders (`/profile/orders`)
 
 ### 🗺️ Maps
@@ -80,7 +79,6 @@ This repository contains **only the frontend**. It communicates with a separate 
 
 - Campaign, incident, and organization management
 - Gift administration
-- Gamification configuration (config, badges, seasons)
 - Admin settings
 
 ### ⚡ Platform capabilities
@@ -316,7 +314,6 @@ Feature-oriented modules call the backend through the shared Axios instance in `
 | Incidents       | `apis/incident/`       | Reports CRUD, media, verification, voting                      |
 | Organizations   | `apis/organization/`   | CRUD, members, join requests, email verification               |
 | Gifts           | `apis/gift/`           | Catalog, redemption, admin redemptions                         |
-| Gamification    | `apis/gamification/`   | Badges, seasons, leaderboard, metrics, config                  |
 | Points          | `apis/points/`         | User points and transactions                                   |
 | Notifications   | `apis/notification/`   | List and mark read                                             |
 | SOS             | `apis/sos/`            | SOS records on the map                                         |
@@ -325,7 +322,6 @@ Feature-oriented modules call the backend through the shared Axios instance in `
 | User            | `apis/user/`           | Profile updates                                                |
 | Chat media      | `apis/chat-media/`     | AI chat media registration                                     |
 | Admin media     | `apis/admin-media/`    | Admin media registration                                       |
-| Difficulty      | `apis/difficulty/`     | Difficulty settings                                            |
 
 ### 🌐 HTTP client behaviour
 

@@ -4,19 +4,17 @@ import { usePathname } from '@/libs/router';
 import Link from '@/libs/router';
 import { useTranslation } from 'react-i18next';
 
-type TabValue = 'account' | 'points' | 'badges' | 'orders';
+type TabValue = 'account' | 'points' | 'orders';
 
 const TAB_ROUTE: Record<TabValue, string> = {
   account: '/profile/account',
   points: '/profile/points',
-  badges: '/profile/badges',
   orders: '/profile/orders',
 };
 
 const TABS: Array<{ value: TabValue; label: string }> = [
   { value: 'account', label: 'Account' },
   { value: 'points', label: 'Points' },
-  { value: 'badges', label: 'Badges' },
   { value: 'orders', label: 'Orders' },
 ];
 
@@ -26,8 +24,6 @@ export function ProfileTabs() {
 
   const activeTab: TabValue = pathname.includes('/profile/orders')
     ? 'orders'
-    : pathname.includes('/profile/badges')
-    ? 'badges'
     : pathname.includes('/profile/points')
       ? 'points'
       : 'account';

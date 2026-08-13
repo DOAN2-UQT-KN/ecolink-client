@@ -5,7 +5,6 @@ import {
   TbSettings,
   TbGift,
   TbFlag,
-  TbTrophy,
 } from 'react-icons/tb';
 import { IconType } from 'react-icons';
 
@@ -49,16 +48,5 @@ export const adminNavItems: AdminNavItem[] = [
   },
   { kind: 'link', href: '/admin/campaigns', labelKey: 'Campaigns', icon: TbFlag },
   { kind: 'link', href: '/admin/gifts', labelKey: 'Gifts', icon: TbGift },
-  {
-    kind: 'group',
-    id: 'gamification',
-    labelKey: 'Gamification',
-    icon: TbTrophy,
-    children: [
-      { href: '/admin/gamification/season', labelKey: 'Season' },
-      { href: '/admin/gamification/badge', labelKey: 'Badge' },
-      { href: '/admin/gamification/config', labelKey: 'Config' },
-    ],
-  },
   { kind: 'link', href: '/admin/settings', labelKey: 'Settings', icon: TbSettings },
 ];

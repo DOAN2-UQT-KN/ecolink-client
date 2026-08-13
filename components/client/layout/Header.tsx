@@ -84,11 +84,6 @@ const items = [
         ariaLabel: 'Join Organizations',
         href: '/organizations',
       },
-      {
-        label: 'Leaderboard',
-        ariaLabel: 'Community Leaderboard',
-        href: '/leaderboard',
-      },
     ],
   },
   {
