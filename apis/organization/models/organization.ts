@@ -3,6 +3,7 @@ import { IUser } from "@/apis/auth/models/user";
 export interface IOrganization {
   id: string;
   name: string;
+  slug: string;
   description: string | null;
   description_vi?: string | null;
   description_en?: string | null;

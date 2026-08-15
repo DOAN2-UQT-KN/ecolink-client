@@ -207,7 +207,8 @@ const DataTableComponent = memo(function DataTableComponent() {
 
   const handleRowClick = useCallback(
     (record: IOrganization) => {
-      router.push(`/organizations/${record.id}`);
+      if (!record.slug) return;
+      router.push(`/organizations/${record.slug}`);
     },
     [router],
   );

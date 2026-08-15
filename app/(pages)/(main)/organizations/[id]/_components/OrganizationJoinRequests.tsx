@@ -46,7 +46,7 @@ export const OrganizationJoinRequests = memo(function OrganizationJoinRequests({
 }) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const { organizationId, organization } = useOrganizationDetail();
+  const { organizationId, organizationSlug, organization } = useOrganizationDetail();
   const [pendingAction, setPendingAction] = useState<{
     id: string;
     approved: boolean;
@@ -74,7 +74,7 @@ export const OrganizationJoinRequests = memo(function OrganizationJoinRequests({
         queryKey: ['organization-join-requests', organizationId],
       });
       void queryClient.invalidateQueries({
-        queryKey: ['organization', organizationId],
+        queryKey: ['organization-by-slug', organizationSlug],
       });
       void queryClient.invalidateQueries({
         queryKey: ['organization-members', organizationId],

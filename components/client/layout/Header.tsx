@@ -92,6 +92,11 @@ const items = [
     textColor: '#fff',
     links: [
       {
+        label: 'My Organizations',
+        ariaLabel: 'My Organizations',
+        href: '/organizations/me',
+      },
+      {
         label: 'My Campaigns',
         ariaLabel: 'My Campaigns',
         href: '/campaigns/me',
@@ -100,11 +105,6 @@ const items = [
         label: 'My Reports',
         ariaLabel: 'My Reports',
         href: '/incidents/me',
-      },
-      {
-        label: 'My Organizations',
-        ariaLabel: 'My Organizations',
-        href: '/organizations/me',
       },
     ],
   },

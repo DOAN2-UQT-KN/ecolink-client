@@ -93,7 +93,9 @@ export default function SummaryCampaignCard({
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  router.push(`/organizations/${campaign.organization_id}`);
+                  const slug = campaign.organization?.slug;
+                  if (!slug) return;
+                  router.push(`/organizations/${slug}`);
                 }}
                 className="w-fit flex items-center gap-2 rounded-md border border-[rgba(136,122,71,0.35)] bg-white/80 px-2 py-1.5 hover:bg-white cursor-pointer"
                 aria-label={t('View organization')}

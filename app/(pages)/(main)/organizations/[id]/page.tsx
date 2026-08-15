@@ -29,7 +29,7 @@ function OrganizationDetailBody() {
   const searchParams = useSearchParams();
   const contactEmailVerifyToastShown = useRef(false);
   const {
-    organizationId,
+    organizationSlug,
     organization,
     isLoading,
     isError,
@@ -41,8 +41,8 @@ function OrganizationDetailBody() {
     if (contactEmailVerifyToastShown.current) return;
     contactEmailVerifyToastShown.current = true;
     toast.success(t("Organization contact email verified"));
-    router.replace(`/organizations/${organizationId}`, { scroll: false });
-  }, [searchParams, t, router, organizationId]);
+    router.replace(`/organizations/${organizationSlug}`, { scroll: false });
+  }, [searchParams, t, router, organizationSlug]);
 
   const breadcrumbs: BreadcrumbItemProps[] = useMemo(
     () => [
@@ -56,11 +56,11 @@ function OrganizationDetailBody() {
         label: organization?.name?.trim()
           ? organization.name
           : t("Organization"),
-        path: `/organizations/${organizationId}`,
+        path: `/organizations/${organizationSlug}`,
         type: "page",
       },
     ],
-    [t, organization, organizationId],
+    [t, organization, organizationSlug],
   );
 
   if (isLoading) {
@@ -133,10 +133,10 @@ function OrganizationDetailBody() {
 }
 
 export default function OrganizationDetailPage() {
-  const { id } = useParams() as { id: string };
+  const { slug } = useParams() as { slug: string };
 
   return (
-    <OrganizationDetailProvider organizationId={id}>
+    <OrganizationDetailProvider organizationSlug={slug}>
       <OrganizationDetailBody />
     </OrganizationDetailProvider>
   );

@@ -86,6 +86,7 @@ export const OrganizationList = memo(function OrganizationList() {
             contactEmail={org.contact_email ?? ""}
             className="h-full"
             organizationId={org.id}
+            organizationSlug={org.slug}
             requestStatus={org.request_status}
               isMember={Boolean(org.is_member)}
             joinRequestId={org.join_request_id}

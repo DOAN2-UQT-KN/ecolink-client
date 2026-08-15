@@ -63,10 +63,19 @@ export function getNotificationHref(
     case 'VOLUNTEER_REQUEST':
     case 'VOLUNTEER_APPROVED':
       if (campaignId) return `/campaigns/${campaignId}`;
-      if (typeof p.organizationId === 'string' && p.organizationId) {
+      const organizationSlug =
+        typeof p.organizationSlug === "string"
+          ? p.organizationSlug
+          : typeof p.organization_slug === "string"
+            ? p.organization_slug
+            : null;
+      if (organizationSlug) {
+        return `/organizations/${organizationSlug}`;
+      }
+      if (typeof p.organizationId === "string" && p.organizationId) {
         return `/organizations/${p.organizationId}`;
       }
-      if (typeof p.organization_id === 'string' && p.organization_id) {
+      if (typeof p.organization_id === "string" && p.organization_id) {
         return `/organizations/${p.organization_id}`;
       }
       return null;

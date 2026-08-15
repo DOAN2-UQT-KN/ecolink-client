@@ -40,6 +40,8 @@ export interface OrganizationCardProps {
   editMode?: boolean;
   /** Organization id; required for listing Join to call POST .../organizations/{id}/join-requests. */
   organizationId?: string;
+  /** Public slug used to open Organization Detail (`/organizations/:slug`). */
+  organizationSlug?: string;
   /** Current user's join request state for this org from the listing API (0 = none, 12 = pending). */
   requestStatus?: number;
   /** True when the signed-in user is an active member of this org. */
@@ -61,6 +63,7 @@ export const OrganizationCard = memo(function OrganizationCard({
   className,
   editMode = false,
   organizationId,
+  organizationSlug,
   requestStatus,
   isMember = false,
   joinRequestId,
@@ -193,9 +196,9 @@ export const OrganizationCard = memo(function OrganizationCard({
   }, [organizationId, leaveOrganizationAsync]);
 
   const handleViewMoreClick = useCallback(() => {
-    if (!organizationId) return;
-    router.push(`/organizations/${organizationId}`);
-  }, [organizationId, router]);
+    if (!organizationSlug) return;
+    router.push(`/organizations/${organizationSlug}`);
+  }, [organizationSlug, router]);
 
   const showJoinButton =
     !showYourGroupTag && !isMember && joinListingShowsJoinButton(requestStatus);

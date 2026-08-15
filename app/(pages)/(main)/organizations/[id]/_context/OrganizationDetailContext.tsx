@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { useGetOrganizationById } from "@/apis/organization/organizationById";
+import { useGetOrganizationBySlug } from "@/apis/organization/organizationBySlug";
 import {
   useCancelJoinRequest,
   useCreateOrganizationJoinRequest,
@@ -22,6 +22,7 @@ import {
 import useAuthStore from "@/stores/useAuthStore";
 
 export interface OrganizationDetailContextType {
+  organizationSlug: string;
   organizationId: string;
   organization: IOrganization | undefined;
   isLoading: boolean;
@@ -48,22 +49,35 @@ export const OrganizationDetailContext = createContext<
 >(undefined);
 
 export function OrganizationDetailProvider({
-  organizationId,
+  organizationSlug,
   children,
 }: {
-  organizationId: string;
+  organizationSlug: string;
   children: ReactNode;
 }) {
   const queryClient = useQueryClient();
   const currentUserId = useAuthStore((s) => s.user?.id);
   const [isLeaveConfirmOpen, setIsLeaveConfirmOpen] = useState(false);
 
+  const { data, isLoading, isError, isFetching } = useGetOrganizationBySlug(
+    organizationSlug,
+    { enabled: Boolean(organizationSlug) },
+  );
+
+  const organization = data?.data?.organization;
+  const organizationId = organization?.id ?? "";
+
   const invalidateAfterMutation = useCallback(() => {
     invalidateOrganizationListsQuery(queryClient);
     void queryClient.invalidateQueries({
-      queryKey: ["organization", organizationId],
+      queryKey: ["organization-by-slug", organizationSlug],
     });
-  }, [queryClient, organizationId]);
+    if (organizationId) {
+      void queryClient.invalidateQueries({
+        queryKey: ["organization", organizationId],
+      });
+    }
+  }, [queryClient, organizationSlug, organizationId]);
 
   const { mutate: requestJoin, isPending: isJoinPending } =
     useCreateOrganizationJoinRequest({
@@ -79,13 +93,6 @@ export function OrganizationDetailProvider({
     useLeaveOrganization({
       onSettled: invalidateAfterMutation,
     });
-
-  const { data, isLoading, isError, isFetching } = useGetOrganizationById(
-    organizationId,
-    { enabled: Boolean(organizationId) },
-  );
-
-  const organization = data?.data?.organization;
 
   const ownerId = organization?.owner_id;
   const requestStatus = organization?.request_status;
@@ -124,6 +131,7 @@ export function OrganizationDetailProvider({
 
   const contextValue = useMemo(
     () => ({
+      organizationSlug,
       organizationId,
       organization,
       isLoading,
@@ -145,6 +153,7 @@ export function OrganizationDetailProvider({
       handleConfirmLeave,
     }),
     [
+      organizationSlug,
       organizationId,
       organization,
       isLoading,

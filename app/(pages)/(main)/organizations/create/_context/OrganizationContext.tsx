@@ -40,9 +40,9 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
       form.reset();
       queryClient.invalidateQueries({ queryKey: ["organizations"] });
       queryClient.invalidateQueries({ queryKey: ["owned-organizations"] });
-      const organizationId = res.data?.organization?.id;
+      const organizationSlug = res.data?.organization?.slug;
       router.push(
-        organizationId ? `/organizations/${organizationId}` : "/organizations/me",
+        organizationSlug ? `/organizations/${organizationSlug}` : "/organizations/me",
       );
     },
   });
