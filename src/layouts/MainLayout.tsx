@@ -17,7 +17,7 @@ export default function MainLayout() {
         sparkCount={8}
         duration={400}
       >
-        <main className="py-[92px] px-[20px] lg:px-[160px]">
+        <main className="py-[92px] px-[20px] lg:px-[80px]">
           <Outlet />
         </main>
       </ClickSpark>
