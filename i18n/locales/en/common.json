@@ -477,6 +477,7 @@
   "Laptop device": "Laptop device",
   "Failed to compress image.": "Failed to compress image.",
   "Organization created successfully": "Organization created successfully",
+  "Organization already exists": "Organization already exists",
   "Organization verified successfully": "Organization verified successfully",
   "Organization updated successfully": "Organization updated successfully",
   "Join request sent successfully": "Join request sent successfully",
