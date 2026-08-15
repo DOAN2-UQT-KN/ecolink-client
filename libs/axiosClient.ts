@@ -47,10 +47,21 @@ const onResponse = (response: AxiosResponse): AxiosResponse => {
     return response
 }
 
+const PUBLIC_AUTH_PATHS = [
+    "/api/v1/auth/sign-in",
+    "/api/v1/auth/sign-up",
+    "/api/v1/auth/refresh-token",
+    "/api/v1/auth/request-password-reset",
+    "/api/v1/auth/reset-password",
+    "/api/v1/auth/oauth/",
+]
+
+const isPublicAuthRequest = (url?: string): boolean =>
+    !!url && PUBLIC_AUTH_PATHS.some((path) => url.includes(path))
+
 const onResponseError = async (error: any): Promise<any> => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
-    // Check for 401 and not a retry, and not the refresh-token URL itself
-    if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url?.includes("/api/v1/auth/refresh-token")) {
+    if (error.response?.status === 401 && !originalRequest._retry && !isPublicAuthRequest(originalRequest.url)) {
         originalRequest._retry = true
         
         const refreshTokenVal = useAuthStore.getState().refreshToken
