@@ -199,7 +199,7 @@ export const OrganizationImageField = memo(function OrganizationImageField({
                 <input
                   ref={inputRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/*" 
                   className="hidden"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
@@ -215,7 +215,7 @@ export const OrganizationImageField = memo(function OrganizationImageField({
 
                 {!isImageSelected(value) ? (
                   <div
-                    className="py-5 px-4 flex flex-col gap-3 items-center justify-center border-1 border-dashed border-button-accent-hover rounded-xl cursor-pointer hover:bg-button-accent/5 transition-colors max-w-xs"
+                    className="py-5 px-4 flex flex-col gap-3 items-center justify-center border-1 border-dashed border-button-accent-hover rounded-xl cursor-pointer hover:bg-button-accent/5 transition-colors w-full"
                     onClick={() => !busy && openPicker()}
                     onKeyDown={(ev) => {
                       if (ev.key === "Enter" || ev.key === " ") {

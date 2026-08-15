@@ -85,7 +85,6 @@ export const OrganizationList = memo(function OrganizationList() {
             backgroundUrl={org.background_url ?? ""}
             contactEmail={org.contact_email ?? ""}
             className="h-full"
-            listingMode
             organizationId={org.id}
             requestStatus={org.request_status}
               isMember={Boolean(org.is_member)}

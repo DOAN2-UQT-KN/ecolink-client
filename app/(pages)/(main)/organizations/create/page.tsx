@@ -55,11 +55,11 @@ function CreateOrganizationContent() {
           flex flex-col gap-[30px] w-full h-full pt-5
         `}
       >
-        <div className="md:grid md:grid-cols-3 md:gap-[30px] w-full h-full md:items-start">
-          <div className="md:col-span-1 h-full">
+        <div className="md:flex md:flex-row md:gap-[20px] w-full h-full md:items-start">
+          <div className="md:w-2/5 h-full">
             <Information />
           </div>
-          <div className="md:col-span-2 h-full">
+          <div className="md:w-3/5 h-full">
             <Preview />
           </div>
         </div>
