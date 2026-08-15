@@ -11,6 +11,7 @@ import type {
   DataTableInlineEdit,
   RowKey,
 } from "./types";
+import { useTranslation } from "react-i18next";
 
 type Props<T> = {
   columns: DataTableColumn<T>[];
@@ -40,6 +41,7 @@ export function DataTableRow<T>({
   onSelect,
   onRowClick,
 }: Props<T>) {
+  const { t } = useTranslation();
   const [editingColumnKey, setEditingColumnKey] = useState<string | null>(null);
   const [draftValue, setDraftValue] = useState<unknown>(null);
 
@@ -67,7 +69,7 @@ export function DataTableRow<T>({
             checked={selected}
             disabled={!canSelect}
             onCheckedChange={(checked) => onSelect(Boolean(checked))}
-            aria-label={`Select row ${rowId}`}
+            aria-label={t("Select row {{id}}", { id: rowId })}
             onClick={(event) => event.stopPropagation()}
           />
         </TableCell>

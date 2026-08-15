@@ -18,6 +18,7 @@ const ForCitizens = () => {
         description: t(
           "Take a photo and submit the waste location in just a few steps.",
         ),
+        imageAlt: t("Report Waste"),
         button: (
           <Button variant="brown" className="w-full" onClick={() => {}}>
             {t("Try Now")}
@@ -34,6 +35,7 @@ const ForCitizens = () => {
         description: t(
           "Track the cleanup status in real time directly on the map.",
         ),
+        imageAlt: t("Track Progress"),
         imageWidth: 163,
         imageHeight: 171,
         imageClassName: "w-[163px] h-[171px]",
@@ -47,6 +49,7 @@ const ForCitizens = () => {
         description: t(
           "Share reports and cleanup results to raise community awareness.",
         ),
+        imageAlt: t("Support the Movement"),
         imageWidth: isMedium ? 247 : 233,
         imageHeight: isMedium ? 162 : 153,
         imageClassName: "w-[233px] h-[153px] md:w-[247px] md:h-[162px]",
@@ -58,17 +61,17 @@ const ForCitizens = () => {
   const [primaryCard, ...secondaryCards] = forCitizensItems;
 
   return (
-    <section className="flex flex-col w-full lg:flex-row md:items-start md:justify-center md:gap-[50px] ">
+    <section className="flex flex-col w-full 2xl:flex-row 2xl:items-start md:justify-center md:gap-[50px] ">
       <motion.div
         initial={{ opacity: 0, x: -50 }}
         whileInView={{ opacity: 1, x: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}
-        className="flex flex-col items-center gap-5 pb-5 md:items-start"
+        className="flex flex-col items-center gap-5 pb-5 2xl:items-start"
       >
-        <Tag variant="green">Raise Your Voice</Tag>
+        <Tag variant="green">{t("Raise Your Voice")}</Tag>
 
-        <h1 className="text-center lg:text-left">
+        <h1 className="text-center 2xl:text-left">
           <Trans
             ns="common"
             i18nKey="forCitizens"
@@ -77,12 +80,12 @@ const ForCitizens = () => {
                 key="0"
                 className="text-background-quaternary italic whitespace-nowrap"
               />,
-              <br key="1" className="hidden lg:inline" />,
+              <br key="1" className="hidden 2xl:inline" />,
             ]}
           />
         </h1>
 
-        <p className="text-justify font-display-2 text-foreground-secondary  lg:w-[600px] md:w-[300px]">
+        <p className="text-center font-display-2 text-foreground-secondary  2xl:w-[600px] ">
           {t(
             "Report waste and environmental issues in just a few simple steps. Your voice empowers the community to act faster and create meaningful change for the Earth.",
           )}

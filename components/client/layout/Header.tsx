@@ -20,6 +20,8 @@ import SpotlightCard from '../shared/SpotlightCard';
 import useAuthStore from '@/stores/useAuthStore';
 import { useRouter } from '@/libs/router';
 import { clearAuthStorage } from '@/utils/logout';
+import { signOut } from '@/apis/auth/signOut';
+import { ADMIN_ROLE_ID } from '@/constants/roles';
 
 type CardNavLink = {
   label: string;
@@ -138,7 +140,6 @@ const Header: React.FC<CardNavProps> = ({ ease = 'power3.out', menuColor }) => {
   const tlRef = useRef<gsap.core.Timeline | null>(null);
 
   const { user, setLogoutSuccess } = useAuthStore();
-  // console.log(user);
   const router = useRouter();
 
   const calculateHeight = () => {
@@ -334,7 +335,7 @@ const Header: React.FC<CardNavProps> = ({ ease = 'power3.out', menuColor }) => {
           <DropdownMenuTrigger asChild>
             <Image
               src="/profile.png"
-              alt="profile"
+              alt={t('Profile')}
               width={35}
               height={30}
               className="cursor-pointer"
@@ -344,7 +345,7 @@ const Header: React.FC<CardNavProps> = ({ ease = 'power3.out', menuColor }) => {
             <DropdownMenuItem asChild>
               <Link href="/profile/points">{t('Profile')}</Link>
             </DropdownMenuItem>
-            {(user as any).role_id === '40ed59d7-5d7c-4ab2-88a2-a24efae7931e' && (
+            {user.roleId === ADMIN_ROLE_ID && (
               <DropdownMenuItem asChild>
                 <Link href="/admin">{t('Admin')}</Link>
               </DropdownMenuItem>
@@ -353,9 +354,16 @@ const Header: React.FC<CardNavProps> = ({ ease = 'power3.out', menuColor }) => {
               variant="destructive"
               onSelect={(e) => {
                 e.preventDefault();
-                clearAuthStorage();
-                setLogoutSuccess();
-                router.push('/authenticate');
+                void (async () => {
+                  try {
+                    await signOut();
+                  } catch {
+                    // Local logout still proceeds if the API is unreachable.
+                  }
+                  clearAuthStorage();
+                  setLogoutSuccess();
+                  router.push('/authenticate');
+                })();
               }}
             >
               {t('Logout')}
@@ -365,7 +373,7 @@ const Header: React.FC<CardNavProps> = ({ ease = 'power3.out', menuColor }) => {
       ) : (
         <Image
           src="/profile.png"
-          alt="profile"
+          alt={t('Profile')}
           width={35}
           height={30}
           className="cursor-pointer"

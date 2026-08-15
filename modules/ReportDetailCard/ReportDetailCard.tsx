@@ -26,6 +26,7 @@ const ReportDetailCard = memo(function ReportDetailCard({
   onPreviewOpenChange,
 }: ReportDetailCardProps) {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [open, setOpen] = useState(false);
   const handlePreviewOpenChange = onPreviewOpenChange ?? setIsPreviewOpen;
   const { title: localizedTitle, description: localizedDescription } =
     useLocalizedDisplay();
@@ -35,11 +36,10 @@ const ReportDetailCard = memo(function ReportDetailCard({
     [incident],
   );
 
-  if (!incident) return null;
+  const content = useMemo(() => {
+    if (!incident) return null;
 
-
-  const content = useMemo(
-    () => (
+    return (
       <article
         className={cn(
           "flex flex-col w-full mx-auto border-1 border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5 overflow-hidden transition-all duration-300",
@@ -93,60 +93,39 @@ const ReportDetailCard = memo(function ReportDetailCard({
           ) : null}
         </div>
       </article>
-    ),
-    [className, handlePreviewOpenChange, images, incident, isExpanded, showAction],
-  );
+    );
+  }, [
+    className,
+    handlePreviewOpenChange,
+    images,
+    incident,
+    isExpanded,
+    localizedDescription,
+    localizedTitle,
+    showAction,
+  ]);
 
+  if (!incident) return null;
 
   if (isExpanded) {
     return content;
   }
-  // useEffect(() => {
-  //   const handler = (e: Event) => {
-  //     const target = e.target as HTMLElement;
-  
-  //     if (target.closest('.ant-image-preview-root')) {
-  //       console.log("clicked inside preview");
-  //       e.stopPropagation();
-  //     }
-  //   };
-  
-  //   document.addEventListener('pointerdown', handler, true);
-  
-  //   return () => {
-  //     document.removeEventListener('pointerdown', handler, true);
-  //   };
-  // }, []);
-  const [open, setOpen] = useState(false);
-  console.log("isPreviewOpen", isPreviewOpen);
+
   return (
-    <Dialog open={open}  
+    <Dialog
+      open={open}
       onOpenChange={(next) => {
         if (isPreviewOpen) {
-          console.log("isPreviewOpen", isPreviewOpen);
-          console.log("next", next);
-          if (next == false) {
+          if (next === false) {
             setOpen(true);
-          
           }
-          else
           return;
         }
-        else {
-          setOpen(next);
-        }
-      }}>
+        setOpen(next);
+      }}
+    >
       <DialogTrigger asChild>
-        <div
-          // onClick={(e) => {
-          //   if (isPreviewOpen) {
-          //     e.preventDefault();
-          //     e.stopPropagation();
-          //   }
-          // }}
-        >
-          {content}
-        </div>
+        <div>{content}</div>
       </DialogTrigger>
       <DialogContent
         className="max-w-[95vw] md:max-w-5xl w-full h-[90vh] md:h-[85vh] p-0 overflow-hidden border-none bg-white/95 backdrop-blur-md"
@@ -161,6 +140,5 @@ const ReportDetailCard = memo(function ReportDetailCard({
     </Dialog>
   );
 });
-
 
 export default ReportDetailCard;

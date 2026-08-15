@@ -78,7 +78,7 @@ const FormFilter = memo(function FormFilter() {
             value={STATUS.DRAFT.toString()}
             className="rounded-[5px] px-4 py-2 h-full data-active:bg-background data-active:shadow-sm transition-all !font-display-1"
           >
-            {t("DRAFT")}
+            {t("Draft")}
           </TabsTrigger>
           <TabsTrigger
             value={STATUS.PENDING.toString()}

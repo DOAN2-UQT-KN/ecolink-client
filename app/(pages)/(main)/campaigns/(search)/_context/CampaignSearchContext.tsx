@@ -146,7 +146,13 @@ export const CampaignSearchProvider = ({ children }: { children: ReactNode }) =>
     [filters.greenPointsFrom, filters.greenPointsTo, rawCampaigns],
   );
 
-  const total = useMemo(() => campaigns.length, [campaigns]);
+  const hasClientGreenPointsFilter = Boolean(
+    filters.greenPointsFrom || filters.greenPointsTo,
+  );
+  const total = useMemo(() => {
+    if (hasClientGreenPointsFilter) return campaigns.length;
+    return queryResult.data?.data?.total ?? campaigns.length;
+  }, [campaigns.length, hasClientGreenPointsFilter, queryResult.data?.data?.total]);
 
   const contextValue = useMemo(
     () => ({

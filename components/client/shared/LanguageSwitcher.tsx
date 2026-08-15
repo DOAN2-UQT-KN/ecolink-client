@@ -10,7 +10,7 @@ interface LanguageSwitcherProps {
 }
 
 const LanguageSwitcher = ({ showName = false }: LanguageSwitcherProps) => {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const [mounted, setMounted] = useState(false);
 
@@ -36,7 +36,7 @@ const LanguageSwitcher = ({ showName = false }: LanguageSwitcherProps) => {
             ? "gap-2 px-3 py-1.5 rounded-full hover:bg-zinc-100"
             : "w-8 h-8 rounded-full overflow-hidden"
         }`}
-        aria-label="Switch language"
+        aria-label={t("Switch language")}
       >
         <div
           className={`${
@@ -55,7 +55,7 @@ const LanguageSwitcher = ({ showName = false }: LanguageSwitcherProps) => {
           ? "gap-2 px-3 py-1.5 rounded-full hover:bg-zinc-100"
           : "w-8 h-8 rounded-full overflow-hidden"
       }`}
-      title={nextLang === "en" ? "Switch to English" : "Chuyển sang Tiếng Việt"}
+      title={t(nextLang === "en" ? "Switch to EN" : "Switch to VN")}
     >
       <div
         className={`${
@@ -64,7 +64,7 @@ const LanguageSwitcher = ({ showName = false }: LanguageSwitcherProps) => {
       >
         <Image
           src={nextLang === "en" ? "/england.webp" : "/vietnam.webp"}
-          alt={nextLang === "en" ? "English" : "Tiếng Việt"}
+          alt={t(nextLang === "en" ? "Switch to EN" : "Switch to VN")}
           width={32}
           height={32}
           className="w-full h-full object-cover"

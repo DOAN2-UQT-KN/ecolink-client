@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 
 interface AddressParts {
   road?: string;
@@ -21,6 +22,7 @@ export const useReverseGeocode = (
   latitude: number | null,
   longitude: number | null,
 ) => {
+  const { t } = useTranslation();
   const { data, isLoading, error } = useQuery<GeocodeResponse>({
     queryKey: ["reverse-geocode", latitude, longitude],
     queryFn: async () => {
@@ -44,7 +46,7 @@ export const useReverseGeocode = (
   });
 
   const formatAddress = (result: GeocodeResponse): string => {
-    if (!result || result.error) return "Location Unavailable";
+    if (!result || result.error) return t("Location Unavailable");
     
     const addr = result.address || {};
     const parts = [
@@ -57,13 +59,13 @@ export const useReverseGeocode = (
       return parts.join(", ");
     }
 
-    return result.display_name?.split(",")[0] || "Unknown Location";
+    return result.display_name?.split(",")[0] || t("Unknown Location");
   };
 
-  const address = data ? formatAddress(data) : (isLoading ? "Fetching address..." : null);
+  const address = data ? formatAddress(data) : (isLoading ? t("Fetching address...") : null);
 
   return { 
-    address: error ? "Location Unavailable" : address, 
+    address: error ? t("Location Unavailable") : address, 
     isLoading 
   };
 };

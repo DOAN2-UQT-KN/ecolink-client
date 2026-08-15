@@ -43,14 +43,22 @@ export const ConfirmPopover = memo(function ConfirmPopover({
   const isDark = theme === "dark";
 
   const runConfirm = useCallback(async () => {
-    await onConfirm();
-    setOpen(false);
+    try {
+      await onConfirm();
+      setOpen(false);
+    } catch {
+      // Keep the dialog open so the user can retry after a failed action.
+    }
   }, [onConfirm]);
 
   const runReject = useCallback(async () => {
     if (!onReject) return;
-    await onReject();
-    setOpen(false);
+    try {
+      await onReject();
+      setOpen(false);
+    } catch {
+      // Keep the dialog open so the user can retry after a failed action.
+    }
   }, [onReject]);
 
   const busy = confirmPending || rejectPending;

@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import useAuthStore from '@/stores/useAuthStore';
 import { Button } from '@/components/client/shared/Button';
 import { clearAuthStorage } from '@/utils/logout';
+import { signOut } from '@/apis/auth/signOut';
 import defaultAvatar from '@/public/default-avatar.png';
 import { uploadToCloudinary } from '@/app/(pages)/(main)/incidents/create/_services/upload.service';
 import { updateUser } from '@/apis/user/updateUser';
@@ -20,22 +21,14 @@ export default function AccountPage() {
   const fileRef = useRef<HTMLInputElement | null>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
 
-  const displayName = useMemo(() => {
-    const anyUser = user as unknown as
-      | { name?: string; full_name?: string; email?: string }
-      | undefined;
-    return (anyUser?.name ?? anyUser?.full_name ?? anyUser?.email ?? '').trim() || '-';
-  }, [user]);
+  const displayName = useMemo(
+    () => (user?.name ?? user?.email ?? '').trim() || '-',
+    [user],
+  );
 
-  const email = useMemo(() => {
-    const anyUser = user as unknown as { email?: string } | undefined;
-    return (anyUser?.email ?? '').trim() || '-';
-  }, [user]);
+  const email = useMemo(() => (user?.email ?? '').trim() || '-', [user]);
 
-  const avatarSrc = useMemo(() => {
-    const anyUser = user as unknown as { avatar?: string | null } | undefined;
-    return anyUser?.avatar || defaultAvatar;
-  }, [user]);
+  const avatarSrc = useMemo(() => user?.avatar || defaultAvatar, [user]);
 
   const handlePickAvatar = () => fileRef.current?.click();
 
@@ -82,9 +75,16 @@ export default function AccountPage() {
             <Button
               variant="brown"
               onClick={() => {
-                clearAuthStorage();
-                setLogoutSuccess();
-                router.push('/authenticate');
+                void (async () => {
+                  try {
+                    await signOut();
+                  } catch {
+                    // Local logout still proceeds if the API is unreachable.
+                  }
+                  clearAuthStorage();
+                  setLogoutSuccess();
+                  router.push('/authenticate');
+                })();
               }}
             >
               {t('Logout')}
@@ -97,7 +97,7 @@ export default function AccountPage() {
             <p className="text-xs text-foreground-secondary">{t('Avatar')}</p>
             <div className="mt-3 flex items-center gap-4">
               <div className="relative h-14 w-14 overflow-hidden rounded-full border border-[rgba(136,122,71,0.35)] bg-white">
-                <Image src={avatarSrc} alt="avatar" fill className="object-cover" />
+                <Image src={avatarSrc} alt={t('Avatar')} fill className="object-cover" />
               </div>
 
               <div className="flex flex-col gap-2">

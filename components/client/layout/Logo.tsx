@@ -1,5 +1,6 @@
 import Image from "@/components/ui/AppImage";
 import Link from "@/libs/router";
+import { useTranslation } from "react-i18next";
 
 type LogoSize = "medium" | "small";
 
@@ -25,6 +26,7 @@ const sizeConfig: Record<
 };
 
 const Logo = ({ size = "medium", href = "/" }: LogoProps) => {
+  const { t } = useTranslation();
   const { imgSize, fontSize, src } = sizeConfig[size];
 
   return (
@@ -33,7 +35,7 @@ const Logo = ({ size = "medium", href = "/" }: LogoProps) => {
       className="flex flex-row items-center"
       style={{ gap: "10px" }}
     >
-      <Image src={src} alt="EcoLink Logo" width={imgSize} height={imgSize} />
+      <Image src={src} alt={t("EcoLink Logo")} width={imgSize} height={imgSize} />
       <span
         style={{
           fontFamily: "var(--font-logo)",

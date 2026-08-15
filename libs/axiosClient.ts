@@ -114,8 +114,6 @@ const config: CreateAxiosDefaults = {
     timeout: 120000,
     headers: {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Expose-Headers": "Authorization",
     },
     paramsSerializer: (params) => queryString.stringify(params, { arrayFormat: "comma" }),
 }

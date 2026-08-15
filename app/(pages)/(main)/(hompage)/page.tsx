@@ -5,7 +5,7 @@ import HeroSection from "./_components/HeroSection";
 import { Divider } from "@/components/client/shared/Divider";
 import ProblemAndSolution from "./_components/ProblemAndSolution";
 import ForVolunteers from "./_components/ForVolunteers";
-import ForCitizens from "./_components/ForCitizens";
+// import ForCitizens from "./_components/ForCitizens";
 import CallToAction from "./_components/CallToAction";
 
 export default function Home() {
@@ -30,10 +30,10 @@ export default function Home() {
       <Divider className="text-background-tertiary my-15" />
 
       <ForVolunteers />
-
+{/* 
       <Divider className="text-background-tertiary my-15" />
 
-      <ForCitizens />
+      <ForCitizens /> */}
 
       <Divider className="text-background-tertiary my-15" />
 

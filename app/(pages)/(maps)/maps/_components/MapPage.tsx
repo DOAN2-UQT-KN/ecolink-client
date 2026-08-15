@@ -6,13 +6,12 @@ import { getAllCampaigns } from '@/apis/campaign/getCampaigns';
 import { getAllReports } from '@/apis/incident/getReport';
 import { getAllSOS } from '@/apis/sos/getSos';
 import type { ISOS } from '@/apis/sos/models/sos';
+import { MapLoadingFallback } from './MapLoadingFallback';
 
 const MapView = dynamic(() => import('./MapView'), {
   ssr: false,
   loading: () => (
-    <div className="h-full w-full bg-slate-100 animate-pulse flex items-center justify-center">
-      <span className="text-slate-400 text-sm">Initialising map…</span>
-    </div>
+    <MapLoadingFallback compact labelKey="Initialising map…" />
   ),
 });
 const FilterPanel = dynamic(() => import('./FilterPanel'), { ssr: false });
@@ -262,20 +261,12 @@ function SOSButton({ onClick }: { onClick: () => void }) {
   const { t } = useTranslation();
   const [isHover, setIsHover] = useState(false);
   const [isActive, setIsActive] = useState(false);
-  const [pulse, setPulse] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setPulse((p) => (p >= 1 ? 0 : p + 0.04));
-    }, 50);
-    return () => clearInterval(interval);
-  }, []);
 
   return (
     <button
       type="button"
       onClick={onClick}
-      aria-label="Emergency SOS"
+      aria-label={t('Emergency SOS')}
       onMouseEnter={() => setIsHover(true)}
       onMouseLeave={() => {
         setIsHover(false);
@@ -284,16 +275,17 @@ function SOSButton({ onClick }: { onClick: () => void }) {
       onMouseDown={() => setIsActive(true)}
       onMouseUp={() => setIsActive(false)}
       className={cn(
-        'absolute top-[200px] right-5 z-[1000] flex size-[50px] cursor-pointer select-none items-center justify-center rounded-full border-none bg-red-500 text-[17px] font-bold text-white outline-none transition-all duration-200 ease-out',
+        'absolute top-[200px] right-5 z-[1000] flex size-[50px] cursor-pointer select-none items-center justify-center rounded-full border-none bg-red-500 text-[17px] font-bold text-white outline-none transition-all duration-200 ease-out shadow-[0_6px_16px_rgba(0,0,0,0.25)]',
         isActive && 'scale-90 bg-red-700',
         !isActive && isHover && 'scale-110 bg-red-600',
         !isActive && !isHover && 'scale-100',
       )}
-      style={{
-        boxShadow: `0 6px 16px rgba(0,0,0,0.25), 0 0 ${pulse * 25}px rgba(239,68,68,${1 - pulse})`,
-      }}
     >
-      <span>{t('SOS')}</span>
+      <span
+        className="pointer-events-none absolute inset-0 rounded-full bg-red-500 animate-ping opacity-40"
+        aria-hidden
+      />
+      <span className="relative">{t('SOS')}</span>
     </button>
   );
 }

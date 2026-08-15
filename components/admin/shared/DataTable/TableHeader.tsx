@@ -3,6 +3,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { TableHead, TableHeader as BaseTableHeader, TableRow } from '@/components/ui/table';
 import { cn } from '@/libs/utils';
 import type { DataTableColumn, SortOrder } from './types';
+import { useTranslation } from 'react-i18next';
 
 type Props<T> = {
   columns: DataTableColumn<T>[];
@@ -30,6 +31,7 @@ export function DataTableHeader<T>({
   onSortChange,
   stickyHeader,
 }: Props<T>) {
+  const { t } = useTranslation();
   return (
     <BaseTableHeader
       className={cn(
@@ -43,7 +45,7 @@ export function DataTableHeader<T>({
               checked={allSelected || (partiallySelected ? 'indeterminate' : false)}
               disabled={!canSelectAny}
               onCheckedChange={(checked) => onToggleAll(Boolean(checked))}
-              aria-label="Select all rows"
+              aria-label={t('Select all rows')}
             />
           </TableHead>
         )}

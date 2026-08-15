@@ -56,7 +56,7 @@ const ForVolunteer = () => {
         transition={{ duration: 0.6 }}
         className="flex flex-col items-center gap-5 pb-5"
       >
-        <Tag variant="green">Take Action</Tag>
+        <Tag variant="green">{t("Take Action")}</Tag>
 
         <h1 className="text-center">
           <Trans
@@ -82,7 +82,7 @@ const ForVolunteer = () => {
         >
           <Image
             src={isLarge ? DESKTOP_IMG : MOBILE_IMG}
-            alt="For volunteers"
+            alt={t("For volunteers")}
             width={isLarge ? 572 : 393}
             height={isLarge ? 582 : 378}
             className="w-[393px] lg:w-[572px] h-auto"

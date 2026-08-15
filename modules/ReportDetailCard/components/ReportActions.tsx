@@ -9,6 +9,7 @@ import {
 
 import { useReportVotes } from "../hooks/useReportVotes";
 import { cn } from "@/libs/utils";
+import { useTranslation } from "react-i18next";
 
 interface ReportActionsProps {
   reportId: string;
@@ -23,6 +24,7 @@ export const ReportActions: React.FC<ReportActionsProps> = ({
   initialVotePoint = 0,
   initialUserVote = null,
 }) => {
+  const { t } = useTranslation();
   const { userVote, handleVote, isVoting } = useReportVotes(
     reportId,
     initialVotePoint,
@@ -44,7 +46,7 @@ export const ReportActions: React.FC<ReportActionsProps> = ({
             "p-1 rounded-full transition-colors hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer",
             userVote === 1 ? "text-emerald-600" : "text-foreground-secondary",
           )}
-          aria-label="Upvote"
+          aria-label={t("Upvote")}
         >
           {userVote === 1 ? (
             <TbArrowBigUpFilled size={20} />
@@ -67,7 +69,7 @@ export const ReportActions: React.FC<ReportActionsProps> = ({
             "p-1 rounded-full transition-colors hover:bg-black/5 dark:hover:bg-white/10  cursor-pointer",
             userVote === -1 ? "text-rose-600" : "text-foreground-secondary",
           )}
-          aria-label="Downvote"
+          aria-label={t("Downvote")}
         >
           {userVote === -1 ? (
             <TbArrowBigDownFilled size={20} />

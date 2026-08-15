@@ -33,7 +33,7 @@ const HeroSection = () => {
       <motion.div variants={itemVariants} className="lg:hidden">
         <Image
           src="/herosection.png"
-          alt="Hero Image"
+          alt={t("Hero Image")}
           width={368}
           height={282}
         />
@@ -43,7 +43,7 @@ const HeroSection = () => {
         variants={itemVariants}
         className="flex flex-col items-center lg:items-start justify-between lg:w-[617px] 3xl:!w-[800px] gap-[17px] lg:gap-6"
       >
-        <Tag variant="green">EcoLink Platform</Tag>
+        <Tag variant="green">{t("EcoLink Platform")}</Tag>
 
         <div className="w-fit">
           <h1 className="w-fit text-center lg:text-left">
@@ -70,7 +70,7 @@ const HeroSection = () => {
       <motion.div variants={itemVariants} className="hidden 3xl:block">
         <Image
           src="/herosection.png"
-          alt="Hero Image"
+          alt={t("Hero Image")}
           width={800}
           height={618}
         />
@@ -82,7 +82,7 @@ const HeroSection = () => {
       >
         <Image
           src="/herosection.png"
-          alt="Hero Image"
+          alt={t("Hero Image")}
           width={600}
           height={418}
         />

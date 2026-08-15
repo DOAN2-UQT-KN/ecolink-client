@@ -1,4 +1,4 @@
-import dayjs from "dayjs";
+import { format, isValid, parse } from "date-fns";
 import useQueryString from "./useQueryString";
 
 export type ParamType =
@@ -9,6 +9,9 @@ export type ParamType =
   | "date"
   | "datetime"
   | "arrayNumber";
+
+const DATE_FORMAT = "dd-MM-yyyy";
+const DATETIME_FORMAT = "dd-MM-yyyy HH:mm:ss";
 
 const useGetParam = <T>(
   key: string,
@@ -49,18 +52,20 @@ const useGetParam = <T>(
         return (query_value === "1") as T;
       }
       break;
-    case "date":
-      if (query_value && dayjs(query_value, "DD-MM-YYYY").isValid()) {
-        return dayjs(query_value, "DD-MM-YYYY").format("DD-MM-YYYY") as T;
+    case "date": {
+      const parsed = parse(query_value, DATE_FORMAT, new Date());
+      if (isValid(parsed)) {
+        return format(parsed, DATE_FORMAT) as T;
       }
       break;
-    case "datetime":
-      if (query_value && dayjs(query_value, "DD-MM-YYYY HH:mm:ss").isValid()) {
-        return dayjs(query_value, "DD-MM-YYYY HH:mm:ss").format(
-          "DD-MM-YYYY HH:mm:ss",
-        ) as T;
+    }
+    case "datetime": {
+      const parsed = parse(query_value, DATETIME_FORMAT, new Date());
+      if (isValid(parsed)) {
+        return format(parsed, DATETIME_FORMAT) as T;
       }
       break;
+    }
     case "string":
       return query_value as T;
   }

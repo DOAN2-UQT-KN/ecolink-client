@@ -56,8 +56,6 @@ const IncidentList = memo(function IncidentList() {
       .filter((report): report is IIncident => Boolean(report));
   }, [savedData?.data]);
 
-  console.log('savedData', savedData?.data?.saved_resource);
-
   const isLoading = useMemo(
     () => (activeTab === 'explore' ? isReportsLoading : isSavedLoading),
     [activeTab, isReportsLoading, isSavedLoading],

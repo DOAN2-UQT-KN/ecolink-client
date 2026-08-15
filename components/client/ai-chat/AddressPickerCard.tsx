@@ -4,6 +4,7 @@ import type { LatLngLiteral } from "leaflet"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/libs/utils"
+import { useTranslation } from "react-i18next"
 
 const LeafletAddressMap = dynamic(() => import("@/modules/LeafletAddressMap"), {
     ssr: false,
@@ -64,6 +65,7 @@ async function reverseGeocode(lat: number, lng: number): Promise<ReverseGeocodin
 }
 
 const AddressPickerCard = memo(function AddressPickerCard({ disabled, onSubmit }: Props) {
+    const { t } = useTranslation()
     const [position, setPosition] = useState<LatLngLiteral | null>(null)
     const [detailAddress, setDetailAddress] = useState("")
     const [loadingAddr, setLoadingAddr] = useState(false)
@@ -124,10 +126,10 @@ const AddressPickerCard = memo(function AddressPickerCard({ disabled, onSubmit }
         <div className="mt-2 w-full rounded-xl border border-border bg-background/60 p-3">
             <div className="mb-2 flex items-center justify-between gap-2">
                 <p className="text-xs font-semibold text-foreground">
-                    Pick location & submit Detail Address
+                    {t("Pick location & submit Detail Address")}
                 </p>
                 {loadingAddr ? (
-                    <span className="text-xs text-muted-foreground">Looking up…</span>
+                    <span className="text-xs text-muted-foreground">{t("Looking up…")}</span>
                 ) : null}
             </div>
 
@@ -135,14 +137,14 @@ const AddressPickerCard = memo(function AddressPickerCard({ disabled, onSubmit }
                 <LeafletAddressMap
                     position={position}
                     setPosition={setPosition}
-                    popupText={detailAddress || "Selected location"}
+                    popupText={detailAddress || t("Selected location")}
                 />
             </div>
 
             <Textarea
                 value={detailAddress}
                 onChange={(e) => setDetailAddress(e.target.value)}
-                placeholder="Detail address (street, ward/district, city)…"
+                placeholder={t("Detail address (street, ward/district, city)…")}
                 className={cn("min-h-[88px] text-sm", disabled && "opacity-60")}
                 disabled={disabled}
             />
@@ -155,7 +157,7 @@ const AddressPickerCard = memo(function AddressPickerCard({ disabled, onSubmit }
                     disabled={disabled || !canSubmit}
                     onClick={submit}
                 >
-                    Submit address
+                    {t("Submit address")}
                 </Button>
             </div>
         </div>

@@ -334,10 +334,10 @@ export function DataTable<T>({
                       }
                     >
                       <SelectTrigger className="h-9 w-full bg-white border-zinc-300 text-zinc-900">
-                        <SelectValue placeholder={filterConfig.placeholder ?? 'Select value'} />
+                        <SelectValue placeholder={filterConfig.placeholder ?? t('Select value')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All</SelectItem>
+                        <SelectItem value="">{t('All')}</SelectItem>
                         {filterConfig.options?.map((option) => (
                           <SelectItem key={option.value} value={option.value}>
                             {option.label}
@@ -532,7 +532,7 @@ export function DataTable<T>({
               <div className="flex items-center gap-1">
                 <button
                   type="button"
-                  aria-label="Previous page"
+                  aria-label={t('Previous page')}
                   onClick={() => pagination.onPrevPage?.()}
                   disabled={!pagination.hasPrevPage || loading}
                   className={cn(
@@ -548,7 +548,7 @@ export function DataTable<T>({
                 </span>
                 <button
                   type="button"
-                  aria-label="Next page"
+                  aria-label={t('Next page')}
                   onClick={() => pagination.onNextPage?.()}
                   disabled={!pagination.hasNextPage || loading}
                   className={cn(
@@ -586,7 +586,7 @@ export function DataTable<T>({
                         <button
                           key={item}
                           type="button"
-                          aria-label={`Page ${item}`}
+                          aria-label={t('Page {{page}}', { page: item })}
                           aria-current={pagination.page === item ? 'page' : undefined}
                           disabled={loading}
                           onClick={() => pagination.onPageChange?.(item)}
@@ -608,7 +608,7 @@ export function DataTable<T>({
               <div className="flex items-center gap-1">
                 <button
                   type="button"
-                  aria-label="Previous page"
+                  aria-label={t('Previous page')}
                   onClick={() => pagination.onPageChange?.(Math.max(1, pagination.page - 1))}
                   disabled={pagination.page <= 1 || loading}
                   className={cn(
@@ -624,7 +624,7 @@ export function DataTable<T>({
                 </span>
                 <button
                   type="button"
-                  aria-label="Next page"
+                  aria-label={t('Next page')}
                   onClick={() => pagination.onPageChange?.(pagination.page + 1)}
                   disabled={loading}
                   className={cn(

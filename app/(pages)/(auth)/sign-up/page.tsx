@@ -180,7 +180,7 @@ export default function SignUp() {
 
           <Button variant="outlined-green" className="w-full h-[60px]">
             <div className="flex flex-row items-center gap-[10px]">
-              <Image src="/google.png" alt="google" width={25} height={25} />
+              <Image src="/google.png" alt={t("google")} width={25} height={25} />
               <span className="!font-medium !font-display-3 px-2">
                 {t("Sign up with Google")}
               </span>

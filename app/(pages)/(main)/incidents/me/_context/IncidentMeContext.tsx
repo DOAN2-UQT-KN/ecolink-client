@@ -69,7 +69,7 @@ export const IncidentMeProvider = ({ children }: { children: ReactNode }) => {
 
   const reports = React.useMemo(() => data?.data?.reports || [], [data]);
   const total = React.useMemo(
-    () => (data as any)?.data?.total || reports.length,
+    () => data?.data?.total ?? reports.length,
     [data, reports.length],
   );
 

@@ -68,7 +68,7 @@ const ProblemAndSolution = () => {
   }, [t]);
 
   return (
-    <section className="flex flex-col items-center justify-between py-[40px] px-[10px] lg:px-[120px] gap-10 w-full overflow-hidden">
+    <section className="flex flex-col items-center justify-between py-[40px] px-[10px] 2xl:px-[120px] gap-10 w-full overflow-hidden">
       <motion.div
         initial={{ opacity: 0, y: -30 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -76,7 +76,7 @@ const ProblemAndSolution = () => {
         transition={{ duration: 0.6, ease: "easeOut" }}
         className="flex flex-col items-center gap-5 "
       >
-        <Tag variant="green">Smart Environmental System</Tag>
+        <Tag variant="green">{t("Smart Environmental System")}</Tag>
 
         <h1 className="text-center">
           <Trans

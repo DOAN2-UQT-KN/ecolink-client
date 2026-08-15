@@ -186,7 +186,6 @@ export const OrganizationCard = memo(function OrganizationCard({
   }, [organizationId, requestJoin]);
 
   const handleConfirmCancelJoin = useCallback(async () => {
-    console.log('handleConfirmCancelJoin', joinRequestId);
     if (!joinRequestId) return;
     await cancelJoinAsync({ request_id: joinRequestId });
   }, [joinRequestId, cancelJoinAsync]);
@@ -237,7 +236,7 @@ export const OrganizationCard = memo(function OrganizationCard({
           !editMode && 'pointer-events-none cursor-default',
         )}
         onClick={editMode ? openBackgroundPicker : undefined}
-        aria-label={editMode ? 'Change cover image' : undefined}
+        aria-label={editMode ? t('Change cover image') : undefined}
         disabled={!editMode}
       >
         <div className={headerClassName} style={headerStyle}>
@@ -264,14 +263,14 @@ export const OrganizationCard = memo(function OrganizationCard({
               !editMode && 'pointer-events-none',
             )}
             onClick={editMode ? openLogoPicker : undefined}
-            aria-label={editMode ? 'Change logo' : undefined}
+            aria-label={editMode ? t('Change logo') : undefined}
             disabled={!editMode}
           >
             {logoDisplayUrl ? (
               // eslint-disable-next-line @next/next/no-img-element -- arbitrary logo URLs
               <img src={logoDisplayUrl} alt="" className="size-full object-cover" />
             ) : (
-              <span className="text-xs text-muted-foreground px-2 text-center">Logo</span>
+              <span className="text-xs text-muted-foreground px-2 text-center">{t('Logo')}</span>
             )}
           </button>
         </div>
@@ -284,7 +283,7 @@ export const OrganizationCard = memo(function OrganizationCard({
                 value={draft.name}
                 onChange={(e) => draft.setName(e.target.value)}
                 className="w-full max-w-md min-w-0 flex-1 basis-56 sm:basis-64 text-center font-display-5 font-semibold text-foreground bg-transparent border-b border-dashed border-foreground/25 outline-none focus-visible:border-button-accent"
-                aria-label="Organization name"
+                aria-label={t('Organization name')}
               />
             ) : (
               <h2 className="font-display-5 font-semibold text-foreground break-words text-center max-w-full">
@@ -310,8 +309,8 @@ export const OrganizationCard = memo(function OrganizationCard({
                   value={draft.contactEmail}
                   onChange={(e) => draft.setContactEmail(e.target.value)}
                   className="w-full bg-transparent border-b border-dashed border-foreground-secondary/40 outline-none focus-visible:border-button-accent text-foreground-secondary placeholder:text-foreground-secondary/60 text-center"
-                  placeholder="contact@example.com"
-                  aria-label="Contact email"
+                  placeholder={t('contact@example.com')}
+                  aria-label={t('Contact email')}
                 />
               ) : emailHref ? (
                 <a
@@ -396,14 +395,14 @@ export const OrganizationCard = memo(function OrganizationCard({
           <div className="flex items-start justify-center gap-2 rounded-lg border border-[rgba(136,122,71,0.35)] bg-white/40 px-3 py-2.5">
             <AlignLeft className="size-4 shrink-0 text-button-accent mt-0.5" />
             <div className="min-w-0 text-left w-full">
-              <p className="text-xs font-medium text-foreground-tertiary">Description</p>
+              <p className="text-xs font-medium text-foreground-tertiary">{t('Description')}</p>
               {editMode ? (
                 <textarea
                   value={draft.description}
                   onChange={(e) => draft.setDescription(e.target.value)}
                   rows={3}
                   className="mt-1 w-full resize-y rounded-md border border-input bg-background px-2 py-1.5 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-                  aria-label="Organization description"
+                  aria-label={t('Organization description')}
                 />
               ) : (
                 // <p className="text-sm text-foreground whitespace-pre-wrap break-words line-clamp-2 pt-1">

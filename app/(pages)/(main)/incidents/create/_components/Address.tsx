@@ -4,6 +4,7 @@ import dynamic from "@/libs/dynamic";
 import { Textarea } from "@/components/ui/textarea";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { useIncident } from "../_hooks/useIncident";
+import { useTranslation } from "react-i18next";
 
 const LeafletAddressMap = dynamic(() => import("@/modules/LeafletAddressMap"), {
   ssr: false,
@@ -17,6 +18,7 @@ type ReverseGeocodingAddress = {
 };
 
 const Address = memo(function Address() {
+  const { t } = useTranslation();
   const { form } = useIncident();
   const {
     register,
@@ -152,11 +154,11 @@ const Address = memo(function Address() {
         {/* Detail */}
         <Field className="w-full h-full gap-2">
           <FieldLabel className="text-foreground-tertiary font-display-3">
-            Detail Address
+            {t("Detail address")}
           </FieldLabel>
           <Textarea
             {...register("detailAddress")}
-            placeholder="Street, house number..."
+            placeholder={t("Street, house number...")}
             className="border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50"
           />
         </Field>
@@ -166,7 +168,7 @@ const Address = memo(function Address() {
           <LeafletAddressMap
             position={position}
             setPosition={setPosition}
-            popupText={detailAddress || "Selected location"}
+            popupText={detailAddress || t("Selected location")}
           />
         </div>
     </div>

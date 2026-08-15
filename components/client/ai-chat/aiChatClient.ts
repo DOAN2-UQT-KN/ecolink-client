@@ -7,6 +7,7 @@
 import axiosClient from "@/libs/axiosClient"
 import requestApi from "@/utils/requestApi"
 import useAuthStore from "@/stores/useAuthStore"
+import i18n from "@/i18n"
 
 export const DEFAULT_AGENT_ID = "ecolink_assistant"
 
@@ -44,22 +45,22 @@ function parseApiError(err: unknown): string {
             try {
                 return JSON.stringify(o.detail)
             } catch {
-                return "Request failed"
+                return i18n.t("Request failed")
             }
         }
         if (typeof o.message === "string") return o.message
     }
     if (err instanceof Error) return err.message
-    return "Request failed"
+    return i18n.t("Request failed")
 }
 
 async function parseFetchError(res: Response): Promise<string> {
     try {
         const j = (await res.json()) as { detail?: unknown }
         if (typeof j.detail === "string") return j.detail
-        return res.statusText || "Request failed"
+        return res.statusText || i18n.t("Request failed")
     } catch {
-        return res.statusText || "Request failed"
+        return res.statusText || i18n.t("Request failed")
     }
 }
 

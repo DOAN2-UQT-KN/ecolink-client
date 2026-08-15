@@ -48,8 +48,12 @@ export const ConfirmPopoverModal = memo(function ConfirmPopoverModal({
   }, [type, t]);
 
   const runConfirm = useCallback(async () => {
-    await onConfirm();
-    setOpen(false);
+    try {
+      await onConfirm();
+      setOpen(false);
+    } catch {
+      // Keep the dialog open so the user can retry after a failed action.
+    }
   }, [onConfirm]);
 
   return (

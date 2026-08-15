@@ -4,6 +4,7 @@ import useAuthStore from "@/stores/useAuthStore"
 import { cn } from "@/libs/utils"
 import { ImagePlus, MessageCircle, Plus, SendHorizontal, X } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
+import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 import AssistantMarkdown from "./AssistantMarkdown"
 import AddressPickerCard from "./AddressPickerCard"
@@ -107,6 +108,7 @@ function storageKey(userId: string) {
 }
 
 export default function AiChatWidget() {
+    const { t } = useTranslation()
     const pathname = usePathname()
     const accessToken = useAuthStore((s) => s.accessToken)
     const user = useAuthStore((s) => s.user)
@@ -158,7 +160,7 @@ export default function AiChatWidget() {
                 setMessages(ui)
             } catch (e) {
                 if (cancelled || conversationIdRef.current !== loadId) return
-                const msg = e instanceof Error ? e.message : "Failed to load chat"
+                const msg = e instanceof Error ? e.message : t("Failed to load chat")
                 toast.error(msg)
                 setConversationId(null)
                 try {
@@ -175,7 +177,7 @@ export default function AiChatWidget() {
         return () => {
             cancelled = true
         }
-    }, [open, conversationId, accessToken, userId, baseConfigured])
+    }, [open, conversationId, accessToken, userId, baseConfigured, t])
 
     useEffect(() => {
         const el = scrollRef.current
@@ -203,7 +205,7 @@ export default function AiChatWidget() {
             if (!files?.length) return
             const slots = MAX_CHAT_IMAGES - pendingImages.length
             if (slots <= 0) {
-                toast.error(`You can attach at most ${MAX_CHAT_IMAGES} images.`)
+                toast.error(t("You can attach at most {{max}} images.", { max: MAX_CHAT_IMAGES }))
                 e.target.value = ""
                 return
             }
@@ -225,12 +227,12 @@ export default function AiChatWidget() {
                     setPendingImages((prev) => [...prev, ...newItems])
                 }
             } catch {
-                toast.error("Could not process an image.")
+                toast.error(t("Could not process an image."))
             } finally {
                 e.target.value = ""
             }
         },
-        [pendingImages.length]
+        [pendingImages.length, t]
     )
 
     const removePendingImage = useCallback((id: string) => {
@@ -243,11 +245,11 @@ export default function AiChatWidget() {
 
     const handleNewChat = useCallback(async () => {
         if (!accessToken) {
-            toast.error("Sign in to use the assistant.")
+            toast.error(t("Sign in to use the assistant."))
             return
         }
         if (!baseConfigured) {
-            toast.error("API URL is not configured (VITE_API_URL).")
+            toast.error(t("API URL is not configured (VITE_API_URL)."))
             return
         }
         abortRef.current?.abort()
@@ -264,20 +266,20 @@ export default function AiChatWidget() {
             })
             persistConversationId(conv.id)
         } catch (e) {
-            const msg = e instanceof Error ? e.message : "Could not start a new chat"
+            const msg = e instanceof Error ? e.message : t("Could not start a new chat")
             toast.error(msg)
             persistConversationId(null)
         } finally {
             setBooting(false)
         }
-    }, [accessToken, baseConfigured, persistConversationId])
+    }, [accessToken, baseConfigured, persistConversationId, t])
 
     const handleSend = useCallback(async () => {
         const text = input.trim()
         if ((!text && pendingImages.length === 0) || streaming || isUploading || !accessToken)
             return
         if (!baseConfigured) {
-            toast.error("API URL is not configured (VITE_API_URL).")
+            toast.error(t("API URL is not configured (VITE_API_URL)."))
             return
         }
 
@@ -291,7 +293,7 @@ export default function AiChatWidget() {
                 convId = conv.id
                 persistConversationId(conv.id)
             } catch (e) {
-                const msg = e instanceof Error ? e.message : "Could not create conversation"
+                const msg = e instanceof Error ? e.message : t("Could not create conversation")
                 toast.error(msg)
                 setBooting(false)
                 return
@@ -318,7 +320,7 @@ export default function AiChatWidget() {
                 }
             } catch (e) {
                 const msg =
-                    e instanceof Error ? e.message : "Image upload or registration failed"
+                    e instanceof Error ? e.message : t("Image upload or registration failed")
                 toast.error(msg)
                 setIsUploading(false)
                 return
@@ -406,7 +408,7 @@ export default function AiChatWidget() {
             )
         } catch (e) {
             if ((e as Error).name === "AbortError") return
-            const msg = e instanceof Error ? e.message : "Stream failed"
+            const msg = e instanceof Error ? e.message : t("Stream failed")
             toast.error(msg)
             setMessages((prev) => prev.filter((m) => m.id !== asstMsgId))
         } finally {
@@ -425,26 +427,8 @@ export default function AiChatWidget() {
         pendingImages,
         persistConversationId,
         streaming,
+        t,
     ])
-
-    const sendTextOnly = useCallback(
-        async (text: string) => {
-            if (!text.trim()) return
-            if (streaming || isUploading || booting || !accessToken) return
-
-            // Temporarily stash existing pending images; this send is text-only.
-            const prev = pendingImages
-            if (prev.length) setPendingImages([])
-            try {
-                setInput(text)
-                await handleSend()
-            } finally {
-                // Restore pending images; do not lose attachments.
-                if (prev.length) setPendingImages(prev)
-            }
-        },
-        [accessToken, booting, handleSend, isUploading, pendingImages, streaming]
-    )
 
     const sendHiddenToAgent = useCallback(
         async (text: string) => {
@@ -452,7 +436,7 @@ export default function AiChatWidget() {
             if (!content) return
             if (streaming || isUploading || booting || !accessToken) return
             if (!baseConfigured) {
-                toast.error("API URL is not configured (VITE_API_URL).")
+                toast.error(t("API URL is not configured (VITE_API_URL)."))
                 return
             }
 
@@ -467,7 +451,7 @@ export default function AiChatWidget() {
                     persistConversationId(conv.id)
                 } catch (e) {
                     const msg =
-                        e instanceof Error ? e.message : "Could not create conversation"
+                        e instanceof Error ? e.message : t("Could not create conversation")
                     toast.error(msg)
                     setBooting(false)
                     return
@@ -536,7 +520,7 @@ export default function AiChatWidget() {
                 )
             } catch (e) {
                 if ((e as Error).name === "AbortError") return
-                const msg = e instanceof Error ? e.message : "Stream failed"
+                const msg = e instanceof Error ? e.message : t("Stream failed")
                 toast.error(msg)
                 setMessages((prev) => prev.filter((m) => m.id !== asstMsgId))
             } finally {
@@ -555,6 +539,7 @@ export default function AiChatWidget() {
             isUploading,
             persistConversationId,
             streaming,
+            t,
         ]
     )
 
@@ -569,7 +554,7 @@ export default function AiChatWidget() {
         <>
             <button
                 type="button"
-                aria-label={open ? "Close assistant" : "Open assistant"}
+                aria-label={open ? t("Close assistant") : t("Open assistant")}
                 onClick={() => setOpen((v) => !v)}
                 className={cn(
                     "fixed bottom-6 right-6 z-[100] flex size-14 items-center justify-center rounded-full border border-[#6d7b36]/30 bg-[#6d7b36] text-white shadow-[var(--neutral-shadows-400)] transition hover:bg-[#5c6a2d] focus-visible:ring-2 focus-visible:ring-[#9cab84] focus-visible:outline-none"
@@ -585,14 +570,14 @@ export default function AiChatWidget() {
                         "max-h-[min(calc(100dvh-8rem),560px)]"
                     )}
                     role="dialog"
-                    aria-label="EcoLink assistant"
+                    aria-label={t("EcoLink assistant")}
                 >
                     <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
                         <div>
-                            <p className="text-sm font-semibold">EcoLink assistant</p>
+                            <p className="text-sm font-semibold">{t("EcoLink assistant")}</p>
                             {!baseConfigured && (
                                 <p className="text-xs text-muted-foreground">
-                                    Set VITE_API_URL
+                                    {t("Set VITE_API_URL")}
                                 </p>
                             )}
                         </div>
@@ -605,7 +590,7 @@ export default function AiChatWidget() {
                             disabled={booting || streaming || isUploading}
                         >
                             <Plus className="size-4" />
-                            New chat
+                            {t("New chat")}
                         </Button>
                     </div>
 
@@ -614,17 +599,17 @@ export default function AiChatWidget() {
                         className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-3 scrollbar-hide"
                     >
                         {booting && messages.length === 0 && (
-                            <p className="text-sm text-muted-foreground">Loading…</p>
+                            <p className="text-sm text-muted-foreground">{t("Loading...")}</p>
                         )}
                         {!booting && messages.length === 0 && (
                             <p className="text-sm text-muted-foreground">
                                 {!hasHydrated
-                                    ? "Preparing chat…"
+                                    ? t("Preparing chat…")
                                     : !accessToken
-                                      ? "Please sign in to chat with EcoLink assistant."
+                                      ? t("Please sign in to chat with EcoLink assistant.")
                                       : !baseConfigured
-                                        ? "Set VITE_API_URL to connect via API Gateway."
-                                        : "Ask about EcoLink, your organizations, or reports. Send a message to begin — a conversation is created automatically."}
+                                        ? t("Set VITE_API_URL to connect via API Gateway.")
+                                        : t("Ask about EcoLink, your organizations, or reports. Send a message to begin — a conversation is created automatically.")}
                             </p>
                         )}
                         {messages.map((m) => (
@@ -641,7 +626,7 @@ export default function AiChatWidget() {
                                     (m.toolsUsed?.length ?? 0) > 0 && (
                                         <ul
                                             className="mb-2 flex flex-col gap-1 border-b border-border/60 pb-2 text-xs text-muted-foreground"
-                                            aria-label="Tools used"
+                                            aria-label={t("Tools used")}
                                         >
                                             {m.toolsUsed!.map((name, i) => (
                                                 <li
@@ -718,8 +703,9 @@ export default function AiChatWidget() {
                                         {!m.imageUrls?.length &&
                                             (m.mediaIds?.length ?? 0) > 0 && (
                                                 <p className="mb-1 text-xs opacity-80">
-                                                    {m.mediaIds!.length} image(s)
-                                                    attached
+                                                    {t("{{count}} image(s) attached", {
+                                                        count: m.mediaIds!.length,
+                                                    })}
                                                 </p>
                                             )}
                                         {m.content ? (
@@ -758,7 +744,7 @@ export default function AiChatWidget() {
                                             type="button"
                                             className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-background text-xs shadow"
                                             onClick={() => removePendingImage(p.id)}
-                                            aria-label="Remove image"
+                                            aria-label={t("Remove image")}
                                         >
                                             ×
                                         </button>
@@ -780,14 +766,14 @@ export default function AiChatWidget() {
                                     pendingImages.length >= MAX_CHAT_IMAGES
                                 }
                                 onClick={() => fileInputRef.current?.click()}
-                                aria-label="Attach images"
+                                aria-label={t("Attach images")}
                             >
                                 <ImagePlus className="size-4" />
                             </Button>
                             <Textarea
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
-                                placeholder="Message…"
+                                placeholder={t("Message…")}
                                 rows={2}
                                 className="min-h-[44px] resize-none text-sm"
                                 disabled={
@@ -813,7 +799,7 @@ export default function AiChatWidget() {
                                     !canChat
                                 }
                                 onClick={() => void handleSend()}
-                                aria-label="Send"
+                                aria-label={t("Send")}
                             >
                                 <SendHorizontal className="size-4" />
                             </Button>
