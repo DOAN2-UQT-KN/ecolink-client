@@ -1,6 +1,7 @@
 import { memo, useContext, useMemo, useCallback } from "react";
 import { DataTable, ColumnType } from "@/components/client/shared/DataTable";
 import { Building2 } from "lucide-react";
+import { TbCircleCheck, TbCircleX } from "react-icons/tb";
 import { useTranslation } from "react-i18next";
 import { OrganizationMeContext } from "../_context/OrganizationMeContext";
 import { IOrganization } from "@/apis/organization/models/organization";
@@ -69,7 +70,22 @@ const DataTableComponent = memo(function DataTableComponent() {
               )}
             </div>
             <div className="flex flex-col min-w-0 flex-1">
-              <span className="font-bold text-sm truncate">{record.name}</span>
+              <div className="flex min-w-0 items-center gap-1.5">
+                <span className="font-bold text-sm truncate">{record.name}</span>
+                {record.is_email_verified ? (
+                  <TbCircleCheck
+                    className="size-4 shrink-0 text-emerald-500"
+                    aria-label={t("Verified")}
+                    title={t("Verified")}
+                  />
+                ) : (
+                  <TbCircleX
+                    className="size-4 shrink-0 text-red-500"
+                    aria-label={t("Unverified")}
+                    title={t("Unverified")}
+                  />
+                )}
+              </div>
               <span className="text-xs text-muted-foreground truncate">
                 {record.contact_email || "—"}
               </span>
@@ -77,6 +93,16 @@ const DataTableComponent = memo(function DataTableComponent() {
           </div>
         ),
         width: 280,
+      },
+      {
+        title: t("Members"),
+        key: "members",
+        render: (_, record) => (
+          <span className="tabular-nums font-display-1">
+            {record.members ?? 0}
+          </span>
+        ),
+        width: 110,
       },
       {
         title: t("Created At"),

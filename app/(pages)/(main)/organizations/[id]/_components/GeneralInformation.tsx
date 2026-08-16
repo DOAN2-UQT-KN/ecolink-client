@@ -1,5 +1,5 @@
 import React, { memo, useCallback, useMemo } from 'react';
-import { TbAlignLeft2, TbCalendarCheck, TbMailPin } from 'react-icons/tb';
+import { TbAlignLeft2, TbCalendarCheck, TbCircleCheck, TbCircleX, TbMailPin } from 'react-icons/tb';
 import { format, parseISO } from 'date-fns';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -7,7 +7,6 @@ import { useTranslation } from 'react-i18next';
 import { useResendContactEmail } from '@/apis/organization/organizationById';
 import { Button } from '@/components/client/shared/Button';
 import { RichTextContent } from '@/components/ui/RichTextContent';
-import { cn } from '@/libs/utils';
 
 import { useOrganizationDetail } from '../_hooks/useOrganizationDetail';
 import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
@@ -73,18 +72,19 @@ export const GeneralInformation = memo(function GeneralInformation() {
                 >
                   <span className="font-display-1">{contactEmail}</span>
                 </a>
-                <div className="mt-1">
-                  <div
-                    className={cn(
-                      'inline-flex items-center flex-row rounded-[10px] border px-2 py-0.5 text-[11px] font-display-1',
-                      isEmailVerified
-                        ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                        : 'border-amber-200 bg-amber-50 text-amber-800',
-                    )}
-                  >
-                    {isEmailVerified ? t('Verified') : t('Unverified')}
-                  </div>
-                </div>
+                {isEmailVerified ? (
+                  <TbCircleCheck
+                    className="size-4 shrink-0 text-emerald-500"
+                    aria-label={t('Verified')}
+                    title={t('Verified')}
+                  />
+                ) : (
+                  <TbCircleX
+                    className="size-4 shrink-0 text-red-500"
+                    aria-label={t('Unverified')}
+                    title={t('Unverified')}
+                  />
+                )}
               </div>
               {showResendContactEmail ? (
                 <div className="mt-2">

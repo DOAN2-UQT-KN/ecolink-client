@@ -190,7 +190,7 @@ export const HeroSection = memo(function HeroSection() {
                     {t("Leave")}
                   </SharedButton>
                   {isLeaveConfirmOpen ? (
-                    <div className="absolute top-[calc(100%+8px)] left-0 z-10 w-full min-w-[240px] max-w-sm rounded-md border border-[rgba(136,122,71,0.45)] bg-white p-3 shadow-md">
+                    <div className="absolute top-[calc(100%+8px)] left-0 z-30 w-full min-w-[240px] max-w-sm rounded-md border border-[rgba(136,122,71,0.45)] bg-white p-3 shadow-md">
                       <p className="text-sm text-foreground text-center">
                         {t("Are you sure?")}
                       </p>

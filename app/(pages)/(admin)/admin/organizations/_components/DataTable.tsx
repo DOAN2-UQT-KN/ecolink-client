@@ -12,7 +12,7 @@ import {
 } from '@/components/admin/shared/DataTable';
 import { PreviewOrganizationPopover } from './PreviewOrganizationPopover';
 import { ApproveOrganizationConfirm } from './ApproveOrganizationConfirm';
-import { TbScanEye } from 'react-icons/tb';
+import { TbCircleCheck, TbCircleX, TbScanEye } from 'react-icons/tb';
 import { RichTextContent } from '@/components/ui/RichTextContent';
 import { formattedDate } from '@/utils/formattedDate';
 import Image from '@/components/ui/AppImage';
@@ -23,6 +23,7 @@ import { STATUS } from '@/constants/status';
 const COLUMN_KEYS = {
   NO: 'no',
   NAME_LOGO: 'name_logo',
+  MEMBERS: 'members',
   CREATED: 'created',
   STATUS: 'status',
   REJECT_REASON: 'reject_reason',
@@ -81,8 +82,26 @@ export function DataTable() {
               </div>
             )}
             <div className="flex min-w-0 flex-1 flex-col">
-              <div className={cn('truncate font-medium', isDark ? 'text-zinc-100' : 'text-zinc-900')}>
-                {record.name}
+              <div
+                className={cn(
+                  'flex min-w-0 items-center gap-1.5 font-medium',
+                  isDark ? 'text-zinc-100' : 'text-zinc-900',
+                )}
+              >
+                <span className="truncate">{record.name}</span>
+                {record.is_email_verified ? (
+                  <TbCircleCheck
+                    className="size-4 shrink-0 text-emerald-500"
+                    aria-label={t('Verified')}
+                    title={t('Verified')}
+                  />
+                ) : (
+                  <TbCircleX
+                    className="size-4 shrink-0 text-red-500"
+                    aria-label={t('Unverified')}
+                    title={t('Unverified')}
+                  />
+                )}
               </div>
               <span
                 className={cn(
@@ -94,6 +113,21 @@ export function DataTable() {
               </span>
             </div>
           </div>
+        ),
+      },
+      {
+        key: COLUMN_KEYS.MEMBERS,
+        title: t('Members'),
+        className: 'min-w-[100px]',
+        render: (_, record) => (
+          <span
+            className={cn(
+              'tabular-nums font-display-1 text-center',
+              isDark ? 'text-zinc-300' : 'text-zinc-700',
+            )}
+          >
+            {record.members ?? 0}
+          </span>
         ),
       },
       {

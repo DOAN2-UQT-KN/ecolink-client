@@ -151,7 +151,6 @@ export const OrganizationJoinRequests = memo(function OrganizationJoinRequests({
                 <div className="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end">
                   <SharedButton
                     variant="brown"
-                    size="small"
                     className="min-w-[96px] !h-[40px]"
                     isLoading={rowPending && pendingAction?.approved === true}
                     isDisabled={pendingAction != null}
@@ -164,7 +163,6 @@ export const OrganizationJoinRequests = memo(function OrganizationJoinRequests({
                   </SharedButton>
                   <SharedButton
                     variant="outlined-brown"
-                    size="small"
                     className="min-w-[96px] !h-[40px]"
                     isLoading={rowPending && pendingAction?.approved === false}
                     isDisabled={pendingAction != null}

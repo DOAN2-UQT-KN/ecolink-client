@@ -17,6 +17,8 @@ export interface IOrganization {
   owner_id: string;
   /** True when the signed-in user is an active member of this org. */
   is_member?: boolean;
+  /** Active member count (owner is not included). */
+  members?: number;
   created_at: string;
   updated_at: string;
   request_status?: number;
