@@ -1,21 +1,13 @@
-import { memo, useContext, useMemo, useCallback, useState } from "react";
+import { memo, useContext, useMemo, useCallback } from "react";
 import { DataTable, ColumnType } from "@/components/client/shared/DataTable";
-import { MoreHorizontal, Building2 } from "lucide-react";
-import { Button } from "@/components/client/shared/Button";
+import { Building2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { OrganizationMeContext } from "../_context/OrganizationMeContext";
 import { IOrganization } from "@/apis/organization/models/organization";
 import { useRouter } from "@/libs/router";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/client/shared/DropdownMenu";
 import { StatusTag } from "@/components/ui/StatusTag";
 import FormFilter from "./FormFilter";
 import useAuthStore from "@/stores/useAuthStore";
-import { UpdateOrganizationPopover } from "./UpdateOrganizationPopover";
 import { useLeaveOrganization } from "@/apis/organization/leaveOrganization";
 
 const defaultPagination = { current: 1, pageSize: 10 };
@@ -31,20 +23,6 @@ const DataTableComponent = memo(function DataTableComponent() {
 
   const { mutate: leaveMutate, isPending: isLeavePending } =
     useLeaveOrganization();
-
-  const [editOrganization, setEditOrganization] =
-    useState<IOrganization | null>(null);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-
-  const handleEditOpenChange = useCallback((open: boolean) => {
-    setEditDialogOpen(open);
-    if (!open) setEditOrganization(null);
-  }, []);
-
-  const openEditDialog = useCallback((org: IOrganization) => {
-    setEditOrganization(org);
-    setEditDialogOpen(true);
-  }, []);
 
   const organizations = context?.organizations ?? [];
   const isLoading = context?.isLoading ?? false;
@@ -132,61 +110,7 @@ const DataTableComponent = memo(function DataTableComponent() {
         width: 140,
         align: "center",
       },
-      {
-        title: t("Action"),
-        key: "actions",
-        render: (_, record) => {
-          const isCurrentUserOwner =
-            currentUserId != null && record.owner_id === currentUserId;
 
-          return (
-            <div
-              className="flex justify-start"
-              onClick={(e) => e.stopPropagation()}
-              onPointerDown={(e) => e.stopPropagation()}
-              role="presentation"
-            >
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outlined-brown"
-                    size="small"
-                    className="h-8 w-8 p-0 border-none bg-transparent hover:bg-muted shadow-none group"
-                    disabled={isLeavePending}
-                  >
-                    <MoreHorizontal className="h-4 w-4 text-muted-foreground group-hover:text-white transition-colors" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-[200px]">
-                {isCurrentUserOwner ? (
-                  <DropdownMenuItem
-                    className="text-xs cursor-pointer"
-                    onSelect={(e) => {
-                      e.preventDefault();
-                      openEditDialog(record);
-                    }}
-                  >
-                    {t("Edit")}
-                  </DropdownMenuItem>
-                ) : (
-                  <DropdownMenuItem
-                    className="text-xs cursor-pointer text-destructive focus:text-destructive"
-                    disabled={isLeavePending}
-                    onSelect={(e) => {
-                      e.preventDefault();
-                      handleLeave(record.id);
-                    }}
-                  >
-                    {t("Leave group")}
-                  </DropdownMenuItem>
-                )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          );
-        },
-        width: 80,
-      },
     ],
     [
       t,
@@ -194,7 +118,6 @@ const DataTableComponent = memo(function DataTableComponent() {
       currentUserId,
       isLeavePending,
       handleLeave,
-      openEditDialog,
     ],
   );
 
@@ -217,12 +140,6 @@ const DataTableComponent = memo(function DataTableComponent() {
 
   return (
     <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
-      <UpdateOrganizationPopover
-        organization={editOrganization}
-        open={editDialogOpen}
-        onOpenChange={handleEditOpenChange}
-        onUpdated={refetch}
-      />
       <DataTable
         rowKey="id"
         columns={columns}
