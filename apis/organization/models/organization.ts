@@ -3,6 +3,7 @@ import { IUser } from "@/apis/auth/models/user";
 export interface IOrganization {
   id: string;
   name: string;
+  slug: string;
   description: string | null;
   description_vi?: string | null;
   description_en?: string | null;
@@ -11,9 +12,13 @@ export interface IOrganization {
   contact_email: string | null;
   is_email_verified: boolean;
   status: number;
+  /** Admin ban reason; `null`/empty when the organization has not been banned. */
+  reject_reason?: string | null;
   owner_id: string;
   /** True when the signed-in user is an active member of this org. */
   is_member?: boolean;
+  /** Active member count (owner is not included). */
+  members?: number;
   created_at: string;
   updated_at: string;
   request_status?: number;

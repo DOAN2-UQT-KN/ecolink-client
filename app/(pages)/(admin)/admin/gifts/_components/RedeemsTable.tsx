@@ -175,7 +175,7 @@ export function RedeemsTable() {
             setPage(1);
           }}
         >
-          <SelectTrigger className="!h-10 w-full !border-zinc-300 sm:w-[210px]">
+          <SelectTrigger className="!h-10 w-full !border-input sm:w-[210px]">
             <SelectValue placeholder={t('Status')} />
           </SelectTrigger>
           <SelectContent>

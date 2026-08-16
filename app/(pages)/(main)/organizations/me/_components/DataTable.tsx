@@ -1,22 +1,18 @@
-import { memo, useContext, useMemo, useCallback, useState } from "react";
+import { memo, useContext, useMemo, useCallback } from "react";
 import { DataTable, ColumnType } from "@/components/client/shared/DataTable";
-import { MoreHorizontal, Building2 } from "lucide-react";
-import { Button } from "@/components/client/shared/Button";
+import { Building2 } from "lucide-react";
+import { TbCircleCheck, TbCircleX } from "react-icons/tb";
 import { useTranslation } from "react-i18next";
 import { OrganizationMeContext } from "../_context/OrganizationMeContext";
 import { IOrganization } from "@/apis/organization/models/organization";
 import { useRouter } from "@/libs/router";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/client/shared/DropdownMenu";
 import { StatusTag } from "@/components/ui/StatusTag";
+import { RichTextContent } from "@/components/ui/RichTextContent";
 import FormFilter from "./FormFilter";
 import useAuthStore from "@/stores/useAuthStore";
-import { UpdateOrganizationPopover } from "./UpdateOrganizationPopover";
 import { useLeaveOrganization } from "@/apis/organization/leaveOrganization";
+import { STATUS } from "@/constants/status";
+import { useLocalizedDisplay } from "@/hooks/useLocalizedDisplay";
 
 const defaultPagination = { current: 1, pageSize: 10 };
 
@@ -25,26 +21,13 @@ const noopSetPagination = (_page: { current: number; pageSize: number }) => {};
 
 const DataTableComponent = memo(function DataTableComponent() {
   const { t, i18n } = useTranslation();
+  const { description: localizedDescription } = useLocalizedDisplay();
   const context = useContext(OrganizationMeContext);
   const router = useRouter();
   const currentUserId = useAuthStore((s) => s.user?.id);
 
   const { mutate: leaveMutate, isPending: isLeavePending } =
     useLeaveOrganization();
-
-  const [editOrganization, setEditOrganization] =
-    useState<IOrganization | null>(null);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-
-  const handleEditOpenChange = useCallback((open: boolean) => {
-    setEditDialogOpen(open);
-    if (!open) setEditOrganization(null);
-  }, []);
-
-  const openEditDialog = useCallback((org: IOrganization) => {
-    setEditOrganization(org);
-    setEditDialogOpen(true);
-  }, []);
 
   const organizations = context?.organizations ?? [];
   const isLoading = context?.isLoading ?? false;
@@ -87,7 +70,22 @@ const DataTableComponent = memo(function DataTableComponent() {
               )}
             </div>
             <div className="flex flex-col min-w-0 flex-1">
-              <span className="font-bold text-sm truncate">{record.name}</span>
+              <div className="flex min-w-0 items-center gap-1.5">
+                <span className="font-bold text-sm truncate">{record.name}</span>
+                {record.is_email_verified ? (
+                  <TbCircleCheck
+                    className="size-4 shrink-0 text-emerald-500"
+                    aria-label={t("Verified")}
+                    title={t("Verified")}
+                  />
+                ) : (
+                  <TbCircleX
+                    className="size-4 shrink-0 text-red-500"
+                    aria-label={t("Unverified")}
+                    title={t("Unverified")}
+                  />
+                )}
+              </div>
               <span className="text-xs text-muted-foreground truncate">
                 {record.contact_email || "—"}
               </span>
@@ -95,6 +93,16 @@ const DataTableComponent = memo(function DataTableComponent() {
           </div>
         ),
         width: 280,
+      },
+      {
+        title: t("Members"),
+        key: "members",
+        render: (_, record) => (
+          <span className="tabular-nums font-display-1">
+            {record.members ?? 0}
+          </span>
+        ),
+        width: 110,
       },
       {
         title: t("Created At"),
@@ -127,66 +135,40 @@ const DataTableComponent = memo(function DataTableComponent() {
         title: t("Status"),
         key: "status",
         render: (_, record) => {
-          return <StatusTag status={record.status} className="!mx-0 min-w-0 justify-center" />;
+          return <StatusTag status={record.status} className="!mx-0 min-w-0 justify-center" label={record.status === STATUS.INACTIVE ? t("Banned") : undefined} />;
         },
         width: 140,
         align: "center",
       },
       {
-        title: t("Action"),
-        key: "actions",
+        title: t("Description"),
+        key: "description",
+        render: (_, record) => (
+          <RichTextContent
+            value={localizedDescription(record)}
+            className="text-sm text-foreground whitespace-pre-wrap break-words !font-display-1"
+            maxLines={2}
+            showMoreLabel={t("See more")}
+            showLessLabel={t("See less")}
+            emptyFallback={<span className="text-muted-foreground">—</span>}
+          />
+        ),
+        width: 260,
+      },
+      {
+        title: t("Ban Reason"),
+        key: "reject_reason",
         render: (_, record) => {
-          const isCurrentUserOwner =
-            currentUserId != null && record.owner_id === currentUserId;
-
+          const reason = record.reject_reason?.trim();
           return (
-            <div
-              className="flex justify-start"
-              onClick={(e) => e.stopPropagation()}
-              onPointerDown={(e) => e.stopPropagation()}
-              role="presentation"
-            >
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outlined-brown"
-                    size="small"
-                    className="h-8 w-8 p-0 border-none bg-transparent hover:bg-muted shadow-none group"
-                    disabled={isLeavePending}
-                  >
-                    <MoreHorizontal className="h-4 w-4 text-muted-foreground group-hover:text-white transition-colors" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-[200px]">
-                {isCurrentUserOwner ? (
-                  <DropdownMenuItem
-                    className="text-xs cursor-pointer"
-                    onSelect={(e) => {
-                      e.preventDefault();
-                      openEditDialog(record);
-                    }}
-                  >
-                    {t("Edit")}
-                  </DropdownMenuItem>
-                ) : (
-                  <DropdownMenuItem
-                    className="text-xs cursor-pointer text-destructive focus:text-destructive"
-                    disabled={isLeavePending}
-                    onSelect={(e) => {
-                      e.preventDefault();
-                      handleLeave(record.id);
-                    }}
-                  >
-                    {t("Leave group")}
-                  </DropdownMenuItem>
-                )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+            <span className="text-xs text-muted-foreground whitespace-pre-wrap break-words line-clamp-3">
+              {reason || "—"}
+            </span>
           );
         },
-        width: 80,
+        width: 220,
       },
+
     ],
     [
       t,
@@ -194,7 +176,7 @@ const DataTableComponent = memo(function DataTableComponent() {
       currentUserId,
       isLeavePending,
       handleLeave,
-      openEditDialog,
+      localizedDescription,
     ],
   );
 
@@ -207,7 +189,8 @@ const DataTableComponent = memo(function DataTableComponent() {
 
   const handleRowClick = useCallback(
     (record: IOrganization) => {
-      router.push(`/organizations/${record.id}`);
+      if (!record.slug || record.status === STATUS.INACTIVE) return;
+      router.push(`/organizations/${record.slug}`);
     },
     [router],
   );
@@ -216,12 +199,6 @@ const DataTableComponent = memo(function DataTableComponent() {
 
   return (
     <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
-      <UpdateOrganizationPopover
-        organization={editOrganization}
-        open={editDialogOpen}
-        onOpenChange={handleEditOpenChange}
-        onUpdated={refetch}
-      />
       <DataTable
         rowKey="id"
         columns={columns}

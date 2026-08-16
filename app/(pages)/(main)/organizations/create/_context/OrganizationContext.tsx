@@ -36,11 +36,14 @@ export const OrganizationProvider = ({ children }: { children: ReactNode }) => {
   });
 
   const { mutate: createOrganization, isPending } = useCreateOrganization({
-    onSuccess: () => {
+    onSuccess: (res) => {
       form.reset();
-      router.push("/");
       queryClient.invalidateQueries({ queryKey: ["organizations"] });
       queryClient.invalidateQueries({ queryKey: ["owned-organizations"] });
+      const organizationSlug = res.data?.organization?.slug;
+      router.push(
+        organizationSlug ? `/organizations/${organizationSlug}` : "/organizations/me",
+      );
     },
   });
 

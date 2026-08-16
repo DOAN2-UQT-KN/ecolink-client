@@ -8,6 +8,7 @@ import { HiEye, HiPencilAlt } from "react-icons/hi";
 
 import { Button as SharedButton } from "@/components/client/shared/Button";
 import { cn } from "@/libs/utils";
+import { ConfirmPopoverModal } from "@/modules/OrganizationCard/components/ConfirmPopoverModal";
 import { UpdateOrganizationPopover } from "@/app/(pages)/(main)/organizations/me/_components/UpdateOrganizationPopover";
 
 import { useOrganizationDetail } from "../_hooks/useOrganizationDetail";
@@ -25,14 +26,11 @@ export const HeroSection = memo(function HeroSection() {
     showJoinButton,
     showCancelButton,
     showLeaveButton,
-    isLeaveConfirmOpen,
-    setIsLeaveConfirmOpen,
     isJoinPending,
     isCancelPending,
     isLeavePending,
     handleJoinClick,
     handleCancelJoinClick,
-    handleLeaveClick,
     handleConfirmLeave,
   } = useOrganizationDetail();
 
@@ -175,47 +173,26 @@ export const HeroSection = memo(function HeroSection() {
                   {t("Cancel")}
                 </SharedButton>
               ) : showLeaveButton ? (
-                <div className="relative w-full max-w-xs min-w-0">
-                  <SharedButton
-                    variant="brown"
-                    size="medium"
-                    className="w-full"
-                    iconLeft={
-                      <HiOutlineUserRemove className="size-4" aria-hidden />
+                <div className="w-full max-w-xs min-w-0">
+                  <ConfirmPopoverModal
+                    type="leave"
+                    confirmPending={isLeavePending}
+                    onConfirm={handleConfirmLeave}
+                    trigger={
+                      <SharedButton
+                        variant="brown"
+                        size="medium"
+                        className="w-full"
+                        iconLeft={
+                          <HiOutlineUserRemove className="size-4" aria-hidden />
+                        }
+                        isLoading={isLeavePending}
+                        isDisabled={!organizationId}
+                      >
+                        {t("Leave")}
+                      </SharedButton>
                     }
-                    isLoading={isLeavePending}
-                    isDisabled={!organizationId}
-                    onClick={handleLeaveClick}
-                  >
-                    {t("Leave")}
-                  </SharedButton>
-                  {isLeaveConfirmOpen ? (
-                    <div className="absolute top-[calc(100%+8px)] left-0 z-10 w-full min-w-[240px] max-w-sm rounded-md border border-[rgba(136,122,71,0.45)] bg-white p-3 shadow-md">
-                      <p className="text-sm text-foreground text-center">
-                        {t("Are you sure?")}
-                      </p>
-                      <div className="mt-3 flex items-center gap-2">
-                        <SharedButton
-                          variant="outlined-brown"
-                          size="small"
-                          className="flex-1"
-                          onClick={() => setIsLeaveConfirmOpen(false)}
-                        >
-                          {t("Cancel")}
-                        </SharedButton>
-                        <SharedButton
-                          variant="brown"
-                          size="small"
-                          className="flex-1"
-                          isLoading={isLeavePending}
-                          isDisabled={!organizationId}
-                          onClick={handleConfirmLeave}
-                        >
-                          {t("Confirm")}
-                        </SharedButton>
-                      </div>
-                    </div>
-                  ) : null}
+                  />
                 </div>
               ) : showJoinButton ? (
                 <SharedButton

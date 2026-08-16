@@ -34,13 +34,13 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ breadcrumbs, isAdmin =
             <BreadcrumbItem>
               {item.type === "link" ? (
                 <BreadcrumbLink
-                  className={cn("text-button-accent-hover cursor-pointer", isAdmin && "text-foreground-secondary hover:text-black")}
+                  className={cn("text-button-accent-hover cursor-pointer", isAdmin && "text-muted-foreground hover:text-foreground")}
                   onClick={() => router.push(item.path)}
                 >
                   {t(item.label)}
                 </BreadcrumbLink>
               ) : (
-                <BreadcrumbPage className={cn("text-button-accent", isAdmin && "text-black")}>
+                <BreadcrumbPage className={cn("text-button-accent", isAdmin && "text-foreground")}>
                   {t(item.label)}
                 </BreadcrumbPage>
               )}

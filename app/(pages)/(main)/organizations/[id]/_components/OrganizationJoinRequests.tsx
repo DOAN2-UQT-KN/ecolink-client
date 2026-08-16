@@ -46,7 +46,7 @@ export const OrganizationJoinRequests = memo(function OrganizationJoinRequests({
 }) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const { organizationId, organization } = useOrganizationDetail();
+  const { organizationId, organizationSlug, organization } = useOrganizationDetail();
   const [pendingAction, setPendingAction] = useState<{
     id: string;
     approved: boolean;
@@ -74,7 +74,7 @@ export const OrganizationJoinRequests = memo(function OrganizationJoinRequests({
         queryKey: ['organization-join-requests', organizationId],
       });
       void queryClient.invalidateQueries({
-        queryKey: ['organization', organizationId],
+        queryKey: ['organization-by-slug', organizationSlug],
       });
       void queryClient.invalidateQueries({
         queryKey: ['organization-members', organizationId],
@@ -151,7 +151,6 @@ export const OrganizationJoinRequests = memo(function OrganizationJoinRequests({
                 <div className="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end">
                   <SharedButton
                     variant="brown"
-                    size="small"
                     className="min-w-[96px] !h-[40px]"
                     isLoading={rowPending && pendingAction?.approved === true}
                     isDisabled={pendingAction != null}
@@ -164,7 +163,6 @@ export const OrganizationJoinRequests = memo(function OrganizationJoinRequests({
                   </SharedButton>
                   <SharedButton
                     variant="outlined-brown"
-                    size="small"
                     className="min-w-[96px] !h-[40px]"
                     isLoading={rowPending && pendingAction?.approved === false}
                     isDisabled={pendingAction != null}

@@ -140,6 +140,7 @@ export const OrganizationSearchProvider = ({ children }: { children: ReactNode }
     search: filters.search?.trim() || undefined,
     sort_by: filters.sort_by,
     sort_order: filters.sort_order,
+    status: STATUS.ACTIVE,
   };
 
   const exploreQuery = useGetOrganizations(listRequest, {

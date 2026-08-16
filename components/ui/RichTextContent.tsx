@@ -189,7 +189,10 @@ export function RichTextContent({
         <button
           type="button"
           className="mt-1 text-xs font-medium text-button-accent underline-offset-2 hover:underline cursor-pointer"
-          onClick={() => setExpanded((e) => !e)}
+          onClick={(event) => {
+            event.stopPropagation();
+            setExpanded((e) => !e);
+          }}
           aria-expanded={expanded}
           aria-controls={contentId}
         >

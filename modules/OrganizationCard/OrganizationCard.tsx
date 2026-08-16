@@ -38,10 +38,10 @@ export interface OrganizationCardProps {
   className?: string;
   /** When true, fields become editable and a save action is shown. */
   editMode?: boolean;
-  /** When true, description is hidden and a Join action is shown (e.g. explore listing). */
-  listingMode?: boolean;
   /** Organization id; required for listing Join to call POST .../organizations/{id}/join-requests. */
   organizationId?: string;
+  /** Public slug used to open Organization Detail (`/organizations/:slug`). */
+  organizationSlug?: string;
   /** Current user's join request state for this org from the listing API (0 = none, 12 = pending). */
   requestStatus?: number;
   /** True when the signed-in user is an active member of this org. */
@@ -62,8 +62,8 @@ export const OrganizationCard = memo(function OrganizationCard({
   contactEmail,
   className,
   editMode = false,
-  listingMode = false,
   organizationId,
+  organizationSlug,
   requestStatus,
   isMember = false,
   joinRequestId,
@@ -196,9 +196,9 @@ export const OrganizationCard = memo(function OrganizationCard({
   }, [organizationId, leaveOrganizationAsync]);
 
   const handleViewMoreClick = useCallback(() => {
-    if (!organizationId) return;
-    router.push(`/organizations/${organizationId}`);
-  }, [organizationId, router]);
+    if (!organizationSlug) return;
+    router.push(`/organizations/${organizationSlug}`);
+  }, [organizationSlug, router]);
 
   const showJoinButton =
     !showYourGroupTag && !isMember && joinListingShowsJoinButton(requestStatus);
@@ -326,7 +326,7 @@ export const OrganizationCard = memo(function OrganizationCard({
           </div>
         </div>
 
-        {listingMode && !editMode ? (
+        {!editMode ? (
           <div className="pt-1 flex items-center justify-center gap-2 w-full">
             {showCancelButton ? (
               <div className="flex-1 min-w-0">
@@ -392,33 +392,7 @@ export const OrganizationCard = memo(function OrganizationCard({
             </SharedButton>
           </div>
         ) : (
-          <div className="flex items-start justify-center gap-2 rounded-lg border border-[rgba(136,122,71,0.35)] bg-white/40 px-3 py-2.5">
-            <AlignLeft className="size-4 shrink-0 text-button-accent mt-0.5" />
-            <div className="min-w-0 text-left w-full">
-              <p className="text-xs font-medium text-foreground-tertiary">{t('Description')}</p>
-              {editMode ? (
-                <textarea
-                  value={draft.description}
-                  onChange={(e) => draft.setDescription(e.target.value)}
-                  rows={3}
-                  className="mt-1 w-full resize-y rounded-md border border-input bg-background px-2 py-1.5 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-                  aria-label={t('Organization description')}
-                />
-              ) : (
-                // <p className="text-sm text-foreground whitespace-pre-wrap break-words line-clamp-2 pt-1">
-                //   {displayDescription}
-                // </p>
-                <RichTextContent
-                  value={displayDescription}
-                  className="text-sm text-foreground whitespace-pre-wrap break-words !font-display-1"
-                  maxLines={2}
-                  showMoreLabel={t('See more')}
-                  showLessLabel={t('See less')}
-                  emptyFallback={<span className="text-foreground-secondary">—</span>}
-                />
-              )}
-            </div>
-          </div>
+          <></>
         )}
 
         {editMode ? (

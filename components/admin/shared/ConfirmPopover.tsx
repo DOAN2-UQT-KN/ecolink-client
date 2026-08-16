@@ -17,13 +17,16 @@ export type ConfirmPopoverProps = {
   title: string;
   description?: ReactNode;
   confirmLabel: string;
-  onConfirm: () => void | Promise<void>;
+  onConfirm: () => void | boolean | Promise<void | boolean>;
   rejectLabel?: string;
-  onReject?: () => void | Promise<void>;
+  onReject?: () => void | boolean | Promise<void | boolean>;
   cancelLabel?: string;
   theme?: "light" | "dark";
   confirmPending?: boolean;
   rejectPending?: boolean;
+  extraContent?: ReactNode;
+  onOpenChange?: (open: boolean) => void;
+  confirmDisabled?: boolean;
 };
 
 export const ConfirmPopover = memo(function ConfirmPopover({
@@ -38,13 +41,26 @@ export const ConfirmPopover = memo(function ConfirmPopover({
   theme = "dark",
   confirmPending = false,
   rejectPending = false,
+  extraContent,
+  onOpenChange,
+  confirmDisabled = false,
 }: ConfirmPopoverProps) {
   const [open, setOpen] = useState(false);
   const isDark = theme === "dark";
 
+  const handleOpenChange = useCallback(
+    (next: boolean) => {
+      if ((confirmPending || rejectPending) && !next) return;
+      setOpen(next);
+      onOpenChange?.(next);
+    },
+    [confirmPending, rejectPending, onOpenChange],
+  );
+
   const runConfirm = useCallback(async () => {
     try {
-      await onConfirm();
+      const result = await onConfirm();
+      if (result === false) return;
       setOpen(false);
     } catch {
       // Keep the dialog open so the user can retry after a failed action.
@@ -54,7 +70,8 @@ export const ConfirmPopover = memo(function ConfirmPopover({
   const runReject = useCallback(async () => {
     if (!onReject) return;
     try {
-      await onReject();
+      const result = await onReject();
+      if (result === false) return;
       setOpen(false);
     } catch {
       // Keep the dialog open so the user can retry after a failed action.
@@ -64,7 +81,7 @@ export const ConfirmPopover = memo(function ConfirmPopover({
   const busy = confirmPending || rejectPending;
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent
         className={cn(
@@ -93,6 +110,7 @@ export const ConfirmPopover = memo(function ConfirmPopover({
             </DialogDescription>
           ) : null}
         </DialogHeader>
+        {extraContent}
         <DialogFooter className="gap-2 sm:justify-end sm:gap-2">
           {cancelLabel ? (
           <Button
@@ -111,7 +129,7 @@ export const ConfirmPopover = memo(function ConfirmPopover({
            <Button
             type="button"
             size="sm"
-            disabled={busy}
+            disabled={busy || confirmDisabled}
             className="inline-flex items-center gap-1.5"
             onClick={() => void runConfirm()}
           >

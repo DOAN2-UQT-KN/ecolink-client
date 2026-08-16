@@ -61,6 +61,7 @@ export interface ICampaign {
   organization?: {
     id: string;
     name: string;
+    slug?: string | null;
     logo_url?: string | null;
     contact_email?: string | null;
   } | null;

@@ -84,13 +84,14 @@ export const usePost = <TResponse extends IBaseResponse, TRequest>(
       }
 
       if (!silentError) {
+        const rawTitle =
+          error.errors?.[0]?.message ??
+          messageError?.content ??
+          error.message;
         showMessage({
           type: MessageType.Toast,
           level: MessageLevel.Error,
-          title:
-            error.errors?.[0]?.message ??
-            messageError?.content ??
-            error.message,
+          title: typeof rawTitle === "string" ? t(rawTitle) : rawTitle,
         });
       }
 

@@ -41,7 +41,7 @@ function GiftsContent() {
       </div>
 
       <Tabs defaultValue="catalog" className="gap-4">
-        <TabsList className="h-10 border border-zinc-200 bg-white">
+        <TabsList className="h-10 border border-border bg-card">
           <TabsTrigger value="catalog">{t("Catalog")}</TabsTrigger>
           <TabsTrigger value="redeems">{t("Redeems")}</TabsTrigger>
         </TabsList>

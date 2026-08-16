@@ -3,11 +3,10 @@ import React, {
   ReactNode,
   useCallback,
   useMemo,
-  useState,
 } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { useGetOrganizationById } from "@/apis/organization/organizationById";
+import { useGetOrganizationBySlug } from "@/apis/organization/organizationBySlug";
 import {
   useCancelJoinRequest,
   useCreateOrganizationJoinRequest,
@@ -22,13 +21,12 @@ import {
 import useAuthStore from "@/stores/useAuthStore";
 
 export interface OrganizationDetailContextType {
+  organizationSlug: string;
   organizationId: string;
   organization: IOrganization | undefined;
   isLoading: boolean;
   isError: boolean;
   isFetching: boolean;
-  isLeaveConfirmOpen: boolean;
-  setIsLeaveConfirmOpen: React.Dispatch<React.SetStateAction<boolean>>;
   showYourGroupTag: boolean;
   showJoinButton: boolean;
   showCancelButton: boolean;
@@ -39,8 +37,7 @@ export interface OrganizationDetailContextType {
   isLeavePending: boolean;
   handleJoinClick: () => void;
   handleCancelJoinClick: () => void;
-  handleLeaveClick: () => void;
-  handleConfirmLeave: () => void;
+  handleConfirmLeave: () => void | Promise<void>;
 }
 
 export const OrganizationDetailContext = createContext<
@@ -48,22 +45,34 @@ export const OrganizationDetailContext = createContext<
 >(undefined);
 
 export function OrganizationDetailProvider({
-  organizationId,
+  organizationSlug,
   children,
 }: {
-  organizationId: string;
+  organizationSlug: string;
   children: ReactNode;
 }) {
   const queryClient = useQueryClient();
   const currentUserId = useAuthStore((s) => s.user?.id);
-  const [isLeaveConfirmOpen, setIsLeaveConfirmOpen] = useState(false);
+
+  const { data, isLoading, isError, isFetching } = useGetOrganizationBySlug(
+    organizationSlug,
+    { enabled: Boolean(organizationSlug) },
+  );
+
+  const organization = data?.data?.organization;
+  const organizationId = organization?.id ?? "";
 
   const invalidateAfterMutation = useCallback(() => {
     invalidateOrganizationListsQuery(queryClient);
     void queryClient.invalidateQueries({
-      queryKey: ["organization", organizationId],
+      queryKey: ["organization-by-slug", organizationSlug],
     });
-  }, [queryClient, organizationId]);
+    if (organizationId) {
+      void queryClient.invalidateQueries({
+        queryKey: ["organization", organizationId],
+      });
+    }
+  }, [queryClient, organizationSlug, organizationId]);
 
   const { mutate: requestJoin, isPending: isJoinPending } =
     useCreateOrganizationJoinRequest({
@@ -75,17 +84,10 @@ export function OrganizationDetailProvider({
       onSettled: invalidateAfterMutation,
     });
 
-  const { mutate: leaveOrganization, isPending: isLeavePending } =
+  const { mutateAsync: leaveOrganization, isPending: isLeavePending } =
     useLeaveOrganization({
       onSettled: invalidateAfterMutation,
     });
-
-  const { data, isLoading, isError, isFetching } = useGetOrganizationById(
-    organizationId,
-    { enabled: Boolean(organizationId) },
-  );
-
-  const organization = data?.data?.organization;
 
   const ownerId = organization?.owner_id;
   const requestStatus = organization?.request_status;
@@ -112,25 +114,19 @@ export function OrganizationDetailProvider({
     cancelJoin({ request_id: joinRequestId });
   }, [joinRequestId, cancelJoin]);
 
-  const handleLeaveClick = useCallback(() => {
-    setIsLeaveConfirmOpen((prev) => !prev);
-  }, []);
-
-  const handleConfirmLeave = useCallback(() => {
+  const handleConfirmLeave = useCallback(async () => {
     if (!organizationId) return;
-    leaveOrganization({ id: organizationId });
-    setIsLeaveConfirmOpen(false);
+    await leaveOrganization({ id: organizationId });
   }, [organizationId, leaveOrganization]);
 
   const contextValue = useMemo(
     () => ({
+      organizationSlug,
       organizationId,
       organization,
       isLoading,
       isError,
       isFetching,
-      isLeaveConfirmOpen,
-      setIsLeaveConfirmOpen,
       showYourGroupTag,
       showJoinButton,
       showCancelButton,
@@ -141,16 +137,15 @@ export function OrganizationDetailProvider({
       isLeavePending,
       handleJoinClick,
       handleCancelJoinClick,
-      handleLeaveClick,
       handleConfirmLeave,
     }),
     [
+      organizationSlug,
       organizationId,
       organization,
       isLoading,
       isError,
       isFetching,
-      isLeaveConfirmOpen,
       showYourGroupTag,
       showJoinButton,
       showCancelButton,
@@ -161,7 +156,6 @@ export function OrganizationDetailProvider({
       isLeavePending,
       handleJoinClick,
       handleCancelJoinClick,
-      handleLeaveClick,
       handleConfirmLeave,
     ],
   );

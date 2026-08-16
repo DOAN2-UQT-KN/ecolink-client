@@ -17,13 +17,14 @@ export const Preview = memo(function Preview() {
   const logoUrl = useImagePreviewSrc(watched?.logoUrl);
   const backgroundUrl = useImagePreviewSrc(watched?.backgroundUrl);
 
+  console.log("watched", watched);
   const cardProps = useMemo(
     () => ({
-      name: watched?.name ?? "",
-      description: watched?.description ?? "",
+      name: watched?.name && watched.name != "" ? watched.name : "[Name]",
+      description: watched?.description && watched.description != "" ? watched.description : "[Description]",
       logoUrl,
       backgroundUrl,
-      contactEmail: watched?.contactEmail ?? "",
+      contactEmail: watched?.contactEmail && watched.contactEmail != "" ? watched.contactEmail : "[Contact Email]",
     }),
     [
       watched?.name,
