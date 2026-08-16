@@ -670,6 +670,7 @@
   "Anonymous": "Anonymous",
   "Approve": "Approve",
   "Approve this organization?": "Approve this organization?",
+  "Verify Organization": "Verify Organization",
   "Are you sure to delete this task?": "Are you sure to delete this task?",
   "Assigned": "Assigned",
   "Back": "Back",
@@ -697,6 +698,7 @@
   "End time is required": "End time is required",
   "End time must be later than start time": "End time must be later than start time",
   "Enter campaign title...": "Enter campaign title...",
+  "Enter reject reason": "Enter reject reason",
   "Enter result description...": "Enter result description...",
   "Enter task title...": "Enter task title...",
   "Exchange": "Exchange",
@@ -748,6 +750,8 @@
   "Received": "Received",
   "Refresh token successfully": "Refresh token successfully",
   "Reject": "Reject",
+  "Reject Reason": "Reject Reason",
+  "Reject reason is required": "Reject reason is required",
   "Report created successfully": "Report created successfully",
   "Report deleted successfully": "Report deleted successfully",
   "Report updated successfully": "Report updated successfully",
@@ -809,7 +813,7 @@
   "We couldn't find the incident you were looking for.": "We couldn't find the incident you were looking for.",
   "We couldn't find the organization you were looking for.": "We couldn't find the organization you were looking for.",
   "You are not an approved member of this campaign": "You are not an approved member of this campaign",
-  "You can verify «{{title}}» or reject it.": "You can verify «{{title}}» or reject it.",
+  "You can approve «{{title}}» or reject it.": "You can approve «{{title}}» or reject it.",
   "Your campaign": "Your campaign",
   "of": "of"
 }

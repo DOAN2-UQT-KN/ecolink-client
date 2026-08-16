@@ -110,6 +110,19 @@ const DataTableComponent = memo(function DataTableComponent() {
         width: 140,
         align: "center",
       },
+      {
+        title: t("Reject Reason"),
+        key: "reject_reason",
+        render: (_, record) => {
+          const reason = record.reject_reason?.trim();
+          return (
+            <span className="text-xs text-muted-foreground whitespace-pre-wrap break-words line-clamp-3">
+              {reason || "—"}
+            </span>
+          );
+        },
+        width: 220,
+      },
 
     ],
     [

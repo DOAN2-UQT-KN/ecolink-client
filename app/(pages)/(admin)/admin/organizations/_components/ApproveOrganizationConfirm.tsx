@@ -4,10 +4,15 @@ import {
   useVerifyOrganization,
 } from "@/apis/organization/organizationById";
 import { ConfirmPopover } from "@/components/admin/shared/ConfirmPopover";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/libs/utils";
 import { TbCheckbox } from "react-icons/tb";
 import { STATUS } from "@/constants/status";
 import { queryClient } from "@/libs/queryClient";
+
+type Decision = "approve" | "reject";
 
 type Props = {
   organizationId: string;
@@ -21,41 +26,152 @@ export const ApproveOrganizationConfirm = memo(function ApproveOrganizationConfi
   theme,
 }: Props) {
   const { t } = useTranslation();
-  const [rejecting, setRejecting] = useState(false);
+  const [decision, setDecision] = useState<Decision>("approve");
+  const [rejectReason, setRejectReason] = useState("");
+  const [rejectReasonError, setRejectReasonError] = useState("");
+  const [pending, setPending] = useState(false);
 
-  const { mutate: verify, isPending: approving } = useVerifyOrganization({
+  const { mutateAsync: verifyAsync } = useVerifyOrganization({
     queryKey: ["organizations"],
   });
 
-  const handleVerify = useCallback((status: number) => {
-    verify({
-      id: organizationId,
-      status
+  const resetForm = useCallback(() => {
+    setDecision("approve");
+    setRejectReason("");
+    setRejectReasonError("");
+  }, []);
+
+  const handleDecisionChange = useCallback((value: string) => {
+    if (value !== "approve" && value !== "reject") return;
+    setDecision(value);
+    if (value === "approve") {
+      setRejectReason("");
+      setRejectReasonError("");
+    }
+  }, []);
+
+  const handleConfirm = useCallback(async () => {
+    if (decision === "reject") {
+      const reason = rejectReason.trim();
+      if (!reason) {
+        setRejectReasonError(t("Reject reason is required"));
+        return false;
+      }
+
+      setPending(true);
+      try {
+        await verifyAsync({
+          id: organizationId,
+          status: STATUS.INACTIVE,
+          reject_reason: reason,
+        });
+        await queryClient.invalidateQueries({ queryKey: ["organizations"] });
+        resetForm();
+      } finally {
+        setPending(false);
+      }
+      return;
+    }
+
+    setPending(true);
+    try {
+      await verifyAsync({
+        id: organizationId,
+        status: STATUS.ACTIVE,
+      });
+      await queryClient.invalidateQueries({ queryKey: ["organizations"] });
+      resetForm();
+    } finally {
+      setPending(false);
+    }
+  }, [decision, organizationId, rejectReason, resetForm, t, verifyAsync]);
+
+  const handleOpenChange = useCallback(
+    (open: boolean) => {
+      if (!open) resetForm();
     },
-    {
-      onSuccess: () => {
-       queryClient.invalidateQueries({ queryKey: ["organizations"] });
-      },
-    },
+    [resetForm],
   );
-  }, [organizationId]);
 
   const isDark = theme === "dark";
+  const confirmDisabled = decision === "reject" && !rejectReason.trim();
 
   return (
     <ConfirmPopover
       theme={theme}
-      title={t("Approve this organization?")}
-      description={t("You can verify {{name}} or reject it.", {
+      title={t("Verify Organization")}
+      description={t("You can approve {{name}} or reject it.", {
         name: organizationName,
       })}
-      confirmLabel={t("Approve")}
-      rejectLabel={t("Reject")}
-      // cancelLabel={t("Cancel")}
-      onConfirm={() => handleVerify(STATUS.ACTIVE)}
-      onReject={() => handleVerify(STATUS.INACTIVE)}
-      confirmPending={approving}
-      rejectPending={rejecting}
+      confirmLabel={t("Confirm")}
+      cancelLabel={t("Cancel")}
+      onConfirm={handleConfirm}
+      confirmPending={pending}
+      confirmDisabled={confirmDisabled}
+      onOpenChange={handleOpenChange}
+      extraContent={
+        <div className="space-y-4">
+          <RadioGroup
+            value={decision}
+            onValueChange={handleDecisionChange}
+            disabled={pending}
+            className="flex flex-row items-center gap-10"
+          >
+            <label
+              htmlFor={`org-decision-approve-${organizationId}`}
+              className="flex cursor-pointer items-center gap-2 text-sm"
+            >
+              <RadioGroupItem
+                value="approve"
+                id={`org-decision-approve-${organizationId}`}
+              />
+              {t("Approve")}
+            </label>
+            <label
+              htmlFor={`org-decision-reject-${organizationId}`}
+              className="flex cursor-pointer items-center gap-2 text-sm"
+            >
+              <RadioGroupItem
+                value="reject"
+                id={`org-decision-reject-${organizationId}`}
+              />
+              {t("Reject")}
+            </label>
+          </RadioGroup>
+
+          {decision === "reject" ? (
+            <div className="space-y-2">
+              <Label
+                htmlFor={`reject-reason-${organizationId}`}
+                className={cn(isDark ? "text-zinc-200" : "text-zinc-800")}
+              >
+                {t("Reject Reason")} <span className="text-destructive">*</span>
+              </Label>
+              <Textarea
+                id={`reject-reason-${organizationId}`}
+                value={rejectReason}
+                onChange={(event) => {
+                  setRejectReason(event.target.value);
+                  if (rejectReasonError) setRejectReasonError("");
+                }}
+                placeholder={t("Enter reject reason")}
+                maxLength={5000}
+                aria-required
+                aria-invalid={Boolean(rejectReasonError)}
+                disabled={pending}
+                className={cn(
+                  "min-h-24",
+                  isDark &&
+                    "border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-500",
+                )}
+              />
+              {rejectReasonError ? (
+                <p className="text-sm text-destructive">{rejectReasonError}</p>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      }
       trigger={
         <button
           type="button"

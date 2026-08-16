@@ -22,6 +22,7 @@ export type IUpdateOrganizationResponse = IBaseResponse<{
 export type IVerifyOrganizationRequest = {
   status?: number;
   id: string;
+  reject_reason?: string | null;
 };
 
 export type IVerifyOrganizationResponse = IBaseResponse<{

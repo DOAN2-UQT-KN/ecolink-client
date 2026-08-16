@@ -30,7 +30,9 @@ export const NotificationMenu = memo(function NotificationMenu() {
     queryKey: NOTIFICATIONS_QUERY_KEY,
     queryFn: () => listMyNotifications({ limit: 40 }),
     enabled: Boolean(user),
-    staleTime: 30_000,
+    staleTime: 15_000,
+    refetchInterval: 20_000,
+    refetchOnWindowFocus: true,
   });
 
   const markReadMutation = useMutation({
