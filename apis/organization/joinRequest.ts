@@ -88,7 +88,11 @@ export const useProcessJoinRequest = (
 export const cancelJoinRequest = async (
   req: ICancelJoinRequestRequest,
 ): Promise<ICancelJoinRequestResponse> => {
-  return await requestApi.delete<ICancelJoinRequestResponse>(`${baseUrl}/cancel`, { data: req });
+  return await requestApi.delete<ICancelJoinRequestResponse>(
+    `${baseUrl}/cancel`,
+    {},
+    { data: req },
+  );
 };
 
 export const useCancelJoinRequest = (

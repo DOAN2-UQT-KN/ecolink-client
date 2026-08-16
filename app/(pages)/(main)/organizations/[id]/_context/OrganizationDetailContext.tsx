@@ -3,7 +3,6 @@ import React, {
   ReactNode,
   useCallback,
   useMemo,
-  useState,
 } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -28,8 +27,6 @@ export interface OrganizationDetailContextType {
   isLoading: boolean;
   isError: boolean;
   isFetching: boolean;
-  isLeaveConfirmOpen: boolean;
-  setIsLeaveConfirmOpen: React.Dispatch<React.SetStateAction<boolean>>;
   showYourGroupTag: boolean;
   showJoinButton: boolean;
   showCancelButton: boolean;
@@ -40,8 +37,7 @@ export interface OrganizationDetailContextType {
   isLeavePending: boolean;
   handleJoinClick: () => void;
   handleCancelJoinClick: () => void;
-  handleLeaveClick: () => void;
-  handleConfirmLeave: () => void;
+  handleConfirmLeave: () => void | Promise<void>;
 }
 
 export const OrganizationDetailContext = createContext<
@@ -57,7 +53,6 @@ export function OrganizationDetailProvider({
 }) {
   const queryClient = useQueryClient();
   const currentUserId = useAuthStore((s) => s.user?.id);
-  const [isLeaveConfirmOpen, setIsLeaveConfirmOpen] = useState(false);
 
   const { data, isLoading, isError, isFetching } = useGetOrganizationBySlug(
     organizationSlug,
@@ -89,7 +84,7 @@ export function OrganizationDetailProvider({
       onSettled: invalidateAfterMutation,
     });
 
-  const { mutate: leaveOrganization, isPending: isLeavePending } =
+  const { mutateAsync: leaveOrganization, isPending: isLeavePending } =
     useLeaveOrganization({
       onSettled: invalidateAfterMutation,
     });
@@ -119,14 +114,9 @@ export function OrganizationDetailProvider({
     cancelJoin({ request_id: joinRequestId });
   }, [joinRequestId, cancelJoin]);
 
-  const handleLeaveClick = useCallback(() => {
-    setIsLeaveConfirmOpen((prev) => !prev);
-  }, []);
-
-  const handleConfirmLeave = useCallback(() => {
+  const handleConfirmLeave = useCallback(async () => {
     if (!organizationId) return;
-    leaveOrganization({ id: organizationId });
-    setIsLeaveConfirmOpen(false);
+    await leaveOrganization({ id: organizationId });
   }, [organizationId, leaveOrganization]);
 
   const contextValue = useMemo(
@@ -137,8 +127,6 @@ export function OrganizationDetailProvider({
       isLoading,
       isError,
       isFetching,
-      isLeaveConfirmOpen,
-      setIsLeaveConfirmOpen,
       showYourGroupTag,
       showJoinButton,
       showCancelButton,
@@ -149,7 +137,6 @@ export function OrganizationDetailProvider({
       isLeavePending,
       handleJoinClick,
       handleCancelJoinClick,
-      handleLeaveClick,
       handleConfirmLeave,
     }),
     [
@@ -159,7 +146,6 @@ export function OrganizationDetailProvider({
       isLoading,
       isError,
       isFetching,
-      isLeaveConfirmOpen,
       showYourGroupTag,
       showJoinButton,
       showCancelButton,
@@ -170,7 +156,6 @@ export function OrganizationDetailProvider({
       isLeavePending,
       handleJoinClick,
       handleCancelJoinClick,
-      handleLeaveClick,
       handleConfirmLeave,
     ],
   );
