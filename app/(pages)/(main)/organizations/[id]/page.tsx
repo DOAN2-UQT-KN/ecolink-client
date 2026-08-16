@@ -1,20 +1,12 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useParams, useRouter, useSearchParams } from "@/libs/router";
 import { useTranslation } from "react-i18next";
-import { Inbox } from "lucide-react";
 import { toast } from "sonner";
 
 import {
   Breadcrumbs,
   BreadcrumbItemProps,
 } from "@/components/client/shared/Breadcrumbs";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { OrganizationDetailTabs } from "./_components/OrganizationDetailTabs";
@@ -22,6 +14,8 @@ import { GeneralInformation } from "./_components/GeneralInformation";
 import { HeroSection } from "./_components/HeroSection";
 import { OrganizationDetailProvider } from "./_context/OrganizationDetailContext";
 import { useOrganizationDetail } from "./_hooks/useOrganizationDetail";
+import { STATUS } from "@/constants/status";
+import NotFound from "@/src/pages/NotFound";
 
 function OrganizationDetailBody() {
   const { t } = useTranslation();
@@ -91,27 +85,8 @@ function OrganizationDetailBody() {
     );
   }
 
-  if (isError || !organization) {
-    return (
-      <div className="max-w-7xl mx-auto w-full px-4 lg:px-8 pb-10">
-        <Breadcrumbs breadcrumbs={breadcrumbs} />
-        <div className="flex justify-center pt-16">
-          <Empty>
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <Inbox className="h-12 w-12 text-muted-foreground" />
-              </EmptyMedia>
-              <EmptyTitle>{t("Organization not found")}</EmptyTitle>
-              <EmptyDescription>
-                {t(
-                  "We couldn't find the organization you were looking for.",
-                )}
-              </EmptyDescription>
-            </EmptyHeader>
-          </Empty>
-        </div>
-      </div>
-    );
+  if (isError || !organization || organization.status === STATUS.INACTIVE) {
+    return <NotFound />;
   }
 
   return (

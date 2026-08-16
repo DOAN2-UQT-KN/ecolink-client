@@ -39,7 +39,7 @@ export function DataTable() {
   const isDark = theme === 'dark';
 
   const handleRowClick = useCallback((record: IOrganization) => {
-    if (!record.slug) return;
+    if (!record.slug || record.status === STATUS.INACTIVE) return;
     window.open(`/organizations/${record.slug}`, '_blank', 'noopener,noreferrer');
   }, []);
 

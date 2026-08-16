@@ -6,10 +6,12 @@ import { OrganizationMeContext } from "../_context/OrganizationMeContext";
 import { IOrganization } from "@/apis/organization/models/organization";
 import { useRouter } from "@/libs/router";
 import { StatusTag } from "@/components/ui/StatusTag";
+import { RichTextContent } from "@/components/ui/RichTextContent";
 import FormFilter from "./FormFilter";
 import useAuthStore from "@/stores/useAuthStore";
 import { useLeaveOrganization } from "@/apis/organization/leaveOrganization";
 import { STATUS } from "@/constants/status";
+import { useLocalizedDisplay } from "@/hooks/useLocalizedDisplay";
 
 const defaultPagination = { current: 1, pageSize: 10 };
 
@@ -18,6 +20,7 @@ const noopSetPagination = (_page: { current: number; pageSize: number }) => {};
 
 const DataTableComponent = memo(function DataTableComponent() {
   const { t, i18n } = useTranslation();
+  const { description: localizedDescription } = useLocalizedDisplay();
   const context = useContext(OrganizationMeContext);
   const router = useRouter();
   const currentUserId = useAuthStore((s) => s.user?.id);
@@ -112,6 +115,21 @@ const DataTableComponent = memo(function DataTableComponent() {
         align: "center",
       },
       {
+        title: t("Description"),
+        key: "description",
+        render: (_, record) => (
+          <RichTextContent
+            value={localizedDescription(record)}
+            className="text-sm text-foreground whitespace-pre-wrap break-words !font-display-1"
+            maxLines={2}
+            showMoreLabel={t("See more")}
+            showLessLabel={t("See less")}
+            emptyFallback={<span className="text-muted-foreground">—</span>}
+          />
+        ),
+        width: 260,
+      },
+      {
         title: t("Ban Reason"),
         key: "reject_reason",
         render: (_, record) => {
@@ -132,6 +150,7 @@ const DataTableComponent = memo(function DataTableComponent() {
       currentUserId,
       isLeavePending,
       handleLeave,
+      localizedDescription,
     ],
   );
 
@@ -144,7 +163,7 @@ const DataTableComponent = memo(function DataTableComponent() {
 
   const handleRowClick = useCallback(
     (record: IOrganization) => {
-      if (!record.slug) return;
+      if (!record.slug || record.status === STATUS.INACTIVE) return;
       router.push(`/organizations/${record.slug}`);
     },
     [router],

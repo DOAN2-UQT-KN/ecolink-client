@@ -60,10 +60,11 @@ export function getNotificationHref(
       return campaignId ? `/campaigns/${campaignId}` : null;
     case 'CAMPAIGN_COMPLETION_PENDING_ADMIN':
       return campaignId ? `/admin/campaigns?highlight=${campaignId}` : '/admin/campaigns';
+    case 'ORGANIZATION_REJECTED':
+      return '/organizations/me';
     case 'VOLUNTEER_REQUEST':
     case 'VOLUNTEER_APPROVED':
     case 'ORGANIZATION_APPROVED':
-    case 'ORGANIZATION_REJECTED':
       if (campaignId) return `/campaigns/${campaignId}`;
       const organizationSlug =
         typeof p.organizationSlug === "string"
