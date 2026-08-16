@@ -56,7 +56,7 @@ export function FormFilter() {
           <div className="relative">
             <TbZoom className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              className="h-10 pl-10 !border !border-zinc-300"
+              className="h-10 pl-10 !border !border-input"
               placeholder={t("Name, email, description...")}
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
@@ -72,7 +72,7 @@ export function FormFilter() {
             value={values.status}
             onValueChange={(value) => onFilterChange({ status: value })}
           >
-            <SelectTrigger className="!h-10 w-full !border !border-zinc-300">
+            <SelectTrigger className="!h-10 w-full !border !border-input">
               <SelectValue placeholder={t("Select status")} />
             </SelectTrigger>
             <SelectContent>
@@ -89,7 +89,7 @@ export function FormFilter() {
   }, [onFilterChange, searchInput, t, values.status]);
 
   return (
-    <div className="space-y-4 rounded-[10px] border border-zinc-200 bg-card p-4">
+    <div className="space-y-4 rounded-[10px] border border-border bg-card p-4">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         {formFields.map((field) => (
           <Field key={field.key}>

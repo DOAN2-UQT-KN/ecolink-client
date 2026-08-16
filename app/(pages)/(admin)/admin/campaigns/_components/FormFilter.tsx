@@ -51,7 +51,7 @@ export const FormFilter = memo(function FormFilter() {
   );
 
   return (
-    <div className="space-y-4 rounded-[10px] border border-zinc-200 bg-card p-4">
+    <div className="space-y-4 rounded-[10px] border border-border bg-card p-4">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         {/* Status filter */}
         <Field>
@@ -59,7 +59,7 @@ export const FormFilter = memo(function FormFilter() {
             {t('Status')}
           </FieldLabel>
           <Select value={filters.status} onValueChange={handleStatusChange}>
-            <SelectTrigger className="!h-10 w-full !border !border-zinc-300">
+            <SelectTrigger className="!h-10 w-full !border !border-input">
               <SelectValue placeholder={t('Select status')} />
             </SelectTrigger>
             <SelectContent>
@@ -80,7 +80,7 @@ export const FormFilter = memo(function FormFilter() {
           <SelectListOrganization
             value={filters.organizationId || ALL_ORGANIZATIONS_VALUE}
             onChange={handleOrganizationChange}
-            className="!h-10 !border !border-zinc-300"
+            className="!h-10 !border !border-input"
             allOptions
           />
         </Field>

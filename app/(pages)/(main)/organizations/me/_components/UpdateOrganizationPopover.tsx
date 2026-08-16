@@ -19,6 +19,7 @@ import { useUpdateOrganization } from "@/apis/organization/organizationById";
 import { OrganizationFormValues } from "@/app/(pages)/(main)/organizations/create/_services/organization.service";
 import { uploadToCloudinary } from "@/app/(pages)/(main)/organizations/create/_services/upload.service";
 import { OrganizationImageField } from "@/app/(pages)/(main)/organizations/create/_components/OrganizationImageUpload";
+import { useLocalizedDisplay } from "@/hooks/useLocalizedDisplay";
 
 export type UpdateOrganizationPopoverProps = {
   organization: IOrganization | null;
@@ -37,14 +38,16 @@ const EditOrganizationFormBody = memo(function EditOrganizationFormBody({
   onOpenChange: (open: boolean) => void;
 }) {
   const { t } = useTranslation();
+  const { description: localizedDescription } = useLocalizedDisplay();
   const [isUploading, setIsUploading] = useState(false);
 
   const orgId = organization.id;
+  const currentDescription = localizedDescription(organization);
 
   const defaultValues = useMemo(
     (): OrganizationFormValues => ({
       name: organization.name,
-      description: organization.description ?? "",
+      description: currentDescription,
       logoUrl: organization.logo_url ?? "",
       backgroundUrl: organization.background_url ?? "",
       contactEmail: organization.contact_email ?? "",
@@ -52,7 +55,7 @@ const EditOrganizationFormBody = memo(function EditOrganizationFormBody({
     [
       organization.id,
       organization.name,
-      organization.description,
+      currentDescription,
       organization.logo_url,
       organization.background_url,
       organization.contact_email,
@@ -259,7 +262,7 @@ export const UpdateOrganizationPopover = memo(
   }: UpdateOrganizationPopoverProps) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        {organization ? (
+        {open && organization ? (
           <EditOrganizationFormBody
             key={organization.id}
             organization={organization}

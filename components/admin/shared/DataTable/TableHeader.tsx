@@ -35,10 +35,10 @@ export function DataTableHeader<T>({
   return (
     <BaseTableHeader
       className={cn(
-        stickyHeader && 'sticky top-0 z-10 backdrop-blur-sm bg-zinc-100 border-b border-gray-200',
+        stickyHeader && 'sticky top-0 z-10 backdrop-blur-sm bg-muted border-b border-border',
       )}
     >
-      <TableRow className="bg-zinc-200 hover:bg-zinc-200 border-b border-gray-200">
+      <TableRow className="bg-muted hover:bg-muted border-b border-border">
         {showSelection && (
           <TableHead className="w-12 px-3">
             <Checkbox
@@ -63,10 +63,10 @@ export function DataTableHeader<T>({
             <TableHead
               key={column.key}
               className={cn(
-                'px-3 py-2.5 font-semibold text-xs uppercase tracking-wide text-zinc-700',
+                'px-3 py-2.5 font-semibold text-xs uppercase tracking-wide text-muted-foreground',
                 column.sticky === 'left' && 'sticky left-0 z-20',
                 column.sticky === 'right' && 'sticky right-0 z-20',
-                column.sticky && 'bg-zinc-200',
+                column.sticky && 'bg-muted',
                 column.className,
               )}
               style={{ width: column.width }}
@@ -75,7 +75,7 @@ export function DataTableHeader<T>({
                 <button
                   type="button"
                   onClick={() => onSortChange?.(column.key, nextOrder)}
-                  className="inline-flex items-center gap-1 transition-colors cursor-pointer text-black"
+                  className="inline-flex items-center gap-1 transition-colors cursor-pointer text-foreground"
                 >
                   {column.title}
                   {active ? (
@@ -87,7 +87,7 @@ export function DataTableHeader<T>({
                       <ArrowUpDown className="h-4 w-4" />
                     )
                   ) : (
-                    <ArrowUpDown className="h-4 w-4 text-black" />
+                    <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
                   )}
                 </button>
               ) : (

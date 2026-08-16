@@ -1,10 +1,11 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { IOrganization } from '@/apis/organization/models/organization';
 import { useAdminLayout } from '@/app/(pages)/(admin)/_context/AdminLayoutContext';
 import { StatusTag } from '@/components/ui/StatusTag';
 import { cn } from '@/libs/utils';
+import { useRouter } from '@/libs/router';
 import { useOrganizationContext } from '../_context/OrganizationContext';
 import {
   DataTable as SharedDataTable,
@@ -17,6 +18,7 @@ import { RichTextContent } from '@/components/ui/RichTextContent';
 import { formattedDate } from '@/utils/formattedDate';
 import Image from '@/components/ui/AppImage';
 import defaultAvatar from '@/public/default-avatar.png';
+import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
 
 const COLUMN_KEYS = {
   NO: 'no',
@@ -28,17 +30,22 @@ const COLUMN_KEYS = {
   ACTION: 'action',
 } as const;
 
-function toOwnerLabel(ownerId?: string | null) {
-  if (!ownerId) return '-';
-  return ownerId.length > 12 ? `${ownerId.slice(0, 6)}...${ownerId.slice(-4)}` : ownerId;
-}
-
 export function DataTable() {
   const { t } = useTranslation();
+  const { description: localizedDescription, locale } = useLocalizedDisplay();
   const { organizations, loading, pagination, total, onPageChange, onPageSizeChange } =
     useOrganizationContext();
   const { theme } = useAdminLayout();
   const isDark = theme === 'dark';
+  const router = useRouter();
+
+  const handleRowClick = useCallback(
+    (record: IOrganization) => {
+      if (!record.slug) return;
+      router.push(`/organizations/${record.slug}`);
+    },
+    [router],
+  );
 
   const columns: DataTableColumn<IOrganization>[] = useMemo(
     () => [
@@ -88,7 +95,7 @@ export function DataTable() {
         title: t('Owner'),
         className: 'min-w-[180px]',
         render: (_, record) => (
-          <div className="flex flex-row items-center justify-center gap-2">
+          <div className="flex flex-row items-center justify-start gap-2">
             <Image
               src={record?.owner?.avatar || defaultAvatar}
               alt={record?.owner?.name}
@@ -96,7 +103,7 @@ export function DataTable() {
               height={40}
               className="rounded-full"
             />
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col">
               <span className={cn('font-medium', isDark ? 'text-zinc-100' : 'text-zinc-900')}>
                 {record?.owner?.name}
               </span>
@@ -123,11 +130,10 @@ export function DataTable() {
       {
         key: COLUMN_KEYS.DESCRIPTION,
         title: t('Description'),
-        dataIndex: 'description',
         className: 'min-w-[260px]',
         render: (_, record) => (
           <RichTextContent
-            value={record.description}
+            value={localizedDescription(record)}
             className="text-sm text-foreground whitespace-pre-wrap break-words !font-display-1"
             maxLines={2}
             showMoreLabel={t('See more')}
@@ -141,10 +147,15 @@ export function DataTable() {
         title: t('Action'),
         className: 'min-w-[160px]',
         render: (_, record) => (
-          <div className="flex items-center gap-2">
+          <div
+            className="flex items-center gap-2"
+            onClick={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+            role="presentation"
+          >
             <PreviewOrganizationPopover
               name={record.name}
-              description={record.description ?? ''}
+              description={localizedDescription(record)}
               logoUrl={record.logo_url ?? ''}
               backgroundUrl={record.background_url ?? ''}
               contactEmail={record.contact_email ?? ''}
@@ -172,7 +183,7 @@ export function DataTable() {
         ),
       },
     ],
-    [isDark, pagination.current, pagination.pageSize, t],
+    [isDark, pagination.current, pagination.pageSize, t, locale, localizedDescription],
   );
 
   return (
@@ -183,6 +194,7 @@ export function DataTable() {
       rowKey="id"
       emptyTitle="No organizations found"
       emptyDescription="No organizations available for the current filters."
+      onRowClick={handleRowClick}
       pagination={{
         page: pagination.current,
         pageSize: pagination.pageSize,

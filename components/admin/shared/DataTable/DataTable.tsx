@@ -256,7 +256,7 @@ export function DataTable<T>({
         <Input
           value={String(value ?? '')}
           onChange={(event) => updateFilters({ ...filterValues, [key]: event.target.value })}
-          className="h-9 bg-white border-zinc-300 text-zinc-900 placeholder:text-zinc-400"
+          className="h-9 bg-background border-input text-foreground placeholder:text-muted-foreground"
         />
       );
     }
@@ -276,7 +276,7 @@ export function DataTable<T>({
           onChange={(event) =>
             updateFilters({ ...filterValues, [key]: { ...dateValue, from: event.target.value } })
           }
-          className="h-9 bg-white border-zinc-300 text-zinc-900"
+          className="h-9 bg-background border-input text-foreground"
         />
         <Input
           type="date"
@@ -284,7 +284,7 @@ export function DataTable<T>({
           onChange={(event) =>
             updateFilters({ ...filterValues, [key]: { ...dateValue, to: event.target.value } })
           }
-          className="h-9 bg-white border-zinc-300 text-zinc-900"
+          className="h-9 bg-background border-input text-foreground"
         />
       </div>
     );
@@ -307,20 +307,20 @@ export function DataTable<T>({
   return (
     <div className={cn('space-y-3', className)}>
       {(search || filters) && (
-        <div className="rounded-md border p-3 space-y-3 backdrop-blur-sm border-zinc-200 bg-zinc-100">
+        <div className="rounded-md border p-3 space-y-3 backdrop-blur-sm border-border bg-muted">
           {search && (
             <Input
               value={searchValue}
               onChange={(event) => updateSearch(event.target.value)}
               placeholder={search.placeholder ?? 'Search...'}
-              className="h-10 bg-white border-zinc-300 placeholder:text-zinc-400 text-zinc-900 focus-visible:ring-zinc-400"
+              className="h-10 bg-background border-input placeholder:text-muted-foreground text-foreground focus-visible:ring-ring"
             />
           )}
           {filterConfig?.length ? (
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               {filterConfig.map((filterConfig) => (
                 <div key={filterConfig.key} className="space-y-1">
-                  <p className="text-xs font-medium uppercase tracking-wide text-zinc-600">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                     {filterConfig.label}
                   </p>
                   {filterConfig.type === 'select' ? (
@@ -333,7 +333,7 @@ export function DataTable<T>({
                         })
                       }
                     >
-                      <SelectTrigger className="h-9 w-full bg-white border-zinc-300 text-zinc-900">
+                      <SelectTrigger className="h-9 w-full bg-background border-input text-foreground">
                         <SelectValue placeholder={filterConfig.placeholder ?? t('Select value')} />
                       </SelectTrigger>
                       <SelectContent>
@@ -360,12 +360,12 @@ export function DataTable<T>({
       )}
 
       {rowSelection && rowSelection.selectedRowKeys.length > 0 && rowSelection.bulkActions && (
-        <div className="rounded-md border p-3 backdrop-blur-sm border-zinc-300 bg-zinc-200">
+        <div className="rounded-md border p-3 backdrop-blur-sm border-border bg-muted">
           {rowSelection.bulkActions}
         </div>
       )}
 
-      <div className={cn('rounded-md border overflow-hidden border-zinc-200 bg-white')}>
+      <div className={cn('rounded-md border overflow-hidden border-border bg-card')}>
         <div
           ref={bodyContainerRef}
           className={cn('w-full overflow-auto', virtualization?.enabled && 'max-h-[420px]')}
@@ -390,7 +390,7 @@ export function DataTable<T>({
                 Array.from({ length: loadingRowCount }).map((_, index) => (
                   <TableRow key={`loading-${index}`}>
                     <TableCell colSpan={columns.length + (rowSelection ? 1 : 0)}>
-                      <Skeleton className="h-7 w-full bg-zinc-200" />
+                      <Skeleton className="h-7 w-full bg-muted" />
                     </TableCell>
                   </TableRow>
                 ))
@@ -398,16 +398,16 @@ export function DataTable<T>({
                 <TableRow>
                   <TableCell colSpan={columns.length + (rowSelection ? 1 : 0)} className="h-56">
                     <div className="flex flex-col items-center justify-center gap-3 text-center">
-                      <div className="rounded-full p-3 bg-red-100">
-                        <AlertCircle className="h-6 w-6 text-red-400" />
+                      <div className="rounded-full p-3 bg-destructive/10">
+                        <AlertCircle className="h-6 w-6 text-destructive" />
                       </div>
-                      <p className="text-sm font-medium text-zinc-900">{error}</p>
+                      <p className="text-sm font-medium text-foreground">{error}</p>
                       {onRetry && (
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={onRetry}
-                          className="border-zinc-300 text-zinc-900 hover:bg-zinc-100"
+                          className="border-input text-foreground hover:bg-muted"
                         >
                           Retry
                         </Button>
@@ -419,12 +419,12 @@ export function DataTable<T>({
                 <TableRow>
                   <TableCell colSpan={columns.length + (rowSelection ? 1 : 0)} className="h-56">
                     <div className="flex flex-col items-center justify-center gap-3 text-center">
-                      <div className="rounded-full p-3 bg-zinc-100">
-                        <Inbox className="h-6 w-6 text-zinc-400" />
+                      <div className="rounded-full p-3 bg-muted">
+                        <Inbox className="h-6 w-6 text-muted-foreground" />
                       </div>
-                      <p className="text-sm font-semibold text-zinc-900">{emptyTitle}</p>
+                      <p className="text-sm font-semibold text-foreground">{emptyTitle}</p>
                       {emptyDescription && (
-                        <p className="text-sm text-zinc-500">{emptyDescription}</p>
+                        <p className="text-sm text-muted-foreground">{emptyDescription}</p>
                       )}
                       {emptyAction}
                     </div>
@@ -487,16 +487,16 @@ export function DataTable<T>({
         </div>
 
         {infiniteScroll?.enabled && infiniteScroll.loadingMore && (
-          <div className="flex items-center justify-center gap-2 border-t py-3 text-sm border-zinc-200 text-zinc-600">
+          <div className="flex items-center justify-center gap-2 border-t py-3 text-sm border-border text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
             Loading more...
           </div>
         )}
 
         {pagination && (
-          <div className="flex flex-wrap items-center justify-between gap-2 border-t p-3 border-zinc-200">
-            <div className="flex items-center gap-2 text-sm text-zinc-900">
-              <span className="text-zinc-600">{t('Page size')}</span>
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t p-3 border-border">
+            <div className="flex items-center gap-2 text-sm text-foreground">
+              <span className="text-muted-foreground">{t('Page size')}</span>
               {pagination.onPageSizeChange && paginationPageSizeSelectValue != null ? (
                 <Select
                   value={String(paginationPageSizeSelectValue)}
@@ -509,7 +509,7 @@ export function DataTable<T>({
                 >
                   <SelectTrigger
                     size="sm"
-                    className="!h-8 w-[90px] min-w-[90px] shrink-0 border-zinc-300 bg-white text-zinc-900 hover:bg-zinc-50"
+                    className="!h-8 w-[90px] min-w-[90px] shrink-0 border-input bg-background text-foreground hover:bg-muted"
                   >
                     <SelectValue />
                   </SelectTrigger>
@@ -522,7 +522,7 @@ export function DataTable<T>({
                   </SelectContent>
                 </Select>
               ) : (
-                <span className="inline-flex h-8 min-w-[90px] items-center rounded-md border px-2 tabular-nums border-zinc-300 bg-white text-zinc-900">
+                <span className="inline-flex h-8 min-w-[90px] items-center rounded-md border px-2 tabular-nums border-input bg-background text-foreground">
                   {pagination.pageSize}
                 </span>
               )}
@@ -538,12 +538,12 @@ export function DataTable<T>({
                   className={cn(
                     'inline-flex h-8 min-w-8 items-center justify-center rounded-md border text-sm transition-colors',
                     'disabled:pointer-events-none disabled:opacity-40',
-                    'border-zinc-300 text-zinc-900 hover:bg-zinc-100',
+                    'border-input text-foreground hover:bg-muted',
                   )}
                 >
                   <ChevronLeft className="h-4 w-4" aria-hidden />
                 </button>
-                <span className="min-w-[2.25rem] px-1 text-center text-sm tabular-nums text-zinc-900">
+                <span className="min-w-[2.25rem] px-1 text-center text-sm tabular-nums text-foreground">
                   {pagination.page}
                 </span>
                 <button
@@ -554,7 +554,7 @@ export function DataTable<T>({
                   className={cn(
                     'inline-flex h-8 min-w-8 items-center justify-center rounded-md border text-sm transition-colors',
                     'disabled:pointer-events-none disabled:opacity-40',
-                    'border-zinc-300 text-zinc-900 hover:bg-zinc-100',
+                    'border-input text-foreground hover:bg-muted',
                   )}
                 >
                   <ChevronRight className="h-4 w-4" aria-hidden />
@@ -577,7 +577,7 @@ export function DataTable<T>({
                       item === 'ellipsis' ? (
                         <span
                           key={`ellipsis-${idx}`}
-                          className="px-1 text-sm text-zinc-500"
+                          className="px-1 text-sm text-muted-foreground"
                           aria-hidden
                         >
                           …
@@ -593,8 +593,8 @@ export function DataTable<T>({
                           className={cn(
                             pageBtnBase,
                             pagination.page === item
-                              ? 'border-zinc-400 bg-zinc-200 text-zinc-900'
-                              : 'border-zinc-300 text-zinc-900 hover:bg-zinc-100',
+                              ? 'border-border bg-muted text-foreground'
+                              : 'border-input text-foreground hover:bg-muted',
                           )}
                         >
                           {item}
@@ -614,12 +614,12 @@ export function DataTable<T>({
                   className={cn(
                     'inline-flex h-8 min-w-8 items-center justify-center rounded-md border text-sm transition-colors',
                     'disabled:pointer-events-none disabled:opacity-40',
-                    'border-zinc-300 text-zinc-900 hover:bg-zinc-100',
+                    'border-input text-foreground hover:bg-muted',
                   )}
                 >
                   <ChevronLeft className="h-4 w-4" aria-hidden />
                 </button>
-                <span className="min-w-[2.25rem] px-1 text-center text-sm tabular-nums text-zinc-900">
+                <span className="min-w-[2.25rem] px-1 text-center text-sm tabular-nums text-foreground">
                   {pagination.page}
                 </span>
                 <button
@@ -630,7 +630,7 @@ export function DataTable<T>({
                   className={cn(
                     'inline-flex h-8 min-w-8 items-center justify-center rounded-md border text-sm transition-colors',
                     'disabled:pointer-events-none disabled:opacity-40',
-                    'border-zinc-300 text-zinc-900 hover:bg-zinc-100',
+                    'border-input text-foreground hover:bg-muted',
                   )}
                 >
                   <ChevronRight className="h-4 w-4" aria-hidden />

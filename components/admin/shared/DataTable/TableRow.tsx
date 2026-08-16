@@ -56,9 +56,9 @@ export function DataTableRow<T>({
   return (
     <BaseTableRow
       className={cn(
-        "group transition-colors border-b border-zinc-200 hover:bg-zinc-100",
+        "group transition-colors border-b border-border hover:bg-muted/50",
         onRowClick && "cursor-pointer",
-        selected && "bg-zinc-200 data-[state=selected]:bg-zinc-200",
+        selected && "bg-muted data-[state=selected]:bg-muted",
       )}
       data-state={selected ? "selected" : undefined}
       onClick={() => onRowClick?.(record)}
@@ -107,12 +107,12 @@ export function DataTableRow<T>({
           <TableCell
             key={column.key}
             className={cn(
-              "px-3 py-2.5 font-display-1 text-zinc-900",
+              "px-3 py-2.5 font-display-1 text-foreground",
               column.sticky === "left" && "sticky left-0 z-10",
               column.sticky === "right" && "sticky right-0 z-10",
-              column.sticky && !selected && "bg-white",
-              column.sticky && selected && "bg-zinc-200",
-              column.sticky && !selected && "group-hover:bg-zinc-100",
+              column.sticky && !selected && "bg-card",
+              column.sticky && selected && "bg-muted",
+              column.sticky && !selected && "group-hover:bg-muted/50",
               column.className,
             )}
             onDoubleClick={(event) => {
@@ -148,7 +148,7 @@ export function DataTableRow<T>({
                     </button>
                     <button
                       type="button"
-                      className="text-xs cursor-pointer transition-colors text-zinc-500 hover:text-zinc-700"
+                      className="text-xs cursor-pointer transition-colors text-muted-foreground hover:text-foreground"
                       onClick={(event) => {
                         event.stopPropagation();
                         cancelEdit();
