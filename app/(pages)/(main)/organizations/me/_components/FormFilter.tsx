@@ -102,7 +102,7 @@ const FormFilter = memo(function FormFilter() {
             value={STATUS.INACTIVE.toString()}
             className="rounded-[5px] px-4 py-2 h-full data-active:bg-background data-active:shadow-sm transition-all !font-display-1"
           >
-            {t("Inactive")}
+            {t("Banned")}
           </TabsTrigger>
         </TabsList>
       </Tabs>

@@ -12,7 +12,7 @@ export interface IOrganization {
   contact_email: string | null;
   is_email_verified: boolean;
   status: number;
-  /** Admin reject reason; `null`/empty when the organization has not been rejected. */
+  /** Admin ban reason; `null`/empty when the organization has not been banned. */
   reject_reason?: string | null;
   owner_id: string;
   /** True when the signed-in user is an active member of this org. */

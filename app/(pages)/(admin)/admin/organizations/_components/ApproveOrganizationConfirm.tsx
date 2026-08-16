@@ -8,53 +8,60 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/libs/utils";
-import { TbCheckbox } from "react-icons/tb";
+import { TbBan, TbCheckbox } from "react-icons/tb";
 import { STATUS } from "@/constants/status";
 import { queryClient } from "@/libs/queryClient";
+import showMessage, { MessageLevel, MessageType } from "@/utils/showMessage";
 
-type Decision = "approve" | "reject";
+type Decision = "approve" | "ban";
+type Mode = "verify" | "ban";
 
 type Props = {
   organizationId: string;
   organizationName: string;
   theme: "light" | "dark";
+  mode?: Mode;
 };
 
 export const ApproveOrganizationConfirm = memo(function ApproveOrganizationConfirm({
   organizationId,
   organizationName,
   theme,
+  mode = "verify",
 }: Props) {
   const { t } = useTranslation();
-  const [decision, setDecision] = useState<Decision>("approve");
-  const [rejectReason, setRejectReason] = useState("");
-  const [rejectReasonError, setRejectReasonError] = useState("");
+  const isBanMode = mode === "ban";
+  const [decision, setDecision] = useState<Decision>(isBanMode ? "ban" : "approve");
+  const [banReason, setBanReason] = useState("");
+  const [banReasonError, setBanReasonError] = useState("");
   const [pending, setPending] = useState(false);
 
   const { mutateAsync: verifyAsync } = useVerifyOrganization({
     queryKey: ["organizations"],
+    messageSuccess: { type: MessageType.Toast },
   });
 
   const resetForm = useCallback(() => {
-    setDecision("approve");
-    setRejectReason("");
-    setRejectReasonError("");
-  }, []);
+    setDecision(isBanMode ? "ban" : "approve");
+    setBanReason("");
+    setBanReasonError("");
+  }, [isBanMode]);
 
   const handleDecisionChange = useCallback((value: string) => {
-    if (value !== "approve" && value !== "reject") return;
+    if (value !== "approve" && value !== "ban") return;
     setDecision(value);
     if (value === "approve") {
-      setRejectReason("");
-      setRejectReasonError("");
+      setBanReason("");
+      setBanReasonError("");
     }
   }, []);
 
   const handleConfirm = useCallback(async () => {
-    if (decision === "reject") {
-      const reason = rejectReason.trim();
+    const shouldBan = isBanMode || decision === "ban";
+    if (shouldBan) {
+      const reason = banReason.trim();
       if (!reason) {
-        setRejectReasonError(t("Reject reason is required"));
+        setBanReasonError(t("Ban reason is required"));
         return false;
       }
 
@@ -66,6 +73,11 @@ export const ApproveOrganizationConfirm = memo(function ApproveOrganizationConfi
           reject_reason: reason,
         });
         await queryClient.invalidateQueries({ queryKey: ["organizations"] });
+        showMessage({
+          type: MessageType.Toast,
+          level: MessageLevel.Success,
+          title: t("Organization banned successfully"),
+        });
         resetForm();
       } finally {
         setPending(false);
@@ -80,11 +92,16 @@ export const ApproveOrganizationConfirm = memo(function ApproveOrganizationConfi
         status: STATUS.ACTIVE,
       });
       await queryClient.invalidateQueries({ queryKey: ["organizations"] });
+      showMessage({
+        type: MessageType.Toast,
+        level: MessageLevel.Success,
+        title: t("Organization verified successfully"),
+      });
       resetForm();
     } finally {
       setPending(false);
     }
-  }, [decision, organizationId, rejectReason, resetForm, t, verifyAsync]);
+  }, [banReason, decision, isBanMode, organizationId, resetForm, t, verifyAsync]);
 
   const handleOpenChange = useCallback(
     (open: boolean) => {
@@ -94,15 +111,18 @@ export const ApproveOrganizationConfirm = memo(function ApproveOrganizationConfi
   );
 
   const isDark = theme === "dark";
-  const confirmDisabled = decision === "reject" && !rejectReason.trim();
+  const showBanReason = isBanMode || decision === "ban";
+  const confirmDisabled = showBanReason && !banReason.trim();
 
   return (
     <ConfirmPopover
       theme={theme}
-      title={t("Verify Organization")}
-      description={t("You can approve {{name}} or reject it.", {
-        name: organizationName,
-      })}
+      title={isBanMode ? t("Ban this organization?") : t("Verify Organization")}
+      description={
+        isBanMode
+          ? t("This will ban {{name}}.", { name: organizationName })
+          : t("You can verify {{name}} or ban it.", { name: organizationName })
+      }
       confirmLabel={t("Confirm")}
       cancelLabel={t("Cancel")}
       onConfirm={handleConfirm}
@@ -111,53 +131,55 @@ export const ApproveOrganizationConfirm = memo(function ApproveOrganizationConfi
       onOpenChange={handleOpenChange}
       extraContent={
         <div className="space-y-4">
-          <RadioGroup
-            value={decision}
-            onValueChange={handleDecisionChange}
-            disabled={pending}
-            className="flex flex-row items-center gap-10"
-          >
-            <label
-              htmlFor={`org-decision-approve-${organizationId}`}
-              className="flex cursor-pointer items-center gap-2 text-sm"
+          {!isBanMode ? (
+            <RadioGroup
+              value={decision}
+              onValueChange={handleDecisionChange}
+              disabled={pending}
+              className="flex flex-row items-center gap-10"
             >
-              <RadioGroupItem
-                value="approve"
-                id={`org-decision-approve-${organizationId}`}
-              />
-              {t("Approve")}
-            </label>
-            <label
-              htmlFor={`org-decision-reject-${organizationId}`}
-              className="flex cursor-pointer items-center gap-2 text-sm"
-            >
-              <RadioGroupItem
-                value="reject"
-                id={`org-decision-reject-${organizationId}`}
-              />
-              {t("Reject")}
-            </label>
-          </RadioGroup>
+              <label
+                htmlFor={`org-decision-approve-${organizationId}`}
+                className="flex cursor-pointer items-center gap-2 text-sm"
+              >
+                <RadioGroupItem
+                  value="approve"
+                  id={`org-decision-approve-${organizationId}`}
+                />
+                {t("Verify")}
+              </label>
+              <label
+                htmlFor={`org-decision-ban-${organizationId}`}
+                className="flex cursor-pointer items-center gap-2 text-sm"
+              >
+                <RadioGroupItem
+                  value="ban"
+                  id={`org-decision-ban-${organizationId}`}
+                />
+                {t("Ban")}
+              </label>
+            </RadioGroup>
+          ) : null}
 
-          {decision === "reject" ? (
+          {showBanReason ? (
             <div className="space-y-2">
               <Label
-                htmlFor={`reject-reason-${organizationId}`}
+                htmlFor={`ban-reason-${organizationId}`}
                 className={cn(isDark ? "text-zinc-200" : "text-zinc-800")}
               >
-                {t("Reject Reason")} <span className="text-destructive">*</span>
+                {t("Ban Reason")} <span className="text-destructive">*</span>
               </Label>
               <Textarea
-                id={`reject-reason-${organizationId}`}
-                value={rejectReason}
+                id={`ban-reason-${organizationId}`}
+                value={banReason}
                 onChange={(event) => {
-                  setRejectReason(event.target.value);
-                  if (rejectReasonError) setRejectReasonError("");
+                  setBanReason(event.target.value);
+                  if (banReasonError) setBanReasonError("");
                 }}
-                placeholder={t("Enter reject reason")}
+                placeholder={t("Enter ban reason")}
                 maxLength={5000}
                 aria-required
-                aria-invalid={Boolean(rejectReasonError)}
+                aria-invalid={Boolean(banReasonError)}
                 disabled={pending}
                 className={cn(
                   "min-h-24",
@@ -165,8 +187,8 @@ export const ApproveOrganizationConfirm = memo(function ApproveOrganizationConfi
                     "border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-500",
                 )}
               />
-              {rejectReasonError ? (
-                <p className="text-sm text-destructive">{rejectReasonError}</p>
+              {banReasonError ? (
+                <p className="text-sm text-destructive">{banReasonError}</p>
               ) : null}
             </div>
           ) : null}
@@ -175,14 +197,22 @@ export const ApproveOrganizationConfirm = memo(function ApproveOrganizationConfi
       trigger={
         <button
           type="button"
+          title={isBanMode ? t("Banned") : t("Verify")}
           className={cn(
             "rounded-md border px-1.5 py-1.5 text-xs font-medium transition-colors cursor-pointer duration-200",
             isDark
-              ? "border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-green-200"
-              : "border-zinc-300 text-zinc-700 hover:bg-zinc-100 hover:text-green-700",
+              ? "border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+              : "border-zinc-300 text-zinc-700 hover:bg-zinc-100",
+            isBanMode
+              ? isDark
+                ? "hover:text-red-300"
+                : "hover:text-red-700"
+              : isDark
+                ? "hover:text-green-200"
+                : "hover:text-green-700",
           )}
         >
-          <TbCheckbox className="size-5" />
+          {isBanMode ? <TbBan className="size-5" /> : <TbCheckbox className="size-5" />}
         </button>
       }
     />

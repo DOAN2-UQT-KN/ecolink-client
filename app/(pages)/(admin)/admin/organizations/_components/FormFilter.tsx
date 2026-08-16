@@ -43,7 +43,7 @@ export function FormFilter() {
       { label: t("All"), value: "all" },
       { label: t("Draft"), value: "4" },
       { label: t("Active"), value: "1" },
-      { label: t("Inactive"), value: "2" },
+      { label: t("Banned"), value: "2" },
       { label: t("In review"), value: "9" },
       { label: t("Pending"), value: "12" },
     ];

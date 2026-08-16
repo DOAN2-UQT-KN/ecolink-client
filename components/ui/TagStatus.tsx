@@ -8,9 +8,10 @@ interface TagTicketProps {
   type: number;
   className?: string;
   isBom?: boolean;
+  label?: string;
 }
 
-const TagStatus: React.FC<TagTicketProps> = ({ type, className, isBom }) => {
+const TagStatus: React.FC<TagTicketProps> = ({ type, className, isBom, label }) => {
   const { t } = useTranslation();
 
   const filterColorByType = useCallback((type: number) => {
@@ -112,7 +113,7 @@ const TagStatus: React.FC<TagTicketProps> = ({ type, className, isBom }) => {
       )}
       color={filterColorByType(type)}
     >
-      {renderNameStatus()}
+      {label ?? renderNameStatus()}
     </Tag>
   );
 };

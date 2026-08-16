@@ -125,21 +125,10 @@ export function DataTable() {
         title: t('Status'),
         className: 'min-w-[120px]',
         render: (_, record) => (
-          <StatusTag status={record.status} className="!mx-0 min-w-0 justify-center" />
-        ),
-      },
-      {
-        key: COLUMN_KEYS.REJECT_REASON,
-        title: t('Reject Reason'),
-        className: 'min-w-[220px]',
-        render: (_, record) => (
-          <RichTextContent
-            value={record.reject_reason?.trim() ?? ''}
-            className="text-sm text-foreground whitespace-pre-wrap break-words !font-display-1"
-            maxLines={2}
-            showMoreLabel={t('See more')}
-            showLessLabel={t('See less')}
-            emptyFallback={<span className="text-foreground-secondary">—</span>}
+          <StatusTag
+            status={record.status}
+            className="!mx-0 min-w-0 justify-center"
+            label={record.status === STATUS.INACTIVE ? t('Banned') : undefined}
           />
         ),
       },
@@ -150,6 +139,21 @@ export function DataTable() {
         render: (_, record) => (
           <RichTextContent
             value={localizedDescription(record)}
+            className="text-sm text-foreground whitespace-pre-wrap break-words !font-display-1"
+            maxLines={2}
+            showMoreLabel={t('See more')}
+            showLessLabel={t('See less')}
+            emptyFallback={<span className="text-foreground-secondary">—</span>}
+          />
+        ),
+      },
+      {
+        key: COLUMN_KEYS.REJECT_REASON,
+        title: t('Ban Reason'),
+        className: 'min-w-[220px]',
+        render: (_, record) => (
+          <RichTextContent
+            value={record.reject_reason?.trim() ?? ''}
             className="text-sm text-foreground whitespace-pre-wrap break-words !font-display-1"
             maxLines={2}
             showMoreLabel={t('See more')}
@@ -190,7 +194,14 @@ export function DataTable() {
                 </button>
               }
             />
-            {record.status === STATUS.PENDING ? (
+            {record.status === STATUS.ACTIVE ? (
+              <ApproveOrganizationConfirm
+                mode="ban"
+                organizationId={record.id}
+                organizationName={record.name}
+                theme={isDark ? 'dark' : 'light'}
+              />
+            ) : record.status !== STATUS.INACTIVE ? (
               <ApproveOrganizationConfirm
                 organizationId={record.id}
                 organizationName={record.name}

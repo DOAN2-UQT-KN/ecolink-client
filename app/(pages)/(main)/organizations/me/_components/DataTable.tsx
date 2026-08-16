@@ -9,6 +9,7 @@ import { StatusTag } from "@/components/ui/StatusTag";
 import FormFilter from "./FormFilter";
 import useAuthStore from "@/stores/useAuthStore";
 import { useLeaveOrganization } from "@/apis/organization/leaveOrganization";
+import { STATUS } from "@/constants/status";
 
 const defaultPagination = { current: 1, pageSize: 10 };
 
@@ -105,13 +106,13 @@ const DataTableComponent = memo(function DataTableComponent() {
         title: t("Status"),
         key: "status",
         render: (_, record) => {
-          return <StatusTag status={record.status} className="!mx-0 min-w-0 justify-center" />;
+          return <StatusTag status={record.status} className="!mx-0 min-w-0 justify-center" label={record.status === STATUS.INACTIVE ? t("Banned") : undefined} />;
         },
         width: 140,
         align: "center",
       },
       {
-        title: t("Reject Reason"),
+        title: t("Ban Reason"),
         key: "reject_reason",
         render: (_, record) => {
           const reason = record.reject_reason?.trim();
