@@ -1,7 +1,6 @@
 import { ICreateReportRequest } from "@/apis/incident/models/createReport";
 
-export const SEVERITY_MIN = 1;
-export const SEVERITY_MAX = 5;
+export { SEVERITY_MIN, SEVERITY_MAX } from "@/constants/severity";
 
 export interface IncidentFormValues {
   title: string;

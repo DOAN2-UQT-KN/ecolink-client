@@ -1,6 +1,8 @@
 import React, { memo, useMemo } from "react";
 import { PiTrash, PiSkullLight, PiClock } from "react-icons/pi";
 import { useTranslation } from "react-i18next";
+import { getSeverityLevel } from "@/constants/severity";
+import { getWasteTypeLabels } from "@/modules/ReportGeneralInformation";
 
 const CONDITION_LABELS: Record<string, string> = {
   "newly-appeared": "Newly-appeared",
@@ -22,11 +24,24 @@ export const ReportFooter = memo(function ReportFooter({
   const { t } = useTranslation();
 
   const items = useMemo(
-    () => [
+    () => {
+      const severity = getSeverityLevel(severityLevel);
+      const wasteTypeLabels = getWasteTypeLabels(wasteType, t);
+      return [
       {
         icon: <PiTrash size={18} />,
         label: t("Waste Type"),
-        value: wasteType || t("N/A"),
+        value:
+          wasteTypeLabels.length > 0 ? (
+            <span className="flex flex-col">
+              {wasteTypeLabels.map((label) => (
+                <span key={label}>{label}</span>
+              ))}
+            </span>
+          ) : (
+            t("N/A")
+          ),
+        valueClassName: undefined as string | undefined,
       },
       {
         icon: <PiClock size={18} />,
@@ -34,13 +49,16 @@ export const ReportFooter = memo(function ReportFooter({
         value: condition
           ? t(CONDITION_LABELS[condition] || condition)
           : t("N/A"),
+        valueClassName: undefined as string | undefined,
       },
       {
         icon: <PiSkullLight size={18} />,
         label: t("Severity"),
-        value: severityLevel ?? t("N/A"),
+        value: severity ? t(severity.label) : t("N/A"),
+        valueClassName: severity?.textClass,
       },
-    ],
+    ];
+    },
     [t, wasteType, condition, severityLevel],
   );
 
@@ -53,7 +71,11 @@ export const ReportFooter = memo(function ReportFooter({
             <span className="text-[10px] uppercase tracking-wider font-bold text-foreground-tertiary">
               {item.label}
             </span>
-            <span className="font-display-1 truncate text-foreground-secondary capitalize">
+            <span
+              className={`font-display-1 whitespace-normal ${
+                item.valueClassName || "text-foreground-secondary"
+              }`}
+            >
               {item.value}
             </span>
           </div>

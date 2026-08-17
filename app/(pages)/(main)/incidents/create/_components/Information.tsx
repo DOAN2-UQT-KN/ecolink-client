@@ -9,7 +9,12 @@ import { Slider } from '@/components/ui/slider';
 import { Controller } from 'react-hook-form';
 import { cn } from '@/libs/utils';
 import RichTextEditor from '@/components/ui/RichTextEditor';
-import { SEVERITY_MAX, SEVERITY_MIN } from '../_services/incident.service';
+import {
+  SEVERITY_LEVEL,
+  SEVERITY_MAX,
+  SEVERITY_MIN,
+  getSeverityLevel,
+} from '@/constants/severity';
 
 const wasteTypeOptions = [
   { label: 'Household waste', value: 'household' },
@@ -171,29 +176,50 @@ const Information = memo(function Information() {
           <Controller
             name="severityLevel"
             control={control}
-            render={({ field }) => (
-              <div className="flex flex-col gap-3 rounded-lg border border-[rgba(136,122,71,0.5)] bg-white/5 px-4 py-3">
-                <div className="flex items-center justify-between text-sm text-foreground-tertiary">
-                  <span>{t('Mild')}</span>
-                  <span className="font-medium text-foreground">{field.value ?? SEVERITY_MIN}</span>
-                  <span>{t('Severe')}</span>
+            render={({ field }) => {
+              const level = field.value ?? SEVERITY_MIN;
+              const severity = getSeverityLevel(level) ?? SEVERITY_LEVEL[SEVERITY_MIN];
+              return (
+                <div className="flex flex-col gap-3 rounded-lg border border-[rgba(136,122,71,0.5)] bg-white/5 px-4 py-3">
+                  <div className="flex items-center justify-center text-sm">
+                    <span className={cn('font-semibold text-center', severity.textClass)}>
+                    {t(severity.label)}
+                    </span>
+                  </div>
+                  <Slider
+                    min={SEVERITY_MIN}
+                    max={SEVERITY_MAX}
+                    step={1}
+                    value={[level]}
+                    onValueChange={(value) => field.onChange(value[0] ?? SEVERITY_MIN)}
+                    aria-label={t('Severity')}
+                    className={severity.sliderClass}
+                  />
+                  <div className="flex justify-between px-0.5">
+                    {([1, 2, 3, 4, 5] as const).map((value) => {
+                      const item = SEVERITY_LEVEL[value];
+                      const selected = value === level;
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          onClick={() => field.onChange(value)}
+                          className={cn(
+                            'flex flex-col items-center gap-0.5 text-[10px] transition-colors',
+                            selected
+                              ? cn('font-semibold', item.textClass)
+                              : 'text-foreground-tertiary',
+                          )}
+                        >
+                          {/* <span>{value}</span> */}
+                          <span className="hidden sm:block">{t(item.label)}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-                <Slider
-                  min={SEVERITY_MIN}
-                  max={SEVERITY_MAX}
-                  step={1}
-                  value={[field.value ?? SEVERITY_MIN]}
-                  onValueChange={(value) => field.onChange(value[0] ?? SEVERITY_MIN)}
-                  aria-label={t('Severity')}
-                  className="[&_[data-slot=slider-range]]:bg-button-accent [&_[data-slot=slider-thumb]]:border-button-accent"
-                />
-                <div className="flex justify-between text-xs text-foreground-tertiary px-0.5">
-                  {Array.from({ length: SEVERITY_MAX - SEVERITY_MIN + 1 }, (_, i) => (
-                    <span key={SEVERITY_MIN + i}>{SEVERITY_MIN + i}</span>
-                  ))}
-                </div>
-              </div>
-            )}
+              );
+            }}
           />
         </Field>
       </div>

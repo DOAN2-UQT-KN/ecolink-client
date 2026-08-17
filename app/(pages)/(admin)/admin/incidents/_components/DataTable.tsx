@@ -21,10 +21,18 @@ import { User } from 'lucide-react';
 import { formattedDate } from '@/utils/formattedDate';
 import defaultAvatar from '@/public/default-avatar.png';
 import { STATUS } from '@/constants/status';
+import {
+  ConditionCell,
+  SeverityCell,
+  WasteTypeCell,
+} from '@/modules/ReportGeneralInformation';
 
 const COLUMN_KEYS = {
   NO: 'no',
   INCIDENT: 'incident',
+  SEVERITY: 'severity_level',
+  CONDITION: 'condition',
+  WASTE_TYPE: 'waste_type',
   OWNER: 'owner',
   AI_ANALYSIS: 'ai_analysis',
   STATUS: 'status',
@@ -119,6 +127,30 @@ export function DataTable() {
               </div>
             </div>
           </div>
+        ),
+      },
+      {
+        key: COLUMN_KEYS.SEVERITY,
+        title: t('Severity'),
+        className: 'min-w-[120px]',
+        render: (_, record) => (
+          <SeverityCell value={record.severity_level} isDark={isDark} />
+        ),
+      },
+      {
+        key: COLUMN_KEYS.CONDITION,
+        title: t('Condition'),
+        className: 'min-w-[160px]',
+        render: (_, record) => (
+          <ConditionCell value={record.condition} isDark={isDark} />
+        ),
+      },
+      {
+        key: COLUMN_KEYS.WASTE_TYPE,
+        title: t('Waste Type'),
+        className: 'min-w-[200px]',
+        render: (_, record) => (
+          <WasteTypeCell value={record.waste_type} isDark={isDark} />
         ),
       },
       {

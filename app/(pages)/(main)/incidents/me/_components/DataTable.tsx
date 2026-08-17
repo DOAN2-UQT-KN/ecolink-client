@@ -23,6 +23,11 @@ import { RichTextContent } from "@/components/ui/RichTextContent";
 import FormFilter from "./FormFilter";
 import { formattedDate } from "@/utils/formattedDate";
 import { STATUS } from "@/constants/status";
+import {
+  ConditionCell,
+  SeverityCell,
+  WasteTypeCell,
+} from "@/modules/ReportGeneralInformation";
 
 const defaultPagination = { current: 1, pageSize: 10 };
 
@@ -84,6 +89,25 @@ const DataTableComponent = memo(function DataTableComponent() {
           </div>
         ),
         width: 300,
+      },
+      {
+        title: t("Severity"),
+        key: "severity_level",
+        render: (_, record) => <SeverityCell value={record.severity_level} />,
+        width: 130,
+      },
+      {
+        title: t("Condition"),
+        key: "condition",
+        render: (_, record) => <ConditionCell value={record.condition} />,
+        width: 180,
+      },
+      {
+        title: t("Waste Type"),
+        key: "waste_type",
+        render: (_, record) => <WasteTypeCell value={record.waste_type} />,
+        width: 250,
+        className: "whitespace-normal align-top",
       },
       {
         title: t("Created At"),

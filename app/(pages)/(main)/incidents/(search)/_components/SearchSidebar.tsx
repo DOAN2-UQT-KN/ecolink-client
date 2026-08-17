@@ -17,6 +17,7 @@ import { Button } from '@/components/client/shared/Button';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { TbZoomReset, TbZoom } from 'react-icons/tb';
 import { useRouter, usePathname, useSearchParams } from '@/libs/router';
+import { SEVERITY_LEVEL } from '@/constants/severity';
 
 const wasteTypeOptions = [
   { label: 'Household waste', value: 'household' },
@@ -31,11 +32,10 @@ const conditionOptions = [
   { label: 'Previously cleaned but reappeared', value: 'reappeared' },
 ];
 
-const severityOptions = [
-  { label: 'Small', value: '1' },
-  { label: 'Medium', value: '2' },
-  { label: 'Large', value: '3' },
-];
+const severityOptions = ([1, 2, 3, 4, 5] as const).map((value) => ({
+  label: SEVERITY_LEVEL[value].label,
+  value: String(value),
+}));
 
 const statusOptions = [
   { label: 'To do', value: STATUS.TODO.toString() },

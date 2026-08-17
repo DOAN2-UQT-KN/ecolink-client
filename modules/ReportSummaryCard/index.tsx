@@ -15,6 +15,8 @@ import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { cn } from '@/libs/utils';
 import RichTextContent from '@/components/ui/RichTextContent';
 import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
+import { getSeverityLevel } from '@/constants/severity';
+import { getWasteTypeLabels } from '@/modules/ReportGeneralInformation';
 
 const CONDITION_LABELS: Record<string, string> = {
   'newly-appeared': 'Newly-appeared',
@@ -51,11 +53,24 @@ const ReportSummaryCard = memo(function ReportSummaryCard({
   );
 
   const footerItems = useMemo(
-    () => [
+    () => {
+      const severity = getSeverityLevel(incident.severity_level);
+      const wasteTypeLabels = getWasteTypeLabels(incident.waste_type, t);
+      return [
       {
         icon: <PiTrash size={18} />,
         label: t('Waste Type'),
-        value: incident.waste_type || t('N/A'),
+        value:
+          wasteTypeLabels.length > 0 ? (
+            <span className="flex flex-col">
+              {wasteTypeLabels.map((label) => (
+                <span key={label}>{label}</span>
+              ))}
+            </span>
+          ) : (
+            t('N/A')
+          ),
+        valueClassName: undefined as string | undefined,
       },
       {
         icon: <PiClock size={18} />,
@@ -63,13 +78,16 @@ const ReportSummaryCard = memo(function ReportSummaryCard({
         value: incident.condition
           ? t(CONDITION_LABELS[incident.condition] || incident.condition)
           : t('N/A'),
+        valueClassName: undefined as string | undefined,
       },
       {
         icon: <PiSkullLight size={18} />,
         label: t('Severity'),
-        value: incident.severity_level ?? t('N/A'),
+        value: severity ? t(severity.label) : t('N/A'),
+        valueClassName: severity?.textClass,
       },
-    ],
+    ];
+    },
     [incident.condition, incident.severity_level, incident.waste_type, t],
   );
 
@@ -135,7 +153,11 @@ const ReportSummaryCard = memo(function ReportSummaryCard({
                     <span className="text-[10px] uppercase tracking-wider font-bold text-foreground-tertiary">
                       {item.label}
                     </span>
-                    <span className="font-display-1 truncate text-foreground-secondary capitalize">
+                    <span
+                      className={`font-display-1 whitespace-normal ${
+                        item.valueClassName || 'text-foreground-secondary'
+                      }`}
+                    >
                       {item.value}
                     </span>
                   </div>
