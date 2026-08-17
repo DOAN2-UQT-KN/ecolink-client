@@ -41,6 +41,7 @@ export interface IIncident {
   description_vi?: string | null;
   description_en?: string | null;
   waste_type: string | null;
+  condition?: string | null;
   severity_level: number | null;
   latitude: number | null;
   longitude: number | null;

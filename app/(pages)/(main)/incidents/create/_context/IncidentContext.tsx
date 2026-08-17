@@ -29,7 +29,6 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
       detailAddress: '',
       wasteTypes: [],
       condition: '',
-      pollutionLevels: [],
       severityLevel: 1,
       imageStrings: [],
     },

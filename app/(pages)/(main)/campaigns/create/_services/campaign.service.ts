@@ -68,6 +68,7 @@ export const mapResourceToIncident = (resource: IResource): IIncident | null => 
       title: resource.name ?? "",
       description: resource.description ?? "",
       waste_type: null,
+      condition: null,
       severity_level: null,
       latitude: null,
       longitude: null,

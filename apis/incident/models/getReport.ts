@@ -7,6 +7,7 @@ export interface IGetReportsRequest {
   status?: number;
   statuses?: number[];
   waste_type?: string;
+  condition?: string;
   severity_level?: number;
   latitude?: number;
   longitude?: number;

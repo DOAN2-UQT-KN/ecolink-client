@@ -24,12 +24,6 @@ const conditionOptions = [
   { label: 'Previously cleaned but reappeared', value: 'reappeared' },
 ];
 
-const pollutionLevelOptions = [
-  { label: 'Odor present / No odor', value: 'odor' },
-  { label: 'Leachate present / No leachate', value: 'leachate' },
-  { label: 'Smoke or fire present / No smoke or fire', value: 'smoke-fire' },
-];
-
 const Information = memo(function Information() {
   const { t } = useTranslation();
   const { form, onSubmit, isPending } = useIncident();
@@ -55,15 +49,6 @@ const Information = memo(function Information() {
   const translatedConditionOptions = useMemo(
     () =>
       conditionOptions.map((o) => ({
-        ...o,
-        label: t(o.label),
-      })),
-    [t],
-  );
-
-  const translatedPollutionLevelOptions = useMemo(
-    () =>
-      pollutionLevelOptions.map((o) => ({
         ...o,
         label: t(o.label),
       })),
@@ -178,27 +163,6 @@ const Information = memo(function Information() {
           />
         </Field>
 
-        {/* Pollution Level — multi-select */}
-        <Field>
-          <FieldLabel className="text-foreground-tertiary font-display-3">
-            {t('Pollution level')}
-          </FieldLabel>
-          <Controller
-            name="pollutionLevels"
-            control={control}
-            defaultValue={[]}
-            render={({ field }) => (
-              <MultiSelect
-                options={translatedPollutionLevelOptions}
-                value={field.value ?? []}
-                onChange={field.onChange}
-                placeholder={t('Select pollution level...')}
-                triggerClassName="border-[rgba(136,122,71,0.5)] focus-visible:ring-[rgba(136,122,71,0.5)]/50 w-full"
-              />
-            )}
-          />
-        </Field>
-
         {/* Severity — slider 1–5 */}
         <Field>
           <FieldLabel className="text-foreground-tertiary font-display-3">
@@ -234,13 +198,7 @@ const Information = memo(function Information() {
         </Field>
       </div>
     ),
-    [
-      control,
-      t,
-      translatedConditionOptions,
-      translatedPollutionLevelOptions,
-      translatedWasteTypeOptions,
-    ],
+    [control, t, translatedConditionOptions, translatedWasteTypeOptions],
   );
 
   return (

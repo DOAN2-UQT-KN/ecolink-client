@@ -4,6 +4,7 @@ import { HiMapPin } from 'react-icons/hi2';
 import {
   PiSkullLight,
   PiTrash,
+  PiClock,
 } from "react-icons/pi";
 import { TbStarFilled } from "react-icons/tb";
 
@@ -14,6 +15,12 @@ import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { cn } from '@/libs/utils';
 import RichTextContent from '@/components/ui/RichTextContent';
 import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
+
+const CONDITION_LABELS: Record<string, string> = {
+  'newly-appeared': 'Newly-appeared',
+  'long-standing': 'Long-standing',
+  reappeared: 'Previously cleaned but reappeared',
+};
 
 interface ReportSummaryCardProps {
   incident: IIncident;
@@ -51,12 +58,19 @@ const ReportSummaryCard = memo(function ReportSummaryCard({
         value: incident.waste_type || t('N/A'),
       },
       {
+        icon: <PiClock size={18} />,
+        label: t('Condition'),
+        value: incident.condition
+          ? t(CONDITION_LABELS[incident.condition] || incident.condition)
+          : t('N/A'),
+      },
+      {
         icon: <PiSkullLight size={18} />,
         label: t('Severity'),
         value: incident.severity_level ?? t('N/A'),
       },
     ],
-    [incident.severity_level, incident.waste_type, t],
+    [incident.condition, incident.severity_level, incident.waste_type, t],
   );
 
   const toggleSelected = useCallback(() => {
@@ -113,7 +127,7 @@ const ReportSummaryCard = memo(function ReportSummaryCard({
             {/* <p className="font-display-1 text-foreground-secondary leading-relaxed line-clamp-2 h-[40px] overflow-y-auto scrollbar-hide">
               {incident.description || t('No description provided.')}
             </p> */}
-            <div className="grid grid-cols-2 gap-1 py-2 border-y border-border/50">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 py-2 border-y border-border/50">
               {footerItems.map((item) => (
                 <div key={item.label} className="flex items-center gap-1 ">
                   <div className="p-2 rounded-lg">{item.icon}</div>

@@ -25,6 +25,12 @@ const wasteTypeOptions = [
   { label: 'Hazardous waste', value: 'hazardous' },
 ];
 
+const conditionOptions = [
+  { label: 'Newly-appeared', value: 'newly-appeared' },
+  { label: 'Long-standing', value: 'long-standing' },
+  { label: 'Previously cleaned but reappeared', value: 'reappeared' },
+];
+
 const severityOptions = [
   { label: 'Small', value: '1' },
   { label: 'Medium', value: '2' },
@@ -89,6 +95,15 @@ export const SearchSidebar = memo(function SearchSidebar() {
       const wasteType = values.join(',');
       setFilters({ waste_type: wasteType });
       updateURL('waste_type', wasteType);
+    },
+    [setFilters, updateURL],
+  );
+
+  const handleConditionChange = useCallback(
+    (value: string) => {
+      const condition = value === 'all' ? undefined : value;
+      setFilters({ condition });
+      updateURL('condition', condition);
     },
     [setFilters, updateURL],
   );
@@ -165,6 +180,29 @@ export const SearchSidebar = memo(function SearchSidebar() {
           />
         </Field>
 
+        {/* Condition Filter */}
+        <Field>
+          <FieldLabel className="text-foreground-tertiary font-display-3">
+            {t('Condition')}
+          </FieldLabel>
+          <Select
+            value={filters.condition || 'all'}
+            onValueChange={handleConditionChange}
+          >
+            <SelectTrigger className="w-full border-1 border-[rgba(136,122,71,0.5)] focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50 bg-white/50">
+              <SelectValue placeholder={t('Select condition')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('All Conditions')}</SelectItem>
+              {conditionOptions.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {t(opt.label)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+
         {/* Severity Filter */}
         <Field>
           <FieldLabel className="text-foreground-tertiary font-display-3">
@@ -205,10 +243,12 @@ export const SearchSidebar = memo(function SearchSidebar() {
     t,
     searchValue,
     filters.statuses,
+    filters.condition,
     filters.severity_level,
     handleStatusChange,
     selectedWasteTypes,
     handleWasteTypeChange,
+    handleConditionChange,
     handleSeverityChange,
     resetFilters,
   ]);

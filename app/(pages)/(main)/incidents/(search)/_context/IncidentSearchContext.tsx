@@ -77,12 +77,14 @@ export const IncidentSearchProvider = ({ children }: { children: ReactNode }) =>
   const urlSearch = useGetParam<string>("search", "string", "");
   const urlStatus = useGetParam<string>("status", "string", undefined);
   const urlWasteType = useGetParam<string>("waste_type", "string", "");
+  const urlCondition = useGetParam<string>("condition", "string", "");
   const urlSeverity = useGetParam<number>("severity_level", "number", undefined);
 
   const [filters, setFiltersState] = useState<Partial<IGetReportsRequest>>({
     search: urlSearch,
     statuses: incidentSearchStatusesFromUrl(urlStatus),
     waste_type: urlWasteType,
+    condition: urlCondition,
     severity_level: urlSeverity,
   });
 
@@ -91,9 +93,10 @@ export const IncidentSearchProvider = ({ children }: { children: ReactNode }) =>
       search: urlSearch,
       statuses: incidentSearchStatusesFromUrl(urlStatus),
       waste_type: urlWasteType,
+      condition: urlCondition,
       severity_level: urlSeverity,
     });
-  }, [urlSearch, urlStatus, urlWasteType, urlSeverity]);
+  }, [urlSearch, urlStatus, urlWasteType, urlCondition, urlSeverity]);
 
   const setFilters = useCallback((newFilters: Partial<IGetReportsRequest>) => {
     setFiltersState((prev) => ({ ...prev, ...newFilters }));
@@ -105,6 +108,7 @@ export const IncidentSearchProvider = ({ children }: { children: ReactNode }) =>
       search: "",
       statuses: [STATUS.TODO],
       waste_type: "",
+      condition: "",
       severity_level: undefined,
     });
     setPagination((prev) => ({ ...prev, current: 1 }));
