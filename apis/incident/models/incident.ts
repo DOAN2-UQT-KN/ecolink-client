@@ -46,6 +46,10 @@ export interface IIncident {
   longitude: number | null;
   status: number | null;
   ai_verified: boolean;
+  /** Admin verification; only admins can set true. */
+  is_verify?: boolean;
+  /** Admin ban reason; `null`/empty when the report has not been banned. */
+  reject_reason?: string | null;
   /** AI recommendation in markdown (nullable until analysis completes). */
   ai_recommendation?: string | null;
   created_at: string;

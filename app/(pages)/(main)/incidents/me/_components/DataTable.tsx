@@ -22,6 +22,7 @@ import { StatusTag } from "@/components/ui/StatusTag";
 import { RichTextContent } from "@/components/ui/RichTextContent";
 import FormFilter from "./FormFilter";
 import { formattedDate } from "@/utils/formattedDate";
+import { STATUS } from "@/constants/status";
 
 const defaultPagination = { current: 1, pageSize: 10 };
 
@@ -145,7 +146,13 @@ const DataTableComponent = memo(function DataTableComponent() {
         title: t("Status"),
         dataIndex: "status",
         key: "status",
-        render: (status) => <StatusTag status={status} className="!mx-0 min-w-0 justify-center" />,
+        render: (status) => (
+          <StatusTag
+            status={status}
+            className="!mx-0 min-w-0 justify-center"
+            label={status === STATUS.INACTIVE ? t("Banned") : undefined}
+          />
+        ),
         width: 120,
         align: "center",
       },
@@ -181,6 +188,19 @@ const DataTableComponent = memo(function DataTableComponent() {
           ) : <></>;
         },
         width: 180,
+      },
+      {
+        title: t("Ban Reason"),
+        key: "reject_reason",
+        render: (_, record) => {
+          const reason = record.reject_reason?.trim();
+          return (
+            <span className="text-xs text-muted-foreground whitespace-pre-wrap break-words line-clamp-3">
+              {reason || "—"}
+            </span>
+          );
+        },
+        width: 220,
       },
       {
         title: t("Action"),
@@ -231,6 +251,7 @@ const DataTableComponent = memo(function DataTableComponent() {
 
   const handleRowClick = useCallback(
     (record: IIncident) => {
+      if (record.status === STATUS.INACTIVE) return;
       router.push(`/incidents/${record.id}`);
     },
     [router],

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import Image from '@/components/ui/AppImage';
 import { Image as AntdImage } from 'antd';
 import { useTranslation } from 'react-i18next';
@@ -20,6 +20,7 @@ import { TbScanEye } from 'react-icons/tb';
 import { User } from 'lucide-react';
 import { formattedDate } from '@/utils/formattedDate';
 import defaultAvatar from '@/public/default-avatar.png';
+import { STATUS } from '@/constants/status';
 
 const COLUMN_KEYS = {
   NO: 'no',
@@ -27,6 +28,7 @@ const COLUMN_KEYS = {
   OWNER: 'owner',
   AI_ANALYSIS: 'ai_analysis',
   STATUS: 'status',
+  REJECT_REASON: 'reject_reason',
   HANDLED_BY: 'handledBy',
   ACTION: 'action',
 } as const;
@@ -43,6 +45,11 @@ export function DataTable() {
   const { theme } = useAdminLayout();
   const isDark = theme === 'dark';
 
+  const handleRowClick = useCallback((record: IIncident) => {
+    if (!record.id || record.status === STATUS.INACTIVE) return;
+    window.open(`/incidents/${record.id}`, '_blank', 'noopener,noreferrer');
+  }, []);
+
   const columns: DataTableColumn<IIncident>[] = useMemo(
     () => [
       {
@@ -58,7 +65,7 @@ export function DataTable() {
       {
         key: COLUMN_KEYS.INCIDENT,
         title: t('Incident'),
-        className: 'sticky left-0 z-20 min-w-[280px]',
+        className: ' min-w-[280px]',
         render: (_, record) => (
           <div className="flex items-center gap-3 py-1">
             <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-border/50 bg-muted">
@@ -186,7 +193,26 @@ export function DataTable() {
         title: t('Status'),
         className: 'min-w-[120px]',
         render: (_, record) => (
-          <StatusTag status={record.status} className="!mx-0 min-w-0 justify-center" />
+          <StatusTag
+            status={record.status}
+            className="!mx-0 min-w-0 justify-center"
+            label={record.status === STATUS.INACTIVE ? t('Banned') : undefined}
+          />
+        ),
+      },
+      {
+        key: COLUMN_KEYS.REJECT_REASON,
+        title: t('Ban Reason'),
+        className: 'min-w-[220px]',
+        render: (_, record) => (
+          <RichTextContent
+            value={record.reject_reason?.trim() ?? ''}
+            className="text-sm text-foreground whitespace-pre-wrap break-words !font-display-1"
+            maxLines={2}
+            showMoreLabel={t('See more')}
+            showLessLabel={t('See less')}
+            emptyFallback={<span className="text-foreground-secondary">—</span>}
+          />
         ),
       },
       {
@@ -227,7 +253,12 @@ export function DataTable() {
         title: t('Action'),
         className: 'min-w-[160px]',
         render: (_, record) => (
-          <div className="flex items-center gap-2">
+          <div
+            className="flex items-center gap-2"
+            onClick={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+            role="presentation"
+          >
             <PreviewIncidentPopover
               incident={record}
               theme={isDark ? 'dark' : 'light'}
@@ -245,11 +276,20 @@ export function DataTable() {
                 </button>
               }
             />
-            <VerifyIncidentConfirm
-              incidentId={record.id}
-              incidentTitle={record.title || t('Untitled Incident')}
-              theme={isDark ? 'dark' : 'light'}
-            />
+            {record.status === STATUS.PENDING ? (
+              <VerifyIncidentConfirm
+                incidentId={record.id}
+                incidentTitle={record.title || t('Untitled Incident')}
+                theme={isDark ? 'dark' : 'light'}
+              />
+            ) : record.status !== STATUS.INACTIVE ? (
+              <VerifyIncidentConfirm
+                mode="ban"
+                incidentId={record.id}
+                incidentTitle={record.title || t('Untitled Incident')}
+                theme={isDark ? 'dark' : 'light'}
+              />
+            ) : null}
           </div>
         ),
       },
@@ -265,6 +305,7 @@ export function DataTable() {
       rowKey="id"
       emptyTitle={t('No incidents found')}
       emptyDescription={t('No incidents available for the current filters.')}
+      onRowClick={handleRowClick}
       pagination={{
         page: pagination.current,
         pageSize: pagination.pageSize,

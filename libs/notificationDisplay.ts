@@ -82,8 +82,11 @@ export function getNotificationHref(
         return `/organizations/${p.organization_id}`;
       }
       return null;
+    case 'REPORT_REJECTED':
+      return '/incidents/me';
     case 'REPORT_STATUS':
     case 'REPORT_READY':
+    case 'REPORT_APPROVED':
       return reportId ? `/incidents/${reportId}` : null;
     default:
       return null;

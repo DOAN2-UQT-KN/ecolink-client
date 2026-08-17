@@ -6,12 +6,21 @@ import { MessageType } from "@/utils/showMessage";
 
 const url = "/api/v1/reports";
 
-export const banReport = async (id: string): Promise<IBaseResponse<unknown>> => {
-  return await requestApi.put<IBaseResponse<unknown>>(`${url}/${id}/ban`, {});
+export type BanReportRequest = {
+  id: string;
+  reject_reason: string;
+};
+
+export const banReport = async (
+  req: BanReportRequest,
+): Promise<IBaseResponse<unknown>> => {
+  return await requestApi.put<IBaseResponse<unknown>>(`${url}/${req.id}/ban`, {
+    reject_reason: req.reject_reason,
+  });
 };
 
 export const useBanReport = (
-  options?: UsePostOptions<IBaseResponse<unknown>, string>,
+  options?: UsePostOptions<IBaseResponse<unknown>, BanReportRequest>,
 ) => {
   const { t } = useTranslation();
   return usePost({

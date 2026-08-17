@@ -44,7 +44,7 @@ export function FormFilter() {
       { label: t("All"), value: "all" },
       { label: t("Draft"), value: String(STATUS.DRAFT) },
       { label: t("Pending"), value: String(STATUS.PENDING) },
-      { label: t("Inactive"), value: String(STATUS.INACTIVE) },
+      { label: t("Banned"), value: String(STATUS.INACTIVE) },
       { label: t("In progress"), value: String(STATUS.IN_PROGRESS) },
       { label: t("Completed"), value: String(STATUS.COMPLETED) },
     ];
