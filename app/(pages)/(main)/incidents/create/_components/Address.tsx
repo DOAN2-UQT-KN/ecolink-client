@@ -23,7 +23,7 @@ type ReverseGeocodingAddress = {
 };
 
 type ForwardGeocodingResult =
-  | { ok: true; lat: number; lng: number }
+  | { ok: true; lat: number; lng: number; displayName: string }
   | { ok: false; reason: "not_found" | "error" };
 
 type AddressSnapshot = {
@@ -168,16 +168,21 @@ const Address = memo(function Address() {
         return { ok: false, reason: "error" };
       }
 
-      const data = (await response.json()) as Array<{ lat?: string; lon?: string }>;
+      const data = (await response.json()) as Array<{
+        lat?: string;
+        lon?: string;
+        display_name?: string;
+      }>;
       const first = data[0];
       const lat = first?.lat != null ? Number(first.lat) : NaN;
       const lng = first?.lon != null ? Number(first.lon) : NaN;
+      const displayName = first?.display_name?.trim() ?? "";
 
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
         return { ok: false, reason: "not_found" };
       }
 
-      return { ok: true, lat, lng };
+      return { ok: true, lat, lng, displayName };
     } catch {
       return { ok: false, reason: "error" };
     }
@@ -297,6 +302,9 @@ const Address = memo(function Address() {
     }
 
     setForwardWarning(null);
+    if (result.displayName) {
+      setSearchQuery(result.displayName);
+    }
     const nextPos = { lat: result.lat, lng: result.lng };
     if (!isSamePosition(position, nextPos)) {
       applyPosition(nextPos, "user");
