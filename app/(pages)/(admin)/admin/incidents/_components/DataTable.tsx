@@ -17,6 +17,7 @@ import { cn } from '@/libs/utils';
 import { useIncidentContext } from '../_context/IncidentContext';
 import { VerifyIncidentConfirm } from './VerifyIncidentConfirm';
 import { TbScanEye } from 'react-icons/tb';
+import { User } from 'lucide-react';
 import { formattedDate } from '@/utils/formattedDate';
 import defaultAvatar from '@/public/default-avatar.png';
 
@@ -26,6 +27,7 @@ const COLUMN_KEYS = {
   OWNER: 'owner',
   AI_ANALYSIS: 'ai_analysis',
   STATUS: 'status',
+  HANDLED_BY: 'handledBy',
   ACTION: 'action',
 } as const;
 
@@ -186,6 +188,39 @@ export function DataTable() {
         render: (_, record) => (
           <StatusTag status={record.status} className="!mx-0 min-w-0 justify-center" />
         ),
+      },
+      {
+        key: COLUMN_KEYS.HANDLED_BY,
+        title: t('Handled by'),
+        className: 'min-w-[180px]',
+        render: (_, record) => {
+          const handledBy = record.handled_by;
+          return handledBy ? (
+            <div className="flex items-center gap-2.5">
+              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 overflow-hidden">
+                {handledBy?.logo_url ? (
+                  <Image
+                    src={handledBy.logo_url}
+                    alt={handledBy.name || t('Handled by')}
+                    width={32}
+                    height={32}
+                    className="h-8 w-8 object-cover"
+                  />
+                ) : (
+                  <User className="h-4 w-4 text-primary" />
+                )}
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs font-semibold uppercase">
+                  {handledBy?.name || '—'}
+                </span>
+                <span className="text-[10px] text-muted-foreground">
+                  {handledBy ? t('Admin Organization') : '—'}
+                </span>
+              </div>
+            </div>
+          ) : <></>;
+        },
       },
       {
         key: COLUMN_KEYS.ACTION,

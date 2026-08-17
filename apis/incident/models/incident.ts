@@ -21,6 +21,16 @@ export interface IMediaFiles {
   created_at: string;
 }
 
+/** Organization handling the report (`report.campaign_id` → campaign → organization). */
+export interface IIncidentHandledBy {
+  id: string;
+  name: string;
+  slug: string;
+  logo_url: string;
+  background_url: string | null;
+  contact_email: string | null;
+}
+
 export interface IIncident {
   id: string;
   user_id: string | null;
@@ -51,4 +61,5 @@ export interface IIncident {
     upvote_count?: number;
   };
   saved?: boolean;
+  handled_by?: IIncidentHandledBy | null;
 }
