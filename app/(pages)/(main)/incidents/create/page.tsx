@@ -70,7 +70,7 @@ function CreateIncidentContent() {
           flex flex-col gap-[30px] w-full h-full pt-5
         `}
       >
-        <div className="md:grid md:grid-cols-2 md:gap-[30px] w-full h-full">
+        <div className="md:grid md:grid-cols-2 flex flex-col gap-[30px] w-full h-full">
           <Information />
           <Address />
         </div>
