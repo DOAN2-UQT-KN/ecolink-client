@@ -75,10 +75,7 @@ const ReportDetailCard = memo(function ReportDetailCard({
 
           <ReportFooter
             wasteType={incident.waste_type}
-            size={incident.size}
-            condition={incident.condition}
-            pollutionLevel={incident.severity_level}
-            isExpanded={isExpanded}
+            severityLevel={incident.severity_level}
           />
 
           {showAction ? (

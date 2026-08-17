@@ -38,8 +38,6 @@ export interface IIncident {
   ai_verified: boolean;
   /** AI recommendation in markdown (nullable until analysis completes). */
   ai_recommendation?: string | null;
-  size?: string;
-  condition?: string;
   created_at: string;
   updated_at: string;
   distance: number;

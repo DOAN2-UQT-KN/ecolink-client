@@ -5,9 +5,11 @@ import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Field, FieldLabel, FieldError } from '@/components/ui/field';
 import { MultiSelect } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
 import { Controller } from 'react-hook-form';
 import { cn } from '@/libs/utils';
 import RichTextEditor from '@/components/ui/RichTextEditor';
+import { SEVERITY_MAX, SEVERITY_MIN } from '../_services/incident.service';
 
 const wasteTypeOptions = [
   { label: 'Household waste', value: 'household' },
@@ -26,12 +28,6 @@ const pollutionLevelOptions = [
   { label: 'Odor present / No odor', value: 'odor' },
   { label: 'Leachate present / No leachate', value: 'leachate' },
   { label: 'Smoke or fire present / No smoke or fire', value: 'smoke-fire' },
-];
-
-const sizeOptions = [
-  { label: 'Small', value: '1' },
-  { label: 'Medium', value: '2' },
-  { label: 'Large', value: '3' },
 ];
 
 const Information = memo(function Information() {
@@ -68,15 +64,6 @@ const Information = memo(function Information() {
   const translatedPollutionLevelOptions = useMemo(
     () =>
       pollutionLevelOptions.map((o) => ({
-        ...o,
-        label: t(o.label),
-      })),
-    [t],
-  );
-
-  const translatedSizeOptions = useMemo(
-    () =>
-      sizeOptions.map((o) => ({
         ...o,
         label: t(o.label),
       })),
@@ -212,34 +199,36 @@ const Information = memo(function Information() {
           />
         </Field>
 
-        {/* Size — single-select radio */}
+        {/* Severity — slider 1–5 */}
         <Field>
-          <FieldLabel className="text-foreground-tertiary font-display-3">{t('Size')}</FieldLabel>
+          <FieldLabel className="text-foreground-tertiary font-display-3">
+            {t('Severity')}
+          </FieldLabel>
           <Controller
-            name="size"
+            name="severityLevel"
             control={control}
             render={({ field }) => (
-              <RadioGroup
-                value={field.value}
-                onValueChange={field.onChange}
-                className="flex flex-row gap-4"
-              >
-                {translatedSizeOptions.map((option) => (
-                  <label
-                    key={option.value}
-                    htmlFor={`size-${option.value}`}
-                    className={cn(
-                      'flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer flex-1 justify-center',
-                      field.value === option.value
-                        ? 'bg-button-accent/10 border-button-accent'
-                        : 'bg-white/5 border-white/10 hover:border-white/20',
-                    )}
-                  >
-                    <RadioGroupItem value={option.value} id={`size-${option.value}`} />
-                    <span className="text-sm font-normal flex-1">{option.label}</span>
-                  </label>
-                ))}
-              </RadioGroup>
+              <div className="flex flex-col gap-3 rounded-lg border border-[rgba(136,122,71,0.5)] bg-white/5 px-4 py-3">
+                <div className="flex items-center justify-between text-sm text-foreground-tertiary">
+                  <span>{t('Mild')}</span>
+                  <span className="font-medium text-foreground">{field.value ?? SEVERITY_MIN}</span>
+                  <span>{t('Severe')}</span>
+                </div>
+                <Slider
+                  min={SEVERITY_MIN}
+                  max={SEVERITY_MAX}
+                  step={1}
+                  value={[field.value ?? SEVERITY_MIN]}
+                  onValueChange={(value) => field.onChange(value[0] ?? SEVERITY_MIN)}
+                  aria-label={t('Severity')}
+                  className="[&_[data-slot=slider-range]]:bg-button-accent [&_[data-slot=slider-thumb]]:border-button-accent"
+                />
+                <div className="flex justify-between text-xs text-foreground-tertiary px-0.5">
+                  {Array.from({ length: SEVERITY_MAX - SEVERITY_MIN + 1 }, (_, i) => (
+                    <span key={SEVERITY_MIN + i}>{SEVERITY_MIN + i}</span>
+                  ))}
+                </div>
+              </div>
             )}
           />
         </Field>
@@ -250,7 +239,6 @@ const Information = memo(function Information() {
       t,
       translatedConditionOptions,
       translatedPollutionLevelOptions,
-      translatedSizeOptions,
       translatedWasteTypeOptions,
     ],
   );

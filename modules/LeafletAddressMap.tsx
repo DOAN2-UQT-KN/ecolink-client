@@ -115,7 +115,7 @@ const LeafletAddressMap = memo(function LeafletAddressMap({
     <MapContainer
       center={position ?? DEFAULT_CENTER}
       zoom={DEFAULT_ZOOM}
-      className="h-full w-full"
+      className="relative z-0 h-full w-full"
     >
       <MapContent
         position={position}
