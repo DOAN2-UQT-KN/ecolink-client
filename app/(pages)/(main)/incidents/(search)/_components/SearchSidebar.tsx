@@ -227,7 +227,7 @@ export const SearchSidebar = memo(function SearchSidebar() {
         </Field>
 
         {/* Reset Button */}
-        <Button
+        {/* <Button
           variant="outlined-brown"
           className="w-full h-11   border-dashed border-2 hover:border-primary hover:text-primary transition-all gap-2"
           onClick={resetFilters}
@@ -236,7 +236,7 @@ export const SearchSidebar = memo(function SearchSidebar() {
             <TbZoomReset size={16} />
             {t('Reset Filters')}
           </div>
-        </Button>
+        </Button> */}
       </div>
     );
   }, [
@@ -254,10 +254,10 @@ export const SearchSidebar = memo(function SearchSidebar() {
   ]);
 
   return (
-    <aside className="w-full mt-[100px] lg:w-[320px] lg:sticky top-0 z-[40] space-y-2 p-6 border border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5 h-fit">
-      <div>
+    <aside className="w-full lg:w-[320px] lg:sticky lg:self-start lg:top-[148px] lg:max-h-[calc(100vh-168px)] lg:overflow-y-auto z-[40] space-y-2 p-6 border border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5 h-fit">
+      {/* <div>
         <h3 className="font-display-3 text-button-accent ">{t('Search Incidents')}</h3>
-      </div>
+      </div> */}
 
       {renderFormFields()}
     </aside>
