@@ -1,5 +1,6 @@
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import type { LatLngLiteral } from "leaflet";
+import { useFormState, useWatch } from "react-hook-form";
 import dynamic from "@/libs/dynamic";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Button } from "@/components/client/shared/Button";
@@ -7,6 +8,7 @@ import { useIncident } from "../_hooks/useIncident";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/libs/utils";
 import { IoIosSearch } from "react-icons/io";
+import type { IncidentFormValues } from "../_services/incident.service";
 
 const LeafletAddressMap = dynamic(() => import("@/modules/LeafletAddressMap"), {
   ssr: false,
@@ -49,13 +51,12 @@ function isSamePosition(a: LatLngLiteral | null, b: LatLngLiteral) {
 const Address = memo(function Address() {
   const { t } = useTranslation();
   const { form } = useIncident();
-  const {
-    register,
-    watch,
-    setValue,
-    getValues,
-    formState: { errors },
-  } = form;
+  const { register, setValue, getValues, control } = form;
+  const detailAddress = useWatch({ control, name: "detailAddress" });
+  const { errors } = useFormState<IncidentFormValues>({
+    control,
+    name: ["detailAddress", "latitude", "longitude"],
+  });
   const [position, setPosition] = useState<LatLngLiteral | null>(null);
   const [forwardWarning, setForwardWarning] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -71,7 +72,6 @@ const Address = memo(function Address() {
   const snapshotRef = useRef<AddressSnapshot | null>(null);
   const searchGenerationRef = useRef(0);
 
-  const detailAddress = watch("detailAddress");
   isEditingRef.current = isEditing;
 
   const applyPosition = useCallback(
