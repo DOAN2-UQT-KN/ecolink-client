@@ -32,14 +32,14 @@ export const PreviewIncidentPopover = memo(function PreviewIncidentPopover({
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent
         className={cn(
-          "max-h-[min(90vh,900px)] w-full max-w-[min(100vw-2rem,1024px)] gap-0 overflow-hidden border-none p-0",
+          "flex max-h-[min(90vh,900px)] w-full max-w-[min(100vw-2rem,1024px)] flex-col gap-0 overflow-hidden border-none p-0",
           isDark ? "bg-zinc-900" : "bg-white/95 backdrop-blur-md",
         )}
         showCloseButton
       >
         <DialogHeader
           className={cn(
-            "border-b px-4 py-3 sm:px-6",
+            "shrink-0 border-b px-4 py-3 sm:px-6",
             isDark ? "border-zinc-700" : "border-zinc-200",
           )}
         >
@@ -52,8 +52,13 @@ export const PreviewIncidentPopover = memo(function PreviewIncidentPopover({
             {t("Preview")}
           </DialogTitle>
         </DialogHeader>
-        <div className="overflow-y-auto px-4 pb-6 sm:px-6">
-          <ReportDetailCard incident={incident} isExpanded showAction={false} />
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-6 sm:px-6">
+          <ReportDetailCard
+            incident={incident}
+            isExpanded
+            showAction={false}
+            className="h-auto"
+          />
         </div>
       </DialogContent>
     </Dialog>

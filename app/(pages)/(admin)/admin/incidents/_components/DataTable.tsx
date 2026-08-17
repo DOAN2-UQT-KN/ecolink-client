@@ -284,46 +284,47 @@ export function DataTable() {
         key: COLUMN_KEYS.ACTION,
         title: t('Action'),
         className: 'min-w-[160px]',
-        render: (_, record) => (
-          <div
-            className="flex items-center gap-2"
-            onClick={(e) => e.stopPropagation()}
-            onPointerDown={(e) => e.stopPropagation()}
-            role="presentation"
-          >
-            <PreviewIncidentPopover
-              incident={record}
-              theme={isDark ? 'dark' : 'light'}
-              trigger={
-                <button
-                  type="button"
-                  className={cn(
-                    'cursor-pointer rounded-md border px-1.5 py-1.5 text-xs font-medium transition-colors duration-200',
-                    isDark
-                      ? 'border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-blue-300'
-                      : 'border-zinc-300 text-zinc-700 hover:bg-zinc-100 hover:text-blue-700',
-                  )}
-                >
-                  <TbScanEye className="size-5" />
-                </button>
-              }
-            />
-            {record.status === STATUS.PENDING ? (
-              <VerifyIncidentConfirm
-                incidentId={record.id}
-                incidentTitle={record.title || t('Untitled Incident')}
-                theme={isDark ? 'dark' : 'light'}
-              />
-            ) : record.status !== STATUS.INACTIVE ? (
-              <VerifyIncidentConfirm
-                mode="ban"
-                incidentId={record.id}
-                incidentTitle={record.title || t('Untitled Incident')}
-                theme={isDark ? 'dark' : 'light'}
-              />
-            ) : null}
-          </div>
-        ),
+        render: (_, record) => {
+          const theme = isDark ? 'dark' : 'light';
+          const isInactive = record.status === STATUS.INACTIVE;
+
+          return (
+            <div
+              className="flex items-center gap-2"
+              onClick={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+              role="presentation"
+            >
+              {isInactive ? null : (
+                <>
+                  <PreviewIncidentPopover
+                    incident={record}
+                    theme={theme}
+                    trigger={
+                      <button
+                        type="button"
+                        className={cn(
+                          'cursor-pointer rounded-md border px-1.5 py-1.5 text-xs font-medium transition-colors duration-200',
+                          isDark
+                            ? 'border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-blue-300'
+                            : 'border-zinc-300 text-zinc-700 hover:bg-zinc-100 hover:text-blue-700',
+                        )}
+                      >
+                        <TbScanEye className="size-5" />
+                      </button>
+                    }
+                  />
+                  <VerifyIncidentConfirm
+                    mode={record.status === STATUS.PENDING ? 'verify' : 'ban'}
+                    incidentId={record.id}
+                    incidentTitle={record.title || t('Untitled Incident')}
+                    theme={theme}
+                  />
+                </>
+              )}
+            </div>
+          );
+        },
       },
     ],
     [isDark, pagination.current, pagination.pageSize, t],
