@@ -5,6 +5,7 @@ import { IPaginationResponse } from "@/types/PaginationResponse";
 export interface IGetReportsRequest {
   search?: string;
   status?: number;
+  statuses?: number[];
   waste_type?: string;
   severity_level?: number;
   latitude?: number;

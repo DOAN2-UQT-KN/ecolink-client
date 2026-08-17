@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback, memo } from 'react';
 
 import { Input } from '@/components/ui/input';
 import { useTranslation } from 'react-i18next';
-import { useIncidentSearch } from '../_context/IncidentSearchContext';
+import { useIncidentSearch, INCIDENT_SEARCH_ALL_STATUSES, incidentSearchSelectValue } from '../_context/IncidentSearchContext';
 import { useDebounce } from '@/hooks/useDebounce';
 import { STATUS } from '@/constants/status';
 import {
@@ -76,9 +76,10 @@ export const SearchSidebar = memo(function SearchSidebar() {
 
   const handleStatusChange = useCallback(
     (value: string) => {
-      const status = value === 'all' ? undefined : Number(value);
-      setFilters({ status });
-      updateURL('status', status?.toString());
+      const statuses =
+        value === 'all' ? [...INCIDENT_SEARCH_ALL_STATUSES] : [Number(value)];
+      setFilters({ statuses });
+      updateURL('status', value);
     },
     [setFilters, updateURL],
   );
@@ -132,7 +133,10 @@ export const SearchSidebar = memo(function SearchSidebar() {
         {/* Status Filter */}
         <Field>
           <FieldLabel className="text-foreground-tertiary font-display-3">{t('Status')}</FieldLabel>
-          <Select value={filters.status?.toString() || 'all'} onValueChange={handleStatusChange}>
+          <Select
+            value={incidentSearchSelectValue(filters.statuses)}
+            onValueChange={handleStatusChange}
+          >
             <SelectTrigger className="w-full border-1 border-[rgba(136,122,71,0.5)] focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50 bg-white/50">
               <SelectValue placeholder={t('Select status')} />
             </SelectTrigger>
@@ -200,7 +204,7 @@ export const SearchSidebar = memo(function SearchSidebar() {
   }, [
     t,
     searchValue,
-    filters.status,
+    filters.statuses,
     filters.severity_level,
     handleStatusChange,
     selectedWasteTypes,

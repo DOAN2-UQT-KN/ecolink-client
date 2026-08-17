@@ -82,7 +82,7 @@ export function DataTable() {
               >
                 {record.title || t('Untitled Incident')}
               </span>
-              <div className="mb-0.5 min-w-0 w-[200px]">
+              <div className="mb-0.5 min-w-0 w-[210px]">
                 <RichTextContent
                   value={record.description}
                   className={cn('text-xs', isDark ? 'text-zinc-400' : 'text-muted-foreground')}
@@ -127,7 +127,7 @@ export function DataTable() {
               height={40}
               className="rounded-full"
             />
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col">
               <span className={cn('font-medium', isDark ? 'text-zinc-100' : 'text-zinc-900')}>
                 {record?.user?.name}
               </span>
