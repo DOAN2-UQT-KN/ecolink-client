@@ -28,21 +28,7 @@ export const ReportFooter = memo(function ReportFooter({
       const severity = getSeverityLevel(severityLevel);
       const wasteTypeLabels = getWasteTypeLabels(wasteType, t);
       return [
-      {
-        icon: <PiTrash size={18} />,
-        label: t("Waste Type"),
-        value:
-          wasteTypeLabels.length > 0 ? (
-            <span className="flex flex-col">
-              {wasteTypeLabels.map((label) => (
-                <span key={label}>{label}</span>
-              ))}
-            </span>
-          ) : (
-            t("N/A")
-          ),
-        valueClassName: undefined as string | undefined,
-      },
+      
       {
         icon: <PiClock size={18} />,
         label: t("Condition"),
@@ -57,13 +43,22 @@ export const ReportFooter = memo(function ReportFooter({
         value: severity ? t(severity.label) : t("N/A"),
         valueClassName: severity?.textClass,
       },
+      {
+        icon: <PiTrash size={18} />,
+        label: t("Waste Type"),
+        value:
+          wasteTypeLabels.length > 0
+            ? wasteTypeLabels.join(", ")
+            : t("N/A"),
+        valueClassName: undefined as string | undefined,
+      },
     ];
     },
     [t, wasteType, condition, severityLevel],
   );
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 py-4 border-y border-border/50 my-4">
+    <div className="grid grid-cols-2 gap-3 py-4 border-y border-border/50 my-4">
       {items.map((item, idx) => (
         <div key={idx} className="flex items-center gap-2.5">
           <div className={`p-2 rounded-lg`}>{item.icon}</div>

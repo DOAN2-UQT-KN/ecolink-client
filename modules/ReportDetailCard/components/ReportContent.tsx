@@ -1,7 +1,6 @@
 import React, { memo, useCallback, useMemo } from "react";
 import { Image as AntdImage } from "antd";
 import { HiMapPin } from "react-icons/hi2";
-import { PiImagesSquareFill } from "react-icons/pi";
 import { useTranslation } from "react-i18next";
 import { RichTextContent } from "@/components/ui/RichTextContent";
 import { cn } from "@/libs/utils";
@@ -65,13 +64,18 @@ export const ReportContent = memo(function ReportContent({
       return (
         <AntdImage.PreviewGroup preview={previewProps}>
           <div
-            className="flex flex-row gap-4 overflow-x-auto pb-2 scrollbar-hide h-[200px]"
+            className={cn(
+              "grid grid-cols-2 gap-1 w-full overflow-hidden rounded-lg",
+              images.length <= 2
+                ? "aspect-[16/10]"
+                : "grid-rows-2 aspect-square",
+            )}
             {...imageInteractionShieldProps}
           >
-            {images.slice(0, 3).map((img, idx) => (
+            {images.slice(0, 4).map((img, idx) => (
               <div
                 key={idx}
-                className="relative flex-shrink-0 w-64 aspect-video overflow-hidden rounded-lg bg-muted group cursor-pointer"
+                className="relative h-full overflow-hidden bg-muted group cursor-pointer"
                 {...imageInteractionShieldProps}
               >
                 <AntdImage
@@ -82,26 +86,26 @@ export const ReportContent = memo(function ReportContent({
                   height="100%"
                   preview={previewProps}
                 />
-                {idx === 2 && images.length > 3 && (
-                  <div
-                    className="absolute bottom-1.5 right-3 z-10 flex items-center gap-0.5 rounded-md bg-black/50 px-1.5 py-1.5 text-white pointer-events-none"
-                    aria-label={`${images.length - 3} more images`}
-                  >
-                    <PiImagesSquareFill className="size-3.5 shrink-0" />
-                    <span className="text-[10px] font-medium leading-none tabular-nums">
-                      +{images.length - 3}
-                    </span>
-                  </div>
+                {idx === 3 && images.length > 4 && (
+                  <>
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center backdrop-blur-[2px] pointer-events-none z-10 transition-opacity group-hover:opacity-0">
+                      <span className="text-white font-display-7">
+                        +{images.length - 4}
+                      </span>
+                    </div>
+                    <div className="hidden">
+                      {images.slice(4).map((hiddenImg, hIdx) => (
+                        <AntdImage
+                          key={hIdx}
+                          src={hiddenImg}
+                          preview={previewProps}
+                        />
+                      ))}
+                    </div>
+                  </>
                 )}
               </div>
             ))}
-            {images.length > 3 && (
-              <div className="hidden">
-                {images.slice(3).map((hiddenImg, hIdx) => (
-                  <AntdImage key={hIdx} src={hiddenImg} preview={previewProps} />
-                ))}
-              </div>
-            )}
           </div>
         </AntdImage.PreviewGroup>
       );
