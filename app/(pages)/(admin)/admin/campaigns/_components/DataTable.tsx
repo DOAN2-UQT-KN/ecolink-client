@@ -29,6 +29,7 @@ const COLUMN_KEYS = {
   CREATED_AT: 'created_at',
   ORGANIZATION: 'organization',
   STATUS: 'status',
+  REJECT_REASON: 'reject_reason',
   MEMBERS: 'members',
   ACTION: 'action',
 } as const;
@@ -186,6 +187,25 @@ export const DataTable = memo(function DataTable() {
         ),
       },
       {
+        key: COLUMN_KEYS.REJECT_REASON,
+        title: t('Ban Reason'),
+        className: 'min-w-[160px] max-w-[260px]',
+        render: (_, record) =>
+          record.reject_reason ? (
+            <span
+              className={cn(
+                'line-clamp-2 text-xs',
+                isDark ? 'text-zinc-300' : 'text-zinc-700',
+              )}
+              title={record.reject_reason}
+            >
+              {record.reject_reason}
+            </span>
+          ) : (
+            <span className={cn('text-xs', isDark ? 'text-zinc-600' : 'text-zinc-400')}>—</span>
+          ),
+      },
+      {
         key: COLUMN_KEYS.MEMBERS,
         title: t('Members'),
         className: 'min-w-[110px]',
@@ -223,9 +243,15 @@ export const DataTable = memo(function DataTable() {
               <TbExternalLink className="size-5" />
             </a>
 
-            {[STATUS.PENDING, STATUS.DRAFT, STATUS.NEW].includes(
-              record.status ?? STATUS.INACTIVE,
-            ) ? (
+            {record.status === STATUS.ACTIVE ? (
+              <VerifyCampaignConfirm
+                mode="ban"
+                campaignId={record.id}
+                campaignTitle={localizedTitle(record)}
+                theme={isDark ? 'dark' : 'light'}
+              />
+            ) : record.status !== STATUS.INACTIVE &&
+              record.status !== STATUS.WAITING_CONFIRMED ? (
               <VerifyCampaignConfirm
                 campaignId={record.id}
                 campaignTitle={localizedTitle(record)}

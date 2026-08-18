@@ -12,6 +12,8 @@ export interface ICampaign {
   description_en?: string | null;
 
   status?: number;
+  /** Admin ban reason; `null`/empty when the campaign has not been banned. */
+  reject_reason?: string | null;
   difficulty?: number;
   green_points?: number;
 

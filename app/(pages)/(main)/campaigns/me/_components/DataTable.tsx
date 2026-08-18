@@ -26,6 +26,7 @@ const COLUMN_KEYS = {
   CREATED_AT: 'created_at',
   ORGANIZATION: 'organization',
   STATUS: 'status',
+  BAN_REASON: 'ban_reason',
   MEMBERS: 'members',
   GREEN_POINTS: 'green_points',
 } as const;
@@ -136,6 +137,22 @@ export const DataTable = memo(function DataTable() {
           <StatusTag status={record.status} className="!mx-0 min-w-0 justify-center" />
         ),
         width: 120,
+      },
+      {
+        key: COLUMN_KEYS.BAN_REASON,
+        title: t('Ban Reason'),
+        render: (_, record) =>
+          record.reject_reason ? (
+            <span
+              className="line-clamp-2 text-xs"
+              title={record.reject_reason}
+            >
+              {record.reject_reason}
+            </span>
+          ) : (
+            <span className="text-xs text-zinc-400">—</span>
+          ),
+        width: 180,
       },
       {
         key: COLUMN_KEYS.MEMBERS,

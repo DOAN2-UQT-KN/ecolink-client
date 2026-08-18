@@ -6,11 +6,24 @@ import { useTranslation } from 'react-i18next';
 
 const url = '/api/v1/campaigns';
 
-export const verifyCampaign = async (id: string): Promise<IBaseResponse<unknown>> => {
-  return await requestApi.put<IBaseResponse<unknown>>(`${url}/${id}/verify`, {});
+export type IVerifyCampaignRequest = {
+  id: string;
+  status?: number;
+  reject_reason?: string | null;
 };
 
-export const useVerifyCampaign = (options?: UsePostOptions<IBaseResponse<unknown>, string>) => {
+export const verifyCampaign = async (
+  params: IVerifyCampaignRequest,
+): Promise<IBaseResponse<unknown>> => {
+  const { id, ...rest } = params;
+  return await requestApi.put<IBaseResponse<unknown>>(`${url}/${id}/verify`, {
+    ...rest,
+  });
+};
+
+export const useVerifyCampaign = (
+  options?: UsePostOptions<IBaseResponse<unknown>, IVerifyCampaignRequest>,
+) => {
   const { t } = useTranslation();
   return usePost({
     mutationFn: verifyCampaign,
