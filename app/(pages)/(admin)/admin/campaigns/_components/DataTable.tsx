@@ -15,6 +15,7 @@ import { useCampaignContext } from '../_context/CampaignContext';
 import { VerifyCampaignConfirm } from './VerifyCampaignConfirm';
 import { formattedDate } from '@/utils/formattedDate';
 import { STATUS } from '@/constants/status';
+import { getDifficultyLevel } from '@/constants/difficulty';
 import { FinalizeCampaignCompletionConfirm } from './FinalizeCampaignCompletionConfirm';
 import { RejectCampaignCompletionConfirm } from './RejectCampaignCompletionConfirm';
 import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
@@ -32,21 +33,6 @@ const COLUMN_KEYS = {
   DIFFICULTY: 'difficulty',
   ACTION: 'action',
 } as const;
-
-function difficultyLabel(difficulty?: number | null): string {
-  if (difficulty == null) return '—';
-  if (difficulty <= 1) return 'Easy';
-  if (difficulty === 2) return 'Medium';
-  if (difficulty === 3) return 'Hard';
-  return `Lv ${difficulty}`;
-}
-
-function difficultyColor(difficulty?: number | null, isDark = true): string {
-  if (difficulty == null) return isDark ? 'text-zinc-500' : 'text-zinc-400';
-  if (difficulty <= 1) return 'text-emerald-400';
-  if (difficulty === 2) return 'text-amber-400';
-  return 'text-rose-400';
-}
 
 const OrgCell = memo(function OrgCell({
   org,
@@ -218,13 +204,19 @@ export const DataTable = memo(function DataTable() {
         key: COLUMN_KEYS.DIFFICULTY,
         title: t('Difficulty'),
         className: 'min-w-[100px]',
-        render: (_, record) => (
-          <span
-            className={cn('font-display-1 font-medium', difficultyColor(record.difficulty, isDark))}
-          >
-            {t(difficultyLabel(record.difficulty))}
-          </span>
-        ),
+        render: (_, record) => {
+          const difficulty = getDifficultyLevel(record.difficulty);
+          return (
+            <span
+              className={cn(
+                'font-display-1 font-medium',
+                difficulty?.textClass ?? (isDark ? 'text-zinc-500' : 'text-zinc-400'),
+              )}
+            >
+              {difficulty ? t(difficulty.label) : '—'}
+            </span>
+          );
+        },
       },
       {
         key: COLUMN_KEYS.ACTION,

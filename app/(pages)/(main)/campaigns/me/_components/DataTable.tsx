@@ -9,6 +9,7 @@ import { StatusTag } from '@/components/ui/StatusTag';
 import { RichTextContent } from '@/components/ui/RichTextContent';
 import { formattedDate } from '@/utils/formattedDate';
 import { STATUS } from '@/constants/status';
+import { getDifficultyLevel } from '@/constants/difficulty';
 import { cn } from '@/libs/utils';
 import { Button } from '@/components/client/shared/Button';
 import {
@@ -35,21 +36,6 @@ const COLUMN_KEYS = {
   DIFFICULTY: 'difficulty',
   ACTION: 'action',
 } as const;
-
-function difficultyLabel(difficulty?: number | null): string {
-  if (difficulty == null) return '—';
-  if (difficulty <= 1) return 'Easy';
-  if (difficulty === 2) return 'Medium';
-  if (difficulty === 3) return 'Hard';
-  return `Lv ${difficulty}`;
-}
-
-function difficultyColor(difficulty?: number | null): string {
-  if (difficulty == null) return 'text-zinc-500';
-  if (difficulty <= 1) return 'text-emerald-500';
-  if (difficulty === 2) return 'text-amber-500';
-  return 'text-rose-500';
-}
 
 export const DataTable = memo(function DataTable() {
   const router = useRouter();
@@ -195,11 +181,19 @@ export const DataTable = memo(function DataTable() {
       {
         key: COLUMN_KEYS.DIFFICULTY,
         title: t('Difficulty'),
-        render: (_, record) => (
-          <span className={cn('font-display-1 font-medium', difficultyColor(record.difficulty))}>
-            {t(difficultyLabel(record.difficulty))}
-          </span>
-        ),
+        render: (_, record) => {
+          const difficulty = getDifficultyLevel(record.difficulty);
+          return (
+            <span
+              className={cn(
+                'font-display-1 font-medium',
+                difficulty?.textClass ?? 'text-zinc-500',
+              )}
+            >
+              {difficulty ? t(difficulty.label) : '—'}
+            </span>
+          );
+        },
         width: 110,
       },
       {

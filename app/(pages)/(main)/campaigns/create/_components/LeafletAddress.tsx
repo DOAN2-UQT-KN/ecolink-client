@@ -7,6 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { useCampaign } from "../_hooks/useCampaign";
+import {
+  DETAIL_ADDRESS_MAX_LENGTH,
+  truncateDetailAddress,
+} from "../_services/campaign.service";
 
 const LeafletAddressMap = dynamic(() => import("@/modules/LeafletAddressMap"), {
   ssr: false,
@@ -62,7 +66,7 @@ const LeafletAddress = memo(function LeafletAddress() {
         .join(", ");
 
     return {
-      detailAddress: parsedDetail,
+      detailAddress: truncateDetailAddress(parsedDetail) || undefined,
     };
   }, []);
 
@@ -164,7 +168,15 @@ const LeafletAddress = memo(function LeafletAddress() {
           {t("Detail address")}
         </FieldLabel>
         <Textarea
-          {...register("detail_address")}
+          {...register("detail_address", {
+            maxLength: {
+              value: DETAIL_ADDRESS_MAX_LENGTH,
+              message: t("Detail address must be at most {{max}} characters", {
+                max: DETAIL_ADDRESS_MAX_LENGTH,
+              }),
+            },
+          })}
+          maxLength={DETAIL_ADDRESS_MAX_LENGTH}
           placeholder={t("Street, district, city...")}
           className="border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50"
         />
