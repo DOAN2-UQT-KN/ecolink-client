@@ -10,6 +10,44 @@ import { useGetReports } from "@/apis/incident/getReport";
 import { IIncident } from "@/apis/incident/models/incident";
 import { IGetReportsRequest } from "@/apis/incident/models/getReport";
 import useGetParam from "@/hooks/useGetParam";
+import { STATUS } from "@/constants/status";
+
+export const INCIDENT_SEARCH_ALL_STATUSES = [
+  STATUS.TODO,
+  STATUS.IN_PROGRESS,
+  STATUS.COMPLETED,
+];
+
+export function incidentSearchStatusesFromUrl(
+  urlStatus: string | undefined,
+): number[] {
+  if (!urlStatus) {
+    return [STATUS.TODO];
+  }
+  if (urlStatus === "all") {
+    return [...INCIDENT_SEARCH_ALL_STATUSES];
+  }
+  const parsed = Number(urlStatus);
+  if (Number.isInteger(parsed)) {
+    return [parsed];
+  }
+  return [STATUS.TODO];
+}
+
+export function incidentSearchSelectValue(
+  statuses: number[] | undefined,
+): string {
+  if (!statuses || statuses.length === 0) {
+    return String(STATUS.TODO);
+  }
+  if (
+    statuses.length === INCIDENT_SEARCH_ALL_STATUSES.length &&
+    INCIDENT_SEARCH_ALL_STATUSES.every((status) => statuses.includes(status))
+  ) {
+    return "all";
+  }
+  return String(statuses[0]);
+}
 
 interface IncidentSearchContextType {
   reports: IIncident[];
@@ -37,25 +75,28 @@ export const IncidentSearchProvider = ({ children }: { children: ReactNode }) =>
   });
 
   const urlSearch = useGetParam<string>("search", "string", "");
-  const urlStatus = useGetParam<number>("status", "number", undefined);
+  const urlStatus = useGetParam<string>("status", "string", undefined);
   const urlWasteType = useGetParam<string>("waste_type", "string", "");
+  const urlCondition = useGetParam<string>("condition", "string", "");
   const urlSeverity = useGetParam<number>("severity_level", "number", undefined);
 
   const [filters, setFiltersState] = useState<Partial<IGetReportsRequest>>({
     search: urlSearch,
-    status: urlStatus,
+    statuses: incidentSearchStatusesFromUrl(urlStatus),
     waste_type: urlWasteType,
+    condition: urlCondition,
     severity_level: urlSeverity,
   });
 
   useEffect(() => {
     setFiltersState({
       search: urlSearch,
-      status: urlStatus,
+      statuses: incidentSearchStatusesFromUrl(urlStatus),
       waste_type: urlWasteType,
+      condition: urlCondition,
       severity_level: urlSeverity,
     });
-  }, [urlSearch, urlStatus, urlWasteType, urlSeverity]);
+  }, [urlSearch, urlStatus, urlWasteType, urlCondition, urlSeverity]);
 
   const setFilters = useCallback((newFilters: Partial<IGetReportsRequest>) => {
     setFiltersState((prev) => ({ ...prev, ...newFilters }));
@@ -65,8 +106,9 @@ export const IncidentSearchProvider = ({ children }: { children: ReactNode }) =>
   const resetFilters = useCallback(() => {
     setFiltersState({
       search: "",
-      status: undefined,
+      statuses: [STATUS.TODO],
       waste_type: "",
+      condition: "",
       severity_level: undefined,
     });
     setPagination((prev) => ({ ...prev, current: 1 }));

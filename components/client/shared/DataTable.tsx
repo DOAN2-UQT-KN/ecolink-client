@@ -61,6 +61,15 @@ export function DataTable<T>({
 }: DataTableProps<T>) {
   const { t } = useTranslation();
 
+  const getColumnStyle = (column: ColumnType<T>): React.CSSProperties | undefined => {
+    if (column.width == null) return undefined;
+    return {
+      width: column.width,
+      minWidth: column.width,
+      maxWidth: column.width,
+    };
+  };
+
   const getRowKey = (record: T, index: number) => {
     if (typeof rowKey === "function") return rowKey(record);
     if (rowKey) return (record[rowKey] as unknown) as string;
@@ -99,7 +108,7 @@ export function DataTable<T>({
                       "h-12 px-4 display-1 font-semibold capitalize text-foreground-secondary font-display-1",
                       column.className,
                     )}
-                    style={{ width: column.width }}
+                    style={getColumnStyle(column)}
                   >
                     {typeof column.title === "string"
                       ? t(column.title)
@@ -117,6 +126,7 @@ export function DataTable<T>({
                       <TableCell
                         key={column.key}
                         className={cn("px-4 py-3", column.className)}
+                        style={getColumnStyle(column)}
                       >
                         <Skeleton className="h-4 w-full" />
                       </TableCell>
@@ -157,6 +167,7 @@ export function DataTable<T>({
                       <TableCell
                         key={column.key}
                         className={cn("px-4 py-3 text-sm", column.className)}
+                        style={getColumnStyle(column)}
                       >
                         {column.render
                           ? column.render(

@@ -42,10 +42,10 @@ const ReportDetailCard = memo(function ReportDetailCard({
     return (
       <article
         className={cn(
-          "flex flex-col w-full mx-auto border-1 border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5 overflow-hidden transition-all duration-300",
-          !isExpanded && "max-w-2xl hover:shadow-md cursor-pointer",
+          "flex flex-col mx-auto border-1 border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5 overflow-hidden transition-all duration-300",
+          !isExpanded && "w-full max-w-2xl hover:shadow-md cursor-pointer",
           isExpanded &&
-            "max-w-none border-none shadow-none bg-transparent h-full",
+            "w-fit max-w-full border-none shadow-none bg-transparent h-full",
           className,
         )}
       >
@@ -75,10 +75,8 @@ const ReportDetailCard = memo(function ReportDetailCard({
 
           <ReportFooter
             wasteType={incident.waste_type}
-            size={incident.size}
             condition={incident.condition}
-            pollutionLevel={incident.severity_level}
-            isExpanded={isExpanded}
+            severityLevel={incident.severity_level}
           />
 
           {showAction ? (
@@ -128,7 +126,7 @@ const ReportDetailCard = memo(function ReportDetailCard({
         <div>{content}</div>
       </DialogTrigger>
       <DialogContent
-        className="max-w-[95vw] md:max-w-5xl w-full h-[90vh] md:h-[85vh] p-0 overflow-hidden border-none bg-white/95 backdrop-blur-md"
+        className="w-fit min-w-[min(100%,36rem)] max-w-[95vw] h-[90vh] md:h-[85vh] p-0 overflow-hidden border-none bg-white/95 backdrop-blur-md"
       >
         <ReportDetailCard
           incident={incident}

@@ -13,7 +13,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { FieldError } from "@/components/ui/field";
 import { compressImage } from "@/libs/compressImage";
+import { cn } from "@/libs/utils";
 
 const ImagePreviewItem = memo(function ImagePreviewItem({
   image,
@@ -80,10 +82,18 @@ const ImagePreviewItem = memo(function ImagePreviewItem({
 
 const FileUpload = memo(function FileUpload() {
   const { t } = useTranslation();
-  const { watch, setValue } = useFormContext<IncidentFormValues>();
+  const { watch, setValue, register, formState: { errors } } = useFormContext<IncidentFormValues>();
   const imageStrings = watch("imageStrings") || [];
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [compressing, setCompressing] = useState(false);
+
+  useEffect(() => {
+    register("imageStrings", {
+      validate: (value) =>
+        (Array.isArray(value) && value.length > 0) ||
+        t("At least one image is required"),
+    });
+  }, [register, t]);
 
   const handleFileChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -112,7 +122,10 @@ const FileUpload = memo(function FileUpload() {
 
       try {
         const newImages = await Promise.all(compressionPromises);
-        setValue("imageStrings", [...imageStrings, ...newImages]);
+        setValue("imageStrings", [...imageStrings, ...newImages], {
+          shouldDirty: true,
+          shouldValidate: true,
+        });
       } catch (error) {
         console.error("Error compressing files:", error);
         toast.error(t("Failed to compress some images."));
@@ -129,17 +142,28 @@ const FileUpload = memo(function FileUpload() {
   const removeImage = useCallback(
     (index: number) => {
       const updatedImages = imageStrings.filter((_, i) => i !== index);
-      setValue("imageStrings", updatedImages);
+      setValue("imageStrings", updatedImages, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
     },
     [imageStrings, setValue],
   );
 
   const clearAll = useCallback(() => {
-    setValue("imageStrings", []);
+    setValue("imageStrings", [], { shouldDirty: true, shouldValidate: true });
   }, [setValue]);
 
   return (
-    <div className="w-full h-full flex flex-col gap-[30px] px-[30px] py-[35px] border-1 border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5 overflow-y-auto scrollbar-hide">
+    <div
+      id="incident-images"
+      className={cn(
+        "w-full h-full flex flex-col gap-[30px] px-[30px] py-[35px] border-1 rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5 overflow-y-auto scrollbar-hide",
+        errors.imageStrings
+          ? "border-destructive ring-2 ring-destructive/20"
+          : "border-[rgba(136,122,71,0.5)]",
+      )}
+    >
       <input
         type="file"
         ref={fileInputRef}
@@ -153,7 +177,7 @@ const FileUpload = memo(function FileUpload() {
         <>
           <div className="flex flex-col gap-[8px]">
             <span className="font-display-5 font-semibold text-button-accent">
-              {t("Upload file")}
+              {t("Upload file")} <span className="text-destructive">*</span>
             </span>
             <span className="font-display-2 text-button-accent-hover">
               {t("Choose a image and upload securely to proceed.")}
@@ -238,6 +262,7 @@ const FileUpload = memo(function FileUpload() {
           </span>
         </div>
       )}
+      <FieldError errors={[errors.imageStrings]} />
     </div>
   );
 });

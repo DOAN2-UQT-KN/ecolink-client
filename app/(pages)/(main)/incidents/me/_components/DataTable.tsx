@@ -22,6 +22,12 @@ import { StatusTag } from "@/components/ui/StatusTag";
 import { RichTextContent } from "@/components/ui/RichTextContent";
 import FormFilter from "./FormFilter";
 import { formattedDate } from "@/utils/formattedDate";
+import { STATUS } from "@/constants/status";
+import {
+  ConditionCell,
+  SeverityCell,
+  WasteTypeCell,
+} from "@/modules/ReportGeneralInformation";
 
 const defaultPagination = { current: 1, pageSize: 10 };
 
@@ -85,6 +91,25 @@ const DataTableComponent = memo(function DataTableComponent() {
         width: 300,
       },
       {
+        title: t("Severity"),
+        key: "severity_level",
+        render: (_, record) => <SeverityCell value={record.severity_level} />,
+        width: 130,
+      },
+      {
+        title: t("Condition"),
+        key: "condition",
+        render: (_, record) => <ConditionCell value={record.condition} />,
+        width: 180,
+      },
+      {
+        title: t("Waste Type"),
+        key: "waste_type",
+        render: (_, record) => <WasteTypeCell value={record.waste_type} />,
+        width: 250,
+        className: "whitespace-normal align-top",
+      },
+      {
         title: t("Created At"),
         dataIndex: "created_at",
         key: "created_at",
@@ -145,29 +170,61 @@ const DataTableComponent = memo(function DataTableComponent() {
         title: t("Status"),
         dataIndex: "status",
         key: "status",
-        render: (status) => <StatusTag status={status} className="!mx-0 min-w-0 justify-center" />,
+        render: (status) => (
+          <StatusTag
+            status={status}
+            className="!mx-0 min-w-0 justify-center"
+            label={status === STATUS.INACTIVE ? t("Banned") : undefined}
+          />
+        ),
         width: 120,
         align: "center",
       },
       {
         title: t("Handled by"),
         key: "handledBy",
-        render: () => (
-          <div className="flex items-center gap-2.5">
-            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 overflow-hidden">
-              <User className="h-4 w-4 text-primary" />
+        render: (_, record) => {
+          const handledBy = record.handled_by;
+          return handledBy ?  (
+            <div className="flex items-center gap-2.5">
+              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 overflow-hidden">
+                {handledBy?.logo_url ? (
+                  <Image
+                    src={handledBy.logo_url}
+                    alt={handledBy.name || t("Handled by")}
+                    width={32}
+                    height={32}
+                    className="h-8 w-8 object-cover"
+                  />
+                ) : (
+                  <User className="h-4 w-4 text-primary" />
+                )}
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs font-semibold uppercase">
+                  {handledBy?.name || "—"}
+                </span>
+                <span className="text-[10px] text-muted-foreground">
+                  {handledBy ? t("Admin Organization") : "—"}
+                </span>
+              </div>
             </div>
-            <div className="flex flex-col">
-              <span className="text-xs font-semibold uppercase">
-                {t("EcoLink Team")}
-              </span>
-              <span className="text-[10px] text-muted-foreground">
-                {t("Admin Organization")}
-              </span>
-            </div>
-          </div>
-        ),
+          ) : <></>;
+        },
         width: 180,
+      },
+      {
+        title: t("Ban Reason"),
+        key: "reject_reason",
+        render: (_, record) => {
+          const reason = record.reject_reason?.trim();
+          return (
+            <span className="text-xs text-muted-foreground whitespace-pre-wrap break-words line-clamp-3">
+              {reason || "—"}
+            </span>
+          );
+        },
+        width: 220,
       },
       {
         title: t("Action"),
@@ -218,6 +275,7 @@ const DataTableComponent = memo(function DataTableComponent() {
 
   const handleRowClick = useCallback(
     (record: IIncident) => {
+      if (record.status === STATUS.INACTIVE) return;
       router.push(`/incidents/${record.id}`);
     },
     [router],

@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback, memo } from 'react';
 
 import { Input } from '@/components/ui/input';
 import { useTranslation } from 'react-i18next';
-import { useIncidentSearch } from '../_context/IncidentSearchContext';
+import { useIncidentSearch, INCIDENT_SEARCH_ALL_STATUSES, incidentSearchSelectValue } from '../_context/IncidentSearchContext';
 import { useDebounce } from '@/hooks/useDebounce';
 import { STATUS } from '@/constants/status';
 import {
@@ -17,6 +17,7 @@ import { Button } from '@/components/client/shared/Button';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { TbZoomReset, TbZoom } from 'react-icons/tb';
 import { useRouter, usePathname, useSearchParams } from '@/libs/router';
+import { SEVERITY_LEVEL } from '@/constants/severity';
 
 const wasteTypeOptions = [
   { label: 'Household waste', value: 'household' },
@@ -25,11 +26,16 @@ const wasteTypeOptions = [
   { label: 'Hazardous waste', value: 'hazardous' },
 ];
 
-const severityOptions = [
-  { label: 'Small', value: '1' },
-  { label: 'Medium', value: '2' },
-  { label: 'Large', value: '3' },
+const conditionOptions = [
+  { label: 'Newly-appeared', value: 'newly-appeared' },
+  { label: 'Long-standing', value: 'long-standing' },
+  { label: 'Previously cleaned but reappeared', value: 'reappeared' },
 ];
+
+const severityOptions = ([1, 2, 3, 4, 5] as const).map((value) => ({
+  label: SEVERITY_LEVEL[value].label,
+  value: String(value),
+}));
 
 const statusOptions = [
   { label: 'To do', value: STATUS.TODO.toString() },
@@ -76,9 +82,10 @@ export const SearchSidebar = memo(function SearchSidebar() {
 
   const handleStatusChange = useCallback(
     (value: string) => {
-      const status = value === 'all' ? undefined : Number(value);
-      setFilters({ status });
-      updateURL('status', status?.toString());
+      const statuses =
+        value === 'all' ? [...INCIDENT_SEARCH_ALL_STATUSES] : [Number(value)];
+      setFilters({ statuses });
+      updateURL('status', value);
     },
     [setFilters, updateURL],
   );
@@ -88,6 +95,15 @@ export const SearchSidebar = memo(function SearchSidebar() {
       const wasteType = values.join(',');
       setFilters({ waste_type: wasteType });
       updateURL('waste_type', wasteType);
+    },
+    [setFilters, updateURL],
+  );
+
+  const handleConditionChange = useCallback(
+    (value: string) => {
+      const condition = value === 'all' ? undefined : value;
+      setFilters({ condition });
+      updateURL('condition', condition);
     },
     [setFilters, updateURL],
   );
@@ -132,7 +148,10 @@ export const SearchSidebar = memo(function SearchSidebar() {
         {/* Status Filter */}
         <Field>
           <FieldLabel className="text-foreground-tertiary font-display-3">{t('Status')}</FieldLabel>
-          <Select value={filters.status?.toString() || 'all'} onValueChange={handleStatusChange}>
+          <Select
+            value={incidentSearchSelectValue(filters.statuses)}
+            onValueChange={handleStatusChange}
+          >
             <SelectTrigger className="w-full border-1 border-[rgba(136,122,71,0.5)] focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50 bg-white/50">
               <SelectValue placeholder={t('Select status')} />
             </SelectTrigger>
@@ -161,6 +180,29 @@ export const SearchSidebar = memo(function SearchSidebar() {
           />
         </Field>
 
+        {/* Condition Filter */}
+        <Field>
+          <FieldLabel className="text-foreground-tertiary font-display-3">
+            {t('Condition')}
+          </FieldLabel>
+          <Select
+            value={filters.condition || 'all'}
+            onValueChange={handleConditionChange}
+          >
+            <SelectTrigger className="w-full border-1 border-[rgba(136,122,71,0.5)] focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50 bg-white/50">
+              <SelectValue placeholder={t('Select condition')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('All Conditions')}</SelectItem>
+              {conditionOptions.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {t(opt.label)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+
         {/* Severity Filter */}
         <Field>
           <FieldLabel className="text-foreground-tertiary font-display-3">
@@ -185,7 +227,7 @@ export const SearchSidebar = memo(function SearchSidebar() {
         </Field>
 
         {/* Reset Button */}
-        <Button
+        {/* <Button
           variant="outlined-brown"
           className="w-full h-11   border-dashed border-2 hover:border-primary hover:text-primary transition-all gap-2"
           onClick={resetFilters}
@@ -194,26 +236,28 @@ export const SearchSidebar = memo(function SearchSidebar() {
             <TbZoomReset size={16} />
             {t('Reset Filters')}
           </div>
-        </Button>
+        </Button> */}
       </div>
     );
   }, [
     t,
     searchValue,
-    filters.status,
+    filters.statuses,
+    filters.condition,
     filters.severity_level,
     handleStatusChange,
     selectedWasteTypes,
     handleWasteTypeChange,
+    handleConditionChange,
     handleSeverityChange,
     resetFilters,
   ]);
 
   return (
-    <aside className="w-full mt-[100px] lg:w-[320px] lg:sticky top-0 z-[40] space-y-2 p-6 border border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5 h-fit">
-      <div>
+    <aside className="w-full lg:w-[320px] lg:sticky lg:self-start lg:top-[148px] lg:max-h-[calc(100vh-168px)] lg:overflow-y-auto z-[40] space-y-2 p-6 border border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5 h-fit">
+      {/* <div>
         <h3 className="font-display-3 text-button-accent ">{t('Search Incidents')}</h3>
-      </div>
+      </div> */}
 
       {renderFormFields()}
     </aside>

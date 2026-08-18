@@ -8,14 +8,8 @@ import {
 } from "@/components/client/shared/Breadcrumbs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from "react-i18next";
-import { Inbox } from "lucide-react";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
+import { STATUS } from "@/constants/status";
+import NotFound from "@/src/pages/NotFound";
 
 const IncidentDetailPage = () => {
   const { id } = useParams() as { id: string };
@@ -66,25 +60,8 @@ const IncidentDetailPage = () => {
     );
   }
 
-  if (isError || !incident) {
-    return (
-      <div className="">
-        <Breadcrumbs breadcrumbs={breadcrumbs} />
-        <div className="flex justify-center pt-20">
-          <Empty>
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <Inbox className="h-12 w-12 text-muted-foreground" />
-              </EmptyMedia>
-              <EmptyTitle>{t("Incident not found")}</EmptyTitle>
-              <EmptyDescription>
-                {t("We couldn't find the incident you were looking for.")}
-              </EmptyDescription>
-            </EmptyHeader>
-          </Empty>
-        </div>
-      </div>
-    );
+  if (isError || !incident || incident.status === STATUS.INACTIVE) {
+    return <NotFound />;
   }
 
   return (

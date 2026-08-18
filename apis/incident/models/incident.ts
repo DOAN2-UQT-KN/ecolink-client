@@ -21,6 +21,16 @@ export interface IMediaFiles {
   created_at: string;
 }
 
+/** Organization handling the report (`report.campaign_id` → campaign → organization). */
+export interface IIncidentHandledBy {
+  id: string;
+  name: string;
+  slug: string;
+  logo_url: string;
+  background_url: string | null;
+  contact_email: string | null;
+}
+
 export interface IIncident {
   id: string;
   user_id: string | null;
@@ -31,15 +41,18 @@ export interface IIncident {
   description_vi?: string | null;
   description_en?: string | null;
   waste_type: string | null;
+  condition?: string | null;
   severity_level: number | null;
   latitude: number | null;
   longitude: number | null;
   status: number | null;
   ai_verified: boolean;
+  /** Admin verification; only admins can set true. */
+  is_verify?: boolean;
+  /** Admin ban reason; `null`/empty when the report has not been banned. */
+  reject_reason?: string | null;
   /** AI recommendation in markdown (nullable until analysis completes). */
   ai_recommendation?: string | null;
-  size?: string;
-  condition?: string;
   created_at: string;
   updated_at: string;
   distance: number;
@@ -53,4 +66,5 @@ export interface IIncident {
     upvote_count?: number;
   };
   saved?: boolean;
+  handled_by?: IIncidentHandledBy | null;
 }

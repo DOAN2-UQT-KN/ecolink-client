@@ -70,6 +70,11 @@ const items = [
     textColor: '#fff',
     links: [
       {
+        label: 'Join Organizations',
+        ariaLabel: 'Join Organizations',
+        href: '/organizations',
+      },
+      {
         label: 'Join Campaigns',
         ariaLabel: 'Join Environmental Campaigns',
         href: '/campaigns',
@@ -78,11 +83,6 @@ const items = [
         label: 'Report Trash',
         ariaLabel: 'Report Trash',
         href: '/incidents',
-      },
-      {
-        label: 'Join Organizations',
-        ariaLabel: 'Join Organizations',
-        href: '/organizations',
       },
     ],
   },

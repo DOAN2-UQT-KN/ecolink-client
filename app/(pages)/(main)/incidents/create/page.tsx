@@ -13,6 +13,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { useCallback, useEffect, useState } from "react";
 import { cn } from "@/libs/utils";
+import { toast } from "sonner";
 
 const breadcrumbs: BreadcrumbItemProps[] = [
   { label: "Home", path: "/", type: "link" },
@@ -34,8 +35,24 @@ function CreateIncidentContent() {
   }, []);
 
   const handleCreate = useCallback(() => {
-    form.handleSubmit(onSubmit)();
-  }, [form, onSubmit]);
+    form.handleSubmit(onSubmit, (validationErrors) => {
+      toast.error(t("Please complete the required fields"));
+      const targetId =
+        validationErrors.detailAddress ||
+        validationErrors.latitude ||
+        validationErrors.longitude
+          ? "incident-address"
+          : validationErrors.imageStrings
+            ? "incident-images"
+            : undefined;
+      if (targetId) {
+        document.getElementById(targetId)?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }
+    })();
+  }, [form, onSubmit, t]);
 
   return (
     <div className="w-full h-full">
@@ -53,7 +70,7 @@ function CreateIncidentContent() {
           flex flex-col gap-[30px] w-full h-full pt-5
         `}
       >
-        <div className="md:grid md:grid-cols-2 md:gap-[30px] w-full h-full">
+        <div className="md:grid md:grid-cols-2 flex flex-col gap-[30px] w-full h-full">
           <Information />
           <Address />
         </div>

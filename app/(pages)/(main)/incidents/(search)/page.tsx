@@ -32,7 +32,7 @@ const IncidentSearchPage = memo(function IncidentSearchPage() {
         {/* Breadcrumbs Section - Sticky with dynamic padding to cover transparent header gap only when scrolling */}
         <div
           className={cn(
-            'sticky top-0 z-[45] bg-background-primary pb-4 -mx-4 px-4 lg:-mx-20 lg:px-20 mb-8g',
+            'sticky top-0 z-[45] bg-background-primary pb-4 -mx-4 px-4 lg:-mx-20 lg:px-20 mb-8',
             isScrolled ? 'pt-[100px]' : 'pt-0',
           )}
         >
@@ -44,7 +44,9 @@ const IncidentSearchPage = memo(function IncidentSearchPage() {
           <SearchSidebar />
 
           {/* Search Results List on the right */}
-          <IncidentList />
+          <div className="min-w-0 flex-1 w-full">
+            <IncidentList />
+          </div>
         </div>
       </div>
     </IncidentSearchProvider>

@@ -5,6 +5,7 @@ export interface IUpdateReportRequest {
   title: string;
   description: string;
   waste_type: string;
+  condition?: string;
   severity_level: number;
   latitude: number;
   longitude: number;

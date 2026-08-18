@@ -2,10 +2,9 @@ import { memo, useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { HiMapPin } from 'react-icons/hi2';
 import {
-  PiArrowsOutSimple,
-  PiSealWarningLight,
   PiSkullLight,
   PiTrash,
+  PiClock,
 } from "react-icons/pi";
 import { TbStarFilled } from "react-icons/tb";
 
@@ -16,6 +15,14 @@ import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { cn } from '@/libs/utils';
 import RichTextContent from '@/components/ui/RichTextContent';
 import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
+import { getSeverityLevel } from '@/constants/severity';
+import { getWasteTypeLabels } from '@/modules/ReportGeneralInformation';
+
+const CONDITION_LABELS: Record<string, string> = {
+  'newly-appeared': 'Newly-appeared',
+  'long-standing': 'Long-standing',
+  reappeared: 'Previously cleaned but reappeared',
+};
 
 interface ReportSummaryCardProps {
   incident: IIncident;
@@ -46,29 +53,42 @@ const ReportSummaryCard = memo(function ReportSummaryCard({
   );
 
   const footerItems = useMemo(
-    () => [
+    () => {
+      const severity = getSeverityLevel(incident.severity_level);
+      const wasteTypeLabels = getWasteTypeLabels(incident.waste_type, t);
+      return [
       {
         icon: <PiTrash size={18} />,
         label: t('Waste Type'),
-        value: incident.waste_type || t('N/A'),
+        value:
+          wasteTypeLabels.length > 0 ? (
+            <span className="flex flex-col">
+              {wasteTypeLabels.map((label) => (
+                <span key={label}>{label}</span>
+              ))}
+            </span>
+          ) : (
+            t('N/A')
+          ),
+        valueClassName: undefined as string | undefined,
       },
       {
-        icon: <PiArrowsOutSimple size={18} />,
-        label: t('Size'),
-        value: incident.size || t('N/A'),
-      },
-      {
-        icon: <PiSealWarningLight size={18} />,
+        icon: <PiClock size={18} />,
         label: t('Condition'),
-        value: incident.condition || t('N/A'),
+        value: incident.condition
+          ? t(CONDITION_LABELS[incident.condition] || incident.condition)
+          : t('N/A'),
+        valueClassName: undefined as string | undefined,
       },
       {
         icon: <PiSkullLight size={18} />,
-        label: t('Pollution Level'),
-        value: incident.severity_level || t('N/A'),
+        label: t('Severity'),
+        value: severity ? t(severity.label) : t('N/A'),
+        valueClassName: severity?.textClass,
       },
-    ],
-    [incident.condition, incident.severity_level, incident.size, incident.waste_type, t],
+    ];
+    },
+    [incident.condition, incident.severity_level, incident.waste_type, t],
   );
 
   const toggleSelected = useCallback(() => {
@@ -125,7 +145,7 @@ const ReportSummaryCard = memo(function ReportSummaryCard({
             {/* <p className="font-display-1 text-foreground-secondary leading-relaxed line-clamp-2 h-[40px] overflow-y-auto scrollbar-hide">
               {incident.description || t('No description provided.')}
             </p> */}
-            <div className="grid grid-cols-2 grid-rows-2 gap-1 py-2 border-y border-border/50">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 py-2 border-y border-border/50">
               {footerItems.map((item) => (
                 <div key={item.label} className="flex items-center gap-1 ">
                   <div className="p-2 rounded-lg">{item.icon}</div>
@@ -133,7 +153,11 @@ const ReportSummaryCard = memo(function ReportSummaryCard({
                     <span className="text-[10px] uppercase tracking-wider font-bold text-foreground-tertiary">
                       {item.label}
                     </span>
-                    <span className="font-display-1 truncate text-foreground-secondary capitalize">
+                    <span
+                      className={`font-display-1 whitespace-normal ${
+                        item.valueClassName || 'text-foreground-secondary'
+                      }`}
+                    >
                       {item.value}
                     </span>
                   </div>

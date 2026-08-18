@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import Image from '@/components/ui/AppImage';
 import { Image as AntdImage } from 'antd';
 import { useTranslation } from 'react-i18next';
@@ -17,15 +17,27 @@ import { cn } from '@/libs/utils';
 import { useIncidentContext } from '../_context/IncidentContext';
 import { VerifyIncidentConfirm } from './VerifyIncidentConfirm';
 import { TbScanEye } from 'react-icons/tb';
+import { User } from 'lucide-react';
 import { formattedDate } from '@/utils/formattedDate';
 import defaultAvatar from '@/public/default-avatar.png';
+import { STATUS } from '@/constants/status';
+import {
+  ConditionCell,
+  SeverityCell,
+  WasteTypeCell,
+} from '@/modules/ReportGeneralInformation';
 
 const COLUMN_KEYS = {
   NO: 'no',
   INCIDENT: 'incident',
+  SEVERITY: 'severity_level',
+  CONDITION: 'condition',
+  WASTE_TYPE: 'waste_type',
   OWNER: 'owner',
   AI_ANALYSIS: 'ai_analysis',
   STATUS: 'status',
+  REJECT_REASON: 'reject_reason',
+  HANDLED_BY: 'handledBy',
   ACTION: 'action',
 } as const;
 
@@ -40,6 +52,11 @@ export function DataTable() {
     useIncidentContext();
   const { theme } = useAdminLayout();
   const isDark = theme === 'dark';
+
+  const handleRowClick = useCallback((record: IIncident) => {
+    if (!record.id || record.status === STATUS.INACTIVE) return;
+    window.open(`/incidents/${record.id}`, '_blank', 'noopener,noreferrer');
+  }, []);
 
   const columns: DataTableColumn<IIncident>[] = useMemo(
     () => [
@@ -56,7 +73,7 @@ export function DataTable() {
       {
         key: COLUMN_KEYS.INCIDENT,
         title: t('Incident'),
-        className: 'sticky left-0 z-20 min-w-[280px]',
+        className: ' min-w-[280px]',
         render: (_, record) => (
           <div className="flex items-center gap-3 py-1">
             <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-border/50 bg-muted">
@@ -80,7 +97,7 @@ export function DataTable() {
               >
                 {record.title || t('Untitled Incident')}
               </span>
-              <div className="mb-0.5 min-w-0 w-[200px]">
+              <div className="mb-0.5 min-w-0 w-[210px]">
                 <RichTextContent
                   value={record.description}
                   className={cn('text-xs', isDark ? 'text-zinc-400' : 'text-muted-foreground')}
@@ -113,6 +130,30 @@ export function DataTable() {
         ),
       },
       {
+        key: COLUMN_KEYS.SEVERITY,
+        title: t('Severity'),
+        className: 'min-w-[120px]',
+        render: (_, record) => (
+          <SeverityCell value={record.severity_level} isDark={isDark} />
+        ),
+      },
+      {
+        key: COLUMN_KEYS.CONDITION,
+        title: t('Condition'),
+        className: 'min-w-[160px]',
+        render: (_, record) => (
+          <ConditionCell value={record.condition} isDark={isDark} />
+        ),
+      },
+      {
+        key: COLUMN_KEYS.WASTE_TYPE,
+        title: t('Waste Type'),
+        className: 'min-w-[200px]',
+        render: (_, record) => (
+          <WasteTypeCell value={record.waste_type} isDark={isDark} />
+        ),
+      },
+      {
         key: COLUMN_KEYS.OWNER,
         title: t('Owner'),
         className: 'min-w-[180px]',
@@ -125,7 +166,7 @@ export function DataTable() {
               height={40}
               className="rounded-full"
             />
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col">
               <span className={cn('font-medium', isDark ? 'text-zinc-100' : 'text-zinc-900')}>
                 {record?.user?.name}
               </span>
@@ -184,39 +225,106 @@ export function DataTable() {
         title: t('Status'),
         className: 'min-w-[120px]',
         render: (_, record) => (
-          <StatusTag status={record.status} className="!mx-0 min-w-0 justify-center" />
+          <StatusTag
+            status={record.status}
+            className="!mx-0 min-w-0 justify-center"
+            label={record.status === STATUS.INACTIVE ? t('Banned') : undefined}
+          />
         ),
+      },
+      {
+        key: COLUMN_KEYS.REJECT_REASON,
+        title: t('Ban Reason'),
+        className: 'min-w-[220px]',
+        render: (_, record) => (
+          <RichTextContent
+            value={record.reject_reason?.trim() ?? ''}
+            className="text-sm text-foreground whitespace-pre-wrap break-words !font-display-1"
+            maxLines={2}
+            showMoreLabel={t('See more')}
+            showLessLabel={t('See less')}
+            emptyFallback={<span className="text-foreground-secondary">—</span>}
+          />
+        ),
+      },
+      {
+        key: COLUMN_KEYS.HANDLED_BY,
+        title: t('Handled by'),
+        className: 'min-w-[180px]',
+        render: (_, record) => {
+          const handledBy = record.handled_by;
+          return handledBy ? (
+            <div className="flex items-center gap-2.5">
+              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 overflow-hidden">
+                {handledBy?.logo_url ? (
+                  <Image
+                    src={handledBy.logo_url}
+                    alt={handledBy.name || t('Handled by')}
+                    width={32}
+                    height={32}
+                    className="h-8 w-8 object-cover"
+                  />
+                ) : (
+                  <User className="h-4 w-4 text-primary" />
+                )}
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs font-semibold uppercase">
+                  {handledBy?.name || '—'}
+                </span>
+                <span className="text-[10px] text-muted-foreground">
+                  {handledBy ? t('Admin Organization') : '—'}
+                </span>
+              </div>
+            </div>
+          ) : <></>;
+        },
       },
       {
         key: COLUMN_KEYS.ACTION,
         title: t('Action'),
         className: 'min-w-[160px]',
-        render: (_, record) => (
-          <div className="flex items-center gap-2">
-            <PreviewIncidentPopover
-              incident={record}
-              theme={isDark ? 'dark' : 'light'}
-              trigger={
-                <button
-                  type="button"
-                  className={cn(
-                    'cursor-pointer rounded-md border px-1.5 py-1.5 text-xs font-medium transition-colors duration-200',
-                    isDark
-                      ? 'border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-blue-300'
-                      : 'border-zinc-300 text-zinc-700 hover:bg-zinc-100 hover:text-blue-700',
-                  )}
-                >
-                  <TbScanEye className="size-5" />
-                </button>
-              }
-            />
-            <VerifyIncidentConfirm
-              incidentId={record.id}
-              incidentTitle={record.title || t('Untitled Incident')}
-              theme={isDark ? 'dark' : 'light'}
-            />
-          </div>
-        ),
+        render: (_, record) => {
+          const theme = isDark ? 'dark' : 'light';
+          const isInactive = record.status === STATUS.INACTIVE;
+
+          return (
+            <div
+              className="flex items-center gap-2"
+              onClick={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+              role="presentation"
+            >
+              {isInactive ? null : (
+                <>
+                  <PreviewIncidentPopover
+                    incident={record}
+                    theme={theme}
+                    trigger={
+                      <button
+                        type="button"
+                        className={cn(
+                          'cursor-pointer rounded-md border px-1.5 py-1.5 text-xs font-medium transition-colors duration-200',
+                          isDark
+                            ? 'border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-blue-300'
+                            : 'border-zinc-300 text-zinc-700 hover:bg-zinc-100 hover:text-blue-700',
+                        )}
+                      >
+                        <TbScanEye className="size-5" />
+                      </button>
+                    }
+                  />
+                  <VerifyIncidentConfirm
+                    mode={record.status === STATUS.PENDING ? 'verify' : 'ban'}
+                    incidentId={record.id}
+                    incidentTitle={record.title || t('Untitled Incident')}
+                    theme={theme}
+                  />
+                </>
+              )}
+            </div>
+          );
+        },
       },
     ],
     [isDark, pagination.current, pagination.pageSize, t],
@@ -230,6 +338,7 @@ export function DataTable() {
       rowKey="id"
       emptyTitle={t('No incidents found')}
       emptyDescription={t('No incidents available for the current filters.')}
+      onRowClick={handleRowClick}
       pagination={{
         page: pagination.current,
         pageSize: pagination.pageSize,

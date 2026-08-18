@@ -5,9 +5,16 @@ import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Field, FieldLabel, FieldError } from '@/components/ui/field';
 import { MultiSelect } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
 import { Controller } from 'react-hook-form';
 import { cn } from '@/libs/utils';
 import RichTextEditor from '@/components/ui/RichTextEditor';
+import {
+  SEVERITY_LEVEL,
+  SEVERITY_MAX,
+  SEVERITY_MIN,
+  getSeverityLevel,
+} from '@/constants/severity';
 
 const wasteTypeOptions = [
   { label: 'Household waste', value: 'household' },
@@ -20,18 +27,6 @@ const conditionOptions = [
   { label: 'Newly-appeared', value: 'newly-appeared' },
   { label: 'Long-standing', value: 'long-standing' },
   { label: 'Previously cleaned but reappeared', value: 'reappeared' },
-];
-
-const pollutionLevelOptions = [
-  { label: 'Odor present / No odor', value: 'odor' },
-  { label: 'Leachate present / No leachate', value: 'leachate' },
-  { label: 'Smoke or fire present / No smoke or fire', value: 'smoke-fire' },
-];
-
-const sizeOptions = [
-  { label: 'Small', value: '1' },
-  { label: 'Medium', value: '2' },
-  { label: 'Large', value: '3' },
 ];
 
 const Information = memo(function Information() {
@@ -59,24 +54,6 @@ const Information = memo(function Information() {
   const translatedConditionOptions = useMemo(
     () =>
       conditionOptions.map((o) => ({
-        ...o,
-        label: t(o.label),
-      })),
-    [t],
-  );
-
-  const translatedPollutionLevelOptions = useMemo(
-    () =>
-      pollutionLevelOptions.map((o) => ({
-        ...o,
-        label: t(o.label),
-      })),
-    [t],
-  );
-
-  const translatedSizeOptions = useMemo(
-    () =>
-      sizeOptions.map((o) => ({
         ...o,
         label: t(o.label),
       })),
@@ -191,68 +168,63 @@ const Information = memo(function Information() {
           />
         </Field>
 
-        {/* Pollution Level — multi-select */}
+        {/* Severity — slider 1–5 */}
         <Field>
           <FieldLabel className="text-foreground-tertiary font-display-3">
-            {t('Pollution level')}
+            {t('Severity')}
           </FieldLabel>
           <Controller
-            name="pollutionLevels"
+            name="severityLevel"
             control={control}
-            defaultValue={[]}
-            render={({ field }) => (
-              <MultiSelect
-                options={translatedPollutionLevelOptions}
-                value={field.value ?? []}
-                onChange={field.onChange}
-                placeholder={t('Select pollution level...')}
-                triggerClassName="border-[rgba(136,122,71,0.5)] focus-visible:ring-[rgba(136,122,71,0.5)]/50 w-full"
-              />
-            )}
-          />
-        </Field>
-
-        {/* Size — single-select radio */}
-        <Field>
-          <FieldLabel className="text-foreground-tertiary font-display-3">{t('Size')}</FieldLabel>
-          <Controller
-            name="size"
-            control={control}
-            render={({ field }) => (
-              <RadioGroup
-                value={field.value}
-                onValueChange={field.onChange}
-                className="flex flex-row gap-4"
-              >
-                {translatedSizeOptions.map((option) => (
-                  <label
-                    key={option.value}
-                    htmlFor={`size-${option.value}`}
-                    className={cn(
-                      'flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer flex-1 justify-center',
-                      field.value === option.value
-                        ? 'bg-button-accent/10 border-button-accent'
-                        : 'bg-white/5 border-white/10 hover:border-white/20',
-                    )}
-                  >
-                    <RadioGroupItem value={option.value} id={`size-${option.value}`} />
-                    <span className="text-sm font-normal flex-1">{option.label}</span>
-                  </label>
-                ))}
-              </RadioGroup>
-            )}
+            render={({ field }) => {
+              const level = field.value ?? SEVERITY_MIN;
+              const severity = getSeverityLevel(level) ?? SEVERITY_LEVEL[SEVERITY_MIN];
+              return (
+                <div className="flex flex-col gap-3 rounded-lg border border-[rgba(136,122,71,0.5)] bg-white/5 px-4 py-3">
+                  <div className="flex items-center justify-center text-sm">
+                    <span className={cn('font-semibold text-center', severity.textClass)}>
+                    {t(severity.label)}
+                    </span>
+                  </div>
+                  <Slider
+                    min={SEVERITY_MIN}
+                    max={SEVERITY_MAX}
+                    step={1}
+                    value={[level]}
+                    onValueChange={(value) => field.onChange(value[0] ?? SEVERITY_MIN)}
+                    aria-label={t('Severity')}
+                    className={severity.sliderClass}
+                  />
+                  <div className="flex justify-between px-0.5">
+                    {([1, 2, 3, 4, 5] as const).map((value) => {
+                      const item = SEVERITY_LEVEL[value];
+                      const selected = value === level;
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          onClick={() => field.onChange(value)}
+                          className={cn(
+                            'flex flex-col items-center gap-0.5 text-[10px] transition-colors',
+                            selected
+                              ? cn('font-semibold', item.textClass)
+                              : 'text-foreground-tertiary',
+                          )}
+                        >
+                          {/* <span>{value}</span> */}
+                          <span className="hidden sm:block">{t(item.label)}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            }}
           />
         </Field>
       </div>
     ),
-    [
-      control,
-      t,
-      translatedConditionOptions,
-      translatedPollutionLevelOptions,
-      translatedSizeOptions,
-      translatedWasteTypeOptions,
-    ],
+    [control, t, translatedConditionOptions, translatedWasteTypeOptions],
   );
 
   return (

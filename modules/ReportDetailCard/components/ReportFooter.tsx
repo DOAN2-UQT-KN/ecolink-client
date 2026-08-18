@@ -1,63 +1,64 @@
 import React, { memo, useMemo } from "react";
-import {
-  PiTrash,
-  PiArrowsOutSimple,
-  PiSealWarningLight,
-  PiSkullLight,
-} from "react-icons/pi";
+import { PiTrash, PiSkullLight, PiClock } from "react-icons/pi";
 import { useTranslation } from "react-i18next";
-import { cn } from "@/libs/utils";
+import { getSeverityLevel } from "@/constants/severity";
+import { getWasteTypeLabels } from "@/modules/ReportGeneralInformation";
+
+const CONDITION_LABELS: Record<string, string> = {
+  "newly-appeared": "Newly-appeared",
+  "long-standing": "Long-standing",
+  reappeared: "Previously cleaned but reappeared",
+};
 
 interface ReportFooterProps {
   wasteType?: string | null;
-  size?: string | number | null;
   condition?: string | null;
-  pollutionLevel?: string | number | null;
-  isExpanded?: boolean;
+  severityLevel?: string | number | null;
 }
 
 export const ReportFooter = memo(function ReportFooter({
   wasteType,
-  size,
   condition,
-  pollutionLevel,
-  isExpanded = false,
+  severityLevel,
 }: ReportFooterProps) {
   const { t } = useTranslation();
 
   const items = useMemo(
-    () => [
+    () => {
+      const severity = getSeverityLevel(severityLevel);
+      const wasteTypeLabels = getWasteTypeLabels(wasteType, t);
+      return [
+      
       {
-        icon: <PiTrash size={18} />,
-        label: t("Waste Type"),
-        value: wasteType || t("N/A"),
-      },
-      {
-        icon: <PiArrowsOutSimple size={18} />,
-        label: t("Size"),
-        value: size || t("N/A"),
-      },
-      {
-        icon: <PiSealWarningLight size={18} />,
+        icon: <PiClock size={18} />,
         label: t("Condition"),
-        value: condition || t("N/A"),
+        value: condition
+          ? t(CONDITION_LABELS[condition] || condition)
+          : t("N/A"),
+        valueClassName: undefined as string | undefined,
       },
       {
         icon: <PiSkullLight size={18} />,
-        label: t("Pollution Level"),
-        value: pollutionLevel || t("N/A"),
+        label: t("Severity"),
+        value: severity ? t(severity.label) : t("N/A"),
+        valueClassName: severity?.textClass,
       },
-    ],
-    [t, wasteType, size, condition, pollutionLevel],
+      {
+        icon: <PiTrash size={18} />,
+        label: t("Waste Type"),
+        value:
+          wasteTypeLabels.length > 0
+            ? wasteTypeLabels.join(", ")
+            : t("N/A"),
+        valueClassName: undefined as string | undefined,
+      },
+    ];
+    },
+    [t, wasteType, condition, severityLevel],
   );
 
   return (
-    <div
-      className={cn(
-        "grid gap-3 py-4 border-y border-border/50 my-4",
-        isExpanded ? "grid-cols-2 md:grid-cols-4" : "grid-cols-2",
-      )}
-    >
+    <div className="grid grid-cols-2 gap-3 py-4 border-y border-border/50 my-4">
       {items.map((item, idx) => (
         <div key={idx} className="flex items-center gap-2.5">
           <div className={`p-2 rounded-lg`}>{item.icon}</div>
@@ -65,7 +66,11 @@ export const ReportFooter = memo(function ReportFooter({
             <span className="text-[10px] uppercase tracking-wider font-bold text-foreground-tertiary">
               {item.label}
             </span>
-            <span className="font-display-1 truncate text-foreground-secondary capitalize">
+            <span
+              className={`font-display-1 whitespace-normal ${
+                item.valueClassName || "text-foreground-secondary"
+              }`}
+            >
               {item.value}
             </span>
           </div>
@@ -74,4 +79,3 @@ export const ReportFooter = memo(function ReportFooter({
     </div>
   );
 });
-
