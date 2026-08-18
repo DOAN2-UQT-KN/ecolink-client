@@ -149,6 +149,7 @@ export const DataTable = memo(function DataTable() {
         key: COLUMN_KEYS.GENERAL_INFORMATION,
         title: t('General information'),
         className: 'min-w-[280px] max-w-[420px]',
+        sticky: 'left',
         render: (_, record) => (
           <GeneralInformationCell
             campaign={record}
