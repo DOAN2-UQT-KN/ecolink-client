@@ -1,11 +1,12 @@
 import { memo, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Building2 } from 'lucide-react';
 import { TbExternalLink } from 'react-icons/tb';
 
 import type { ICampaign } from '@/apis/campaign/models/campaign';
 import { useAdminLayout } from '@/app/(pages)/(admin)/_context/AdminLayoutContext';
 import { StatusTag } from '@/components/ui/StatusTag';
-import { RichTextContent } from '@/components/ui/RichTextContent';
+import Image from '@/components/ui/AppImage';
 import {
   DataTable as SharedDataTable,
   type DataTableColumn,
@@ -20,19 +21,73 @@ import { FinalizeCampaignCompletionConfirm } from './FinalizeCampaignCompletionC
 import { RejectCampaignCompletionConfirm } from './RejectCampaignCompletionConfirm';
 import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
 
+const DEFAULT_BANNER = '/banner-default.jpg';
+
 const COLUMN_KEYS = {
   NO: 'no',
-  TITLE: 'title',
-  DESCRIPTION: 'description',
+  GENERAL_INFORMATION: 'general_information',
   CREATED_AT: 'created_at',
-  DATE_RANGE: 'date_range',
   ORGANIZATION: 'organization',
   STATUS: 'status',
   MEMBERS: 'members',
-  GREEN_POINTS: 'green_points',
-  DIFFICULTY: 'difficulty',
   ACTION: 'action',
 } as const;
+
+const GeneralInformationCell = memo(function GeneralInformationCell({
+  campaign,
+  title,
+  isDark,
+}: {
+  campaign: ICampaign;
+  title: string;
+  isDark: boolean;
+}) {
+  const { t } = useTranslation();
+  const bannerUrl = campaign.banner?.trim() ? campaign.banner : DEFAULT_BANNER;
+  const difficulty = getDifficultyLevel(campaign.difficulty);
+  const duration = `${formattedDate(campaign.start_date ?? undefined)} - ${formattedDate(campaign.end_date ?? undefined)}`;
+
+  return (
+    <div className="flex items-start gap-3 min-w-[280px] max-w-[420px]">
+      <Image
+        src={bannerUrl}
+        alt={title}
+        width={72}
+        height={48}
+        className={cn(
+          'h-12 w-[72px] shrink-0 rounded-md object-cover ring-1',
+          isDark ? 'ring-zinc-700' : 'ring-zinc-200',
+        )}
+      />
+      <div className="flex min-w-0 flex-col gap-0.5">
+        <span
+          className={cn(
+            'font-medium line-clamp-2',
+            isDark ? 'text-zinc-100' : 'text-zinc-900',
+          )}
+        >
+          {title}
+        </span>
+        <span
+          className={cn(
+            'text-xs tabular-nums',
+            isDark ? 'text-zinc-400' : 'text-zinc-600',
+          )}
+        >
+          {duration}
+        </span>
+        <span
+          className={cn(
+            'font-display-1 text-xs font-medium',
+            difficulty?.textClass ?? (isDark ? 'text-zinc-500' : 'text-zinc-500'),
+          )}
+        >
+          {difficulty ? t(difficulty.label) : '—'}
+        </span>
+      </div>
+    </div>
+  );
+});
 
 const OrgCell = memo(function OrgCell({
   org,
@@ -41,12 +96,6 @@ const OrgCell = memo(function OrgCell({
   org?: ICampaign['organization'];
   isDark: boolean;
 }) {
-  if (!org) {
-    return <span className={isDark ? 'text-zinc-500' : 'text-zinc-400'}>—</span>;
-  }
-
-  const fallback = org.name?.slice(0, 2).toUpperCase() || '?';
-
   return (
     <div className="flex items-center gap-2 min-w-[160px]">
       <div
@@ -57,21 +106,19 @@ const OrgCell = memo(function OrgCell({
             : 'ring-zinc-300 bg-zinc-200 text-zinc-600',
         )}
       >
-        {org.logo_url ? (
-          <img src={org.logo_url} alt={org.name} className="h-full w-full object-cover" />
+        {org?.logo_url ? (
+          <Image src={org.logo_url} alt={org.name} className="h-full w-full object-cover" />
         ) : (
-          fallback
+          <Building2 className="h-4 w-4" />
         )}
       </div>
       <div className="flex flex-col leading-tight">
         <span className={cn('text-sm font-medium', isDark ? 'text-zinc-100' : 'text-zinc-900')}>
-          {org.name}
+          {org?.name || '—'}
         </span>
-        {org.contact_email && (
-          <span className={cn('text-xs', isDark ? 'text-zinc-500' : 'text-zinc-500')}>
-            {org.contact_email}
-          </span>
-        )}
+        <span className={cn('text-xs', isDark ? 'text-zinc-500' : 'text-zinc-500')}>
+          {org?.contact_email || '—'}
+        </span>
       </div>
     </div>
   );
@@ -79,8 +126,7 @@ const OrgCell = memo(function OrgCell({
 
 export const DataTable = memo(function DataTable() {
   const { t } = useTranslation();
-  const { title: localizedTitle, description: localizedDescription, locale } =
-    useLocalizedDisplay();
+  const { title: localizedTitle, locale } = useLocalizedDisplay();
   const { campaigns, loading, pagination, total, onPageChange, onPageSizeChange } =
     useCampaignContext();
   const { theme } = useAdminLayout();
@@ -92,7 +138,6 @@ export const DataTable = memo(function DataTable() {
         key: COLUMN_KEYS.NO,
         title: t('No'),
         className: 'w-[60px]',
-        sticky: 'right',
         render: (_, __, index) => (
           <span className="tabular-nums">
             {(pagination.current - 1) * pagination.pageSize + index + 1}
@@ -100,30 +145,14 @@ export const DataTable = memo(function DataTable() {
         ),
       },
       {
-        key: COLUMN_KEYS.TITLE,
-        title: t('Title'),
-        sticky: 'right',
-        className: 'min-w-[200px] max-w-[260px]',
+        key: COLUMN_KEYS.GENERAL_INFORMATION,
+        title: t('General information'),
+        className: 'min-w-[280px] max-w-[420px]',
         render: (_, record) => (
-          <span
-            className={cn('font-medium line-clamp-2', isDark ? 'text-zinc-100' : 'text-zinc-900')}
-          >
-            {localizedTitle(record)}
-          </span>
-        ),
-      },
-      {
-        key: COLUMN_KEYS.DESCRIPTION,
-        title: t('Description'),
-        className: 'min-w-[220px] max-w-[300px]',
-        render: (_, record) => (
-          <RichTextContent
-            value={localizedDescription(record)}
-            className="text-sm text-foreground whitespace-pre-wrap break-words !font-display-1"
-            maxLines={2}
-            showMoreLabel={t('See more')}
-            showLessLabel={t('See less')}
-            emptyFallback={<span className="text-foreground-secondary">—</span>}
+          <GeneralInformationCell
+            campaign={record}
+            title={localizedTitle(record)}
+            isDark={isDark}
           />
         ),
       },
@@ -134,29 +163,12 @@ export const DataTable = memo(function DataTable() {
         render: (_, record) => (
           <span
             className={cn(
-              'tabular-nums font-display-1',
+              'tabular-nums !font-display-1',
               isDark ? 'text-zinc-300' : 'text-zinc-700',
             )}
           >
             {formattedDate(record.created_at)}
           </span>
-        ),
-      },
-      {
-        key: COLUMN_KEYS.DATE_RANGE,
-        title: t('Campaign duration'),
-        className: 'min-w-[180px]',
-        render: (_, record) => (
-          <div className="space-y-0.5">
-            <p className={cn('text-xs', isDark ? 'text-zinc-400' : 'text-zinc-600')}>
-              <span className="font-medium">{t('Start')}:</span>{' '}
-              {formattedDate(record.start_date ?? undefined)}
-            </p>
-            <p className={cn('text-xs', isDark ? 'text-zinc-400' : 'text-zinc-600')}>
-              <span className="font-medium">{t('End')}:</span>{' '}
-              {formattedDate(record.end_date ?? undefined)}
-            </p>
-          </div>
         ),
       },
       {
@@ -191,41 +203,11 @@ export const DataTable = memo(function DataTable() {
         ),
       },
       {
-        key: COLUMN_KEYS.GREEN_POINTS,
-        title: t('Green pts'),
-        className: 'min-w-[100px]',
-        render: (_, record) => (
-          <span className="flex items-center gap-1 text-sm font-medium text-emerald-500">
-            🌿 {record.green_points ?? 0}
-          </span>
-        ),
-      },
-      {
-        key: COLUMN_KEYS.DIFFICULTY,
-        title: t('Difficulty'),
-        className: 'min-w-[100px]',
-        render: (_, record) => {
-          const difficulty = getDifficultyLevel(record.difficulty);
-          return (
-            <span
-              className={cn(
-                'font-display-1 font-medium',
-                difficulty?.textClass ?? (isDark ? 'text-zinc-500' : 'text-zinc-400'),
-              )}
-            >
-              {difficulty ? t(difficulty.label) : '—'}
-            </span>
-          );
-        },
-      },
-      {
         key: COLUMN_KEYS.ACTION,
         title: t('Action'),
         sticky: 'right',
-        // className: 'sticky right-0 z-20 min-w-[100px]',
         render: (_, record) => (
           <div className="flex items-center gap-2">
-            {/* Preview — opens campaign detail in a new tab */}
             <a
               href={`/campaigns/${record.id}`}
               target="_blank"
@@ -269,7 +251,7 @@ export const DataTable = memo(function DataTable() {
         ),
       },
     ],
-    [isDark, pagination.current, pagination.pageSize, t, locale, localizedTitle, localizedDescription],
+    [isDark, pagination.current, pagination.pageSize, t, locale, localizedTitle],
   );
 
   return (
