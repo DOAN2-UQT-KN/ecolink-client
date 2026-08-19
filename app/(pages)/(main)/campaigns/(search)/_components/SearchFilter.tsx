@@ -98,10 +98,9 @@ export const SearchFilter = memo(function SearchFilter({ isScrolled = false }: S
   );
 
   useEffect(() => {
-    if (debouncedSearchValue !== filters.search) {
-      setFilters({ search: debouncedSearchValue });
-      updateURL({ search: debouncedSearchValue || undefined });
-    }
+    if (debouncedSearchValue === (filters.search ?? "")) return;
+    setFilters({ search: debouncedSearchValue });
+    updateURL({ search: debouncedSearchValue || undefined });
   }, [debouncedSearchValue, filters.search, setFilters, updateURL]);
 
   const handleStatusChange = useCallback(

@@ -31,11 +31,26 @@ export function parseViewMode(tabValue: string | undefined): CampaignSearchViewM
   return tabValue === "mine" ? "mine" : "explore";
 }
 
-export function parseStatuses(value: number[] | undefined): number[] | undefined {
-  if (!value || value.length === 0) return undefined;
+export function parseStatuses(
+  value: number[] | string | undefined,
+): number[] | undefined {
+  if (value == null) return undefined;
+
+  const numbers = Array.isArray(value)
+    ? value
+    : value
+        .split(",")
+        .map((item) => item.trim())
+        .filter((item) => item.length > 0)
+        .map((item) => Number(item));
+
+  if (numbers.length === 0) return undefined;
+
   const allowedStatus = CAMPAIGN_STATUS_OPTIONS.map((option) => option.value);
-  const filtered = value.filter((status) =>
-    allowedStatus.includes(status as (typeof allowedStatus)[number]),
+  const filtered = numbers.filter(
+    (status) =>
+      Number.isInteger(status) &&
+      allowedStatus.includes(status as (typeof allowedStatus)[number]),
   );
 
   if (filtered.length === 0) return undefined;
@@ -64,19 +79,29 @@ export function parseGreenPoints(value: string | undefined): number | undefined 
   return Math.floor(parsed);
 }
 
+export function areCampaignSearchFiltersEqual(
+  a: CampaignSearchFilters,
+  b: CampaignSearchFilters,
+): boolean {
+  return (
+    a.search === b.search &&
+    a.greenPointsFrom === b.greenPointsFrom &&
+    a.greenPointsTo === b.greenPointsTo &&
+    a.statuses.length === b.statuses.length &&
+    a.statuses.every((status, index) => status === b.statuses[index])
+  );
+}
+
 export function buildCampaignSearchFilters(initial: {
   search?: string;
-  statuses?: number[];
+  statuses?: number[] | string;
   status?: string;
   greenPointsFrom?: string;
   greenPointsTo?: string;
 }): CampaignSearchFilters {
-  const fallbackSingleStatus = initial.status ? [Number(initial.status)] : undefined;
   const parsedStatuses =
     parseStatuses(initial.statuses) ??
-    parseStatuses(
-      fallbackSingleStatus?.filter((status) => Number.isFinite(status)),
-    ) ??
+    parseStatuses(initial.status) ??
     [...DEFAULT_CAMPAIGN_SEARCH_STATUSES];
 
   return {

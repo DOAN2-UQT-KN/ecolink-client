@@ -16,6 +16,7 @@ import type { IGetCampaignsRequest } from "@/apis/campaign/models/getCampaigns";
 
 import {
   applyGreenPointsRange,
+  areCampaignSearchFiltersEqual,
   buildCampaignSearchFilters,
   CAMPAIGN_PAGE_SIZE,
   DEFAULT_CAMPAIGN_SEARCH_STATUSES,
@@ -77,7 +78,7 @@ export const CampaignSearchProvider = ({ children }: { children: ReactNode }) =>
   );
 
   const urlSearch = useGetParam<string>("search", "string", "");
-  const urlStatuses = useGetParam<number[]>("statuses", "arrayNumber", undefined);
+  const urlStatuses = useGetParam<string>("statuses", "string", undefined);
   const urlStatus = useGetParam<string>("status", "string", undefined);
   const urlGreenPointsFrom = useGetParam<string>("green_points_from", "string", undefined);
   const urlGreenPointsTo = useGetParam<string>("green_points_to", "string", undefined);
@@ -93,20 +94,22 @@ export const CampaignSearchProvider = ({ children }: { children: ReactNode }) =>
   );
 
   useEffect(() => {
-    setFiltersState(
-      buildCampaignSearchFilters({
-        search: urlSearch,
-        statuses: urlStatuses,
-        status: urlStatus,
-        greenPointsFrom: urlGreenPointsFrom,
-        greenPointsTo: urlGreenPointsTo,
-      }),
-    );
+    const next = buildCampaignSearchFilters({
+      search: urlSearch,
+      statuses: urlStatuses,
+      status: urlStatus,
+      greenPointsFrom: urlGreenPointsFrom,
+      greenPointsTo: urlGreenPointsTo,
+    });
+    setFiltersState((prev) => (areCampaignSearchFiltersEqual(prev, next) ? prev : next));
   }, [urlGreenPointsFrom, urlGreenPointsTo, urlSearch, urlStatus, urlStatuses]);
 
   const setFilters = useCallback((newFilters: Partial<CampaignSearchFilters>) => {
-    setFiltersState((prev) => ({ ...prev, ...newFilters }));
-    setPagination((prev) => ({ ...prev, current: 1 }));
+    setFiltersState((prev) => {
+      const next = { ...prev, ...newFilters };
+      return areCampaignSearchFiltersEqual(prev, next) ? prev : next;
+    });
+    setPagination((prev) => (prev.current === 1 ? prev : { ...prev, current: 1 }));
   }, []);
 
   const resetFilters = useCallback(() => {
