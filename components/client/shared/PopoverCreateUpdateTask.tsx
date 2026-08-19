@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/select';
 import { useCreateCampaignTask, useUpdateCampaignTask } from '@/apis/campaign/campaignTask';
 import { ICampaignTask } from '@/apis/campaign/models/campaignTask';
+import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
 import RichTextEditor from '@/components/ui/RichTextEditor';
 import { cn } from '@/libs/utils';
 import { Calendar } from '@/components/ui/calendar';
@@ -158,6 +159,7 @@ const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
   onSuccess,
 }: Omit<PopoverCreateUpdateTaskProps, 'open'>) {
   const { t } = useTranslation();
+  const { title: localizedTitle, description: localizedDescription } = useLocalizedDisplay();
   const isCreate = !task;
   const isInProgressTask = !isCreate && task?.status === STATUS.IN_PROGRESS;
 
@@ -172,21 +174,25 @@ const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
     }
 
     return {
-      title: task?.title || '',
-      description: task?.description || '',
+      title: task ? localizedTitle(task) : '',
+      description: task ? localizedDescription(task) : '',
       scheduled_date: initialDate,
       scheduled_time_from: initialTimeRange.scheduled_time_from,
       scheduled_time_to: initialTimeRange.scheduled_time_to,
       priority: task?.priority ?? PRIORITY.MEDIUM,
-      result_description: task?.result?.description || '',
+      result_description: task?.result ? localizedDescription(task.result) : '',
       result_images: task?.result?.file || [],
       status: task?.status ?? 1,
     };
-  }, [task]);
+  }, [task, localizedTitle, localizedDescription]);
 
   const form = useForm<TaskFormValues>({
     defaultValues,
   });
+
+  useEffect(() => {
+    form.reset(defaultValues);
+  }, [defaultValues, form]);
 
   const {
     register,
@@ -234,6 +240,7 @@ const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
     [t],
   );
 
+  console.log("defaultValues", defaultValues);
   const handleResultImagesChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = e.target.files;
@@ -459,11 +466,17 @@ const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
                 {t('Description')}
               </FieldLabel>
 
-              <RichTextEditor
-                value={defaultValues.description}
-                onChange={(value) => form.setValue('description', value)}
-                placeholder={t('Enter description...')}
-                className={cn(inputClassName, 'min-h-[220px]')}
+              <Controller
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <RichTextEditor
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder={t('Enter description...')}
+                    className={cn(inputClassName, 'min-h-[220px]')}
+                  />
+                )}
               />
               <FieldError errors={[errors.description]} />
             </Field>
@@ -521,10 +534,6 @@ const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
                 <FieldLabel className="text-foreground-tertiary font-display-3">
                   {t('Scheduled Time')} <span className="text-destructive">*</span>
                 </FieldLabel>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
-                  <span className="text-xs text-muted-foreground">{t('From')}</span>
-                  <span className="text-xs text-muted-foreground">{t('To')}</span>
-                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <Controller
                     control={form.control}
@@ -587,7 +596,10 @@ const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
                     )}
                   />
                 </div>
-
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
+                  <span className="text-xs text-muted-foreground">{t('From')}</span>
+                  <span className="text-xs text-muted-foreground">{t('To')}</span>
+                </div>
                 {form.watch('scheduled_time_from') &&
                   form.watch('scheduled_time_to') &&
                   form.watch('scheduled_time_to') <= form.watch('scheduled_time_from') && (
@@ -631,13 +643,17 @@ const CreateUpdateTaskFormBody = memo(function CreateUpdateTaskFormBody({
                 <div className="flex flex-col gap-4">
                   <div>
                     <span className="text-sm text-foreground-tertiary">{t('Description')}</span>
-                    <RichTextEditor
-                      value={form.watch('result_description')}
-                      onChange={(value) =>
-                        form.setValue('result_description', value || '', { shouldDirty: true })
-                      }
-                      placeholder={t('Enter result description...')}
-                      className={cn(inputClassName, 'min-h-[180px] mt-2')}
+                    <Controller
+                      control={form.control}
+                      name="result_description"
+                      render={({ field }) => (
+                        <RichTextEditor
+                          value={field.value}
+                          onChange={(value) => field.onChange(value || '')}
+                          placeholder={t('Enter result description...')}
+                          className={cn(inputClassName, 'min-h-[180px] mt-2')}
+                        />
+                      )}
                     />
                     <FieldError errors={[errors.result_description]} />
                     {form.watch('status') === STATUS.COMPLETED &&

@@ -64,6 +64,7 @@ export function getNotificationHref(
       return '/organizations/me';
     case 'VOLUNTEER_REQUEST':
     case 'VOLUNTEER_APPROVED':
+    case 'VOLUNTEER_REJECTED':
     case 'ORGANIZATION_APPROVED':
       if (campaignId) return `/campaigns/${campaignId}`;
       const organizationSlug =
