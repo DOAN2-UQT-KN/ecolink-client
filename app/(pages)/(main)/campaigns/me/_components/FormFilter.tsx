@@ -15,12 +15,12 @@ import useCampaignMeContext from '../_hooks/useCampaignMeContext';
 
 const CAMPAIGN_STATUS_OPTIONS = [
   { labelKey: 'All', value: 'all' },
-  { labelKey: 'Active', value: String(STATUS.ACTIVE) },
-  { labelKey: 'Inactive', value: String(STATUS.INACTIVE) },
   { labelKey: 'Pending', value: String(STATUS.PENDING) },
+  { labelKey: 'Active', value: String(STATUS.ACTIVE) },
   { labelKey: 'In Review', value: String(STATUS.INREVIEW) },
   { labelKey: 'Waiting Confirmed', value: String(STATUS.WAITING_CONFIRMED) },
   { labelKey: 'Completed', value: String(STATUS.COMPLETED) },
+  { labelKey: 'Inactive', value: String(STATUS.INACTIVE) },
 ] as const;
 
 export const FormFilter = memo(function FormFilter() {

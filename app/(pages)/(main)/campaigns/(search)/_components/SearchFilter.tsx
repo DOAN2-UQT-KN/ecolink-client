@@ -20,6 +20,9 @@ import { cn } from '@/libs/utils';
 import {
   CAMPAIGN_SEARCH_DEBOUNCE_MS,
   CAMPAIGN_STATUS_OPTIONS,
+  DEFAULT_CAMPAIGN_SEARCH_STATUSES,
+  isDefaultCampaignStatuses,
+  serializeStatuses,
 } from '../_services/campaignSearch.service';
 import { useCampaignSearch } from '../_context/CampaignSearchContext';
 
@@ -103,9 +106,13 @@ export const SearchFilter = memo(function SearchFilter({ isScrolled = false }: S
 
   const handleStatusChange = useCallback(
     (value: string) => {
-      const status = value === 'all' ? undefined : Number(value);
-      setFilters({ status });
-      updateURL({ status: status?.toString() });
+      const statuses =
+        value === 'all' ? [...DEFAULT_CAMPAIGN_SEARCH_STATUSES] : [Number(value)];
+      setFilters({ statuses });
+      updateURL({
+        statuses: value === 'all' ? undefined : serializeStatuses(statuses),
+        status: undefined,
+      });
     },
     [setFilters, updateURL],
   );
@@ -143,6 +150,7 @@ export const SearchFilter = memo(function SearchFilter({ isScrolled = false }: S
     const params = new URLSearchParams(searchParams.toString());
     params.delete('search');
     params.delete('status');
+    params.delete('statuses');
     params.delete('green_points_from');
     params.delete('green_points_to');
 
@@ -158,6 +166,18 @@ export const SearchFilter = memo(function SearchFilter({ isScrolled = false }: S
       })),
     [t],
   );
+
+  const selectedStatusValue = useMemo(() => {
+    if (isDefaultCampaignStatuses(filters.statuses)) {
+      return 'all';
+    }
+
+    if (filters.statuses.length === 1) {
+      return filters.statuses[0]?.toString() ?? 'all';
+    }
+
+    return 'all';
+  }, [filters.statuses]);
 
   return (
     <aside
@@ -206,7 +226,7 @@ export const SearchFilter = memo(function SearchFilter({ isScrolled = false }: S
 
         <Field className="w-full">
           <FieldLabel className="text-foreground-tertiary font-display-3">{t('Status')}</FieldLabel>
-          <Select value={filters.status?.toString() || 'all'} onValueChange={handleStatusChange}>
+          <Select value={selectedStatusValue} onValueChange={handleStatusChange}>
             <SelectTrigger className={FILTER_SELECT_CLASS}>
               <SelectValue placeholder={t('All statuses')} />
             </SelectTrigger>

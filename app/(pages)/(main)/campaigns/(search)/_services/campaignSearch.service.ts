@@ -3,7 +3,15 @@ import { STATUS } from "@/constants/status";
 
 export type CampaignSearchViewMode = "explore" | "mine";
 
-export type CampaignSearchFilters = Pick<IGetCampaignsRequest, "search" | "status"> & {
+export const DEFAULT_CAMPAIGN_SEARCH_STATUSES = [
+  STATUS.ACTIVE,
+  STATUS.INREVIEW,
+  STATUS.WAITING_CONFIRMED,
+  STATUS.COMPLETED,
+] as const;
+
+export type CampaignSearchFilters = Pick<IGetCampaignsRequest, "search"> & {
+  statuses: number[];
   greenPointsFrom?: number;
   greenPointsTo?: number;
 };
@@ -14,6 +22,8 @@ export const CAMPAIGN_SEARCH_DEBOUNCE_MS = 500;
 export const CAMPAIGN_STATUS_OPTIONS = [
   { label: "Pending", value: STATUS.PENDING },
   { label: "Active", value: STATUS.ACTIVE },
+  { label: "In Review", value: STATUS.INREVIEW },
+  { label: "Waiting Confirmed", value: STATUS.WAITING_CONFIRMED },
   { label: "Completed", value: STATUS.COMPLETED },
 ] as const;
 
@@ -21,14 +31,28 @@ export function parseViewMode(tabValue: string | undefined): CampaignSearchViewM
   return tabValue === "mine" ? "mine" : "explore";
 }
 
-export function parseStatus(value: string | undefined): number | undefined {
-  if (!value) return undefined;
-
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed)) return undefined;
-
+export function parseStatuses(value: number[] | undefined): number[] | undefined {
+  if (!value || value.length === 0) return undefined;
   const allowedStatus = CAMPAIGN_STATUS_OPTIONS.map((option) => option.value);
-  return allowedStatus.includes(parsed as (typeof allowedStatus)[number]) ? parsed : undefined;
+  const filtered = value.filter((status) =>
+    allowedStatus.includes(status as (typeof allowedStatus)[number]),
+  );
+
+  if (filtered.length === 0) return undefined;
+  return [...new Set(filtered)];
+}
+
+export function serializeStatuses(statuses: number[] | undefined): string | undefined {
+  if (!statuses || statuses.length === 0) return undefined;
+  return statuses.join(",");
+}
+
+export function isDefaultCampaignStatuses(statuses: number[] | undefined): boolean {
+  if (!statuses || statuses.length !== DEFAULT_CAMPAIGN_SEARCH_STATUSES.length) {
+    return false;
+  }
+
+  return DEFAULT_CAMPAIGN_SEARCH_STATUSES.every((status) => statuses.includes(status));
 }
 
 export function parseGreenPoints(value: string | undefined): number | undefined {
@@ -42,13 +66,22 @@ export function parseGreenPoints(value: string | undefined): number | undefined 
 
 export function buildCampaignSearchFilters(initial: {
   search?: string;
+  statuses?: number[];
   status?: string;
   greenPointsFrom?: string;
   greenPointsTo?: string;
 }): CampaignSearchFilters {
+  const fallbackSingleStatus = initial.status ? [Number(initial.status)] : undefined;
+  const parsedStatuses =
+    parseStatuses(initial.statuses) ??
+    parseStatuses(
+      fallbackSingleStatus?.filter((status) => Number.isFinite(status)),
+    ) ??
+    [...DEFAULT_CAMPAIGN_SEARCH_STATUSES];
+
   return {
     search: initial.search ?? "",
-    status: parseStatus(initial.status),
+    statuses: parsedStatuses,
     greenPointsFrom: parseGreenPoints(initial.greenPointsFrom),
     greenPointsTo: parseGreenPoints(initial.greenPointsTo),
   };
