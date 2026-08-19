@@ -29,9 +29,12 @@ export default function SummaryCampaignCard({
     useLocalizedDisplay();
   const displayTitle = localizedTitle(campaign);
   const displayDescription = localizedDescription(campaign);
-  const maxMembers = 50;
-  const currentMembers = 18;
-  const memberProgress = (currentMembers / maxMembers) * 100;
+  const currentMembers = campaign.current_members ?? 0;
+  const maxMembers = campaign.max_members ?? null;
+  const memberProgress =
+    maxMembers != null && maxMembers > 0
+      ? Math.min(100, Math.round((currentMembers / maxMembers) * 100))
+      : 0;
   const router = useRouter();
   const currentUserId = useAuthStore((s) => s.user?.id);
   const showYourCampaignTag =
@@ -136,7 +139,7 @@ export default function SummaryCampaignCard({
           <div className="flex items-center justify-between font-display-1 text-button-accent">
             <span>{t('Member enrollment')}</span>
             <span className="font-display-1">
-              {currentMembers} / {maxMembers}
+              {currentMembers} / {maxMembers != null && maxMembers > 0 ? maxMembers : '∞'}
             </span>
           </div>
           <Progress

@@ -57,11 +57,7 @@ const RESET_BUTTON_CLASS = cn(
   FILTER_CONTROL_H,
 );
 
-interface SearchFilterProps {
-  isScrolled?: boolean;
-}
-
-export const SearchFilter = memo(function SearchFilter({ isScrolled = false }: SearchFilterProps) {
+export const SearchFilter = memo(function SearchFilter() {
   const { t } = useTranslation();
   const { filters, setFilters, resetFilters } = useCampaignSearch();
   const router = useRouter();
@@ -181,11 +177,10 @@ export const SearchFilter = memo(function SearchFilter({ isScrolled = false }: S
   return (
     <aside
       className={cn(
-        'w-full lg:w-[320px] sticky top-0 z-[40] h-full transition-all duration-200',
-        isScrolled ? 'pt-[100px]' : 'pt-0',
+        FILTER_PANEL_CLASS,
+        'w-full lg:w-[320px] lg:sticky lg:self-start lg:top-[220px] lg:max-h-[calc(100vh-240px)] lg:overflow-y-auto z-[40] space-y-4 h-fit',
       )}
     >
-      <div className={cn(FILTER_PANEL_CLASS, 'space-y-4')}>
         <Field className="w-full">
           <FieldLabel className="text-foreground-tertiary font-display-3">{t('Search')}</FieldLabel>
           <div className="relative group">
@@ -251,7 +246,6 @@ export const SearchFilter = memo(function SearchFilter({ isScrolled = false }: S
             {t('Reset')}
           </span>
         </Button>
-      </div>
     </aside>
   );
 });
