@@ -6,6 +6,9 @@ export interface IUser {
   name: string;
   avatar: string | null;
   bio: string | null;
+  phone_number?: string | null;
+  gender?: 'male' | 'female' | 'other' | 'prefer_not_to_say' | null;
+  date_of_birth?: string | null;
   roleId: string;
   emailVerified: boolean;
   createdAt: string;
