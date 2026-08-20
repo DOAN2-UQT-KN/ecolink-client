@@ -4,12 +4,16 @@ import type { IUser } from '@/apis/auth/models/user';
 
 export interface IUpdateUserRequest {
   name?: string;
-  avatar?: string;
+  avatar?: string | null;
   bio?: string;
   roleId?: string;
+  phone_number?: string | null;
+  gender?: 'male' | 'female' | 'other' | 'prefer_not_to_say' | null;
+  date_of_birth?: string | null;
   /** Set together; use `null` for both to clear saved location. */
   latitude?: number | null;
   longitude?: number | null;
+  detail_address?: string | null;
   notification_preferences?: Record<string, boolean>;
 }
 

@@ -5,6 +5,7 @@ import {
   TbSettings,
   TbGift,
   TbFlag,
+  TbUser,
 } from 'react-icons/tb';
 import { IconType } from 'react-icons';
 
@@ -45,6 +46,12 @@ export const adminNavItems: AdminNavItem[] = [
     href: '/admin/organizations',
     labelKey: 'Organizations',
     icon: TbUsersGroup,
+  },
+  {
+    kind: 'link',
+    href: '/admin/users',
+    labelKey: 'Users',
+    icon: TbUser,
   },
   { kind: 'link', href: '/admin/campaigns', labelKey: 'Campaigns', icon: TbFlag },
   { kind: 'link', href: '/admin/gifts', labelKey: 'Gifts', icon: TbGift },

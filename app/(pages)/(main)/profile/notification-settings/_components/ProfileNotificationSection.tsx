@@ -33,7 +33,7 @@ export function ProfileNotificationSection() {
         });
         const nextUser = res?.data?.user;
         if (nextUser) setUser(nextUser);
-        toast.success(t('Updated successfully'));
+        // toast.success(t('Updated successfully'));
       } catch (err) {
         console.error(err);
         toast.error(t('Failed to update notification settings'));

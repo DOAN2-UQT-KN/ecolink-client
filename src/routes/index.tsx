@@ -49,6 +49,7 @@ export const router = createBrowserRouter([
             children: [
               { index: true, element: <Navigate to="/profile/account" replace /> },
               { path: "account", element: lazyPage(() => import("@/app/(pages)/(main)/profile/account/page"), "profile-account") },
+              { path: "notification-settings", element: lazyPage(() => import("@/app/(pages)/(main)/profile/notification-settings/page"), "profile-notification-settings") },
               { path: "points", element: lazyPage(() => import("@/app/(pages)/(main)/profile/points/page"), "profile-points") },
               { path: "orders", element: lazyPage(() => import("@/app/(pages)/(main)/profile/orders/page"), "profile-orders") },
             ],
@@ -82,6 +83,7 @@ export const router = createBrowserRouter([
           { path: "campaigns", element: lazyPage(() => import("@/app/(pages)/(admin)/admin/campaigns/page"), "admin-campaigns") },
           { path: "incidents", element: lazyPage(() => import("@/app/(pages)/(admin)/admin/incidents/page"), "admin-incidents") },
           { path: "organizations", element: lazyPage(() => import("@/app/(pages)/(admin)/admin/organizations/page"), "admin-organizations") },
+          { path: "users", element: lazyPage(() => import("@/app/(pages)/(admin)/admin/users/page"), "admin-users") },
           { path: "gifts", element: lazyPage(() => import("@/app/(pages)/(admin)/admin/gifts/page"), "admin-gifts") },
           { path: "settings", element: lazyPage(() => import("@/app/(pages)/(admin)/admin/settings/page"), "admin-settings") },
           { path: "*", element: <NotFound /> },

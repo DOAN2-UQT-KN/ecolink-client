@@ -10,6 +10,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import usePointsContext from '../_hooks/usePointsContext';
 import { formatPoints } from '../_services/points.service';
@@ -34,7 +35,7 @@ function TransactionCard({ transaction }: { transaction: IPointTransaction }) {
     points > 0 ? 'text-emerald-600' : points < 0 ? 'text-rose-600' : 'text-foreground-secondary';
 
   return (
-    <article className="flex items-center justify-between rounded-xl border border-[rgba(136,122,71,0.5)]  bg-white p-4 sm:p-5 shadow-sm">
+    <article className="flex items-center justify-between rounded-lg border border-[rgba(136,122,71,0.35)] bg-background/20 p-4">
       <div className="flex flex-col gap-1">
         <p className="text-sm font-semibold text-foreground-primary sm:text-base">{message}</p>
         {timestamp && <p className="text-xs text-foreground-secondary sm:text-sm">{timestamp}</p>}
@@ -50,7 +51,7 @@ function TransactionCard({ transaction }: { transaction: IPointTransaction }) {
 
 function TransactionCardSkeleton() {
   return (
-    <article className="flex items-center justify-between rounded-xl border border-[rgba(136,122,71,0.5)] bg-white p-4 sm:p-5 shadow-sm">
+    <article className="flex items-center justify-between rounded-lg border border-[rgba(136,122,71,0.35)] bg-background/20 p-4">
       <div className="flex flex-1 flex-col gap-2">
         <Skeleton className="h-4 w-3/4" />
         <Skeleton className="h-3 w-1/2" />
@@ -78,7 +79,7 @@ const TransactionHistory = memo(function TransactionHistory() {
 
   return (
     <section className="rounded-xl border border-[rgba(136,122,71,0.35)] bg-white p-5 sm:p-6">
-      <h2 className="text-lg font-semibold">{t('Transaction history')}</h2>
+      <h2 className="text-lg font-semibold text-button-accent">{t('Transaction history')}</h2>
 
       {isLoading ? (
         <div className="mt-4 space-y-3">
@@ -88,7 +89,7 @@ const TransactionHistory = memo(function TransactionHistory() {
         </div>
       ) : transactions.length === 0 ? (
         <div className="mt-4">
-          <Empty className="rounded-xl border border-border/50 bg-background/40 p-8">
+          <Empty className="rounded-xl border border-[rgba(136,122,71,0.35)] bg-background/20 p-8">
             <EmptyHeader>
               <EmptyMedia variant="icon">
                 <History className="h-5 w-5 text-muted-foreground" />
@@ -110,30 +111,32 @@ const TransactionHistory = memo(function TransactionHistory() {
       )}
 
       {totalPages > 1 && (
-        <div className="mt-5 flex items-center justify-between border-t border-border/50 pt-4">
-          <button
+        <div className="mt-5 flex items-center justify-between border-t border-[rgba(136,122,71,0.35)] pt-4">
+          <Button
             type="button"
+            variant="outline"
             onClick={() => handlePageChange(pagination.current - 1)}
             disabled={pagination.current <= 1}
-            className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex items-center gap-2"
           >
             <ChevronLeft size={16} />
             {t('Previous')}
-          </button>
+          </Button>
 
           <p className="text-sm text-foreground-secondary">
             {t('Page')} {pagination.current} {t('of')} {totalPages}
           </p>
 
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={() => handlePageChange(pagination.current + 1)}
             disabled={pagination.current >= totalPages}
-            className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex items-center gap-2"
           >
             {t('Next')}
             <ChevronRight size={16} />
-          </button>
+          </Button>
         </div>
       )}
     </section>
