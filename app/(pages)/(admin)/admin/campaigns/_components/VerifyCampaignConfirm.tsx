@@ -165,7 +165,7 @@ export const VerifyCampaignConfirm = memo(function VerifyCampaignConfirm({
                 htmlFor={`ban-reason-${campaignId}`}
                 className={cn(isDark ? "text-zinc-200" : "text-zinc-800")}
               >
-                {t("Ban Reason")} <span className="text-destructive">*</span>
+                {t("Reject Reason")} <span className="text-destructive">*</span>
               </Label>
               <Textarea
                 id={`ban-reason-${campaignId}`}

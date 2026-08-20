@@ -17,8 +17,7 @@ import { VerifyCampaignConfirm } from './VerifyCampaignConfirm';
 import { formattedDate } from '@/utils/formattedDate';
 import { STATUS } from '@/constants/status';
 import { getDifficultyLevel } from '@/constants/difficulty';
-import { FinalizeCampaignCompletionConfirm } from './FinalizeCampaignCompletionConfirm';
-import { RejectCampaignCompletionConfirm } from './RejectCampaignCompletionConfirm';
+import { CompletionReviewCampaignConfirm } from './CompletionReviewCampaignConfirm';
 import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
 
 const DEFAULT_BANNER = '/banner-default.jpg';
@@ -189,7 +188,7 @@ export const DataTable = memo(function DataTable() {
       },
       {
         key: COLUMN_KEYS.REJECT_REASON,
-        title: t('Ban Reason'),
+        title: t('Reject Reason'),
         className: 'min-w-[160px] max-w-[260px]',
         render: (_, record) =>
           record.reject_reason ? (
@@ -261,18 +260,11 @@ export const DataTable = memo(function DataTable() {
             ) : null}
 
             {record.status === STATUS.WAITING_CONFIRMED ? (
-              <>
-                <FinalizeCampaignCompletionConfirm
-                  campaignId={record.id}
-                  campaignTitle={localizedTitle(record)}
-                  theme={isDark ? 'dark' : 'light'}
-                />
-                <RejectCampaignCompletionConfirm
-                  campaignId={record.id}
-                  campaignTitle={localizedTitle(record)}
-                  theme={isDark ? 'dark' : 'light'}
-                />
-              </>
+              <CompletionReviewCampaignConfirm
+                campaignId={record.id}
+                campaignTitle={localizedTitle(record)}
+                theme={isDark ? 'dark' : 'light'}
+              />
             ) : null}
           </div>
         ),

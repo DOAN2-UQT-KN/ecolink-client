@@ -235,7 +235,7 @@ export function DataTable() {
       },
       {
         key: COLUMN_KEYS.REJECT_REASON,
-        title: t('Ban Reason'),
+        title: t('Reject Reason'),
         className: 'min-w-[220px]',
         render: (_, record) => (
           <RichTextContent

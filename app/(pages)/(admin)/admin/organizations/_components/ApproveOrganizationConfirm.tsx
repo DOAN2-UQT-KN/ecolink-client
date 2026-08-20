@@ -167,7 +167,7 @@ export const ApproveOrganizationConfirm = memo(function ApproveOrganizationConfi
                 htmlFor={`ban-reason-${organizationId}`}
                 className={cn(isDark ? "text-zinc-200" : "text-zinc-800")}
               >
-                {t("Ban Reason")} <span className="text-destructive">*</span>
+                {t("Reject Reason")} <span className="text-destructive">*</span>
               </Label>
               <Textarea
                 id={`ban-reason-${organizationId}`}

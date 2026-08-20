@@ -12,6 +12,12 @@ export type IVerifyCampaignRequest = {
   reject_reason?: string | null;
 };
 
+export type ICompletionReviewRequest = {
+  id: string;
+  decision: 'approve' | 'reject';
+  reject_reason?: string;
+};
+
 export const verifyCampaign = async (
   params: IVerifyCampaignRequest,
 ): Promise<IBaseResponse<unknown>> => {
@@ -38,42 +44,24 @@ export const useVerifyCampaign = (
   });
 };
 
-export const rejectCampaign = async (id: string): Promise<IBaseResponse<unknown>> => {
-  return await requestApi.put<IBaseResponse<unknown>>(`${url}/${id}/reject`, {});
-};
-
-/** Admin: finalize campaign after manager submitted completion (same route as volunteer-facing submit). */
-export const finalizeCampaignCompletion = async (
-  id: string,
+export const reviewCampaignCompletion = async (
+  params: ICompletionReviewRequest,
 ): Promise<IBaseResponse<unknown>> => {
-  return await requestApi.put<IBaseResponse<unknown>>(`${url}/${id}/mark-done`, {});
+  const { id, decision, reject_reason } = params;
+  return await requestApi.put<IBaseResponse<unknown>>(
+    `${url}/${id}/completion-review`,
+    {
+      decision,
+      rejectReason: reject_reason,
+    },
+  );
 };
 
-export const useRejectCampaign = (options?: UsePostOptions<IBaseResponse<unknown>, string>) => {
-  const { t } = useTranslation();
-  return usePost({
-    mutationFn: rejectCampaign,
-    messageSuccess: {
-      content: t('Campaign rejected successfully'),
-      type: MessageType.Toast,
-    },
-    messageError: {
-      type: MessageType.Toast,
-    },
-    ...options,
-  });
-};
-
-export const useFinalizeCampaignCompletion = (
-  options?: UsePostOptions<IBaseResponse<unknown>, string>,
+export const useReviewCampaignCompletion = (
+  options?: UsePostOptions<IBaseResponse<unknown>, ICompletionReviewRequest>,
 ) => {
-  const { t } = useTranslation();
   return usePost({
-    mutationFn: finalizeCampaignCompletion,
-    messageSuccess: {
-      content: t('Campaign marked as done successfully'),
-      type: MessageType.Toast,
-    },
+    mutationFn: reviewCampaignCompletion,
     messageError: {
       type: MessageType.Toast,
     },

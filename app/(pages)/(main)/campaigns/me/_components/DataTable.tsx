@@ -140,7 +140,7 @@ export const DataTable = memo(function DataTable() {
       },
       {
         key: COLUMN_KEYS.BAN_REASON,
-        title: t('Ban Reason'),
+        title: t('Reject Reason'),
         render: (_, record) =>
           record.reject_reason ? (
             <span

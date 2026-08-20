@@ -156,7 +156,7 @@ const DataTableComponent = memo(function DataTableComponent() {
         width: 260,
       },
       {
-        title: t("Ban Reason"),
+        title: t("Reject Reason"),
         key: "reject_reason",
         render: (_, record) => {
           const reason = record.reject_reason?.trim();

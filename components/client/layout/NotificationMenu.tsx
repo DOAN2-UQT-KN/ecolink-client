@@ -86,7 +86,7 @@ export const NotificationMenu = memo(function NotificationMenu() {
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
-        className="w-[min(100vw-2rem,380px)] max-h-[min(420px,70vh)] overflow-y-auto p-0"
+        className="min-w-0 w-[min(calc(100vw-2rem),360px)] max-w-[min(calc(100vw-2rem),360px)] max-h-[min(420px,70vh)] overflow-x-hidden overflow-y-auto p-0"
         sideOffset={8}
       >
         <div className="sticky top-0 z-10 border-b border-border/60 bg-background/95 px-3 py-2 backdrop-blur-sm">
@@ -99,24 +99,28 @@ export const NotificationMenu = memo(function NotificationMenu() {
             {t('No notifications yet')}
           </p>
         ) : (
-          <ul className="divide-y divide-border/50">
+          <ul className="min-w-0 divide-y divide-border/50">
             {items.map((item) => {
               const { title, body } = getLocalizedNotificationText(item, i18n.language);
               const unread = !item.readAt;
               const href = getNotificationHref(item.kind, item.payload);
               return (
-                <li key={item.id}>
+                <li key={item.id} className="min-w-0">
                   <button
                     type="button"
                     className={cn(
-                      'flex w-full flex-col gap-0.5 px-3 py-2.5 text-left text-sm transition-colors hover:bg-muted/80',
+                      'flex min-w-0 max-w-full w-full flex-col gap-0.5 overflow-hidden px-3 py-2.5 text-left text-sm transition-colors hover:bg-muted/80',
                       unread && 'bg-primary/5',
                     )}
                     onClick={() => void onItemActivate(item)}
                   >
-                    <span className="font-medium text-foreground leading-snug">{title}</span>
-                    <span className="text-xs text-muted-foreground line-clamp-2">{body}</span>
-                    <span className="text-[10px] text-muted-foreground/80">
+                    <span className="font-medium text-foreground leading-snug break-words [overflow-wrap:anywhere]">
+                      {title}
+                    </span>
+                    <span className="text-xs text-muted-foreground leading-snug break-words [overflow-wrap:anywhere]">
+                      {body}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground/80 break-words [overflow-wrap:anywhere]">
                       {formatDistanceToNow(new Date(item.createdAt), {
                         addSuffix: true,
                         locale: dateLocale,
