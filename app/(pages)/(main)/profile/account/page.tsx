@@ -9,7 +9,6 @@ import { clearAuthStorage } from '@/utils/logout';
 import { signOut } from '@/apis/auth/signOut';
 import { ProfileGeneralInformation } from './_components/ProfileGeneralInformation';
 import { ProfileLocationSection } from './_components/ProfileLocationSection';
-import { ProfileNotificationSection } from './_components/ProfileNotificationSection';
 
 export default function AccountPage() {
   const { t } = useTranslation();
@@ -21,8 +20,6 @@ export default function AccountPage() {
       <ProfileGeneralInformation />
 
       <ProfileLocationSection />
-
-      <ProfileNotificationSection />
 
       <section className="rounded-xl border border-[rgba(136,122,71,0.35)] bg-white p-5 sm:p-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">

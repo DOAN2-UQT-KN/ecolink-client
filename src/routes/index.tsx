@@ -49,6 +49,7 @@ export const router = createBrowserRouter([
             children: [
               { index: true, element: <Navigate to="/profile/account" replace /> },
               { path: "account", element: lazyPage(() => import("@/app/(pages)/(main)/profile/account/page"), "profile-account") },
+              { path: "notification-settings", element: lazyPage(() => import("@/app/(pages)/(main)/profile/notification-settings/page"), "profile-notification-settings") },
               { path: "points", element: lazyPage(() => import("@/app/(pages)/(main)/profile/points/page"), "profile-points") },
               { path: "orders", element: lazyPage(() => import("@/app/(pages)/(main)/profile/orders/page"), "profile-orders") },
             ],
