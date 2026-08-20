@@ -20,7 +20,7 @@ import { useCampaignDetail } from './_hooks/useCampaignDetail';
 import { TbArrowRight } from 'react-icons/tb';
 import { Button } from '@/components/client/shared/Button';
 import { STATUS } from '@/constants/status';
-import { ConfirmPopover } from '@/components/admin/shared/ConfirmPopover';
+import { ConfirmPopoverModal } from '@/modules/OrganizationCard/components/ConfirmPopoverModal';
 import { useMarkDoneCampaign } from '@/apis/campaign/campaignById';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
@@ -51,7 +51,7 @@ function CampaignDetailBody() {
 
   const canOwnerSubmitCompletion =
     isCampaignOwner &&
-    (campaign?.status === STATUS.INREVIEW || campaign?.status === STATUS.ACTIVE);
+    (campaign?.status === STATUS.ACTIVE || campaign?.status === STATUS.INREVIEW);
 
   const showAwaitingAdminCompletion =
     isCampaignOwner && campaign?.status === STATUS.WAITING_CONFIRMED;
@@ -211,13 +211,12 @@ function CampaignDetailBody() {
               <CampaignAttendanceQrButton />
             ) : null}
             {canOwnerSubmitCompletion ? (
-              <ConfirmPopover
+              <ConfirmPopoverModal
                 title={t('Mark Campaign as Done')}
                 description={t('Mark campaign done confirmation')}
-                onConfirm={handleMarkDone}
-                cancelLabel={t('Cancel')}
                 confirmLabel={t('Mark done')}
-                theme="light"
+                cancelLabel={t('Cancel')}
+                onConfirm={handleMarkDone}
                 confirmPending={isMarkingDone}
                 trigger={
                   <Button
@@ -226,7 +225,7 @@ function CampaignDetailBody() {
                     size="medium"
                     isLoading={isMarkingDone}
                     className="!h-[45px]"
-                    disabled={isMarkingDone}
+                    isDisabled={isMarkingDone}
                   >
                     {t('Mark done')}
                   </Button>

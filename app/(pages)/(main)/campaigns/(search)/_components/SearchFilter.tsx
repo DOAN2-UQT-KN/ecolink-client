@@ -20,6 +20,9 @@ import { cn } from '@/libs/utils';
 import {
   CAMPAIGN_SEARCH_DEBOUNCE_MS,
   CAMPAIGN_STATUS_OPTIONS,
+  DEFAULT_CAMPAIGN_SEARCH_STATUSES,
+  isDefaultCampaignStatuses,
+  serializeStatuses,
 } from '../_services/campaignSearch.service';
 import { useCampaignSearch } from '../_context/CampaignSearchContext';
 
@@ -54,11 +57,7 @@ const RESET_BUTTON_CLASS = cn(
   FILTER_CONTROL_H,
 );
 
-interface SearchFilterProps {
-  isScrolled?: boolean;
-}
-
-export const SearchFilter = memo(function SearchFilter({ isScrolled = false }: SearchFilterProps) {
+export const SearchFilter = memo(function SearchFilter() {
   const { t } = useTranslation();
   const { filters, setFilters, resetFilters } = useCampaignSearch();
   const router = useRouter();
@@ -95,17 +94,20 @@ export const SearchFilter = memo(function SearchFilter({ isScrolled = false }: S
   );
 
   useEffect(() => {
-    if (debouncedSearchValue !== filters.search) {
-      setFilters({ search: debouncedSearchValue });
-      updateURL({ search: debouncedSearchValue || undefined });
-    }
+    if (debouncedSearchValue === (filters.search ?? "")) return;
+    setFilters({ search: debouncedSearchValue });
+    updateURL({ search: debouncedSearchValue || undefined });
   }, [debouncedSearchValue, filters.search, setFilters, updateURL]);
 
   const handleStatusChange = useCallback(
     (value: string) => {
-      const status = value === 'all' ? undefined : Number(value);
-      setFilters({ status });
-      updateURL({ status: status?.toString() });
+      const statuses =
+        value === 'all' ? [...DEFAULT_CAMPAIGN_SEARCH_STATUSES] : [Number(value)];
+      setFilters({ statuses });
+      updateURL({
+        statuses: value === 'all' ? undefined : serializeStatuses(statuses),
+        status: undefined,
+      });
     },
     [setFilters, updateURL],
   );
@@ -143,6 +145,7 @@ export const SearchFilter = memo(function SearchFilter({ isScrolled = false }: S
     const params = new URLSearchParams(searchParams.toString());
     params.delete('search');
     params.delete('status');
+    params.delete('statuses');
     params.delete('green_points_from');
     params.delete('green_points_to');
 
@@ -159,14 +162,25 @@ export const SearchFilter = memo(function SearchFilter({ isScrolled = false }: S
     [t],
   );
 
+  const selectedStatusValue = useMemo(() => {
+    if (isDefaultCampaignStatuses(filters.statuses)) {
+      return 'all';
+    }
+
+    if (filters.statuses.length === 1) {
+      return filters.statuses[0]?.toString() ?? 'all';
+    }
+
+    return 'all';
+  }, [filters.statuses]);
+
   return (
     <aside
       className={cn(
-        'w-full lg:w-[320px] sticky top-0 z-[40] h-full transition-all duration-200',
-        isScrolled ? 'pt-[100px]' : 'pt-0',
+        FILTER_PANEL_CLASS,
+        'w-full lg:w-[320px] lg:sticky lg:self-start lg:top-[220px] lg:max-h-[calc(100vh-240px)] lg:overflow-y-auto z-[40] space-y-4 h-fit',
       )}
     >
-      <div className={cn(FILTER_PANEL_CLASS, 'space-y-4')}>
         <Field className="w-full">
           <FieldLabel className="text-foreground-tertiary font-display-3">{t('Search')}</FieldLabel>
           <div className="relative group">
@@ -206,7 +220,7 @@ export const SearchFilter = memo(function SearchFilter({ isScrolled = false }: S
 
         <Field className="w-full">
           <FieldLabel className="text-foreground-tertiary font-display-3">{t('Status')}</FieldLabel>
-          <Select value={filters.status?.toString() || 'all'} onValueChange={handleStatusChange}>
+          <Select value={selectedStatusValue} onValueChange={handleStatusChange}>
             <SelectTrigger className={FILTER_SELECT_CLASS}>
               <SelectValue placeholder={t('All statuses')} />
             </SelectTrigger>
@@ -232,7 +246,6 @@ export const SearchFilter = memo(function SearchFilter({ isScrolled = false }: S
             {t('Reset')}
           </span>
         </Button>
-      </div>
     </aside>
   );
 });

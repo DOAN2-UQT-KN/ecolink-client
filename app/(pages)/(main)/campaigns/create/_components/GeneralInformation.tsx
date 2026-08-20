@@ -14,7 +14,14 @@ import { cn } from '@/libs/utils';
 import SelectListOrganization from '@/components/form/SelectListOrganization';
 
 import { useCampaign } from '../_hooks/useCampaign';
-import { difficultyOptions } from '../_services/campaign.service';
+import { TITLE_MAX_LENGTH } from '../_services/campaign.service';
+import {
+  DIFFICULTY_LEVEL,
+  DIFFICULTY_MAX,
+  DIFFICULTY_MIN,
+  DIFFICULTY_VALUES,
+  getDifficultyLevel,
+} from '@/constants/difficulty';
 import UploadBanner from './UploadBanner';
 import RichTextEditor from '@/components/ui/RichTextEditor';
 
@@ -55,9 +62,6 @@ const GeneralInformation = memo(function GeneralInformation({
     [],
   );
 
-  const difficultyMin = difficultyOptions[0] ?? 1;
-  const difficultyMax = difficultyOptions[difficultyOptions.length - 1] ?? 5;
-
   return (
     <div className="w-full h-full flex flex-col gap-[30px] px-[30px] py-[35px] border-1 border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5">
       <div className="flex flex-col gap-6">
@@ -90,7 +94,16 @@ const GeneralInformation = memo(function GeneralInformation({
               {t('Title')} <span className="text-destructive">*</span>
             </FieldLabel>
             <Input
-              {...register('title', { required: t('Title is required') })}
+              {...register('title', {
+                required: t('Title is required'),
+                maxLength: {
+                  value: TITLE_MAX_LENGTH,
+                  message: t('Title must be at most {{max}} characters', {
+                    max: TITLE_MAX_LENGTH,
+                  }),
+                },
+              })}
+              maxLength={TITLE_MAX_LENGTH}
               placeholder={t('Enter campaign title...')}
               className={inputClassName}
             />
@@ -157,25 +170,50 @@ const GeneralInformation = memo(function GeneralInformation({
             <Controller
               name="difficulty"
               control={control}
-              render={({ field }) => (
-                <div className="flex flex-col gap-3 rounded-lg border border-[rgba(136,122,71,0.5)] bg-white/5 px-4 py-3">
-                  <div className="flex items-center justify-between text-sm text-foreground-tertiary">
-                    <span>{t('Level')}</span>
-                    <span className="font-medium text-foreground">
-                      {field.value ?? difficultyMin}
-                    </span>
+              render={({ field }) => {
+                const level = field.value ?? DIFFICULTY_MIN;
+                const difficulty =
+                  getDifficultyLevel(level) ?? DIFFICULTY_LEVEL[DIFFICULTY_MIN];
+                return (
+                  <div className="flex flex-col gap-3 rounded-lg border border-[rgba(136,122,71,0.5)] bg-white/5 px-4 py-3">
+                    <div className="flex items-center justify-center text-sm">
+                      <span className={cn('font-semibold text-center', difficulty.textClass)}>
+                        {t(difficulty.label)}
+                      </span>
+                    </div>
+                    <Slider
+                      min={DIFFICULTY_MIN}
+                      max={DIFFICULTY_MAX}
+                      step={1}
+                      value={[level]}
+                      onValueChange={(value) => field.onChange(value[0] ?? DIFFICULTY_MIN)}
+                      aria-label={t('Difficulty')}
+                      className={difficulty.sliderClass}
+                    />
+                    <div className="flex justify-between px-0.5">
+                      {DIFFICULTY_VALUES.map((value) => {
+                        const item = DIFFICULTY_LEVEL[value];
+                        const selected = value === level;
+                        return (
+                          <button
+                            key={value}
+                            type="button"
+                            onClick={() => field.onChange(value)}
+                            className={cn(
+                              'flex flex-col items-center gap-0.5 text-[10px] transition-colors',
+                              selected
+                                ? cn('font-semibold', item.textClass)
+                                : 'text-foreground-tertiary',
+                            )}
+                          >
+                            <span className="hidden sm:block">{t(item.label)}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <Slider
-                    min={difficultyMin}
-                    max={difficultyMax}
-                    step={1}
-                    value={[field.value ?? difficultyMin]}
-                    onValueChange={(value) => field.onChange(value[0] ?? difficultyMin)}
-                    aria-label={t('Difficulty')}
-                    className="[&_[data-slot=slider-range]]:bg-button-accent [&_[data-slot=slider-thumb]]:border-button-accent"
-                  />
-                </div>
-              )}
+                );
+              }}
             />
             <FieldError errors={[errors.difficulty]} />
           </Field>

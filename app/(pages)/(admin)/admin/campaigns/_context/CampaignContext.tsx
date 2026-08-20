@@ -15,6 +15,7 @@ import type { ICampaign } from '@/apis/campaign/models/campaign';
 import useGetParam from '@/hooks/useGetParam';
 
 export type FormFilterValues = {
+  search: string;
   status: string;
   organizationId: string;
   sortBy: 'created_at' | 'updated_at';
@@ -64,6 +65,7 @@ export function CampaignProvider({ children }: { children: React.ReactNode }) {
   const searchParamsRef = useRef(searchParams);
   searchParamsRef.current = searchParams;
 
+  const urlSearch = useGetParam<string>('search', 'string', '');
   const urlStatus = useGetParam<string>('status', 'string', 'all');
   const urlOrganizationId = useGetParam<string>('organization_id', 'string', '');
   const urlSortBy = useGetParam<string>('sort_by', 'string', 'created_at');
@@ -72,6 +74,7 @@ export function CampaignProvider({ children }: { children: React.ReactNode }) {
   const urlLimit = useGetParam<number>('limit', 'number', 10);
 
   const [filters, setFilters] = useState<FormFilterValues>({
+    search: urlSearch ?? '',
     status: urlStatus ?? 'all',
     organizationId: urlOrganizationId ?? '',
     sortBy: parseSortBy(urlSortBy),
@@ -85,6 +88,7 @@ export function CampaignProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const nextFilters: FormFilterValues = {
+      search: urlSearch ?? '',
       status: urlStatus ?? 'all',
       organizationId: urlOrganizationId ?? '',
       sortBy: parseSortBy(urlSortBy),
@@ -92,6 +96,7 @@ export function CampaignProvider({ children }: { children: React.ReactNode }) {
     };
     setFilters((prev) => {
       if (
+        prev.search === nextFilters.search &&
         prev.status === nextFilters.status &&
         prev.organizationId === nextFilters.organizationId &&
         prev.sortBy === nextFilters.sortBy &&
@@ -112,7 +117,7 @@ export function CampaignProvider({ children }: { children: React.ReactNode }) {
       }
       return nextPagination;
     });
-  }, [urlLimit, urlOrganizationId, urlPage, urlSortBy, urlSortOrder, urlStatus]);
+  }, [urlLimit, urlOrganizationId, urlPage, urlSearch, urlSortBy, urlSortOrder, urlStatus]);
 
   const setParams = useCallback(
     (updates: Record<string, string | undefined>) => {
@@ -135,10 +140,11 @@ export function CampaignProvider({ children }: { children: React.ReactNode }) {
     () => ({
       page: pagination.current,
       limit: pagination.pageSize,
+      search: filters.search.trim() || undefined,
       status: filters.status === 'all' ? undefined : Number(filters.status),
       organization_id: filters.organizationId || undefined,
     }),
-    [filters.organizationId, filters.status, pagination],
+    [filters.organizationId, filters.search, filters.status, pagination],
   );
 
   const { data, isLoading } = useGetCampaigns(request);
@@ -152,6 +158,7 @@ export function CampaignProvider({ children }: { children: React.ReactNode }) {
         const merged = { ...prev, ...next };
         setPagination((prevPagination) => ({ ...prevPagination, current: 1 }));
         setParams({
+          search: merged.search.trim() || undefined,
           status: merged.status === 'all' ? undefined : merged.status,
           organization_id: merged.organizationId || undefined,
           sort_by: merged.sortBy,
@@ -166,6 +173,7 @@ export function CampaignProvider({ children }: { children: React.ReactNode }) {
 
   const onResetFilters = useCallback(() => {
     const resetFilters: FormFilterValues = {
+      search: '',
       status: 'all',
       organizationId: '',
       sortBy: 'created_at',
@@ -174,6 +182,7 @@ export function CampaignProvider({ children }: { children: React.ReactNode }) {
     setFilters(resetFilters);
     setPagination((prev) => ({ ...prev, current: 1 }));
     setParams({
+      search: undefined,
       status: undefined,
       organization_id: undefined,
       sort_by: undefined,

@@ -7,11 +7,10 @@ import { cn } from "@/libs/utils";
 interface TagTicketProps {
   type: number;
   className?: string;
-  isBom?: boolean;
   label?: string;
 }
 
-const TagStatus: React.FC<TagTicketProps> = ({ type, className, isBom, label }) => {
+const TagStatus: React.FC<TagTicketProps> = ({ type, className, label }) => {
   const { t } = useTranslation();
 
   const filterColorByType = useCallback((type: number) => {
@@ -38,6 +37,7 @@ const TagStatus: React.FC<TagTicketProps> = ({ type, className, isBom, label }) 
         return "cyan";
       case STATUS.WAITING_APPROVED:
       case STATUS.WAITING_CONFIRMED:
+      case STATUS.INREVIEW:
         return "orange";
       case STATUS.VERIFIED:
       case STATUS.IN_PROGRESS:
@@ -60,11 +60,12 @@ const TagStatus: React.FC<TagTicketProps> = ({ type, className, isBom, label }) 
       case STATUS.DRAFT:
         return t("Draft");
       case STATUS.NEW:
-        return isBom ? t("Submitted") : t("New");
+        return t("New");
       case STATUS.WAITING_APPROVED:
         return t("Waiting Approved");
       case STATUS.WAITING_CONFIRMED:
-        return isBom ? t("In review") : t("Waiting Confirmed");
+      case STATUS.INREVIEW:
+        return t("Waiting Confirmed");
       case STATUS.REVIEWED:
         return t("Reviewed");
       case STATUS.ASSIGNED:

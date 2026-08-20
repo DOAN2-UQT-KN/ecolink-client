@@ -41,7 +41,7 @@ export const NOTIFICATION_PREFERENCE_LABEL_KEYS: Record<
   campaignNearbyVerify: 'Notify: verify nearby campaigns',
   campaignDone: 'Notify: campaign completed',
   campaignCompletionRejected: 'Notify: completion rejected by admin',
-  volunteerRequest: 'Notify: volunteer requests and approvals',
+  volunteerRequest: 'Notify: volunteer requests, approvals, and rejections',
   reportStatus: 'Notify: report status updates',
 };
 

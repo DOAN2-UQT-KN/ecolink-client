@@ -22,6 +22,7 @@ import ChangeStatus from '@/components/ui/ChangeStatus';
 import { STATUS } from '@/constants/status';
 import { cn } from '@/libs/utils';
 import { isVideoUrl } from '@/utils/campaignTaskMedia';
+import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
 
 export interface CampaignTaskCardProps {
   task: ICampaignTask;
@@ -32,9 +33,12 @@ export interface CampaignTaskCardProps {
 
 export function CampaignTaskCard({ task, onEdit, onDelete, isOwner }: CampaignTaskCardProps) {
   const { t } = useTranslation();
+  const { title: localizedTitle, description: localizedDescription } = useLocalizedDisplay();
   const [isOpen, setIsOpen] = useState(false);
   const { scheduled_time_from, scheduled_time_to } = parseScheduledTimeRange(task.scheduled_time);
-  const resultDescription = task.result?.description ?? '';
+  const taskTitle = localizedTitle(task);
+  const taskDescription = localizedDescription(task);
+  const resultDescription = task.result ? localizedDescription(task.result) : '';
   const resultImages = task.result?.file ?? [];
   const normalizedPriority = Number(task.priority);
   const leftBorderColor =
@@ -59,7 +63,7 @@ export function CampaignTaskCard({ task, onEdit, onDelete, isOwner }: CampaignTa
       >
         <div className="flex flex-col gap-1 w-full">
           <span className="font-bold font-display-4 text-button-accent">
-            {task.title || t('Untitled Task')}
+            {taskTitle || t('Untitled Task')}
           </span>
           <div className="flex justify-start gap-3 items-center w-full">
             <div className="font-display-1 text-foreground-tertiary flex items-center justify-center gap-1">
@@ -123,7 +127,7 @@ export function CampaignTaskCard({ task, onEdit, onDelete, isOwner }: CampaignTa
                   {t('Description')}
                 </div>
                 <RichTextContent
-                  value={task.description || ''}
+                  value={taskDescription}
                   className="text-foreground whitespace-pre-wrap break-words !font-display-4"
                 />
               </div>
@@ -161,7 +165,7 @@ export function CampaignTaskCard({ task, onEdit, onDelete, isOwner }: CampaignTa
                           ) : (
                             <AntdImage
                               src={mediaUrl}
-                              alt={task.title || ''}
+                              alt={taskTitle || ''}
                               className="object-cover transition-transform duration-300 group-hover:scale-105 w-[220px] h-[220px] cursor-pointer"
                               width="220px"
                               height="220px"
