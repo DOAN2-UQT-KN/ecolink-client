@@ -48,13 +48,12 @@ const CampaignsSearchPage = memo(function CampaignsSearchPage() {
           </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-8 items-start w-full h-full">
-          <div
-            className={`w-full lg:w-[320px] sticky top-0  ${isScrolled ? 'pt-[100px]' : 'pt-0'} z-[40] h-full`}
-          >
-            <SearchFilter isScrolled={isScrolled} />
+        <div className="flex flex-col lg:flex-row gap-8 items-start w-full">
+          <SearchFilter />
+
+          <div className="min-w-0 flex-1 w-full">
+            <CampaignList />
           </div>
-          <CampaignList />
         </div>
       </div>
     </CampaignSearchProvider>

@@ -1,75 +1,78 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 import { useRouter } from '@/libs/router';
 import { useTranslation } from 'react-i18next';
 import { Building2 } from 'lucide-react';
-import { TbPencil } from 'react-icons/tb';
 
 import type { ICampaign } from '@/apis/campaign/models/campaign';
 import { StatusTag } from '@/components/ui/StatusTag';
-import { RichTextContent } from '@/components/ui/RichTextContent';
+import Image from '@/components/ui/AppImage';
 import { formattedDate } from '@/utils/formattedDate';
-import { STATUS } from '@/constants/status';
+import { getDifficultyLevel } from '@/constants/difficulty';
 import { cn } from '@/libs/utils';
-import { Button } from '@/components/client/shared/Button';
 import {
   DataTable as SharedDataTable,
   type ColumnType,
 } from '@/components/client/shared/DataTable';
 import useCampaignMeContext from '../_hooks/useCampaignMeContext';
 import FormFilter from './FormFilter';
-import { UpdateCampaignPopover } from './UpdateCampaignPopover';
 import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
 
 const defaultPagination = { current: 1, pageSize: 10 };
+const DEFAULT_BANNER = '/banner-default.jpg';
 
 const COLUMN_KEYS = {
   NO: 'no',
-  TITLE: 'title',
-  DESCRIPTION: 'description',
+  GENERAL_INFORMATION: 'general_information',
   CREATED_AT: 'created_at',
-  DATE_RANGE: 'date_range',
   ORGANIZATION: 'organization',
   STATUS: 'status',
+  BAN_REASON: 'ban_reason',
   MEMBERS: 'members',
   GREEN_POINTS: 'green_points',
-  DIFFICULTY: 'difficulty',
-  ACTION: 'action',
 } as const;
 
-function difficultyLabel(difficulty?: number | null): string {
-  if (difficulty == null) return '—';
-  if (difficulty <= 1) return 'Easy';
-  if (difficulty === 2) return 'Medium';
-  if (difficulty === 3) return 'Hard';
-  return `Lv ${difficulty}`;
-}
+const GeneralInformationCell = memo(function GeneralInformationCell({
+  campaign,
+  title,
+}: {
+  campaign: ICampaign;
+  title: string;
+}) {
+  const { t } = useTranslation();
+  const bannerUrl = campaign.banner?.trim() ? campaign.banner : DEFAULT_BANNER;
+  const difficulty = getDifficultyLevel(campaign.difficulty);
+  const duration = `${formattedDate(campaign.start_date ?? undefined)} - ${formattedDate(campaign.end_date ?? undefined)}`;
 
-function difficultyColor(difficulty?: number | null): string {
-  if (difficulty == null) return 'text-zinc-500';
-  if (difficulty <= 1) return 'text-emerald-500';
-  if (difficulty === 2) return 'text-amber-500';
-  return 'text-rose-500';
-}
+  return (
+    <div className="flex items-start gap-3 min-w-[280px] max-w-[420px]">
+      <Image
+        src={bannerUrl}
+        alt={title}
+        width={72}
+        height={48}
+        className="h-12 w-[72px] shrink-0 rounded-md object-cover ring-1 ring-zinc-200"
+      />
+      <div className="flex min-w-0 flex-col gap-0.5">
+        <span className="font-medium line-clamp-2 text-zinc-900">{title}</span>
+        <span className="text-xs text-zinc-600 tabular-nums">{duration}</span>
+        <span
+          className={cn(
+            'font-display-1 text-xs font-medium',
+            difficulty?.textClass ?? 'text-zinc-500',
+          )}
+        >
+          {difficulty ? t(difficulty.label) : '—'}
+        </span>
+      </div>
+    </div>
+  );
+});
 
 export const DataTable = memo(function DataTable() {
   const router = useRouter();
   const { t } = useTranslation();
-  const { title: localizedTitle, description: localizedDescription, locale } =
-    useLocalizedDisplay();
-  const { campaigns, isLoading, pagination, setPagination, total, refetch } =
-    useCampaignMeContext();
-  const [selectedCampaign, setSelectedCampaign] = useState<ICampaign | null>(null);
-  const [openUpdate, setOpenUpdate] = useState(false);
-
-  const openEdit = useCallback((campaign: ICampaign) => {
-    setSelectedCampaign(campaign);
-    setOpenUpdate(true);
-  }, []);
-
-  const closeEdit = useCallback((open: boolean) => {
-    setOpenUpdate(open);
-    if (!open) setSelectedCampaign(null);
-  }, []);
+  const { title: localizedTitle, locale } = useLocalizedDisplay();
+  const { campaigns, isLoading, pagination, setPagination, total } = useCampaignMeContext();
 
   const columns: ColumnType<ICampaign>[] = useMemo(
     () => [
@@ -84,29 +87,12 @@ export const DataTable = memo(function DataTable() {
         width: 60,
       },
       {
-        key: COLUMN_KEYS.TITLE,
-        title: t('Title'),
+        key: COLUMN_KEYS.GENERAL_INFORMATION,
+        title: t('General information'),
         render: (_, record) => (
-          <span className="font-medium line-clamp-2">{localizedTitle(record)}</span>
+          <GeneralInformationCell campaign={record} title={localizedTitle(record)} />
         ),
-        width: 220,
-      },
-      {
-        key: COLUMN_KEYS.DESCRIPTION,
-        title: t('Description'),
-        render: (_, record) => (
-          <div className="w-[280px]">
-            <RichTextContent
-              value={localizedDescription(record)}
-              className="text-sm text-foreground whitespace-pre-wrap break-words !font-display-1 w-full"
-              maxLines={2}
-              showMoreLabel={t('See more')}
-              showLessLabel={t('See less')}
-              emptyFallback={<span className="text-foreground-secondary">—</span>}
-            />
-          </div>
-        ),
-        width: 300,
+        width: 360,
       },
       {
         key: COLUMN_KEYS.CREATED_AT,
@@ -117,31 +103,13 @@ export const DataTable = memo(function DataTable() {
         width: 140,
       },
       {
-        key: COLUMN_KEYS.DATE_RANGE,
-        title: t('Campaign duration'),
-        render: (_, record) => (
-          <div className="space-y-0.5">
-            <p className="text-xs text-zinc-600">
-              <span className="font-medium">{t('Start')}:</span>{' '}
-              {formattedDate(record.start_date ?? undefined)}
-            </p>
-            <p className="text-xs text-zinc-600">
-              <span className="font-medium">{t('End')}:</span>{' '}
-              {formattedDate(record.end_date ?? undefined)}
-            </p>
-          </div>
-        ),
-        width: 180,
-      },
-      {
         key: COLUMN_KEYS.ORGANIZATION,
         title: t('Organization'),
         render: (_, record) => (
           <div className="flex items-center gap-2 min-w-[160px]">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full overflow-hidden ring-1 text-xs font-semibold ring-zinc-300 bg-zinc-200 text-zinc-600">
               {record.organization?.logo_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
+                <Image
                   src={record.organization.logo_url}
                   alt={record.organization.name}
                   className="h-full w-full object-cover"
@@ -171,6 +139,22 @@ export const DataTable = memo(function DataTable() {
         width: 120,
       },
       {
+        key: COLUMN_KEYS.BAN_REASON,
+        title: t('Reject Reason'),
+        render: (_, record) =>
+          record.reject_reason ? (
+            <span
+              className="line-clamp-2 text-xs"
+              title={record.reject_reason}
+            >
+              {record.reject_reason}
+            </span>
+          ) : (
+            <span className="text-xs text-zinc-400">—</span>
+          ),
+        width: 180,
+      },
+      {
         key: COLUMN_KEYS.MEMBERS,
         title: t('Members'),
         render: (_, record) => (
@@ -182,51 +166,18 @@ export const DataTable = memo(function DataTable() {
         ),
         width: 120,
       },
-      {
-        key: COLUMN_KEYS.GREEN_POINTS,
-        title: t('Green pts'),
-        render: (_, record) => (
-          <span className="flex items-center gap-1 text-sm font-medium text-emerald-500">
-            🌿 {record.green_points ?? 0}
-          </span>
-        ),
-        width: 120,
-      },
-      {
-        key: COLUMN_KEYS.DIFFICULTY,
-        title: t('Difficulty'),
-        render: (_, record) => (
-          <span className={cn('font-display-1 font-medium', difficultyColor(record.difficulty))}>
-            {t(difficultyLabel(record.difficulty))}
-          </span>
-        ),
-        width: 110,
-      },
-      {
-        key: COLUMN_KEYS.ACTION,
-        title: t('Action'),
-        render: (_, record) => {
-          const canEdit = [STATUS.ACTIVE, STATUS.PENDING].includes(record.status ?? -1);
-          if (!canEdit) return <span className="text-zinc-400">—</span>;
-          return (
-            <Button
-              type="button"
-              variant="outlined-brown"
-              size="small"
-              className="h-8 w-8 p-0 border-none bg-transparent hover:bg-muted shadow-none group"
-              onClick={(e) => {
-                e.stopPropagation();
-                openEdit(record);
-              }}
-            >
-              <TbPencil className="h-4 w-4 text-muted-foreground group-hover:text-white transition-colors" />
-            </Button>
-          );
-        },
-        width: 90,
-      },
+      // {
+      //   key: COLUMN_KEYS.GREEN_POINTS,
+      //   title: t('Green pts'),
+      //   render: (_, record) => (
+      //     <span className="flex items-center gap-1 text-sm font-medium text-emerald-500">
+      //       🌿 {record.green_points ?? 0}
+      //     </span>
+      //   ),
+      //   width: 120,
+      // },
     ],
-    [openEdit, pagination.current, pagination.pageSize, t, locale, localizedTitle, localizedDescription],
+    [pagination.current, pagination.pageSize, t, locale, localizedTitle],
   );
 
   const handleTableChange = useCallback(
@@ -245,12 +196,6 @@ export const DataTable = memo(function DataTable() {
 
   return (
     <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
-      <UpdateCampaignPopover
-        campaign={selectedCampaign}
-        open={openUpdate}
-        onOpenChange={closeEdit}
-        onUpdated={refetch}
-      />
       <SharedDataTable
         rowKey="id"
         columns={columns}

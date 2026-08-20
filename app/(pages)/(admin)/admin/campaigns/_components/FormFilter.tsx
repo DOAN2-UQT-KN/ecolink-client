@@ -1,7 +1,9 @@
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { TbZoom } from 'react-icons/tb';
 
 import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -13,6 +15,7 @@ import SelectListOrganization, {
   ALL_ORGANIZATIONS_VALUE,
 } from '@/components/form/SelectListOrganization';
 import { STATUS } from '@/constants/status';
+import { useDebounce } from '@/hooks/useDebounce';
 import { useCampaignContext } from '../_context/CampaignContext';
 
 /** Status options relevant to campaigns — derived from STATUS enum */
@@ -21,14 +24,26 @@ const CAMPAIGN_STATUS_OPTIONS = [
   { labelKey: 'Active', value: String(STATUS.ACTIVE) },
   { labelKey: 'Inactive', value: String(STATUS.INACTIVE) },
   { labelKey: 'Pending', value: String(STATUS.PENDING) },
-  // { labelKey: "Verified", value: String(STATUS.VERIFIED) },
-  // { labelKey: "Rejected", value: String(STATUS.REJECTED) },
+  { labelKey: 'Waiting Confirmed', value: String(STATUS.WAITING_CONFIRMED) },
   { labelKey: 'Completed', value: String(STATUS.COMPLETED) },
 ] as const;
 
 export const FormFilter = memo(function FormFilter() {
   const { t } = useTranslation();
   const { filters, onFilterChange } = useCampaignContext();
+
+  const [searchValue, setSearchValue] = useState(filters.search ?? '');
+  const debouncedSearch = useDebounce(searchValue, 500);
+
+  useEffect(() => {
+    setSearchValue(filters.search ?? '');
+  }, [filters.search]);
+
+  useEffect(() => {
+    const normalized = debouncedSearch.trim();
+    if ((filters.search ?? '') === normalized) return;
+    onFilterChange({ search: normalized });
+  }, [debouncedSearch, filters.search, onFilterChange]);
 
   const handleStatusChange = useCallback(
     (value: string) => {
@@ -53,7 +68,21 @@ export const FormFilter = memo(function FormFilter() {
   return (
     <div className="space-y-4 rounded-[10px] border border-border bg-card p-4">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {/* Status filter */}
+        <Field>
+          <FieldLabel className="text-sm font-medium text-foreground-secondary">
+            {t('Search')}
+          </FieldLabel>
+          <div className="relative">
+            <TbZoom className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              className="h-10 pl-10 !border !border-input"
+              placeholder={t('Search by title...')}
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+            />
+          </div>
+        </Field>
+
         <Field>
           <FieldLabel className="text-sm font-medium text-foreground-secondary">
             {t('Status')}
@@ -72,7 +101,6 @@ export const FormFilter = memo(function FormFilter() {
           </Select>
         </Field>
 
-        {/* Organization filter */}
         <Field>
           <FieldLabel className="text-sm font-medium text-foreground-secondary">
             {t('Organization')}

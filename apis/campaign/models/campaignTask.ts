@@ -3,7 +3,9 @@ import { IBaseResponse } from '@/types/BaseResponse';
 
 export interface ICampaignTask {
   id: string;
-  description: string;
+  description?: string | null;
+  description_vi?: string | null;
+  description_en?: string | null;
   status: number;
   created_at: string;
   updated_at: string;
@@ -11,8 +13,12 @@ export interface ICampaignTask {
   scheduled_time: string;
   priority: number;
   title?: string;
+  title_vi?: string | null;
+  title_en?: string | null;
   result?: {
     description?: string;
+    description_vi?: string | null;
+    description_en?: string | null;
     file?: string[];
   };
   scheduled_date: string;

@@ -1,6 +1,11 @@
 import { IIncident } from "@/apis/incident/models/incident";
 import { IResource } from "@/apis/saved-resource/models/getResource";
 import { ICreateCampaignRequest } from "@/apis/campaign/models/createCampaign";
+import { STATUS } from "@/constants/status";
+import { DIFFICULTY_MIN, clampDifficulty } from "@/constants/difficulty";
+
+export const TITLE_MAX_LENGTH = 200;
+export const DETAIL_ADDRESS_MAX_LENGTH = 255;
 
 export interface CampaignFormValues {
   organization_id: string;
@@ -21,7 +26,7 @@ export const DEFAULT_CAMPAIGN_FORM_VALUES: CampaignFormValues = {
   title: "",
   description: "",
   banner: undefined,
-  difficulty: 1,
+  difficulty: DIFFICULTY_MIN,
   start_date: undefined,
   end_date: undefined,
   latitude: undefined,
@@ -30,55 +35,42 @@ export const DEFAULT_CAMPAIGN_FORM_VALUES: CampaignFormValues = {
   selectedReports: [],
 };
 
-export const difficultyOptions = [1, 2, 3, 4, 5];
+export const truncateDetailAddress = (value?: string | null): string => {
+  const trimmed = value?.trim() ?? "";
+  if (trimmed.length <= DETAIL_ADDRESS_MAX_LENGTH) {
+    return trimmed;
+  }
+  return trimmed.slice(0, DETAIL_ADDRESS_MAX_LENGTH);
+};
 
 export const transformToApiData = (
   data: CampaignFormValues,
 ): ICreateCampaignRequest => {
+  const description = data.description.trim() || undefined;
+  const detailAddress = truncateDetailAddress(data.detail_address) || undefined;
+  const reportIds = data.selectedReports
+    .filter((report) => report.status === STATUS.TODO)
+    .map((report) => report.id);
+
   return {
     organization_id: data.organization_id,
-    title: data.title.trim(),
-    description: data.description.trim(),
+    title: data.title.trim().slice(0, TITLE_MAX_LENGTH),
+    description,
     banner: typeof data.banner === "string" ? data.banner : undefined,
-    difficulty: data.difficulty,
+    difficulty: clampDifficulty(data.difficulty),
     start_date: data.start_date,
     end_date: data.end_date,
     latitude: data.latitude,
     longitude: data.longitude,
-    detail_address: data.detail_address.trim() || undefined,
-    report_ids: data.selectedReports.map((report) => report.id),
+    detail_address: detailAddress,
+    report_ids: reportIds.length > 0 ? reportIds : undefined,
   };
 };
 
 export const mapResourceToIncident = (resource: IResource): IIncident | null => {
-  const maybeIncident = (resource as unknown as { resource?: IIncident }).resource;
-  if (maybeIncident?.id) {
-    return maybeIncident;
-  }
-
-  const maybeData = (resource as unknown as { data?: IIncident }).data;
-  if (maybeData?.id) {
-    return maybeData;
-  }
-
-  if (resource.id) {
-    return {
-      id: resource.id,
-      user_id: null,
-      title: resource.name ?? "",
-      description: resource.description ?? "",
-      waste_type: null,
-      condition: null,
-      severity_level: null,
-      latitude: null,
-      longitude: null,
-      status: null,
-      ai_verified: false,
-      created_at: resource.created_at,
-      updated_at: resource.updated_at,
-      distance: 0,
-      image_urls: [],
-    };
+  const nestedIncident = resource.resource;
+  if (nestedIncident?.id) {
+    return nestedIncident;
   }
 
   return null;

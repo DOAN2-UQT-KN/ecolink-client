@@ -16,7 +16,11 @@ import { cn } from "@/libs/utils";
 export type ConfirmPopoverModalType = "leave" | "cancel";
 
 export type ConfirmPopoverModalProps = {
-  type: ConfirmPopoverModalType;
+  type?: ConfirmPopoverModalType;
+  title?: string;
+  description?: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
   trigger: ReactNode;
   onConfirm: () => void | Promise<void>;
   confirmPending?: boolean;
@@ -24,6 +28,10 @@ export type ConfirmPopoverModalProps = {
 
 export const ConfirmPopoverModal = memo(function ConfirmPopoverModal({
   type,
+  title: titleProp,
+  description: descriptionProp,
+  confirmLabel: confirmLabelProp,
+  cancelLabel: cancelLabelProp,
   trigger,
   onConfirm,
   confirmPending = false,
@@ -32,20 +40,25 @@ export const ConfirmPopoverModal = memo(function ConfirmPopoverModal({
   const [open, setOpen] = useState(false);
 
   const title = useMemo(() => {
+    if (titleProp) return titleProp;
     return type === "leave"
       ? t("Leave this organization?")
       : t("Cancel your join request?");
-  }, [type, t]);
+  }, [titleProp, type, t]);
 
   const description = useMemo(() => {
+    if (descriptionProp) return descriptionProp;
     return type === "leave"
       ? t("You will need to join again to regain access.")
       : t("You can submit a new request later.");
-  }, [type, t]);
-  
+  }, [descriptionProp, type, t]);
+
   const confirmLabel = useMemo(() => {
+    if (confirmLabelProp) return confirmLabelProp;
     return type === "leave" ? t("Leave") : t("Cancel request");
-  }, [type, t]);
+  }, [confirmLabelProp, type, t]);
+
+  const cancelLabel = cancelLabelProp ?? t("Cancel");
 
   const runConfirm = useCallback(async () => {
     try {
@@ -89,7 +102,7 @@ export const ConfirmPopoverModal = memo(function ConfirmPopoverModal({
             className="h-[40px] flex items-center gap-1.5 flex-row"
             onClick={() => setOpen(false)}
           >
-            {t("Cancel")}
+            {cancelLabel}
           </Button>
           <Button
             variant="brown"

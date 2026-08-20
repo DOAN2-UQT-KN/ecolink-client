@@ -56,6 +56,7 @@ export function getNotificationHref(
     case 'CAMPAIGN_DONE':
     case 'CAMPAIGN_VERIFY_INVITE':
     case 'CAMPAIGN_COMPLETION_VERIFY_INVITE':
+    case 'CAMPAIGN_COMPLETION_APPROVED_BY_ADMIN':
     case 'CAMPAIGN_COMPLETION_REJECTED_BY_ADMIN':
       return campaignId ? `/campaigns/${campaignId}` : null;
     case 'CAMPAIGN_COMPLETION_PENDING_ADMIN':
@@ -64,6 +65,7 @@ export function getNotificationHref(
       return '/organizations/me';
     case 'VOLUNTEER_REQUEST':
     case 'VOLUNTEER_APPROVED':
+    case 'VOLUNTEER_REJECTED':
     case 'ORGANIZATION_APPROVED':
       if (campaignId) return `/campaigns/${campaignId}`;
       const organizationSlug =

@@ -53,7 +53,8 @@ const IncidentList = memo(function IncidentList() {
     const resourceArray = Array.isArray(resources?.items) ? resources?.items : [];
     return resourceArray
       .map((resource) => mapResourceToIncident(resource))
-      .filter((report): report is IIncident => Boolean(report));
+      .filter((report): report is IIncident => Boolean(report))
+      .filter((report) => report.status === STATUS.TODO);
   }, [savedData?.data]);
 
   const isLoading = useMemo(

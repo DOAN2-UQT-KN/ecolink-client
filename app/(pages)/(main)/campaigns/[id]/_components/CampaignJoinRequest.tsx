@@ -142,7 +142,6 @@ export const CampaignJoinRequest = memo(function CampaignJoinRequest({
                 <div className="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end">
                   <SharedButton
                     variant="brown"
-                    size="small"
                     className="min-w-[96px] !h-[40px]"
                     isLoading={rowPending && pendingAction?.approved === true}
                     isDisabled={pendingAction != null}
@@ -155,7 +154,6 @@ export const CampaignJoinRequest = memo(function CampaignJoinRequest({
                   </SharedButton>
                   <SharedButton
                     variant="outlined-brown"
-                    size="small"
                     className="min-w-[96px] !h-[40px]"
                     isLoading={rowPending && pendingAction?.approved === false}
                     isDisabled={pendingAction != null}

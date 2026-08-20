@@ -74,6 +74,7 @@ export function DataTable() {
         key: COLUMN_KEYS.INCIDENT,
         title: t('Incident'),
         className: ' min-w-[280px]',
+        sticky: 'left',
         render: (_, record) => (
           <div className="flex items-center gap-3 py-1">
             <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-border/50 bg-muted">
@@ -234,7 +235,7 @@ export function DataTable() {
       },
       {
         key: COLUMN_KEYS.REJECT_REASON,
-        title: t('Ban Reason'),
+        title: t('Reject Reason'),
         className: 'min-w-[220px]',
         render: (_, record) => (
           <RichTextContent
@@ -284,6 +285,7 @@ export function DataTable() {
         key: COLUMN_KEYS.ACTION,
         title: t('Action'),
         className: 'min-w-[160px]',
+        sticky: 'right',
         render: (_, record) => {
           const theme = isDark ? 'dark' : 'light';
           const isInactive = record.status === STATUS.INACTIVE;

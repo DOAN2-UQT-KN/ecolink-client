@@ -6,7 +6,7 @@ import { Search } from 'lucide-react';
 import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import SelectListOrganization, {
+import {
   ALL_ORGANIZATIONS_VALUE,
 } from '@/components/form/SelectListOrganization';
 import { STATUS } from '@/constants/status';
@@ -15,10 +15,11 @@ import useCampaignMeContext from '../_hooks/useCampaignMeContext';
 
 const CAMPAIGN_STATUS_OPTIONS = [
   { labelKey: 'All', value: 'all' },
-  { labelKey: 'Active', value: String(STATUS.ACTIVE) },
-  { labelKey: 'Inactive', value: String(STATUS.INACTIVE) },
   { labelKey: 'Pending', value: String(STATUS.PENDING) },
+  { labelKey: 'Active', value: String(STATUS.ACTIVE) },
+  { labelKey: 'Waiting Confirmed', value: String(STATUS.WAITING_CONFIRMED) },
   { labelKey: 'Completed', value: String(STATUS.COMPLETED) },
+  { labelKey: 'Inactive', value: String(STATUS.INACTIVE) },
 ] as const;
 
 export const FormFilter = memo(function FormFilter() {
@@ -103,14 +104,14 @@ export const FormFilter = memo(function FormFilter() {
             className="pl-10 h-10 border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50 text-base !font-display-1"
           />
         </div>
-        <Field>
+        {/* <Field>
           <SelectListOrganization
             value={filters.organizationId || ALL_ORGANIZATIONS_VALUE}
             onChange={handleOrganizationChange}
             className="!h-10 w-full border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50  !font-display-1"
             allOptions
           />
-        </Field>
+        </Field> */}
       </div>
     </div>
   );

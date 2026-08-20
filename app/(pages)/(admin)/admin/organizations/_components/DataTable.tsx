@@ -60,6 +60,7 @@ export function DataTable() {
         key: COLUMN_KEYS.NAME_LOGO,
         title: t('Organization'),
         className: ' z-20 min-w-[220px]',
+        sticky: 'left',
         render: (_, record) => (
           <div className="flex items-center gap-3">
             {record.logo_url ? (
@@ -183,7 +184,7 @@ export function DataTable() {
       },
       {
         key: COLUMN_KEYS.REJECT_REASON,
-        title: t('Ban Reason'),
+        title: t('Reject Reason'),
         className: 'min-w-[220px]',
         render: (_, record) => (
           <RichTextContent
@@ -200,6 +201,7 @@ export function DataTable() {
         key: COLUMN_KEYS.ACTION,
         title: t('Action'),
         className: 'min-w-[160px]',
+        sticky: 'right',
         render: (_, record) => (
           <div
             className="flex items-center gap-2"
