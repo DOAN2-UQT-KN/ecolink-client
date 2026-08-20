@@ -17,7 +17,6 @@ const CAMPAIGN_STATUS_OPTIONS = [
   { labelKey: 'All', value: 'all' },
   { labelKey: 'Pending', value: String(STATUS.PENDING) },
   { labelKey: 'Active', value: String(STATUS.ACTIVE) },
-  { labelKey: 'In Review', value: String(STATUS.INREVIEW) },
   { labelKey: 'Waiting Confirmed', value: String(STATUS.WAITING_CONFIRMED) },
   { labelKey: 'Completed', value: String(STATUS.COMPLETED) },
   { labelKey: 'Inactive', value: String(STATUS.INACTIVE) },

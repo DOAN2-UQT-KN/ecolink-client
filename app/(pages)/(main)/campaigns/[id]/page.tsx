@@ -51,7 +51,7 @@ function CampaignDetailBody() {
 
   const canOwnerSubmitCompletion =
     isCampaignOwner &&
-    (campaign?.status === STATUS.INREVIEW || campaign?.status === STATUS.ACTIVE);
+    (campaign?.status === STATUS.ACTIVE || campaign?.status === STATUS.INREVIEW);
 
   const showAwaitingAdminCompletion =
     isCampaignOwner && campaign?.status === STATUS.WAITING_CONFIRMED;

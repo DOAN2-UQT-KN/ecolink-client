@@ -68,7 +68,7 @@ export const CompletionReviewCampaignConfirm = memo(
             type: MessageType.Toast,
             level: MessageLevel.Success,
             title: t(
-              "Completion request rejected; campaign returned to in review",
+              "Completion request rejected; campaign returned to active",
             ),
           });
           resetForm();
@@ -168,7 +168,7 @@ export const CompletionReviewCampaignConfirm = memo(
                 )}
               >
                 {t(
-                  "The campaign will return to in review. The organization owner will be notified.",
+                  "The campaign will return to active. The organization owner will be notified.",
                 )}
               </p>
             )}

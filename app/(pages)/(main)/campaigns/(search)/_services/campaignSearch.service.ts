@@ -5,7 +5,6 @@ export type CampaignSearchViewMode = "explore" | "mine";
 
 export const DEFAULT_CAMPAIGN_SEARCH_STATUSES = [
   STATUS.ACTIVE,
-  STATUS.INREVIEW,
   STATUS.WAITING_CONFIRMED,
   STATUS.COMPLETED,
 ] as const;
@@ -22,7 +21,6 @@ export const CAMPAIGN_SEARCH_DEBOUNCE_MS = 500;
 export const CAMPAIGN_STATUS_OPTIONS = [
   { label: "Pending", value: STATUS.PENDING },
   { label: "Active", value: STATUS.ACTIVE },
-  { label: "In Review", value: STATUS.INREVIEW },
   { label: "Waiting Confirmed", value: STATUS.WAITING_CONFIRMED },
   { label: "Completed", value: STATUS.COMPLETED },
 ] as const;
