@@ -17,6 +17,7 @@ export interface IUser {
   latitude?: number | null;
   longitude?: number | null;
   locationUpdatedAt?: string | null;
+  detail_address?: string | null;
   notification_preferences?: Record<string, boolean>;
   notificationPreferences?: Record<string, boolean>;
 }

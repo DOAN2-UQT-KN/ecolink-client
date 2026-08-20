@@ -13,6 +13,7 @@ export interface IUpdateUserRequest {
   /** Set together; use `null` for both to clear saved location. */
   latitude?: number | null;
   longitude?: number | null;
+  detail_address?: string | null;
   notification_preferences?: Record<string, boolean>;
 }
 

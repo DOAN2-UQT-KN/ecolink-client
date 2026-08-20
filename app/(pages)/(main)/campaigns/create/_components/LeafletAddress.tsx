@@ -4,6 +4,7 @@ import { useFormState, useWatch } from "react-hook-form";
 import dynamic from "@/libs/dynamic";
 import { useTranslation } from "react-i18next";
 import { IoIosSearch } from "react-icons/io";
+import { toast } from "sonner";
 
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Button } from "@/components/client/shared/Button";
@@ -24,8 +25,12 @@ const LeafletAddressMap = dynamic(() => import("@/modules/LeafletAddressMap"), {
 
 const NOMINATIM_HEADERS = { Accept: "application/json" } as const;
 const REVERSE_DEBOUNCE_MS = 400;
+const GPS_OPTIONS: PositionOptions = {
+  enableHighAccuracy: true,
+  timeout: 15_000,
+};
 
-type AddressChangeSource = "map" | "gps" | "user";
+type AddressChangeSource = "map" | "gps" | "user" | "hydrate";
 
 type ReverseGeocodingAddress = {
   detailAddress?: string;
@@ -79,12 +84,13 @@ const LeafletAddress = memo(function LeafletAddress() {
   const isEditingRef = useRef(false);
   const snapshotRef = useRef<AddressSnapshot | null>(null);
   const searchGenerationRef = useRef(0);
+  const initDoneRef = useRef(false);
 
   isEditingRef.current = isEditing;
 
   const applyPosition = useCallback(
     (newPos: LatLngLiteral, source: AddressChangeSource) => {
-      if (source === "user") {
+      if (source === "user" || source === "hydrate") {
         skipReverseRef.current = true;
       }
       setPosition(newPos);
@@ -200,15 +206,37 @@ const LeafletAddress = memo(function LeafletAddress() {
     }
   }, []);
 
+  // Hydrate from existing form coords (skip reverse when address already set); else auto GPS once.
   useEffect(() => {
+    if (initDoneRef.current) return;
+    initDoneRef.current = true;
+
+    const lat = getValues("latitude");
+    const lng = getValues("longitude");
+    const hasCoords =
+      typeof lat === "number" &&
+      typeof lng === "number" &&
+      !Number.isNaN(lat) &&
+      !Number.isNaN(lng);
+
+    if (hasCoords) {
+      const savedAddress = truncateDetailAddress(getValues("detail_address"));
+      applyPosition({ lat, lng }, "hydrate");
+      if (!savedAddress) {
+        skipReverseRef.current = false;
+      }
+      return;
+    }
+
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         applyPosition({ lat: pos.coords.latitude, lng: pos.coords.longitude }, "gps");
       },
       () => {},
+      GPS_OPTIONS,
     );
-  }, [applyPosition]);
+  }, [applyPosition, getValues]);
 
   useEffect(() => {
     if (!position) return;
@@ -251,6 +279,22 @@ const LeafletAddress = memo(function LeafletAddress() {
       }
     };
   }, [getAddressFromLatLng, position, writeDetailAddressFromReverse]);
+
+  const useCurrentLocation = useCallback(() => {
+    if (!navigator.geolocation) {
+      toast.error(t("Geolocation is not supported"));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        applyPosition({ lat: pos.coords.latitude, lng: pos.coords.longitude }, "gps");
+      },
+      () => {
+        toast.error(t("No location on device"));
+      },
+      GPS_OPTIONS,
+    );
+  }, [applyPosition, t]);
 
   const startEditing = useCallback(() => {
     snapshotRef.current = {
@@ -381,7 +425,15 @@ const LeafletAddress = memo(function LeafletAddress() {
               {detailAddress || t("Street, district, city...")}
             </p>
             <FieldError errors={[errors.detail_address]} />
-            <div className="flex justify-end">
+            <div className="flex flex-wrap justify-end gap-2">
+              <Button
+                type="button"
+                variant="outlined-brown"
+                className="w-fit"
+                onClick={useCurrentLocation}
+              >
+                {t("Use current location")}
+              </Button>
               <Button type="button" variant="outlined-brown" className="w-fit" onClick={startEditing}>
                 {t("Edit")}
               </Button>

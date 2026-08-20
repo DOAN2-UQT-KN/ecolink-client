@@ -34,7 +34,6 @@ export default function AccountPage() {
           </div>
           <Button
             variant="brown"
-            size="small"
             onClick={() => {
               void (async () => {
                 try {
