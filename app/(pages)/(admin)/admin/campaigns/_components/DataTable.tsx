@@ -251,6 +251,7 @@ export const DataTable = memo(function DataTable() {
                 theme={isDark ? 'dark' : 'light'}
               />
             ) : record.status !== STATUS.INACTIVE &&
+              record.status !== STATUS.COMPLETED &&
               record.status !== STATUS.WAITING_CONFIRMED ? (
               <VerifyCampaignConfirm
                 campaignId={record.id}
