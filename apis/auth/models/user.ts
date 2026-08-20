@@ -20,6 +20,9 @@ export interface IUser {
   detail_address?: string | null;
   notification_preferences?: Record<string, boolean>;
   notificationPreferences?: Record<string, boolean>;
+  status?: number;
+  reject_reason?: string | null;
+  rejectReason?: string | null;
 }
 
 export interface IGetMeResponse extends IBaseResponse<{ user: IUser }> {}
