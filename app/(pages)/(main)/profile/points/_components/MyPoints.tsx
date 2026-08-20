@@ -22,19 +22,23 @@ const MyPoints = memo(function MyPoints() {
   const { t } = useTranslation();
 
   return (
-    <section>
-      <div className=" grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="rounded-lg border border-[rgba(136,122,71,0.5)] bg-background p-4">
-          <div className="font-display-2 uppercase tracking-wide text-foreground-secondary flex items-center gap-2 ">
-            <TbCoinFilled className="inline-block size-8 text-yellow-500" /> {t('Spendable points (SP)')}
+    <section className="rounded-xl border border-[rgba(136,122,71,0.35)] bg-white p-5 sm:p-6">
+      <h2 className="text-lg font-semibold text-button-accent">{t('My points')}</h2>
+
+      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="rounded-lg border border-[rgba(136,122,71,0.35)] bg-background/20 p-4">
+          <div className="flex items-center gap-2 text-sm text-foreground-secondary">
+            <TbCoinFilled className="inline-block size-8 text-yellow-500" />
+            {t('Spendable points (SP)')}
           </div>
           <div className="mt-2 font-display-4 font-semibold tabular-nums">
             {isLoading ? '...' : formatPoints(readSpendableBalance(points))}
           </div>
         </div>
-        <div className="rounded-lg border border-[rgba(136,122,71,0.5)] bg-background p-4">
-          <div className="font-display-2 uppercase tracking-wide text-foreground-secondary flex items-center gap-2">
-            <TbLeaf className="inline-block size-8 text-emerald-600" /> {t('Green points')}
+        <div className="rounded-lg border border-[rgba(136,122,71,0.35)] bg-background/20 p-4">
+          <div className="flex items-center gap-2 text-sm text-foreground-secondary">
+            <TbLeaf className="inline-block size-8 text-emerald-600" />
+            {t('Green points')}
           </div>
           <div className="mt-2 font-display-4 font-semibold tabular-nums">
             {isLoading ? '...' : formatPoints(readGreenBalance(points))}
