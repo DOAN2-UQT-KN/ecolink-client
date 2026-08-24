@@ -9,7 +9,7 @@ import useAuthStore from '@/stores/useAuthStore';
 import type { IUser } from '@/apis/auth/models/user';
 import { updateUser } from '@/apis/user/updateUser';
 import { Button } from '@/components/client/shared/Button';
-import { Field, FieldLabel } from '@/components/ui/field';
+import { Field } from '@/components/ui/field';
 import { cn } from '@/libs/utils';
 import {
   DETAIL_ADDRESS_MAX_LENGTH,

@@ -13,9 +13,8 @@ import {
   SelectValue,
   MultiSelect,
 } from '@/components/ui/select';
-import { Button } from '@/components/client/shared/Button';
 import { Field, FieldLabel } from '@/components/ui/field';
-import { TbZoomReset, TbZoom } from 'react-icons/tb';
+import { TbZoom } from 'react-icons/tb';
 import { useRouter, usePathname, useSearchParams } from '@/libs/router';
 import { SEVERITY_LEVEL } from '@/constants/severity';
 

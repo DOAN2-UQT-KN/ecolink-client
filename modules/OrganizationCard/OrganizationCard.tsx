@@ -1,6 +1,6 @@
 import React, { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { cn } from '@/libs/utils';
-import { AlignLeft, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { HiMail } from 'react-icons/hi';
 import { BiGroup } from 'react-icons/bi';
 import { HiOutlineUserRemove } from 'react-icons/hi';
@@ -23,7 +23,6 @@ import {
   joinListingShowsCancelButton,
   joinListingShowsJoinButton,
 } from './utils/joinRequestListingUi';
-import { RichTextContent } from '@/components/ui/RichTextContent';
 
 export { useOrganizationCardEdit } from './hooks/useOrganizationCardEdit';
 

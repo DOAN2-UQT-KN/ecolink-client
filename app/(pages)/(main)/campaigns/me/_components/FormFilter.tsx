@@ -3,7 +3,6 @@ import { usePathname, useRouter, useSearchParams } from '@/libs/router';
 import { useTranslation } from 'react-i18next';
 import { Search } from 'lucide-react';
 
-import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
