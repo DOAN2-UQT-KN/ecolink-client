@@ -216,16 +216,17 @@ export const ReportContent = memo(function ReportContent({
 
   return (
     <div className={cn("flex flex-col gap-4", isExpanded && "gap-6")}>
-      <div className="space-y-1">
-        <h2 className="font-display-4 font-semibold text-black leading-tight">
-          {title}
-        </h2>
-        {address && (
+      {address && (
           <div className="flex items-center gap-2 font-display-1 text-foreground-tertiary">
             <HiMapPin size={14} />
             <p>{address}</p>
           </div>
         )}
+
+      <div className="space-y-0">
+        <h2 className="font-display-4 font-semibold text-black leading-tight">
+          {title}
+        </h2>  
       </div>
       <RichTextContent
         value={description}
