@@ -18,6 +18,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { duplicateReasonLabel } from "./duplicateReasonLabel";
 
 export type DuplicateReportModalProps = {
@@ -38,12 +46,12 @@ function findMediaUrl(
 
 function MediaThumb({
   url,
-  label,
+  alt,
   isDark,
   loading,
 }: {
   url?: string;
-  label: string;
+  alt: string;
   isDark: boolean;
   loading?: boolean;
 }) {
@@ -53,42 +61,39 @@ function MediaThumb({
     : "border-border/50 bg-muted";
 
   return (
-    <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-      <span className={cn("text-[11px] font-medium", muted)}>{label}</span>
-      <div
-        className={cn(
-          "relative aspect-square w-full overflow-hidden rounded-lg border",
-          box,
-        )}
-      >
-        {loading ? (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Loader2
-              className={cn(
-                "h-5 w-5 animate-spin",
-                isDark ? "text-zinc-400" : "text-muted-foreground",
-              )}
-            />
-          </div>
-        ) : url ? (
-          <AntdImage
-            src={url}
-            alt={label}
-            className="!h-full !w-full object-cover"
-            wrapperClassName="!h-full !w-full"
-            preview={{ zIndex: 2000 }}
-          />
-        ) : (
-          <div
+    <div
+      className={cn(
+        "relative aspect-square w-full max-w-[180px] overflow-hidden rounded-lg border",
+        box,
+      )}
+    >
+      {loading ? (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Loader2
             className={cn(
-              "absolute inset-0 flex items-center justify-center text-[11px]",
-              muted,
+              "h-5 w-5 animate-spin",
+              isDark ? "text-zinc-400" : "text-muted-foreground",
             )}
-          >
-            —
-          </div>
-        )}
-      </div>
+          />
+        </div>
+      ) : url ? (
+        <AntdImage
+          src={url}
+          alt={alt}
+          className="!h-full !w-full object-cover"
+          rootClassName="!h-full !w-full"
+          preview={{ zIndex: 2000 }}
+        />
+      ) : (
+        <div
+          className={cn(
+            "absolute inset-0 flex items-center justify-center text-[11px]",
+            muted,
+          )}
+        >
+          —
+        </div>
+      )}
     </div>
   );
 }
@@ -178,33 +183,77 @@ export const DuplicateReportModal = memo(function DuplicateReportModal({
             </p>
           ) : (
             <Spin spinning={duplicateLoading}>
-              <div className="flex flex-col gap-4" {...imageShield}>
+              <div {...imageShield}>
                 <AntdImage.PreviewGroup preview={{ zIndex: 2000 }}>
-                  {verification.matches.map((match) => {
-                    const currentUrl = findMediaUrl(mediaFiles, match.media_id);
-                    const duplicateUrl = findMediaUrl(
-                      duplicateMediaFiles,
-                      match.duplicate_media_id,
-                    );
-                    return (
-                      <div
-                        key={`${match.media_id}-${match.duplicate_media_id}`}
-                        className="flex gap-3"
+                  <Table
+                    className={cn(
+                      isDark && "[&_tr]:border-zinc-700",
+                    )}
+                  >
+                    <TableHeader>
+                      <TableRow
+                        className={cn(
+                          "hover:bg-transparent",
+                          isDark && "hover:bg-transparent border-zinc-700",
+                        )}
                       >
-                        <MediaThumb
-                          url={currentUrl}
-                          label={t("This report")}
-                          isDark={isDark}
-                        />
-                        <MediaThumb
-                          url={duplicateUrl}
-                          label={t("Duplicate report")}
-                          isDark={isDark}
-                          loading={duplicateLoading && !duplicateUrl}
-                        />
-                      </div>
-                    );
-                  })}
+                        <TableHead
+                          className={cn(
+                            "w-1/2",
+                            isDark ? "text-zinc-300" : "text-foreground",
+                          )}
+                        >
+                          {t("This report")}
+                        </TableHead>
+                        <TableHead
+                          className={cn(
+                            "w-1/2",
+                            isDark ? "text-zinc-300" : "text-foreground",
+                          )}
+                        >
+                          {t("Duplicate report")}
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {verification.matches.map((match) => {
+                        const currentUrl = findMediaUrl(
+                          mediaFiles,
+                          match.media_id,
+                        );
+                        const duplicateUrl = findMediaUrl(
+                          duplicateMediaFiles,
+                          match.duplicate_media_id,
+                        );
+                        return (
+                          <TableRow
+                            key={`${match.media_id}-${match.duplicate_media_id}`}
+                            className={cn(
+                              "hover:bg-transparent",
+                              isDark &&
+                                "hover:bg-transparent border-zinc-700",
+                            )}
+                          >
+                            <TableCell className="align-top whitespace-normal">
+                              <MediaThumb
+                                url={currentUrl}
+                                alt={t("This report")}
+                                isDark={isDark}
+                              />
+                            </TableCell>
+                            <TableCell className="align-top whitespace-normal">
+                              <MediaThumb
+                                url={duplicateUrl}
+                                alt={t("Duplicate report")}
+                                isDark={isDark}
+                                loading={duplicateLoading && !duplicateUrl}
+                              />
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
                 </AntdImage.PreviewGroup>
               </div>
             </Spin>
