@@ -35,15 +35,18 @@ export interface IIncidentHandledBy {
 export interface IDuplicateMediaMatch {
   media_id: string;
   duplicate_media_id: string;
+  /** Detect method, e.g. EXACT_HASH_MATCH, HIGH_IMAGE_SIMILARITY. */
+  reason: string;
 }
 
 /**
  * Duplicate verification after SHA-256 / pHash.
- * Null until the AI worker writes back; empty reasons/matches means unique.
+ * Null until the AI worker writes back; null reason / empty matches means unique.
  */
 export interface IDuplicateVerification {
   duplicate_report_id: string | null;
-  reasons: string[];
+  /** Final verdict, e.g. DUPLICATE_IMAGE, SAME_PLACE. */
+  reason: string | null;
   matches: IDuplicateMediaMatch[];
 }
 

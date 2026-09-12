@@ -59,8 +59,8 @@ export const DuplicateVerificationCell = memo(function DuplicateVerificationCell
     );
   }
 
-  const primaryReason = value.reasons[0]
-    ? duplicateReasonLabel(value.reasons[0], t)
+  const primaryReason = value.reason
+    ? duplicateReasonLabel(value.reason, t)
     : t("Duplicate");
   const muted = isDark ? "text-zinc-400" : "text-muted-foreground";
 

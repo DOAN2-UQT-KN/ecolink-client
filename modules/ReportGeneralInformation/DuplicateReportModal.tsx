@@ -116,12 +116,12 @@ export const DuplicateReportModal = memo(function DuplicateReportModal({
   const duplicateMediaFiles = data?.data?.report?.media_files;
   const duplicateLoading = Boolean(duplicateId) && (isLoading || isFetching);
 
-  const reasonMessages = useMemo(
+  const reasonMessage = useMemo(
     () =>
-      verification.reasons.length > 0
-        ? verification.reasons.map((r) => duplicateReasonLabel(r, t))
-        : [t("Duplicate")],
-    [t, verification.reasons],
+      verification.reason
+        ? duplicateReasonLabel(verification.reason, t)
+        : t("Duplicate"),
+    [t, verification.reason],
   );
 
   const stop = useCallback((e: SyntheticEvent) => {
@@ -162,15 +162,7 @@ export const DuplicateReportModal = memo(function DuplicateReportModal({
         </DialogHeader>
 
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6">
-          <Alert
-            type="error"
-            showIcon
-            message={
-              reasonMessages.length === 1
-                ? reasonMessages[0]
-                : reasonMessages.join(" · ")
-            }
-          />
+          <Alert type="error" showIcon message={reasonMessage} />
 
           {verification.matches.length === 0 ? (
             <p
@@ -199,7 +191,7 @@ export const DuplicateReportModal = memo(function DuplicateReportModal({
                       >
                         <TableHead
                           className={cn(
-                            "w-1/2",
+                            "w-[40%]",
                             isDark ? "text-zinc-300" : "text-foreground",
                           )}
                         >
@@ -207,11 +199,19 @@ export const DuplicateReportModal = memo(function DuplicateReportModal({
                         </TableHead>
                         <TableHead
                           className={cn(
-                            "w-1/2",
+                            "w-[40%]",
                             isDark ? "text-zinc-300" : "text-foreground",
                           )}
                         >
                           {t("Duplicate report")}
+                        </TableHead>
+                        <TableHead
+                          className={cn(
+                            "w-[20%]",
+                            isDark ? "text-zinc-300" : "text-foreground",
+                          )}
+                        >
+                          {t("Detect reason")}
                         </TableHead>
                       </TableRow>
                     </TableHeader>
@@ -248,6 +248,16 @@ export const DuplicateReportModal = memo(function DuplicateReportModal({
                                 isDark={isDark}
                                 loading={duplicateLoading && !duplicateUrl}
                               />
+                            </TableCell>
+                            <TableCell
+                              className={cn(
+                                "align-top text-xs whitespace-normal",
+                                isDark ? "text-zinc-300" : "text-muted-foreground",
+                              )}
+                            >
+                              {match.reason
+                                ? duplicateReasonLabel(match.reason, t)
+                                : "—"}
                             </TableCell>
                           </TableRow>
                         );
