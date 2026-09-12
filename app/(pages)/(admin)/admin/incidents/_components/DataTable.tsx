@@ -23,6 +23,7 @@ import defaultAvatar from '@/public/default-avatar.png';
 import { STATUS } from '@/constants/status';
 import {
   ConditionCell,
+  DuplicateVerificationCell,
   SeverityCell,
   WasteTypeCell,
 } from '@/modules/ReportGeneralInformation';
@@ -35,6 +36,7 @@ const COLUMN_KEYS = {
   WASTE_TYPE: 'waste_type',
   OWNER: 'owner',
   AI_ANALYSIS: 'ai_analysis',
+  DUPLICATE_VERIFICATION: 'duplicate_verification',
   STATUS: 'status',
   REJECT_REASON: 'reject_reason',
   HANDLED_BY: 'handledBy',
@@ -74,7 +76,7 @@ export function DataTable() {
         key: COLUMN_KEYS.INCIDENT,
         title: t('Incident'),
         className: ' min-w-[280px]',
-        sticky: 'left',
+        // sticky: 'left',
         render: (_, record) => (
           <div className="flex items-center gap-3 py-1">
             <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-border/50 bg-muted">
@@ -222,6 +224,19 @@ export function DataTable() {
         },
       },
       {
+        key: COLUMN_KEYS.DUPLICATE_VERIFICATION,
+        title: t('Duplicate check'),
+        className: 'min-w-[160px]',
+        render: (_, record) => (
+          <DuplicateVerificationCell
+            value={record.duplicate_verification}
+            mediaFiles={record.media_files}
+            openInNewTab
+            isDark={isDark}
+          />
+        ),
+      },
+      {
         key: COLUMN_KEYS.STATUS,
         title: t('Status'),
         className: 'min-w-[120px]',
@@ -285,7 +300,7 @@ export function DataTable() {
         key: COLUMN_KEYS.ACTION,
         title: t('Action'),
         className: 'min-w-[160px]',
-        sticky: 'right',
+        // sticky: 'right',
         render: (_, record) => {
           const theme = isDark ? 'dark' : 'light';
           const isInactive = record.status === STATUS.INACTIVE;

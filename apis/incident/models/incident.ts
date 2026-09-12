@@ -31,6 +31,22 @@ export interface IIncidentHandledBy {
   contact_email: string | null;
 }
 
+/** Media pair that triggered a duplicate match. */
+export interface IDuplicateMediaMatch {
+  media_id: string;
+  duplicate_media_id: string;
+}
+
+/**
+ * Duplicate verification after SHA-256 / pHash.
+ * Null until the AI worker writes back; empty reasons/matches means unique.
+ */
+export interface IDuplicateVerification {
+  duplicate_report_id: string | null;
+  reasons: string[];
+  matches: IDuplicateMediaMatch[];
+}
+
 export interface IIncident {
   id: string;
   user_id: string | null;
@@ -53,6 +69,10 @@ export interface IIncident {
   reject_reason?: string | null;
   /** AI recommendation in markdown (nullable until analysis completes). */
   ai_recommendation?: string | null;
+  /**
+   * Duplicate verification after SHA-256 / pHash. Null until the AI worker writes back.
+   */
+  duplicate_verification?: IDuplicateVerification | null;
   created_at: string;
   updated_at: string;
   distance: number;

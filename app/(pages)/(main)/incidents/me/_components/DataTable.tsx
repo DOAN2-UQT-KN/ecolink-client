@@ -25,6 +25,7 @@ import { formattedDate } from "@/utils/formattedDate";
 import { STATUS } from "@/constants/status";
 import {
   ConditionCell,
+  DuplicateVerificationCell,
   SeverityCell,
   WasteTypeCell,
 } from "@/modules/ReportGeneralInformation";
@@ -165,6 +166,17 @@ const DataTableComponent = memo(function DataTableComponent() {
         },
         width: 88,
         align: "center",
+      },
+      {
+        title: t("Duplicate check"),
+        key: "duplicate_verification",
+        render: (_, record) => (
+          <DuplicateVerificationCell
+            value={record.duplicate_verification}
+            mediaFiles={record.media_files}
+          />
+        ),
+        width: 160,
       },
       {
         title: t("Status"),

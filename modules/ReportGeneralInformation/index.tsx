@@ -104,3 +104,9 @@ export const WasteTypeCell = memo(function WasteTypeCell({
     </span>
   );
 });
+
+export { DuplicateVerificationCell } from './DuplicateVerificationCell';
+export type { DuplicateVerificationCellProps } from './DuplicateVerificationCell';
+export { DuplicateReportModal } from './DuplicateReportModal';
+export type { DuplicateReportModalProps } from './DuplicateReportModal';
+export { duplicateReasonLabel } from './duplicateReasonLabel';
