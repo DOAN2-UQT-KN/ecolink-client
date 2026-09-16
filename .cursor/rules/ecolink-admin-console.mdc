@@ -1,0 +1,67 @@
+---
+description: Khuôn console quản trị /admin — page + _context đồng bộ URL + FormFilter + DataTable + ConfirmPopover.
+globs: app/(pages)/(admin)/**,components/admin/**
+alwaysApply: false
+---
+
+# Console quản trị `/admin`
+
+## Khuôn 5 phần (cả 5 trang hiện có đều giống hệt — bám theo, đừng sáng tạo)
+
+```
+app/(pages)/(admin)/admin/<resource>/
+  page.tsx        # <XProvider><XContent /></XProvider>
+  loading.tsx     # dead code
+  _components/    # DataTable.tsx, FormFilter.tsx, <Action>Confirm.tsx, Preview<X>Popover.tsx
+  _context/       # <X>Context.tsx — filter + pagination + đồng bộ URL
+  _services/      # (tuỳ chọn) form types, defaults, transform — KHÔNG có HTTP
+```
+
+`page.tsx`: tách `XContent` riêng để nằm **bên trong** Provider; wrapper `<div className="space-y-6">`; `<Breadcrumbs breadcrumbs={...} isAdmin={true} />`.
+
+## `_context/<X>Context.tsx` — trái tim
+
+Tham chiếu chuẩn: `app/(pages)/(admin)/admin/gifts/_context/GiftContext.tsx`.
+
+- Đọc URL bằng `useGetParam<T>(key, type, default)` từ `@/hooks/useGetParam`.
+- Ghi URL bằng `router.replace(...)` với template `pathname?params` và `{ scroll: false }` — dùng **replace**, không phải push.
+- Giữ `searchParamsRef = useRef(searchParams)` để `setParams` đọc giá trị mới nhất mà không đưa `searchParams` vào deps.
+- Giá trị rỗng / `"all"` thì **xoá param** khỏi URL.
+- `useEffect` đồng bộ ngược URL → state, có short-circuit `if (bằng nhau) return prev` tránh loop.
+- `onFilterChange` **luôn reset về trang 1**.
+- Parser riêng cho mỗi param (`parseActiveFilter`, `normalizePageSize`); `PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const`.
+- `request` và context `value` đều `useMemo`; hook consumer `throw` khi dùng ngoài Provider.
+
+## `_components/FormFilter.tsx`
+
+Mảng `FormFieldConfig[] = { key, label, render }` render vào grid `<Field><FieldLabel/>{render()}</Field>`.
+Ô search có state cục bộ + `useDebounce(searchInput, 500)` rồi mới đẩy lên context.
+Wrapper: `<div className="space-y-4 rounded-[10px] border border-border bg-card p-4">`.
+
+## `_components/DataTable.tsx`
+
+```ts
+import { DataTable as SharedDataTable, type DataTableColumn } from "@/components/admin/shared/DataTable";
+```
+
+- `const COLUMN_KEYS = { ... } as const;` ở đầu file; `columns` luôn `useMemo`.
+- Số thứ tự: `(pagination.current - 1) * pagination.pageSize + index + 1`.
+- `pagination` là **1-based**: `{ page: pagination.current, pageSize, total, onPageChange, onPageSizeChange }`.
+- Cell chứa nút phải chặn lan: `<div onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()} role="presentation">`.
+
+## `ConfirmPopover`
+
+`components/admin/shared/ConfirmPopover.tsx` — tên là Popover nhưng bên trong là shadcn `Dialog`.
+**`onConfirm` trả về `false` thì dialog KHÔNG đóng** (dùng để validate). Có `extraContent` làm slot, `confirmPending`, `confirmDisabled`, `theme` (mặc định `"dark"`).
+
+## Dark theme
+
+Truyền **prop `isDark: boolean`** rồi rẽ nhánh trong `cn()`. **Không dùng biến thể `dark:` của Tailwind** — theme là React context (`AdminLayoutContext`).
+
+## Thêm trang admin mới
+
+Nhớ 3 chỗ: tạo thư mục trang · đăng ký route trong `src/routes/index.tsx` (nhánh `path: "admin"`) · thêm mục vào `app/(pages)/(admin)/_config/adminNav.ts`.
+
+---
+
+Chi tiết đầy đủ: @.claude/skills/ecolink-admin-console/SKILL.md

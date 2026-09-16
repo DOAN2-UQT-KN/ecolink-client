@@ -1,0 +1,79 @@
+---
+description: UI, styling, form và i18n — shadcn vs antd, design token Tailwind v4, cn(), hai loại Button, react-hook-form không schema lib.
+globs: components/ui/**,components/form/**,components/client/shared/**,i18n/**,app/**/*.css
+alwaysApply: false
+---
+
+# UI, styling & form
+
+## Chọn thư viện
+
+- Modal → **luôn** shadcn `@/components/ui/dialog`. Không dùng antd Modal.
+- Input/Select/Tabs/Table/Tooltip → `@/components/ui/*`.
+- antd v6 **chỉ dùng hạn chế**: `Image`, `Image.PreviewGroup`, `Tag`.
+- Bảng admin → `@/components/admin/shared/DataTable`. Bảng client → `@/components/client/shared/DataTable` (API kiểu antd, khác hẳn).
+
+## ⚠️ `cn()` ở `@/libs/utils`
+
+```ts
+import { cn } from "@/libs/utils";   // ✅
+import { cn } from "@/lib/utils";    // ❌ không tồn tại — components.json ghi sai
+```
+
+## Hai loại Button
+
+- Public: `@/components/client/shared/Button` — `variant="green"|"brown"|"outlined-green"|"outlined-brown"`, `size="large"|"medium"|"small"`, props `iconLeft`/`iconRight`/`isLoading`/`isDisabled`.
+- Admin & trong dialog: `@/components/ui/button`.
+
+## Tailwind v4 — không có file config
+
+Token là CSS custom property trong `app/globals.css`: `--foreground-primary/-secondary/-tertiary`, `--background-primary…-quaternary`, `--border-input`, `--button-accent`, `--button-accent-hover`, `--font-title/-display/-logo`, `--neutral|primary|secondary-shadows-100..600`, cộng bộ token shadcn (`oklch`). Class có sẵn ở `app/_styles/{typography,button}.css`.
+
+Cần màu mới → **thêm token vào `globals.css`**, đừng hardcode hex.
+
+Dark mode (chỉ admin) dùng **prop `isDark` + ternary trong `cn()`**, không dùng biến thể `dark:`.
+
+## Form — react-hook-form, KHÔNG zod/yup
+
+```tsx
+<Field>
+  <FieldLabel htmlFor="email">{t("Email")} <span className="text-destructive">*</span></FieldLabel>
+  <Input id="email" type="email"
+    {...register("email", {
+      required: t("Email is required"),
+      pattern: { value: /.../, message: t("Invalid email format") },
+    })}
+    aria-invalid={!!errors.email} />
+  {errors.email && <span className="text-red-500 text-sm mt-1">{errors.email.message}</span>}
+</Field>
+```
+
+- `<Field>` + `<FieldLabel>` từ `@/components/ui/field`; dấu bắt buộc `<span className="text-destructive">*</span>`; lỗi `<span className="text-red-500 text-sm mt-1">`.
+- Form nhiều component → `useForm` trong `_context` + `<FormProvider>` + `useFormContext()`.
+- Form trong modal → `useEffect` theo `open` gọi `reset(entityToFormValues(x))` hoặc `reset(DEFAULTS)`.
+- Giá trị số **giữ dạng string** trong form state, parse lúc submit.
+- `catch {}` để trống — `usePost` đã bắn toast lỗi.
+
+## Upload ảnh
+
+`compressImage` → Cloudinary (`uploadToCloudinary`) → gửi URL cho API. Đây là **ngoại lệ duy nhất** được gọi `axios` trực tiếp. Hiển thị bằng `@/components/ui/AppImage`.
+
+## i18n — bắt buộc
+
+1. Mọi chuỗi hiển thị qua `t()`. **Key chính là câu tiếng Anh.**
+2. Thêm key mới phải sửa **cả** `i18n/locales/en/common.json` **và** `vi/common.json`.
+3. Helper thuần nhận `t` làm tham số: `getWasteTypeLabels(value, t)`.
+4. Constants lưu label tiếng Anh **chưa dịch**; component gọi `t(severity.label)`.
+5. Nội dung đa ngôn ngữ từ API (`title_vi`/`title_en`) → `useLocalizedDisplay()`, đừng tự chọn field.
+
+## Enum
+
+Chỉ 5 enum thật: `STATUS`, `PRIORITY`, `SortOrder`, `MessageType`, `MessageLevel`. Metadata hiển thị dùng **const object `as const` + type guard** (`SEVERITY_LEVEL` + `isSeverityLevel` + `getSeverityLevel`).
+
+## Toast
+
+`showMessage({ type: MessageType.Toast, level: MessageLevel.Success, title: t("...") })` từ `@/utils/showMessage` (default export). Không gọi `toast()` của sonner trực tiếp.
+
+---
+
+Chi tiết đầy đủ: @.claude/skills/ecolink-ui-and-forms/SKILL.md

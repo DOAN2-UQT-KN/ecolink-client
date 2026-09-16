@@ -1,0 +1,70 @@
+---
+description: Trang phía người dùng cuối — 4 dạng (search)/[id]/create/me, _context giữ form và mutation, layout Main/Profile/Auth/Maps.
+globs: app/(pages)/(main)/**,app/(pages)/(auth)/**,app/(pages)/(maps)/**,components/client/**,src/**
+alwaysApply: false
+---
+
+# Trang phía người dùng cuối
+
+## 4 dạng trang cho mỗi resource
+
+```
+app/(pages)/(main)/campaigns/
+  (search)/   # duyệt / tìm kiếm công khai
+  [id]/       # chi tiết  → route thật campaigns/:id
+  create/     # form tạo mới
+  me/         # của chính tôi, thường là bảng + filter
+```
+
+Mỗi dạng có: `page.tsx` (default export) · `loading.tsx` (dead code) · `_components/` · `_context/` · `_hooks/` · `_services/`.
+
+⚠️ Tên thư mục **không phải** route. `organizations/[id]/` nhưng route là `organizations/:slug`. Route thật ở `src/routes/index.tsx`.
+
+## Layout đã lo padding
+
+`MainLayout` đã bọc `<main className="py-[92px] px-[20px] lg:px-[80px]">` — đừng thêm padding ngoài cùng trong `page.tsx`.
+
+## `_context/` giữ form và mutation
+
+Trang `create/`: `useForm` khởi tạo **trong Context**, bọc `<FormProvider {...form}>`, field con dùng `useFormContext()`.
+
+Pipeline submit chuẩn: upload ảnh → `transformToApiData()` → mutate → `onSuccess` gọi `form.reset()` + `router.push(...)` + `queryClient.invalidateQueries(...)`.
+
+Trang `me/` và `(search)/`: Context kiểu filter + pagination + đồng bộ URL, giống khuôn admin.
+
+## `_hooks/` — accessor throw
+
+```ts
+export const useIncident = () => {
+  const context = useContext(IncidentContext);
+  if (!context) throw new Error('useIncident must be used within an IncidentProvider');
+  return context;
+};
+```
+
+## `_services/` — hàm thuần, KHÔNG có HTTP
+
+Form value types, defaults, parser, `transformToApiData()` (camelCase form → snake_case API), `buildXRequest()`.
+
+## Quyền truy cập
+
+**Không có route guard.** Chặn thật là 401 interceptor redirect `/sign-in?redirect=...`.
+Ẩn/hiện chức năng phải dựa trên **cờ do API trả về**, không tự suy từ role:
+
+```tsx
+const canManageCampaign = Boolean(campaign?.can_manage_campaign);
+```
+
+Đọc user: `useAuthStore((s) => s.user?.id)` trong component; `useAuthStore.getState()` ngoài React.
+
+## Component dùng chung
+
+`components/client/shared/` — kiểm tra trước khi viết mới: `Breadcrumbs`, `Button`, `CampaignTaskCard`, `CollapseCard`, `ContentCard`, `DataTable`, `StatsCard`, `SummaryCampaignCard`, `SingleImageFileField`, `Tag`, `PageSuspense`, `LanguageSwitcher`...
+
+Nút phía public dùng `components/client/shared/Button` (`variant="green"|"brown"|"outlined-green"|"outlined-brown"`), **không** dùng `components/ui/button`.
+
+`components/client/shared/DataTable` có API kiểu antd — **khác hoàn toàn** `components/admin/shared/DataTable`.
+
+---
+
+Chi tiết đầy đủ: @.claude/skills/ecolink-client-pages/SKILL.md

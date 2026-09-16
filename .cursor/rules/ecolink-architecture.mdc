@@ -1,0 +1,62 @@
+---
+description: Kiến trúc nền tảng ecolink-client — Vite + React Router SPA giả dạng Next.js App Router. Luật bắt buộc cho mọi file.
+alwaysApply: true
+---
+
+# ecolink-client — luật nền tảng
+
+## ⚠️ Đây KHÔNG phải Next.js
+
+Thư mục trông như Next.js App Router (`app/(pages)/(main)/campaigns/[id]/page.tsx`, `loading.tsx`, `_components/`) nhưng thực chất là **Vite 7 + React 19 + react-router-dom 7, CSR thuần**. Repo migrate từ Next.js và giữ lại quy ước thư mục.
+
+- `(main)`, `(admin)`, `(search)`, `[id]` chỉ là **tên thư mục** — router bỏ qua hoàn toàn.
+- `loading.tsx` là **dead code**.
+- Alias `@/*` trỏ về **root repo**, không phải `src/`.
+
+## Không bao giờ
+
+1. `import ... from "next/..."` — không compile.
+2. Thêm `"use client"` — vô nghĩa ở đây.
+3. Import navigation từ `react-router-dom` trong `app/` hoặc `modules/` — phải qua `@/libs/router`.
+4. `import { cn } from "@/lib/utils"` — đúng là **`@/libs/utils`** (`components.json` ghi sai).
+5. Gọi `axios` trực tiếp — phải qua `utils/requestApi` + `hooks/reactQuery`. (Ngoại lệ duy nhất: upload Cloudinary.)
+6. Gọi `toast()` của sonner trực tiếp — phải qua `utils/showMessage`.
+7. Reformat cả file theo Prettier — repo không enforce, bám style file đang sửa.
+
+## Shim Next.js
+
+```ts
+import { Link, useRouter, usePathname, useSearchParams, useParams } from "@/libs/router";
+```
+
+```tsx
+<Link href="/campaigns" />                // ✅ href, KHÔNG phải to
+const searchParams = useSearchParams();   // ✅ trả về URLSearchParams trực tiếp
+const [sp, setSp] = useSearchParams();    // ❌ đó là API react-router, không phải shim
+```
+
+Ảnh: `@/components/ui/AppImage` (thay `next/image`). Lazy: `@/libs/dynamic` (thay `next/dynamic`).
+
+## Thêm route = 2 chỗ sửa
+
+1. `app/(pages)/<nhóm>/<route>/page.tsx` — default export.
+2. Đăng ký trong `src/routes/index.tsx`:
+   `{ path: "campaigns/me", element: lazyPage(() => import("@/app/(pages)/(main)/campaigns/me/page"), "campaigns-me") }`
+
+Quên bước 2 = route không tồn tại.
+
+## i18n bắt buộc
+
+Mọi chuỗi hiển thị qua `t()`. **Key chính là câu tiếng Anh.** Thêm key mới phải sửa **cả** `i18n/locales/en/common.json` **và** `i18n/locales/vi/common.json`.
+
+## Auth
+
+`/admin` **không có route guard** — không có `ProtectedRoute`/`RequireAuth` trong repo. `ADMIN_ROLE_ID` chỉ dùng để *ẩn* link menu ở `components/client/layout/Header.tsx`. Enforcement thật ở server. Đừng viết code dựa trên giả định "vào được /admin nghĩa là admin".
+
+## Lệnh
+
+`npm run dev` (port 5173) · `npm run build` = `tsc -b && vite build` — **cổng kiểm tra duy nhất, repo không có test** · `npm run lint` = `eslint . --fix`.
+
+---
+
+Chi tiết đầy đủ: @.claude/skills/ecolink-architecture/SKILL.md
