@@ -230,7 +230,6 @@ export function DataTable() {
         render: (_, record) => (
           <DuplicateVerificationCell
             value={record.duplicate_verification}
-            mediaFiles={record.media_files}
             openInNewTab
             isDark={isDark}
           />

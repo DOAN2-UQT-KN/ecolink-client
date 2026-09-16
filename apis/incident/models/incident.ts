@@ -32,21 +32,27 @@ export interface IIncidentHandledBy {
 }
 
 /** Media pair that triggered a duplicate match. */
-export interface IDuplicateMediaMatch {
+export interface IDuplicateNewMedia {
   media_id: string;
-  duplicate_media_id: string;
-  /** Detect method, e.g. EXACT_HASH_MATCH, HIGH_IMAGE_SIMILARITY. */
-  reason: string;
+  url: string | null;
 }
 
-/**
- * Duplicate verification after SHA-256 / pHash.
- * Null until the AI worker writes back; null reason / empty matches means unique.
- */
+export interface IDuplicateOldMedia {
+  duplicate_media_id: string;
+  duplicate_url: string | null;
+}
+
+export interface IDuplicateMediaMatch {
+  new_media: IDuplicateNewMedia;
+  duplicate_media: IDuplicateOldMedia;
+}
+
+/** One older report and the media pairs that matched it. */
 export interface IDuplicateVerification {
-  duplicate_report_id: string | null;
-  /** Final verdict, e.g. DUPLICATE_IMAGE, SAME_PLACE. */
-  reason: string | null;
+  duplicate_report_id: string;
+  title: string | null;
+  detail_address: string | null;
+  status: number | null;
   matches: IDuplicateMediaMatch[];
 }
 
@@ -73,9 +79,9 @@ export interface IIncident {
   /** AI recommendation in markdown (nullable until analysis completes). */
   ai_recommendation?: string | null;
   /**
-   * Duplicate verification after SHA-256 / pHash. Null until the AI worker writes back.
+   * Null until the AI worker writes back; empty array means unique.
    */
-  duplicate_verification?: IDuplicateVerification | null;
+  duplicate_verification?: IDuplicateVerification[] | null;
   created_at: string;
   updated_at: string;
   distance: number;

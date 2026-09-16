@@ -12,6 +12,8 @@ export function duplicateReasonLabel(
       return t("Exact hash match");
     case "HIGH_IMAGE_SIMILARITY":
       return t("High image similarity");
+    case "FEATURE_MATCH":
+      return t("Feature match");
     default:
       return reason;
   }

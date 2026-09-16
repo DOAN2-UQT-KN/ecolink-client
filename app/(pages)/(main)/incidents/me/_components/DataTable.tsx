@@ -173,7 +173,6 @@ const DataTableComponent = memo(function DataTableComponent() {
         render: (_, record) => (
           <DuplicateVerificationCell
             value={record.duplicate_verification}
-            mediaFiles={record.media_files}
           />
         ),
         width: 160,
