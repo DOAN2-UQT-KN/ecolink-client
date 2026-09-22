@@ -1,5 +1,6 @@
 import React, { memo, useCallback, useMemo } from 'react';
 import { TbAlignLeft2, TbCalendarCheck, TbCircleCheck, TbCircleX, TbMailPin } from 'react-icons/tb';
+import BlueTickBadge, { isBlueTickVisible } from '@/components/ui/BlueTickBadge';
 import { format, parseISO } from 'date-fns';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -57,6 +58,15 @@ export const GeneralInformation = memo(function GeneralInformation() {
 
   return (
     <aside className="w-full rounded-xl border border-[rgba(136,122,71,0.35)] bg-white/70 p-4 sm:p-5 space-y-5 shadow-sm">
+      {isBlueTickVisible(organization) && (
+        <div className="rounded-lg bg-[#1d9bf0]/10 px-3 py-2">
+          <BlueTickBadge organization={organization} withLabel />
+          <p className="mt-1 text-xs text-foreground-tertiary">
+            {t('An admin reviewed this organization\'s legal documents.')}
+          </p>
+        </div>
+      )}
+
       <div>
         <p className="text-xs font-medium text-foreground-tertiary uppercase tracking-wide">
           {t('Contact')}

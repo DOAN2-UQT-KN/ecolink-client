@@ -1,5 +1,11 @@
 import { ICreateOrganizationRequest } from "@/apis/organization/models/createOrganization";
 
+/**
+ * Shared by the owner's edit form (`organizations/me/_components/UpdateOrganizationPopover`).
+ * The direct-create page these files were written for is gone — organizations now come from
+ * the application pipeline under `organizations/apply`.
+ */
+
 /** Empty string, pasted URL, or a file picked in the form (uploaded on submit). */
 export type OrganizationImageSource = string | File | Blob;
 

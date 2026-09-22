@@ -1,0 +1,61 @@
+---
+description: Tầng gọi API — apis/<domain>/<verb><Noun>.ts, requestApi, useGet/usePost, queryKey, IBaseResponse.
+globs: apis/**
+alwaysApply: false
+---
+
+# Tầng API
+
+## 4 lớp
+
+`libs/axiosClient.ts` → `utils/requestApi.ts` → `hooks/reactQuery.ts` (`useGet`/`usePost`) → `apis/<domain>/<verb><Noun>.ts`
+
+Không bao giờ gọi `axios` trực tiếp trong component.
+
+## Một file = một endpoint, export CẢ hàm trần lẫn hook
+
+```ts
+import requestApi from "@/utils/requestApi";
+import type { IGetGiftsRequest, IGetGiftsResponse } from "@/apis/gift/models/gift";
+import { useGet, UseGetOptions } from "@/hooks/reactQuery";
+
+const url = "/api/v1/gifts";
+
+export const getGifts = async (req: IGetGiftsRequest): Promise<IGetGiftsResponse> =>
+  await requestApi.get<IGetGiftsResponse>(url, req);
+
+export const useGetGifts = (
+  req: IGetGiftsRequest,
+  options?: Omit<UseGetOptions<IGetGiftsResponse>, "queryKey" | "queryFn">,
+) => useGet({ queryKey: ["gifts", req], queryFn: () => getGifts(req), ...options });
+```
+
+Mutation — `usePost` là lối vào duy nhất cho **mọi** verb (kể cả PUT/PATCH/DELETE):
+
+```ts
+export const useCreateGift = (options?: UsePostOptions<ICreateGiftResponse, ICreateGiftRequest>) => {
+  const { t } = useTranslation();
+  return usePost({
+    mutationFn: createGift,
+    queryKey: ["gifts"],                                   // tự invalidate ở onSettled
+    messageSuccess: { content: t("Gift created successfully"), type: MessageType.Toast },
+    messageError: { type: MessageType.Toast },
+    ...options,                                            // spread CUỐI CÙNG
+  });
+};
+```
+
+## Quy tắc
+
+- `const url = "/api/v1/..."` ở đầu module, không inline.
+- `...options` spread cuối cùng để caller override được.
+- Mutation có id + body dùng một object arg: `updateGift({ id, data })`.
+- `queryKey` là tuple string: resource số nhiều trước, params sau — `["gifts", req]`, `["report-detail", id]`, `["gift-redemptions", "admin", req]`. Không có key factory.
+- Response dựng từ `IBaseResponse<T>` hoặc `IPaginationResponse<T, K>` (generic thứ 2 đặt tên key collection): `IPaginationResponse<IIncident[], "reports">`.
+- Đặt tên: `I<Verb><Entity>Request` / `Response`, để ở `apis/<domain>/models/`.
+- `usePost` đã lo toast + 401 logout + invalidate ⇒ `catch {}` để trống trong component là đúng.
+- Lỗi đã được bóc: consumer nhận body API (`QueryError`), không phải `AxiosError`.
+
+---
+
+Chi tiết đầy đủ: @.claude/skills/ecolink-api-layer/SKILL.md

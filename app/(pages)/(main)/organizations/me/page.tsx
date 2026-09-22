@@ -27,7 +27,7 @@ function MyOrganizationsPage() {
   );
 
   const handleCreateOrganization = React.useCallback(() => {
-    router.push("/organizations/create");
+    router.push("/organizations/apply");
   }, [router]);
 
   return (

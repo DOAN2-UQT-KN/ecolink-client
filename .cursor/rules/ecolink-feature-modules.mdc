@@ -1,0 +1,60 @@
+---
+description: Quy ước modules/ — khi nào tách component dùng chung, cấu trúc phẳng hay chia thư mục con, barrel, pattern memo + props controlled.
+globs: modules/**
+alwaysApply: false
+---
+
+# Feature module dùng chung — `modules/`
+
+## Đặt ở đâu
+
+| Phạm vi dùng | Nơi đặt |
+|---|---|
+| Một route | `app/(pages)/.../<route>/_components/` |
+| Nhiều route, có logic riêng | `modules/<Name>/` |
+| Primitive UI toàn app | `components/ui/` |
+| Widget chung phía client | `components/client/shared/` |
+| Widget chung phía admin | `components/admin/shared/` |
+
+**Bắt đầu ở `_components/`. Chỉ chuyển sang `modules/` khi có route thứ hai thật sự dùng.**
+
+## Cấu trúc theo kích thước
+
+≤4 file → phẳng, `index.tsx` kiêm barrel (ví dụ `ReportGeneralInformation/`).
+Lớn hơn → file entry **trùng tên thư mục** (`OrganizationCard.tsx`, không phải `index.tsx`) + `components/ hooks/ services/ types/ utils/`.
+
+**Không có thư mục `api/` trong module** — hook gọi API luôn ở `apis/`.
+`services/` trong module = hàm thuần (build payload, invalidate cache, transform), không phải HTTP.
+Types đặt `types/<Name>.types.ts`.
+
+## Barrel
+
+Repo chỉ có 2 barrel. Với module phẳng, re-export đặt ở **cuối `index.tsx`**:
+
+```tsx
+export { DuplicateReportModal } from './DuplicateReportModal';
+export type { DuplicateReportModalProps } from './DuplicateReportModal';
+```
+
+Tiêu thụ: `import { SeverityCell } from '@/modules/ReportGeneralInformation';`
+
+## Pattern component
+
+- `memo(function X(){})` — giữ tên hàm, không dùng `memo(() => {})`.
+- Props type tên `<Name>Props`, export ra ngoài, **không prefix `I`** (khác model API: `IIncident`, `ICreateReportRequest`).
+- Modal **controlled từ cha**: `open` + `onOpenChange`.
+- Nhận `isDark?: boolean` nếu module có thể hiển thị trong khu vực admin.
+- Hằng số cục bộ (`WASTE_TYPE_LABELS`, `CELL_MAX_LENGTH`) ở đầu file, label để **tiếng Anh chưa dịch**, gọi `t()` lúc render.
+- Hàm thuần nhận `t` làm tham số để gọi được ngoài React.
+- Chặn click lan trong bảng/card: `const stop = useCallback((e: SyntheticEvent) => e.stopPropagation(), [])` rồi spread `{ onClick: stop, onPointerDown: stop }`.
+- Nhiều file export **cả** named lẫn default — bám theo file xung quanh.
+
+## Module hiện có
+
+`ReportDetailCard/` (card sự cố đầy đủ + vote) · `ReportSummaryCard/` (tile rút gọn) · `ReportGeneralInformation/` (thông tin sự cố + UI trùng lặp, dùng trong bảng admin) · `OrganizationCard/` (card tổ chức, sửa tại chỗ) · `LeafletAddressMap.tsx` (chọn địa chỉ trên bản đồ).
+
+⚠️ `ReportGeneralInformation/DuplicateReportModal.tsx` còn sót dòng `"use client"` — đó là rác từ thời Next.js, **đừng bắt chước**.
+
+---
+
+Chi tiết đầy đủ: @.claude/skills/ecolink-feature-modules/SKILL.md
