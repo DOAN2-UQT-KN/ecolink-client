@@ -84,7 +84,7 @@ function MediaThumb({
   return (
     <div
       className={cn(
-        "relative aspect-[16/10] w-full overflow-hidden rounded-xl",
+        "relative aspect-square w-full overflow-hidden rounded-xl",
         isDark ? "bg-zinc-900" : "bg-background-primary",
       )}
     >
