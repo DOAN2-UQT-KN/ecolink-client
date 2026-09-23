@@ -1045,5 +1045,15 @@
   "Undo": "Undo",
   "This application can no longer be edited.": "This application can no longer be edited.",
   "Back to application status": "Back to application status",
-  "Unchanged from your previous submission": "Unchanged from your previous submission"
+  "Unchanged from your previous submission": "Unchanged from your previous submission",
+  "Organization account activated, you can sign in now": "Organization account activated, you can sign in now",
+  "Invalid activation link": "Invalid activation link",
+  "This activation link is invalid or has expired.": "This activation link is invalid or has expired.",
+  "Activate your organization account": "Activate your organization account",
+  "Your application was approved. Set a password for the organization account — you will sign in with the organization's contact email.": "Your application was approved. Set a password for the organization account — you will sign in with the organization's contact email.",
+  "Password must be at least 8 characters": "Password must be at least 8 characters",
+  "Confirm password": "Confirm password",
+  "Please confirm your password": "Please confirm your password",
+  "Passwords do not match": "Passwords do not match",
+  "Activate account": "Activate account"
 }

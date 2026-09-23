@@ -77,6 +77,7 @@ export const router = createBrowserRouter([
           { path: "sign-up", element: lazyPage(() => import("@/app/(pages)/(auth)/sign-up/page"), "sign-up") },
           { path: "authenticate", element: lazyPage(() => import("@/app/(pages)/(auth)/authenticate/page"), "authenticate") },
           { path: "reset-password", element: lazyPage(() => import("@/app/(pages)/(auth)/reset-password/page"), "reset-password") },
+          { path: "activate-organization", element: lazyPage(() => import("@/app/(pages)/(auth)/activate-organization/page"), "activate-organization") },
           { path: "request-reset-password", element: lazyPage(() => import("@/app/(pages)/(auth)/request-reset-password/page"), "request-reset-password") },
           { path: "google-callback", element: lazyPage(() => import("@/app/(pages)/(auth)/google-callback/page"), "google-callback") },
           { path: "auth/oauth/google/callback", element: lazyPage(() => import("@/app/(pages)/(auth)/auth/oauth/google/callback/page"), "google-callback") },

@@ -1045,5 +1045,15 @@
   "Undo": "Hoàn tác",
   "This application can no longer be edited.": "Hồ sơ này không còn chỉnh sửa được nữa.",
   "Back to application status": "Quay lại trang trạng thái",
-  "Unchanged from your previous submission": "Giữ nguyên như lần nộp trước"
+  "Unchanged from your previous submission": "Giữ nguyên như lần nộp trước",
+  "Organization account activated, you can sign in now": "Đã kích hoạt tài khoản tổ chức, bạn có thể đăng nhập",
+  "Invalid activation link": "Liên kết kích hoạt không hợp lệ",
+  "This activation link is invalid or has expired.": "Liên kết kích hoạt không hợp lệ hoặc đã hết hạn.",
+  "Activate your organization account": "Kích hoạt tài khoản tổ chức",
+  "Your application was approved. Set a password for the organization account — you will sign in with the organization's contact email.": "Hồ sơ của bạn đã được duyệt. Hãy đặt mật khẩu cho tài khoản tổ chức — bạn sẽ đăng nhập bằng email liên hệ của tổ chức.",
+  "Password must be at least 8 characters": "Mật khẩu phải có ít nhất 8 ký tự",
+  "Confirm password": "Xác nhận mật khẩu",
+  "Please confirm your password": "Vui lòng xác nhận mật khẩu",
+  "Passwords do not match": "Mật khẩu không khớp",
+  "Activate account": "Kích hoạt tài khoản"
 }
