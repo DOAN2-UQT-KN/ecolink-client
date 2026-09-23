@@ -31,14 +31,26 @@ const inputClassName =
  */
 export const StepDocuments = memo(function StepDocuments() {
   const { t } = useTranslation();
-  const { form, uploadDocument, removeDocument, isUploadingDocument } =
-    useApplication();
+  const {
+    form,
+    uploadDocument,
+    removeDocument,
+    isUploadingDocument,
+    existingDocuments,
+    removedDocumentIds,
+    toggleExistingDocument,
+  } = useApplication();
   const [docType, setDocType] = useState<ApplicationDocType>(
     "ESTABLISHMENT_DECISION",
   );
   const inputRef = useRef<HTMLInputElement>(null);
 
   const documents = form.watch("documents");
+  // On a resubmission the limit covers what stays attached plus what is being added.
+  const keptExistingCount = existingDocuments.filter(
+    (document) => !removedDocumentIds.includes(document.id),
+  ).length;
+  const totalCount = keptExistingCount + documents.length;
 
   const handlePick = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -62,7 +74,7 @@ export const StepDocuments = memo(function StepDocuments() {
         });
         return;
       }
-      if (documents.length >= MAX_FILES) {
+      if (totalCount >= MAX_FILES) {
         showMessage({
           type: MessageType.Toast,
           level: MessageLevel.Error,
@@ -73,7 +85,7 @@ export const StepDocuments = memo(function StepDocuments() {
 
       await uploadDocument(file, docType);
     },
-    [docType, documents.length, t, uploadDocument],
+    [docType, t, totalCount, uploadDocument],
   );
 
   return (
@@ -113,7 +125,7 @@ export const StepDocuments = memo(function StepDocuments() {
           <Button
             variant="outlined-brown"
             onClick={() => inputRef.current?.click()}
-            isDisabled={isUploadingDocument || documents.length >= MAX_FILES}
+            isDisabled={isUploadingDocument || totalCount >= MAX_FILES}
             className="sm:w-auto"
           >
             {isUploadingDocument ? t("Uploading...") : t("Choose a file")}
@@ -130,6 +142,59 @@ export const StepDocuments = memo(function StepDocuments() {
           onChange={handlePick}
         />
       </Field>
+
+      {existingDocuments.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <p className="text-sm font-semibold text-foreground-secondary">
+            {t("Already submitted")}
+          </p>
+          <ul className="flex flex-col gap-2">
+            {existingDocuments.map((document) => {
+              const isRemoved = removedDocumentIds.includes(document.id);
+              return (
+                <li
+                  key={document.id}
+                  className={cn(
+                    "flex items-center gap-3 rounded-md border border-[rgba(136,122,71,0.35)] px-3 py-2",
+                    isRemoved && "bg-[rgba(136,122,71,0.06)] opacity-60",
+                  )}
+                >
+                  <IoDocumentAttachOutline className="shrink-0 text-button-accent" />
+                  <div className="min-w-0 flex-1">
+                    <p className={cn("truncate text-sm", isRemoved && "line-through")}>
+                      {document.file_name ?? document.doc_type}
+                    </p>
+                    <p className="text-xs text-foreground-tertiary">
+                      {t(
+                        DOC_TYPE_OPTIONS.find((o) => o.value === document.doc_type)
+                          ?.label ?? document.doc_type,
+                      )}
+                    </p>
+                  </div>
+                  {isRemoved ? (
+                    <button
+                      type="button"
+                      onClick={() => toggleExistingDocument(document.id)}
+                      className="rounded-md px-2 py-1 text-sm text-button-accent hover:bg-[rgba(136,122,71,0.1)]"
+                    >
+                      {t("Undo")}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => toggleExistingDocument(document.id)}
+                      aria-label={t("Remove")}
+                      className="rounded-md p-2 text-destructive hover:bg-destructive/10"
+                    >
+                      <BiTrash />
+                    </button>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
 
       {documents.length > 0 ? (
         <ul className="flex flex-col gap-2">
@@ -159,7 +224,7 @@ export const StepDocuments = memo(function StepDocuments() {
             </li>
           ))}
         </ul>
-      ) : (
+      ) : keptExistingCount > 0 ? null : (
         <p className="rounded-md bg-[rgba(136,122,71,0.08)] px-3 py-2 text-sm text-foreground-tertiary">
           {t(
             "You can submit without documents, but a reviewer will most likely ask for them before approving.",

@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/libs/utils";
 import {
+  ApplicationFormValues,
   CHANNEL_TYPE_OPTIONS,
   LEGAL_REP_ID_TYPE_OPTIONS,
 } from "../_services/application.service";
@@ -28,9 +29,30 @@ import { useApplication } from "../_hooks/useApplication";
 const inputClassName =
   "border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50";
 
+/** Any of the three identifying fields filled means the applicant is replacing the representative. */
+const hasRepresentative = (values: ApplicationFormValues) =>
+  Boolean(
+    values.legalRepFullName.trim() ||
+      values.legalRepIdNumber.trim() ||
+      values.legalRepPhone.trim(),
+  );
+
 export const StepContact = memo(function StepContact() {
   const { t } = useTranslation();
-  const { form } = useApplication();
+  const { form, isEditMode } = useApplication();
+
+  // On a resubmission the representative is optional: the server keeps the one already on
+  // file unless a complete new one is sent. A new application always needs one.
+  const requiredRep = (message: string) =>
+    isEditMode
+      ? {
+          validate: (value: string, values: ApplicationFormValues) =>
+            Boolean(value.trim()) || !hasRepresentative(values) || message,
+        }
+      : { required: message };
+  const requiredMark = isEditMode ? null : (
+    <span className="text-destructive">*</span>
+  );
   const {
     control,
     register,
@@ -125,17 +147,23 @@ export const StepContact = memo(function StepContact() {
               "Used only to assess this application. It is never shown on your organization page, and we store the ID number as a one-way hash plus its last 4 characters.",
             )}
           </p>
+          {isEditMode && (
+            <p className="rounded-md bg-[rgba(136,122,71,0.08)] px-3 py-2 text-sm text-foreground-secondary">
+              {t("Leave blank to keep the representative you submitted before.")}
+            </p>
+          )}
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
           <Field>
             <FieldLabel className="text-foreground-tertiary font-display-3">
-              {t("Full name")} <span className="text-destructive">*</span>
+              {t("Full name")} {requiredMark}
             </FieldLabel>
             <Input
-              {...register("legalRepFullName", {
-                required: t("Full name is required"),
-              })}
+              {...register(
+                "legalRepFullName",
+                requiredRep(t("Full name is required")),
+              )}
               className={inputClassName}
             />
             <FieldError errors={[errors.legalRepFullName]} />
@@ -178,11 +206,11 @@ export const StepContact = memo(function StepContact() {
 
           <Field>
             <FieldLabel className="text-foreground-tertiary font-display-3">
-              {t("ID number")} <span className="text-destructive">*</span>
+              {t("ID number")} {requiredMark}
             </FieldLabel>
             <Input
               {...register("legalRepIdNumber", {
-                required: t("ID number is required"),
+                ...requiredRep(t("ID number is required")),
                 minLength: { value: 4, message: t("ID number is too short") },
               })}
               className={inputClassName}
@@ -195,12 +223,10 @@ export const StepContact = memo(function StepContact() {
 
           <Field>
             <FieldLabel className="text-foreground-tertiary font-display-3">
-              {t("Phone")} <span className="text-destructive">*</span>
+              {t("Phone")} {requiredMark}
             </FieldLabel>
             <Input
-              {...register("legalRepPhone", {
-                required: t("Phone is required"),
-              })}
+              {...register("legalRepPhone", requiredRep(t("Phone is required")))}
               className={inputClassName}
             />
             <FieldError errors={[errors.legalRepPhone]} />

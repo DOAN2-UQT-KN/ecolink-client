@@ -2,13 +2,11 @@ import { ReactNode, memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { TbCheck, TbCopy } from "react-icons/tb";
 
-import type {
-  ApplicationStatus,
-  IApplication,
-} from "@/apis/organization-application/models/application";
+import type { IApplication } from "@/apis/organization-application/models/application";
 import AppImage from "@/components/ui/AppImage";
 import { RichTextContent } from "@/components/ui/RichTextContent";
-import { cn } from "@/libs/utils";
+import TagStatus from "@/components/ui/TagStatus";
+import { APPLICATION_STATUS_TAG } from "@/constants/organizationApplicationStatus";
 import { formattedDate } from "@/utils/formattedDate";
 import showMessage, { MessageLevel, MessageType } from "@/utils/showMessage";
 import {
@@ -16,26 +14,6 @@ import {
   DOC_TYPE_OPTIONS,
   ORG_TYPE_OPTIONS,
 } from "../_services/application.service";
-
-export const STATUS_LABELS: Record<ApplicationStatus, string> = {
-  DRAFT: "Draft",
-  SUBMITTED: "Waiting for review",
-  UNDER_REVIEW: "Under review",
-  NEEDS_MORE_INFO: "More information needed",
-  APPROVED: "Approved",
-  REJECTED: "Not approved",
-  WITHDRAWN: "Withdrawn",
-};
-
-export const STATUS_TONES: Record<ApplicationStatus, string> = {
-  DRAFT: "bg-zinc-100 text-zinc-700",
-  SUBMITTED: "bg-amber-100 text-amber-800",
-  UNDER_REVIEW: "bg-blue-100 text-blue-800",
-  NEEDS_MORE_INFO: "bg-orange-100 text-orange-800",
-  APPROVED: "bg-emerald-100 text-emerald-800",
-  REJECTED: "bg-red-100 text-red-800",
-  WITHDRAWN: "bg-zinc-100 text-zinc-700",
-};
 
 export function SummaryRow({
   label,
@@ -137,14 +115,11 @@ export const ApplicationDetails = memo(function ApplicationDetails({
             <h2 className="font-display-6 font-semibold !text-button-accent break-words">
               {profile.name}
             </h2>
-            <span
-              className={cn(
-                "rounded-full px-3 py-1 text-sm font-medium",
-                STATUS_TONES[status],
-              )}
-            >
-              {t(STATUS_LABELS[status])}
-            </span>
+            <TagStatus
+              type={APPLICATION_STATUS_TAG[status].type}
+              label={t(APPLICATION_STATUS_TAG[status].label)}
+              className="!m-0"
+            />
           </div>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-foreground-tertiary">
             <TrackingCode code={application.code} />

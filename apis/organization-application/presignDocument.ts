@@ -24,6 +24,29 @@ export const presignDocument = async ({
   });
 };
 
+/** Presign for a resubmission: the one-time submission token is spent, the tracking link isn't. */
+export const presignDocumentForApplication = async ({
+  applicationId,
+  trackingToken,
+  data,
+}: {
+  applicationId: string;
+  trackingToken: string;
+  data: IPresignDocumentRequest;
+}): Promise<IPresignDocumentResponse> => {
+  return await requestApi.post<IPresignDocumentResponse>(
+    `/api/v1/organization-applications/${applicationId}/documents/presign?token=${encodeURIComponent(
+      trackingToken,
+    )}`,
+    data,
+  );
+};
+
+/** Who is uploading: a fresh applicant, or one fixing an application a reviewer sent back. */
+export type ApplicationUploadCredential =
+  | { submissionToken: string }
+  | { applicationId: string; trackingToken: string };
+
 export const usePresignDocument = (
   options?: UsePostOptions<IPresignDocumentResponse, IPresignDocumentVariables>,
 ) => {
@@ -43,19 +66,23 @@ export const usePresignDocument = (
  * never learns a URL it could share: reading the file back goes through the admin API.
  */
 export const uploadApplicationDocument = async (
-  submissionToken: string,
+  credential: ApplicationUploadCredential,
   file: File,
   docType: IPresignDocumentRequest["doc_type"],
 ): Promise<string> => {
-  const presigned = await presignDocument({
-    submissionToken,
-    data: {
-      doc_type: docType,
-      file_name: file.name,
-      mime_type: file.type,
-      size_bytes: file.size,
-    },
-  });
+  const data: IPresignDocumentRequest = {
+    doc_type: docType,
+    file_name: file.name,
+    mime_type: file.type,
+    size_bytes: file.size,
+  };
+  const presigned =
+    "submissionToken" in credential
+      ? await presignDocument({
+          submissionToken: credential.submissionToken,
+          data,
+        })
+      : await presignDocumentForApplication({ ...credential, data });
 
   const { document_id, upload_url, fields } = presigned.data;
 

@@ -32,4 +32,6 @@ export interface IUpdateApplicationRequest
   extends Partial<Omit<ICreateApplicationRequest, "consent">> {
   id: string;
   token: string;
+  /** Already-attached documents to drop on resubmit. */
+  remove_document_ids?: string[];
 }

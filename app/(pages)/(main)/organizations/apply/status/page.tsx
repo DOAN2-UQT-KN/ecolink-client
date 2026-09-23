@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { TbPencil } from "react-icons/tb";
 
 import {
   useGetApplication,
@@ -7,7 +8,7 @@ import { useWithdrawApplication } from "@/apis/organization-application/createAp
 import type { ApplicationStatus } from "@/apis/organization-application/models/application";
 import { BreadcrumbItemProps } from "@/components/client/shared/Breadcrumbs";
 import { Button } from "@/components/client/shared/Button";
-import { useParams, useSearchParams } from "@/libs/router";
+import { Link, useParams, useSearchParams } from "@/libs/router";
 import { queryClient } from "@/libs/queryClient";
 import ApplicationDetails from "../_components/ApplicationDetails";
 import {
@@ -86,20 +87,38 @@ export default function ApplicationStatusPage() {
   }
 
   const canWithdraw = OPEN_STATUSES.includes(application.status);
+  // Only a reviewer's request for more information reopens the form.
+  const canEdit = application.status === "NEEDS_MORE_INFO";
 
   return (
     <ApplicationPageLayout breadcrumbs={breadcrumbs}>
       <ApplicationDetails application={application} />
 
-      {canWithdraw && (
-        <div className="flex justify-end border-t border-[rgba(136,122,71,0.3)] pt-6">
-          <Button
-            variant="outlined-brown"
-            onClick={() => withdraw({ id, token })}
-            isDisabled={isWithdrawing}
-          >
-            {t("Withdraw application")}
-          </Button>
+      {(canWithdraw || canEdit) && (
+        <div className="flex flex-col-reverse gap-3 border-t border-[rgba(136,122,71,0.3)] pt-6 sm:flex-row sm:justify-end">
+          {canWithdraw && (
+            <Button
+              variant="outlined-brown"
+              onClick={() => withdraw({ id, token })}
+              isDisabled={isWithdrawing}
+              className="w-full sm:w-auto"
+            >
+              {t("Withdraw application")}
+            </Button>
+          )}
+          {canEdit && (
+            <Link
+              href={`/organizations/apply/edit/${id}?token=${encodeURIComponent(token)}`}
+            >
+              <Button
+                variant="brown"
+                iconLeft={<TbPencil className="size-5" />}
+                className="w-full sm:w-auto"
+              >
+                {t("Edit application")}
+              </Button>
+            </Link>
+          )}
         </div>
       )}
     </ApplicationPageLayout>

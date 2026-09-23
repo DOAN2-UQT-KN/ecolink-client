@@ -1,5 +1,6 @@
 import type {
   ApplicationDocType,
+  IApplication,
   LegalRepIdType,
   OrganizationChannelType,
   OrgType,
@@ -116,6 +117,34 @@ export const DOC_TYPE_OPTIONS: { value: ApplicationDocType; label: string }[] = 
  * would mean anyone with a Gmail address could tick "school" and sail through.
  */
 export const DOMAIN_HINT_ORG_TYPES: OrgType[] = ["SCHOOL", "GOV"];
+
+/**
+ * Prefills the form for a resubmission. The legal representative is review-only and never
+ * returned by the public API, so it starts empty — left empty, the server keeps the old one.
+ */
+export function applicationToFormValues(
+  application: IApplication,
+): ApplicationFormValues {
+  const { profile } = application;
+  return {
+    ...DEFAULT_APPLICATION_FORM_VALUES,
+    email: profile.contact_email,
+    orgType: application.org_type,
+    name: profile.name,
+    description: profile.description ?? "",
+    address: profile.address ?? "",
+    latitude: profile.latitude ?? undefined,
+    longitude: profile.longitude ?? undefined,
+    logo: profile.logo_url,
+    background: profile.background_url ?? "",
+    channels: application.channels.length
+      ? application.channels.map((channel) => ({
+          type: channel.type,
+          url: channel.url,
+        }))
+      : DEFAULT_APPLICATION_FORM_VALUES.channels,
+  };
+}
 
 export function toCreateApplicationRequest(params: {
   values: ApplicationFormValues;

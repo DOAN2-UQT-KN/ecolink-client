@@ -2,19 +2,28 @@ import React, { createContext, ReactNode, useCallback, useMemo } from "react";
 import { FormProvider, useForm, UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
-import { useCreateApplication } from "@/apis/organization-application/createApplication";
+import {
+  useCreateApplication,
+  useUpdateApplication,
+} from "@/apis/organization-application/createApplication";
 import {
   useRequestApplicationOtp,
   useResolveApplicationEmailLink,
   useVerifyApplicationOtp,
 } from "@/apis/organization-application/emailOtp";
 import { uploadApplicationDocument } from "@/apis/organization-application/presignDocument";
-import type { ApplicationDocType } from "@/apis/organization-application/models/application";
+import type {
+  ApplicationDocType,
+  IApplication,
+  IApplicationDocument,
+} from "@/apis/organization-application/models/application";
 import { uploadToCloudinary } from "@/app/(pages)/(main)/incidents/create/_services/upload.service";
+import { queryClient } from "@/libs/queryClient";
 import { useRouter, useSearchParams } from "@/libs/router";
 import showMessage, { MessageLevel, MessageType } from "@/utils/showMessage";
 import {
   ApplicationFormValues,
+  applicationToFormValues,
   DEFAULT_APPLICATION_FORM_VALUES,
   toCreateApplicationRequest,
 } from "../_services/application.service";
@@ -29,8 +38,20 @@ export const APPLICATION_STEPS = [
 
 export type ApplicationStep = (typeof APPLICATION_STEPS)[number];
 
+/** Resubmitting after a reviewer asked for more: the mailbox is already proven. */
+const EDIT_STEPS: ApplicationStep[] = ["profile", "contact", "documents", "review"];
+
+export interface ApplicationEditTarget {
+  application: IApplication;
+  /** Tracking-link token; authorises the upload and resubmit calls. */
+  trackingToken: string;
+}
+
 interface ApplicationContextType {
   form: UseFormReturn<ApplicationFormValues>;
+  /** Steps this flow walks through; edit mode skips the email gate. */
+  steps: readonly ApplicationStep[];
+  isEditMode: boolean;
   step: ApplicationStep;
   stepIndex: number;
   goToStep: (step: ApplicationStep) => void;
@@ -53,6 +74,10 @@ interface ApplicationContextType {
   uploadDocument: (file: File, docType: ApplicationDocType) => Promise<void>;
   removeDocument: (documentId: string) => void;
   isUploadingDocument: boolean;
+  /** Edit mode only: what was attached before, and which of it the applicant dropped. */
+  existingDocuments: IApplicationDocument[];
+  removedDocumentIds: string[];
+  toggleExistingDocument: (documentId: string) => void;
 
   submit: () => Promise<void>;
   isSubmitting: boolean;
@@ -71,7 +96,15 @@ const STEP_FIELDS: Record<ApplicationStep, (keyof ApplicationFormValues)[]> = {
   review: ["consent"],
 };
 
-export const ApplicationProvider = ({ children }: { children: ReactNode }) => {
+export const ApplicationProvider = ({
+  children,
+  edit,
+}: {
+  children: ReactNode;
+  edit?: ApplicationEditTarget;
+}) => {
+  const isEditMode = Boolean(edit);
+  const steps = isEditMode ? EDIT_STEPS : APPLICATION_STEPS;
   const { t } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -83,13 +116,23 @@ export const ApplicationProvider = ({ children }: { children: ReactNode }) => {
   const [isEmailLocked, setIsEmailLocked] = React.useState(false);
   const [isUploadingDocument, setIsUploadingDocument] = React.useState(false);
   const [isUploadingImages, setIsUploadingImages] = React.useState(false);
+  const [removedDocumentIds, setRemovedDocumentIds] = React.useState<string[]>(
+    [],
+  );
+  const existingDocuments = useMemo(
+    () => edit?.application.documents ?? [],
+    [edit],
+  );
 
   const form = useForm<ApplicationFormValues>({
-    defaultValues: DEFAULT_APPLICATION_FORM_VALUES,
+    // The provider mounts once the application is loaded, so the defaults can carry it.
+    defaultValues: edit
+      ? applicationToFormValues(edit.application)
+      : DEFAULT_APPLICATION_FORM_VALUES,
     mode: "onTouched",
   });
 
-  const step = APPLICATION_STEPS[stepIndex];
+  const step = steps[stepIndex];
 
   const { mutateAsync: requestOtpAsync, isPending: isRequestingOtp } =
     useRequestApplicationOtp();
@@ -97,6 +140,8 @@ export const ApplicationProvider = ({ children }: { children: ReactNode }) => {
     useVerifyApplicationOtp();
   const { mutateAsync: createApplicationAsync, isPending: isCreating } =
     useCreateApplication();
+  const { mutateAsync: updateApplicationAsync, isPending: isUpdating } =
+    useUpdateApplication({ messageSuccess: undefined });
 
   // The mailed link only tells us which address the code went to; the code still has to be
   // typed. It saves an applicant who closed the tab from burning another code.
@@ -152,30 +197,42 @@ export const ApplicationProvider = ({ children }: { children: ReactNode }) => {
     setStepIndex((current) => current + 1);
   }, [form, verifyOtpAsync]);
 
-  const goToStep = useCallback((target: ApplicationStep) => {
-    setStepIndex(APPLICATION_STEPS.indexOf(target));
-  }, []);
+  const goToStep = useCallback(
+    (target: ApplicationStep) => {
+      setStepIndex(Math.max(steps.indexOf(target), 0));
+    },
+    [steps],
+  );
 
   const next = useCallback(async () => {
-    const fields = STEP_FIELDS[APPLICATION_STEPS[stepIndex]];
+    const fields = STEP_FIELDS[steps[stepIndex]];
     const valid = fields.length ? await form.trigger(fields) : true;
     if (!valid) return;
-    setStepIndex((current) => Math.min(current + 1, APPLICATION_STEPS.length - 1));
-  }, [form, stepIndex]);
+    setStepIndex((current) => Math.min(current + 1, steps.length - 1));
+  }, [form, stepIndex, steps]);
 
   const back = useCallback(() => {
-    // Step 0 is the OTP gate; once past it there is no going back to re-verify, because the
-    // submission token is bound to the address that was already confirmed.
-    setStepIndex((current) => Math.max(current - 1, 1));
-  }, []);
+    // In the new-application flow step 0 is the OTP gate; once past it there is no going back
+    // to re-verify, because the submission token is bound to the address already confirmed.
+    const firstStep = isEditMode ? 0 : 1;
+    setStepIndex((current) => Math.max(current - 1, firstStep));
+  }, [isEditMode]);
 
   const uploadDocument = useCallback(
     async (file: File, docType: ApplicationDocType) => {
-      if (!submissionToken) return;
+      const credential = edit
+        ? {
+            applicationId: edit.application.id,
+            trackingToken: edit.trackingToken,
+          }
+        : submissionToken
+          ? { submissionToken }
+          : null;
+      if (!credential) return;
       setIsUploadingDocument(true);
       try {
         const documentId = await uploadApplicationDocument(
-          submissionToken,
+          credential,
           file,
           docType,
         );
@@ -198,8 +255,16 @@ export const ApplicationProvider = ({ children }: { children: ReactNode }) => {
         setIsUploadingDocument(false);
       }
     },
-    [form, submissionToken, t],
+    [edit, form, submissionToken, t],
   );
+
+  const toggleExistingDocument = useCallback((documentId: string) => {
+    setRemovedDocumentIds((current) =>
+      current.includes(documentId)
+        ? current.filter((id) => id !== documentId)
+        : [...current, documentId],
+    );
+  }, []);
 
   const removeDocument = useCallback(
     (documentId: string) => {
@@ -214,7 +279,7 @@ export const ApplicationProvider = ({ children }: { children: ReactNode }) => {
 
   const submit = useCallback(async () => {
     const valid = await form.trigger();
-    if (!valid || !submissionToken) return;
+    if (!valid || (!edit && !submissionToken)) return;
 
     const values = form.getValues();
     setIsUploadingImages(true);
@@ -239,9 +304,36 @@ export const ApplicationProvider = ({ children }: { children: ReactNode }) => {
       setIsUploadingImages(false);
     }
 
+    const request = toCreateApplicationRequest({ values, logoUrl, backgroundUrl });
+
+    if (edit) {
+      const { id } = edit.application;
+      const token = edit.trackingToken;
+      // `consent` belongs to the first submission only; the resubmit endpoint ignores it.
+      const { consent: _consent, ...changes } = request;
+      await updateApplicationAsync({
+        id,
+        token,
+        ...changes,
+        remove_document_ids: removedDocumentIds,
+      });
+      showMessage({
+        type: MessageType.Toast,
+        level: MessageLevel.Success,
+        title: t("Application resubmitted"),
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ["organization-application", id, token],
+      });
+      router.push(
+        `/organizations/apply/status/${id}?token=${encodeURIComponent(token)}`,
+      );
+      return;
+    }
+
     const response = await createApplicationAsync({
       submissionToken,
-      data: toCreateApplicationRequest({ values, logoUrl, backgroundUrl }),
+      data: request,
     });
 
     // The tracking link also goes out by email; this takes the applicant straight there.
@@ -250,11 +342,22 @@ export const ApplicationProvider = ({ children }: { children: ReactNode }) => {
       token: response.data.tracking_token,
     });
     router.push(`/organizations/apply/submitted?${params.toString()}`);
-  }, [createApplicationAsync, form, router, submissionToken, t]);
+  }, [
+    createApplicationAsync,
+    edit,
+    form,
+    removedDocumentIds,
+    router,
+    submissionToken,
+    t,
+    updateApplicationAsync,
+  ]);
 
   const contextValue = useMemo(
     () => ({
       form,
+      steps,
+      isEditMode,
       step,
       stepIndex,
       goToStep,
@@ -271,16 +374,22 @@ export const ApplicationProvider = ({ children }: { children: ReactNode }) => {
       uploadDocument,
       removeDocument,
       isUploadingDocument,
+      existingDocuments,
+      removedDocumentIds,
+      toggleExistingDocument,
       submit,
-      isSubmitting: isCreating || isUploadingImages,
+      isSubmitting: isCreating || isUpdating || isUploadingImages,
     }),
     [
       back,
       changeEmail,
+      existingDocuments,
       form,
       goToStep,
       isCreating,
+      isEditMode,
       isEmailLocked,
+      isUpdating,
       isRequestingOtp,
       isUploadingDocument,
       isUploadingImages,
@@ -288,11 +397,14 @@ export const ApplicationProvider = ({ children }: { children: ReactNode }) => {
       next,
       otpExpiresAt,
       removeDocument,
+      removedDocumentIds,
       requestOtp,
       step,
       stepIndex,
+      steps,
       submissionToken,
       submit,
+      toggleExistingDocument,
       uploadDocument,
       verifyOtp,
     ],

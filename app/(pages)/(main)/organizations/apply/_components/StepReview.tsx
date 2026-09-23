@@ -13,7 +13,13 @@ import { SummaryRow } from "./ApplicationDetails";
 
 export const StepReview = memo(function StepReview() {
   const { t } = useTranslation();
-  const { form, goToStep } = useApplication();
+  const {
+    form,
+    goToStep,
+    isEditMode,
+    existingDocuments,
+    removedDocumentIds,
+  } = useApplication();
   const {
     setValue,
     watch,
@@ -22,6 +28,22 @@ export const StepReview = memo(function StepReview() {
   } = form;
 
   const values = watch();
+  const documentRows = [
+    ...existingDocuments
+      .filter((document) => !removedDocumentIds.includes(document.id))
+      .map((document) => ({
+        key: document.id,
+        docType: document.doc_type,
+        fileName: document.file_name ?? "",
+      })),
+    ...values.documents.map((document) => ({
+      key: document.documentId,
+      docType: document.docType,
+      fileName: document.fileName,
+    })),
+  ];
+  // Left blank on a resubmission, the representative on file stays as it is.
+  const keepsRepresentative = isEditMode && !values.legalRepFullName.trim();
 
   return (
     <div className="flex flex-col gap-6">
@@ -77,9 +99,15 @@ export const StepReview = memo(function StepReview() {
           ))}
         <SummaryRow
           label={t("Legal representative")}
-          value={values.legalRepFullName}
+          value={
+            keepsRepresentative
+              ? t("Unchanged from your previous submission")
+              : values.legalRepFullName
+          }
         />
-        <SummaryRow label={t("Phone")} value={values.legalRepPhone} />
+        {!keepsRepresentative && (
+          <SummaryRow label={t("Phone")} value={values.legalRepPhone} />
+        )}
       </section>
 
       <section className="flex flex-col gap-3 rounded-md border border-[rgba(136,122,71,0.35)] p-4">
@@ -93,10 +121,10 @@ export const StepReview = memo(function StepReview() {
             {t("Edit")}
           </button>
         </div>
-        {values.documents.length ? (
-          values.documents.map((document) => (
+        {documentRows.length ? (
+          documentRows.map((document) => (
             <SummaryRow
-              key={document.documentId}
+              key={document.key}
               label={t(
                 DOC_TYPE_OPTIONS.find((o) => o.value === document.docType)
                   ?.label ?? document.docType,

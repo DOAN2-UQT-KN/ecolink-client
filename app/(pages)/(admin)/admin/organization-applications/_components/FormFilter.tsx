@@ -60,8 +60,8 @@ export function FormFilter() {
 
     const laneOptions = [
       { label: t("All"), value: "all" },
-      { label: t("Lane A — fast track"), value: "A" },
-      { label: t("Lane B — standard"), value: "B" },
+      { label: t("Lane A"), value: "A" },
+      { label: t("Lane B"), value: "B" },
     ];
 
     const renderSelect = (

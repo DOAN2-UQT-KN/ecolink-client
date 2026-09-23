@@ -1,6 +1,15 @@
-import { useCallback, useMemo, useState } from "react";
+import { ReactNode, useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { TbExternalLink, TbFileText } from "react-icons/tb";
+import {
+  TbChevronDown,
+  TbCircleCheck,
+  TbCircleX,
+  TbExternalLink,
+  TbFileText,
+  TbHelpCircle,
+  TbInfoCircle,
+  TbMessageQuestion,
+} from "react-icons/tb";
 
 import {
   buildApplicationDocumentUrl,
@@ -10,6 +19,7 @@ import {
   useRequestMoreInfo,
 } from "@/apis/organization-application/adminApplications";
 import type { ApplicationLane } from "@/apis/organization-application/models/application";
+import { useAdminLayout } from "@/app/(pages)/(admin)/_context/AdminLayoutContext";
 import {
   Dialog,
   DialogContent,
@@ -18,8 +28,21 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { RichTextContent } from "@/components/ui/RichTextContent";
 import { Skeleton } from "@/components/ui/skeleton";
+import TagStatus from "@/components/ui/TagStatus";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { APPLICATION_STATUS_TAG } from "@/constants/organizationApplicationStatus";
 import { queryClient } from "@/libs/queryClient";
 import { cn } from "@/libs/utils";
 import showMessage, { MessageLevel, MessageType } from "@/utils/showMessage";
@@ -27,14 +50,100 @@ import { formattedDate } from "@/utils/formattedDate";
 
 type Decision = "APPROVE" | "REJECT" | "REQUEST_INFO";
 
-function Row({ label, value }: { label: string; value: React.ReactNode }) {
+const OTHER_REASON = "Other";
+
+/**
+ * Preset gaps a reviewer usually sends back. Untranslated English here; the message is built
+ * from the reviewer's translated labels so it reads naturally in their language.
+ */
+const REQUEST_INFO_REASONS = [
+  "Missing establishment decision or business licence",
+  "Documents are unreadable, cropped or expired",
+  "Representative ID does not match the provided name",
+  "Contact email domain does not match the organization",
+  "Official channel link is missing or does not work",
+  "Organization name or logo needs to be corrected",
+  OTHER_REASON,
+];
+
+/** Colour per outcome: filled when picked, tinted outline otherwise. */
+const DECISION_STYLES: Record<
+  Decision,
+  { selected: string; light: string; dark: string }
+> = {
+  APPROVE: {
+    selected: "border-emerald-600 bg-emerald-600 text-white",
+    light: "border-emerald-600/40 text-emerald-700 hover:bg-emerald-50",
+    dark: "border-emerald-400/40 text-emerald-300 hover:bg-emerald-500/10",
+  },
+  REQUEST_INFO: {
+    selected: "border-amber-500 bg-amber-500 text-white",
+    light: "border-amber-500/50 text-amber-700 hover:bg-amber-50",
+    dark: "border-amber-400/40 text-amber-300 hover:bg-amber-500/10",
+  },
+  REJECT: {
+    selected: "border-red-600 bg-red-600 text-white",
+    light: "border-red-600/40 text-red-700 hover:bg-red-50",
+    dark: "border-red-400/40 text-red-300 hover:bg-red-500/10",
+  },
+};
+
+/** The shared checkbox is tinted with the client's green; admin keeps to its zinc palette. */
+const adminCheckboxClassName = (isDark: boolean) =>
+  isDark
+    ? "border-zinc-600 data-checked:border-zinc-100 data-checked:bg-zinc-100 data-checked:text-zinc-900 dark:data-checked:bg-zinc-100"
+    : "border-zinc-400 data-checked:border-zinc-900 data-checked:bg-zinc-900 data-checked:text-white";
+
+function Row({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="flex flex-col gap-0.5 sm:flex-row sm:gap-4">
       <span className="w-[180px] shrink-0 text-sm text-muted-foreground">
         {label}
       </span>
-      <span className="min-w-0 break-words text-sm">{value || "—"}</span>
+      <div className="min-w-0 flex-1 break-words text-sm">{value || "—"}</div>
     </div>
+  );
+}
+
+function SectionCard({
+  title,
+  hint,
+  defaultOpen = false,
+  isDark,
+  children,
+}: {
+  title: string;
+  hint?: string;
+  defaultOpen?: boolean;
+  isDark: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <Collapsible
+      defaultOpen={defaultOpen}
+      className={cn(
+        "group/section rounded-lg border",
+        isDark ? "border-zinc-700 bg-zinc-800/50" : "border-zinc-200 bg-white",
+      )}
+    >
+      <CollapsibleTrigger
+        className={cn(
+          "flex w-full cursor-pointer items-center justify-between gap-3 rounded-lg px-4 py-3 text-left",
+          isDark ? "hover:bg-zinc-800" : "hover:bg-zinc-50",
+        )}
+      >
+        <div className="flex min-w-0 flex-col">
+          <span className="font-semibold">{title}</span>
+          {hint && (
+            <span className="truncate text-xs text-muted-foreground">{hint}</span>
+          )}
+        </div>
+        <TbChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform group-data-[state=open]/section:rotate-180" />
+      </CollapsibleTrigger>
+      <CollapsibleContent className="flex flex-col gap-2 px-4 pb-4">
+        {children}
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
 
@@ -51,6 +160,8 @@ export function ApplicationReviewDialog({
   onClose: () => void;
 }) {
   const { t } = useTranslation();
+  const { theme } = useAdminLayout();
+  const isDark = theme === "dark";
   const { data, isLoading } = useGetAdminApplicationById(applicationId);
   const application = data?.data?.application;
 
@@ -59,7 +170,9 @@ export function ApplicationReviewDialog({
   const [waiveDocuments, setWaiveDocuments] = useState(false);
   const [waiveReason, setWaiveReason] = useState("");
   const [grantBlueTick, setGrantBlueTick] = useState(false);
-  const [message, setMessage] = useState("");
+  const [rejectReason, setRejectReason] = useState("");
+  const [infoReasons, setInfoReasons] = useState<string[]>([]);
+  const [otherReason, setOtherReason] = useState("");
 
   const invalidate = useCallback(() => {
     void queryClient.invalidateQueries({
@@ -87,11 +200,36 @@ export function ApplicationReviewDialog({
     application?.status === "REJECTED" ||
     application?.status === "WITHDRAWN";
 
+  const isOtherPicked = infoReasons.includes(OTHER_REASON);
+
+  const toggleInfoReason = useCallback((reason: string, checked: boolean) => {
+    setInfoReasons((current) =>
+      checked
+        ? [...current, reason]
+        : current.filter((item) => item !== reason),
+    );
+  }, []);
+
   const handleSubmit = useCallback(async () => {
     if (!application) return;
 
     if (decision === "REQUEST_INFO") {
-      if (!message.trim()) {
+      if (isOtherPicked && !otherReason.trim()) {
+        showMessage({
+          type: MessageType.Toast,
+          level: MessageLevel.Error,
+          title: t("Enter the other reason"),
+        });
+        return;
+      }
+      // Keep the preset order rather than the click order, so notes read consistently.
+      const message = [
+        ...REQUEST_INFO_REASONS.filter(
+          (reason) => reason !== OTHER_REASON && infoReasons.includes(reason),
+        ).map((reason) => t(reason)),
+        ...(isOtherPicked ? [otherReason.trim()] : []),
+      ].join(", ");
+      if (!message) {
         showMessage({
           type: MessageType.Toast,
           level: MessageLevel.Error,
@@ -99,7 +237,7 @@ export function ApplicationReviewDialog({
         });
         return;
       }
-      await requestInfoAsync({ id: application.id, message: message.trim() });
+      await requestInfoAsync({ id: application.id, message });
       showMessage({
         type: MessageType.Toast,
         level: MessageLevel.Success,
@@ -110,7 +248,7 @@ export function ApplicationReviewDialog({
     }
 
     if (decision === "REJECT") {
-      if (!message.trim()) {
+      if (!rejectReason.trim()) {
         showMessage({
           type: MessageType.Toast,
           level: MessageLevel.Error,
@@ -121,7 +259,7 @@ export function ApplicationReviewDialog({
       await decideAsync({
         id: application.id,
         decision: "REJECT",
-        reject_reason: message.trim(),
+        reject_reason: rejectReason.trim(),
       });
       showMessage({
         type: MessageType.Toast,
@@ -160,9 +298,12 @@ export function ApplicationReviewDialog({
     decideAsync,
     decision,
     grantBlueTick,
+    infoReasons,
+    isOtherPicked,
     lane,
-    message,
     onClose,
+    otherReason,
+    rejectReason,
     requestInfoAsync,
     t,
     waiveDocuments,
@@ -177,11 +318,26 @@ export function ApplicationReviewDialog({
     setWaiveDocuments(next === "A");
   }, []);
 
+  const textareaClassName = cn(
+    isDark &&
+      "border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-500",
+  );
+  const checkboxClassName = adminCheckboxClassName(isDark);
+
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+      <DialogContent
+        className={cn(
+          "max-h-[90vh] max-w-4xl overflow-y-auto",
+          isDark ? "bg-zinc-900 text-zinc-100" : "bg-zinc-50 text-zinc-900",
+        )}
+      >
         <DialogHeader>
-          <DialogTitle>{t("Review application")}</DialogTitle>
+          <DialogTitle
+            className={cn(isDark ? "text-zinc-100" : "text-zinc-900")}
+          >
+            {t("Review application")}
+          </DialogTitle>
         </DialogHeader>
 
         {isLoading || !application ? (
@@ -191,13 +347,28 @@ export function ApplicationReviewDialog({
             <Skeleton className="h-24 w-full" />
           </div>
         ) : (
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-lg font-semibold">
+                {application.profile?.name}
+              </span>
+              <TagStatus
+                type={APPLICATION_STATUS_TAG[application.status].type}
+                label={t(APPLICATION_STATUS_TAG[application.status].label)}
+                className="!m-0"
+              />
+              <span className="text-xs text-muted-foreground">
+                {application.code}
+              </span>
+            </div>
+
             {/* The contact domain decides lane A, so it leads. */}
-            <section className="rounded-lg border border-border p-4">
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                {t("Contact email")}
-              </p>
-              <p className="mt-1 text-lg">
+            <SectionCard
+              title={t("Contact email")}
+              defaultOpen
+              isDark={isDark}
+            >
+              <p className="text-lg">
                 <span className="text-muted-foreground">
                   {contactEmailParts.local}@
                 </span>
@@ -205,27 +376,48 @@ export function ApplicationReviewDialog({
                   {contactEmailParts.domain}
                 </span>
               </p>
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 {t(
                   "Ownership of this mailbox was confirmed by a one-time code before the application was submitted.",
                 )}
               </p>
-            </section>
+            </SectionCard>
 
-            <section className="flex flex-col gap-2">
-              <h3 className="font-semibold">{t("Organization profile")}</h3>
+            <SectionCard
+              title={t("Organization profile")}
+              defaultOpen
+              isDark={isDark}
+            >
               <Row label={t("Name")} value={application.profile?.name} />
               <Row label={t("Type")} value={t(application.org_type)} />
               <Row label={t("Address")} value={application.profile?.address} />
+              <Row
+                label={t("Description")}
+                value={
+                  <RichTextContent
+                    value={application.profile?.description}
+                    className="text-sm leading-relaxed"
+                    maxLines={4}
+                    showMoreLabel={t("Show more")}
+                    showLessLabel={t("Show less")}
+                    emptyFallback="—"
+                  />
+                }
+              />
               <Row label={t("Tracking code")} value={application.code} />
               <Row
                 label={t("Submitted")}
                 value={formattedDate(application.submitted_at)}
               />
-            </section>
+            </SectionCard>
 
-            <section className="flex flex-col gap-2">
-              <h3 className="font-semibold">{t("Official channels")}</h3>
+            <SectionCard
+              title={t("Official channels")}
+              hint={t("{{count}} provided", {
+                count: application.channels?.length ?? 0,
+              })}
+              isDark={isDark}
+            >
               {application.channels?.length ? (
                 application.channels.map((channel) => (
                   <Row
@@ -236,7 +428,10 @@ export function ApplicationReviewDialog({
                         href={channel.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-blue-600 underline"
+                        className={cn(
+                          "inline-flex items-center gap-1 underline",
+                          isDark ? "text-blue-300" : "text-blue-600",
+                        )}
                       >
                         {channel.url}
                         <TbExternalLink />
@@ -249,15 +444,15 @@ export function ApplicationReviewDialog({
                   {t("No channels provided.")}
                 </p>
               )}
-            </section>
+            </SectionCard>
 
-            <section className="flex flex-col gap-2">
-              <h3 className="font-semibold">{t("Legal representative")}</h3>
-              <p className="text-xs text-muted-foreground">
-                {t(
-                  "Review-only. Never shown publicly, and only the last 4 characters of the ID number are stored.",
-                )}
-              </p>
+            <SectionCard
+              title={t("Legal representative")}
+              hint={t(
+                "Review-only. Never shown publicly, and only the last 4 characters of the ID number are stored.",
+              )}
+              isDark={isDark}
+            >
               <Row
                 label={t("Full name")}
                 value={application.legal_representative?.full_name}
@@ -278,10 +473,15 @@ export function ApplicationReviewDialog({
                 label={t("Position")}
                 value={application.legal_representative?.position}
               />
-            </section>
+            </SectionCard>
 
-            <section className="flex flex-col gap-2">
-              <h3 className="font-semibold">{t("Legal documents")}</h3>
+            <SectionCard
+              title={t("Legal documents")}
+              hint={t("{{count}} attached", {
+                count: application.documents?.length ?? 0,
+              })}
+              isDark={isDark}
+            >
               {application.documents?.length ? (
                 <ul className="flex flex-col gap-2">
                   {application.documents.map((document) => (
@@ -293,7 +493,10 @@ export function ApplicationReviewDialog({
                         )}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 text-sm text-blue-600 underline"
+                        className={cn(
+                          "inline-flex items-center gap-2 text-sm underline",
+                          isDark ? "text-blue-300" : "text-blue-600",
+                        )}
                       >
                         <TbFileText />
                         {document.file_name ?? document.doc_type}
@@ -309,79 +512,146 @@ export function ApplicationReviewDialog({
               <p className="text-xs text-muted-foreground">
                 {t("Every time a document is opened it is written to the audit log.")}
               </p>
-            </section>
+            </SectionCard>
 
             {isClosed ? (
-              <section className="rounded-lg bg-muted p-4 text-sm">
+              <section
+                className={cn(
+                  "rounded-lg p-4 text-sm",
+                  isDark ? "bg-zinc-800" : "bg-zinc-100",
+                )}
+              >
                 {t("This application has already been decided.")}
               </section>
             ) : (
-              <section className="flex flex-col gap-4 rounded-lg border border-border p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <h3 className="font-semibold">{t("Decision")}</h3>
+              <section
+                className={cn(
+                  "flex flex-col gap-4 rounded-lg border p-4",
+                  isDark
+                    ? "border-zinc-700 bg-zinc-800/50"
+                    : "border-zinc-200 bg-white",
+                )}
+              >
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="font-semibold">{t("Decision")}</h3>
+                    {application.status !== "UNDER_REVIEW" && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={isClaiming}
+                        onClick={() => claimAsync({ id: application.id })}
+                      >
+                        {t("Claim for review")}
+                      </Button>
+                    )}
+                  </div>
                   {application.status !== "UNDER_REVIEW" && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={isClaiming}
-                      onClick={() => claimAsync({ id: application.id })}
-                    >
-                      {t("Claim for review")}
-                    </Button>
+                    <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                      <TbInfoCircle className="mt-0.5 size-3.5 shrink-0" />
+                      {t(
+                        "Claiming marks you as the reviewer and moves the application to Under review, so other admins know it is taken and cannot claim it at the same time. It is optional — you can decide without claiming.",
+                      )}
+                    </p>
                   )}
                 </div>
 
                 <div className="flex flex-wrap gap-2">
                   {(
                     [
-                      ["APPROVE", t("Approve")],
-                      ["REQUEST_INFO", t("Request more information")],
-                      ["REJECT", t("Reject")],
-                    ] as [Decision, string][]
-                  ).map(([value, label]) => (
+                      ["APPROVE", t("Approve"), TbCircleCheck],
+                      [
+                        "REQUEST_INFO",
+                        t("Request more information"),
+                        TbMessageQuestion,
+                      ],
+                      ["REJECT", t("Reject"), TbCircleX],
+                    ] as const
+                  ).map(([value, label, Icon]) => (
                     <button
                       key={value}
                       type="button"
                       onClick={() => setDecision(value)}
                       className={cn(
-                        "rounded-md border px-3 py-1.5 text-sm",
+                        "inline-flex cursor-pointer items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors",
                         decision === value
-                          ? "border-transparent bg-foreground text-background"
-                          : "border-border",
+                          ? DECISION_STYLES[value].selected
+                          : isDark
+                            ? DECISION_STYLES[value].dark
+                            : DECISION_STYLES[value].light,
                       )}
                     >
+                      <Icon className="size-4" />
                       {label}
                     </button>
                   ))}
                 </div>
 
-                {decision === "APPROVE" ? (
+                {decision === "APPROVE" && (
                   <div className="flex flex-col gap-3">
                     <div className="flex flex-wrap gap-2">
                       {(
                         [
-                          ["A", t("Lane A — fast track")],
-                          ["B", t("Lane B — standard")],
-                        ] as [ApplicationLane, string][]
-                      ).map(([value, label]) => (
+                          [
+                            "A",
+                            t("Lane A"),
+                            t(
+                              "For bodies whose identity is proven by an official email domain, such as schools (.edu.vn) and government agencies (.gov.vn). Check the contact domain by eye; documents may be waived with a reason, and the Blue Tick is granted on approval.",
+                            ),
+                          ],
+                          [
+                            "B",
+                            t("Lane B"),
+                            t(
+                              "For clubs, NGOs and social enterprises, usually on Gmail or their own domain. Legal documents are required, and the organization is approved without a Blue Tick — it earns one later through its activity.",
+                            ),
+                          ],
+                        ] as [ApplicationLane, string, string][]
+                      ).map(([value, label, explanation]) => (
                         <button
                           key={value}
                           type="button"
                           onClick={() => handleLaneChange(value)}
                           className={cn(
-                            "rounded-md border px-3 py-1.5 text-sm",
+                            "inline-flex cursor-pointer items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-semibold transition-colors",
                             lane === value
-                              ? "border-transparent bg-foreground text-background"
-                              : "border-border",
+                              ? isDark
+                                ? "border-zinc-100 bg-zinc-100 text-zinc-900"
+                                : "border-zinc-900 bg-zinc-900 text-white"
+                              : isDark
+                                ? "border-zinc-700 hover:bg-zinc-800"
+                                : "border-zinc-300 hover:bg-zinc-100",
                           )}
                         >
                           {label}
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span
+                                aria-label={explanation}
+                                className="inline-flex opacity-50 transition-opacity hover:opacity-100"
+                              >
+                                <TbHelpCircle className="size-3.5" />
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent
+                              side="top"
+                              className="max-w-xs font-normal leading-relaxed"
+                            >
+                              {explanation}
+                            </TooltipContent>
+                          </Tooltip>
                         </button>
                       ))}
                     </div>
+                    <p className="text-xs text-muted-foreground">
+                      {t(
+                        "Picking a lane pre-fills the waive and Blue Tick options below; you can still change both.",
+                      )}
+                    </p>
 
                     <label className="flex items-start gap-3 text-sm">
                       <Checkbox
+                        className={checkboxClassName}
                         checked={waiveDocuments}
                         onCheckedChange={(checked) =>
                           setWaiveDocuments(checked === true)
@@ -402,11 +672,13 @@ export function ApplicationReviewDialog({
                           "Why are documents not needed? e.g. official uit.edu.vn domain",
                         )}
                         rows={2}
+                        className={textareaClassName}
                       />
                     )}
 
                     <label className="flex items-start gap-3 text-sm">
                       <Checkbox
+                        className={checkboxClassName}
                         checked={grantBlueTick}
                         onCheckedChange={(checked) =>
                           setGrantBlueTick(checked === true)
@@ -419,16 +691,54 @@ export function ApplicationReviewDialog({
                       </span>
                     </label>
                   </div>
-                ) : (
+                )}
+
+                {decision === "REQUEST_INFO" && (
+                  <div className="flex flex-col gap-3">
+                    <p className="text-sm text-muted-foreground">
+                      {t("What does the applicant need to add?")}
+                    </p>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {REQUEST_INFO_REASONS.map((reason) => (
+                        <label
+                          key={reason}
+                          className="flex items-start gap-3 text-sm"
+                        >
+                          <Checkbox
+                            className={checkboxClassName}
+                            checked={infoReasons.includes(reason)}
+                            onCheckedChange={(checked) =>
+                              toggleInfoReason(reason, checked === true)
+                            }
+                          />
+                          <span>{t(reason)}</span>
+                        </label>
+                      ))}
+                    </div>
+                    {isOtherPicked && (
+                      <Textarea
+                        value={otherReason}
+                        onChange={(event) => setOtherReason(event.target.value)}
+                        placeholder={t("Describe the other reason")}
+                        rows={3}
+                        className={textareaClassName}
+                      />
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      {t(
+                        "The selected reasons are joined with commas and sent to the applicant.",
+                      )}
+                    </p>
+                  </div>
+                )}
+
+                {decision === "REJECT" && (
                   <Textarea
-                    value={message}
-                    onChange={(event) => setMessage(event.target.value)}
-                    placeholder={
-                      decision === "REJECT"
-                        ? t("Why is this application not approved?")
-                        : t("What does the applicant need to add?")
-                    }
+                    value={rejectReason}
+                    onChange={(event) => setRejectReason(event.target.value)}
+                    placeholder={t("Why is this application not approved?")}
                     rows={4}
+                    className={textareaClassName}
                   />
                 )}
 

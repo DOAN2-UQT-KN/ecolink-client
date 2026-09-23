@@ -14,11 +14,11 @@ const STEP_LABELS: Record<(typeof APPLICATION_STEPS)[number], string> = {
 
 export const Stepper = memo(function Stepper() {
   const { t } = useTranslation();
-  const { stepIndex } = useApplication();
+  const { stepIndex, steps } = useApplication();
 
   return (
     <ol className="flex flex-wrap items-center gap-x-2 gap-y-3">
-      {APPLICATION_STEPS.map((step, index) => {
+      {steps.map((step, index) => {
         const isDone = index < stepIndex;
         const isCurrent = index === stepIndex;
 
@@ -47,7 +47,7 @@ export const Stepper = memo(function Stepper() {
             >
               {t(STEP_LABELS[step])}
             </span>
-            {index < APPLICATION_STEPS.length - 1 && (
+            {index < steps.length - 1 && (
               <span
                 aria-hidden
                 className="mx-1 hidden h-px w-8 bg-[rgba(136,122,71,0.4)] sm:block"

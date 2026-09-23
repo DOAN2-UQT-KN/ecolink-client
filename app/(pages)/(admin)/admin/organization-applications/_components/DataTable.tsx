@@ -1,40 +1,19 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { TbAlertTriangle } from "react-icons/tb";
+import { TbAlertTriangle, TbFileSearch } from "react-icons/tb";
 
-import type {
-  ApplicationStatus,
-  IAdminApplication,
-} from "@/apis/organization-application/models/application";
+import type { IAdminApplication } from "@/apis/organization-application/models/application";
 import { useAdminLayout } from "@/app/(pages)/(admin)/_context/AdminLayoutContext";
 import {
   DataTable as SharedDataTable,
   type DataTableColumn,
 } from "@/components/admin/shared/DataTable";
+import TagStatus from "@/components/ui/TagStatus";
+import { APPLICATION_STATUS_TAG } from "@/constants/organizationApplicationStatus";
 import { formattedDate } from "@/utils/formattedDate";
 import { cn } from "@/libs/utils";
 import { useApplicationsContext } from "../_context/ApplicationsContext";
 import { ApplicationReviewDialog } from "./ApplicationReviewDialog";
-
-const STATUS_LABELS: Record<ApplicationStatus, string> = {
-  DRAFT: "Draft",
-  SUBMITTED: "Waiting for review",
-  UNDER_REVIEW: "Under review",
-  NEEDS_MORE_INFO: "More information needed",
-  APPROVED: "Approved",
-  REJECTED: "Not approved",
-  WITHDRAWN: "Withdrawn",
-};
-
-const STATUS_TONES: Record<ApplicationStatus, string> = {
-  DRAFT: "bg-zinc-100 text-zinc-700",
-  SUBMITTED: "bg-amber-100 text-amber-800",
-  UNDER_REVIEW: "bg-blue-100 text-blue-800",
-  NEEDS_MORE_INFO: "bg-orange-100 text-orange-800",
-  APPROVED: "bg-emerald-100 text-emerald-800",
-  REJECTED: "bg-red-100 text-red-800",
-  WITHDRAWN: "bg-zinc-100 text-zinc-700",
-};
 
 export function DataTable() {
   const { t } = useTranslation();
@@ -112,14 +91,11 @@ export function DataTable() {
         title: t("Status"),
         render: (_, record) => (
           <div className="flex items-center gap-2">
-            <span
-              className={cn(
-                "rounded-full px-2.5 py-0.5 text-xs font-medium",
-                STATUS_TONES[record.status],
-              )}
-            >
-              {t(STATUS_LABELS[record.status])}
-            </span>
+            <TagStatus
+              type={APPLICATION_STATUS_TAG[record.status].type}
+              label={t(APPLICATION_STATUS_TAG[record.status].label)}
+              className="!mx-0 min-w-0 justify-center"
+            />
             {/* Approved but no ORG account yet: provisioning is still retrying, or stuck. */}
             {record.status === "APPROVED" && !record.account_provisioned_at && (
               <span
@@ -150,18 +126,21 @@ export function DataTable() {
           <div
             onClick={(event) => event.stopPropagation()}
             onPointerDown={(event) => event.stopPropagation()}
+            className="flex items-center justify-center w-full"
           >
             <button
               type="button"
+              title={t("Review")}
+              aria-label={t("Review")}
               className={cn(
-                "rounded-md border px-3 py-1.5 text-sm font-medium",
+                "rounded-md border px-1.5 py-1.5 text-xs font-medium transition-colors cursor-pointer duration-200",
                 isDark
-                  ? "border-zinc-700 hover:bg-zinc-800"
-                  : "border-zinc-300 hover:bg-zinc-100",
+                  ? "border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-blue-300"
+                  : "border-zinc-300 text-zinc-700 hover:bg-zinc-100 hover:text-blue-700",
               )}
               onClick={() => setOpenId(record.id)}
             >
-              {t("Review")}
+              <TbFileSearch className="size-5" />
             </button>
           </div>
         ),
