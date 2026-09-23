@@ -7,6 +7,7 @@ import type {
   IApplication,
 } from "@/apis/organization-application/models/application";
 import AppImage from "@/components/ui/AppImage";
+import { RichTextContent } from "@/components/ui/RichTextContent";
 import { cn } from "@/libs/utils";
 import { formattedDate } from "@/utils/formattedDate";
 import showMessage, { MessageLevel, MessageType } from "@/utils/showMessage";
@@ -48,7 +49,7 @@ export function SummaryRow({
       <span className="w-[200px] shrink-0 text-sm text-foreground-tertiary">
         {label}
       </span>
-      <span className="text-sm break-words">{value || "—"}</span>
+      <div className="min-w-0 flex-1 text-sm break-words">{value || "—"}</div>
     </div>
   );
 }
@@ -93,7 +94,7 @@ function TrackingCode({ code }: { code: string }) {
         className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-button-accent transition-colors hover:bg-[rgba(136,122,71,0.1)]"
       >
         {isCopied ? <TbCheck className="size-4" /> : <TbCopy className="size-4" />}
-        {isCopied ? t("Copied") : t("Copy")}
+        {/* {isCopied ? t("Copied") : t("Copy")} */}
       </button>
     </div>
   );
@@ -208,11 +209,16 @@ export const ApplicationDetails = memo(function ApplicationDetails({
         <SummaryRow
           label={t("Description")}
           value={
-            profile.description ? (
-              <span className="whitespace-pre-line">{profile.description}</span>
-            ) : (
-              ""
-            )
+            // Stored as the editor's Slate JSON, so it needs the same renderer as the
+            // report detail rather than plain text.
+            <RichTextContent
+              value={profile.description}
+              className="font-display-2 text-foreground-secondary leading-relaxed"
+              maxLines={4}
+              showMoreLabel={t("Show more")}
+              showLessLabel={t("Show less")}
+              emptyFallback="—"
+            />
           }
         />
       </Section>
