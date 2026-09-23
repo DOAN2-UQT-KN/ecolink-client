@@ -1,10 +1,17 @@
 import requestApi from "@/utils/requestApi";
-import { usePost, UsePostOptions } from "@/hooks/reactQuery";
+import {
+  useGet,
+  UseGetOptions,
+  usePost,
+  UsePostOptions,
+} from "@/hooks/reactQuery";
 import { useTranslation } from "react-i18next";
 import { MessageType } from "@/utils/showMessage";
 import {
   IRequestApplicationOtpRequest,
   IRequestApplicationOtpResponse,
+  IResolveApplicationEmailLinkRequest,
+  IResolveApplicationEmailLinkResponse,
   IVerifyApplicationOtpRequest,
   IVerifyApplicationOtpResponse,
 } from "./models/emailOtp";
@@ -53,6 +60,31 @@ export const useVerifyApplicationOtp = (
   return usePost({
     mutationFn: verifyApplicationOtp,
     messageError: { type: MessageType.Toast },
+    ...options,
+  });
+};
+
+export const resolveApplicationEmailLink = async (
+  req: IResolveApplicationEmailLinkRequest,
+): Promise<IResolveApplicationEmailLinkResponse> => {
+  return await requestApi.get<IResolveApplicationEmailLinkResponse>(
+    `${url}/link`,
+    req,
+  );
+};
+
+export const useResolveApplicationEmailLink = (
+  req: IResolveApplicationEmailLinkRequest,
+  options?: Omit<
+    UseGetOptions<IResolveApplicationEmailLinkResponse>,
+    "queryKey" | "queryFn"
+  >,
+) => {
+  return useGet({
+    queryKey: ["application-email-link", req],
+    queryFn: () => resolveApplicationEmailLink(req),
+    retry: false,
+    refetchOnWindowFocus: false,
     ...options,
   });
 };

@@ -2,7 +2,10 @@ import requestApi from "@/utils/requestApi";
 import { usePost, UsePostOptions } from "@/hooks/reactQuery";
 import { useTranslation } from "react-i18next";
 import { MessageType } from "@/utils/showMessage";
-import { IApplicationResponse } from "./models/application";
+import {
+  IApplicationResponse,
+  ICreateApplicationResponse,
+} from "./models/application";
 import {
   ICreateApplicationRequest,
   IUpdateApplicationRequest,
@@ -19,14 +22,17 @@ export interface ICreateApplicationVariables {
 export const createApplication = async ({
   submissionToken,
   data,
-}: ICreateApplicationVariables): Promise<IApplicationResponse> => {
-  return await requestApi.post<IApplicationResponse>(url, data, {
+}: ICreateApplicationVariables): Promise<ICreateApplicationResponse> => {
+  return await requestApi.post<ICreateApplicationResponse>(url, data, {
     headers: { [SUBMISSION_TOKEN_HEADER]: submissionToken },
   });
 };
 
 export const useCreateApplication = (
-  options?: UsePostOptions<IApplicationResponse, ICreateApplicationVariables>,
+  options?: UsePostOptions<
+    ICreateApplicationResponse,
+    ICreateApplicationVariables
+  >,
 ) => {
   const { t } = useTranslation();
   return usePost({

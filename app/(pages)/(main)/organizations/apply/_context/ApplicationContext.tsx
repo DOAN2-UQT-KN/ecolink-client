@@ -5,12 +5,13 @@ import { useTranslation } from "react-i18next";
 import { useCreateApplication } from "@/apis/organization-application/createApplication";
 import {
   useRequestApplicationOtp,
+  useResolveApplicationEmailLink,
   useVerifyApplicationOtp,
 } from "@/apis/organization-application/emailOtp";
 import { uploadApplicationDocument } from "@/apis/organization-application/presignDocument";
 import type { ApplicationDocType } from "@/apis/organization-application/models/application";
 import { uploadToCloudinary } from "@/app/(pages)/(main)/incidents/create/_services/upload.service";
-import { useRouter } from "@/libs/router";
+import { useRouter, useSearchParams } from "@/libs/router";
 import showMessage, { MessageLevel, MessageType } from "@/utils/showMessage";
 import {
   ApplicationFormValues,
@@ -38,7 +39,12 @@ interface ApplicationContextType {
 
   /** Set once the emailed code has been accepted; unlocks every later step. */
   submissionToken: string;
-  otpSentAt: Date | null;
+  /** When the latest code stops working; `null` until one has been sent. */
+  otpExpiresAt: Date | null;
+  /** True when the form was reopened from the mailed link, so the address is fixed. */
+  isEmailLocked: boolean;
+  /** Drops the sent code so another address can be entered (not offered when locked). */
+  changeEmail: () => void;
   requestOtp: () => Promise<void>;
   verifyOtp: () => Promise<void>;
   isRequestingOtp: boolean;
@@ -68,10 +74,13 @@ const STEP_FIELDS: Record<ApplicationStep, (keyof ApplicationFormValues)[]> = {
 export const ApplicationProvider = ({ children }: { children: ReactNode }) => {
   const { t } = useTranslation();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const linkToken = searchParams.get("t") ?? "";
 
   const [stepIndex, setStepIndex] = React.useState(0);
   const [submissionToken, setSubmissionToken] = React.useState("");
-  const [otpSentAt, setOtpSentAt] = React.useState<Date | null>(null);
+  const [otpExpiresAt, setOtpExpiresAt] = React.useState<Date | null>(null);
+  const [isEmailLocked, setIsEmailLocked] = React.useState(false);
   const [isUploadingDocument, setIsUploadingDocument] = React.useState(false);
   const [isUploadingImages, setIsUploadingImages] = React.useState(false);
 
@@ -89,12 +98,48 @@ export const ApplicationProvider = ({ children }: { children: ReactNode }) => {
   const { mutateAsync: createApplicationAsync, isPending: isCreating } =
     useCreateApplication();
 
+  // The mailed link only tells us which address the code went to; the code still has to be
+  // typed. It saves an applicant who closed the tab from burning another code.
+  const { data: emailLink, isError: isEmailLinkInvalid } =
+    useResolveApplicationEmailLink(
+      { token: linkToken },
+      { enabled: Boolean(linkToken), staleTime: 0, gcTime: 0 },
+    );
+
+  React.useEffect(() => {
+    if (!emailLink?.data) return;
+    form.setValue("email", emailLink.data.email);
+    setOtpExpiresAt(new Date(emailLink.data.expires_at));
+    setIsEmailLocked(true);
+  }, [emailLink, form]);
+
+  React.useEffect(() => {
+    if (!isEmailLinkInvalid) return;
+    showMessage({
+      type: MessageType.Toast,
+      level: MessageLevel.Error,
+      title: t("This link has expired, please request a new code"),
+    });
+    router.replace("/organizations/apply");
+    // `router` is rebuilt every render; only a new failure should toast again.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEmailLinkInvalid, t]);
+
   const requestOtp = useCallback(async () => {
     const valid = await form.trigger("email");
     if (!valid) return;
-    await requestOtpAsync({ email: form.getValues("email").trim() });
-    setOtpSentAt(new Date());
+    const response = await requestOtpAsync({
+      email: form.getValues("email").trim(),
+    });
+    setOtpExpiresAt(new Date(response.data.expires_at));
+    form.setValue("otp", "");
   }, [form, requestOtpAsync]);
+
+  const changeEmail = useCallback(() => {
+    setOtpExpiresAt(null);
+    form.setValue("otp", "");
+    form.clearErrors("otp");
+  }, [form]);
 
   const verifyOtp = useCallback(async () => {
     const valid = await form.trigger(["email", "otp"]);
@@ -200,11 +245,11 @@ export const ApplicationProvider = ({ children }: { children: ReactNode }) => {
     });
 
     // The tracking link also goes out by email; this takes the applicant straight there.
-    router.push(
-      `/organizations/apply/submitted?code=${encodeURIComponent(
-        response.data.application.code,
-      )}`,
-    );
+    const params = new URLSearchParams({
+      id: response.data.application.id,
+      token: response.data.tracking_token,
+    });
+    router.push(`/organizations/apply/submitted?${params.toString()}`);
   }, [createApplicationAsync, form, router, submissionToken, t]);
 
   const contextValue = useMemo(
@@ -216,7 +261,9 @@ export const ApplicationProvider = ({ children }: { children: ReactNode }) => {
       next,
       back,
       submissionToken,
-      otpSentAt,
+      otpExpiresAt,
+      isEmailLocked,
+      changeEmail,
       requestOtp,
       verifyOtp,
       isRequestingOtp,
@@ -229,15 +276,17 @@ export const ApplicationProvider = ({ children }: { children: ReactNode }) => {
     }),
     [
       back,
+      changeEmail,
       form,
       goToStep,
       isCreating,
+      isEmailLocked,
       isRequestingOtp,
       isUploadingDocument,
       isUploadingImages,
       isVerifyingOtp,
       next,
-      otpSentAt,
+      otpExpiresAt,
       removeDocument,
       requestOtp,
       step,

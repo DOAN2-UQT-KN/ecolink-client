@@ -10,7 +10,7 @@ import { cn } from "@/libs/utils";
 import { ApplicationProvider } from "./_context/ApplicationContext";
 import { useApplication } from "./_hooks/useApplication";
 import Stepper from "./_components/Stepper";
-import StepEmail from "./_components/StepEmail";
+import StepEmail, { stepCardClassName } from "./_components/StepEmail";
 import StepProfile from "./_components/StepProfile";
 import StepContact from "./_components/StepContact";
 import StepDocuments from "./_components/StepDocuments";
@@ -52,13 +52,17 @@ function ApplyContent() {
       <div className="flex flex-col gap-[30px] w-full h-full pt-5">
         <Stepper />
 
-        <div className="rounded-[10px] border border-[rgba(136,122,71,0.5)] bg-white/80 px-[24px] py-[28px] shadow-sm lg:px-[30px] lg:py-[35px]">
-          {step === "email" && <StepEmail />}
-          {step === "profile" && <StepProfile />}
-          {step === "contact" && <StepContact />}
-          {step === "documents" && <StepDocuments />}
-          {step === "review" && <StepReview />}
-        </div>
+        {/* The email step draws its own two cards side by side; the rest share one. */}
+        {step === "email" ? (
+          <StepEmail />
+        ) : (
+          <div className={stepCardClassName}>
+            {step === "profile" && <StepProfile />}
+            {step === "contact" && <StepContact />}
+            {step === "documents" && <StepDocuments />}
+            {step === "review" && <StepReview />}
+          </div>
+        )}
 
         {step !== "email" && (
           <div className="flex justify-between gap-3">

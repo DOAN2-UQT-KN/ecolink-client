@@ -110,6 +110,12 @@ export interface IAdminApplication extends IApplication {
 }
 
 export type IApplicationResponse = IBaseResponse<{ application: IApplication }>;
+
+/** Submitting also hands back the tracking credential the acknowledgement mail carries. */
+export type ICreateApplicationResponse = IBaseResponse<{
+  application: IApplication;
+  tracking_token: string;
+}>;
 export type IAdminApplicationResponse = IBaseResponse<{
   application: IAdminApplication;
 }>;

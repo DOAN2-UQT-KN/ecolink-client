@@ -9,17 +9,7 @@ import {
   ORG_TYPE_OPTIONS,
 } from "../_services/application.service";
 import { useApplication } from "../_hooks/useApplication";
-
-function SummaryRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex flex-col gap-0.5 sm:flex-row sm:gap-4">
-      <span className="w-[200px] shrink-0 text-sm text-foreground-tertiary">
-        {label}
-      </span>
-      <span className="text-sm break-words">{value || "—"}</span>
-    </div>
-  );
-}
+import { SummaryRow } from "./ApplicationDetails";
 
 export const StepReview = memo(function StepReview() {
   const { t } = useTranslation();

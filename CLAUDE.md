@@ -41,4 +41,4 @@ Các trang phía người dùng cuối (`create/`, `me/`, `/profile/*`) **vẫn 
 | Component UI, styling, form, i18n | `ecolink-ui-and-forms` |
 | Tách component dùng chung ra `modules/` | `ecolink-feature-modules` |
 
-Bản đầy đủ ở `.claude/skills/<name>/SKILL.md`. Cursor dùng cùng nội dung qua `.cursor/rules/*.mdc`.
+Bản đầy đủ ở `.claude/skills/<name>/SKILL.md`. Cursor có bản sao y hệt ở `.cursor/skills/<name>/SKILL.md` (sửa skill thì sửa cả hai), cộng bản rút gọn tự nạp theo `globs` ở `.cursor/rules/*.mdc`.

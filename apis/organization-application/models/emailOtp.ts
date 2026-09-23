@@ -6,6 +6,18 @@ export interface IRequestApplicationOtpRequest {
 
 export type IRequestApplicationOtpResponse = IBaseResponse<{
   sent: boolean;
+  sent_at: string;
+  expires_at: string;
+}>;
+
+export interface IResolveApplicationEmailLinkRequest {
+  token: string;
+}
+
+/** The address a mailed "continue" link was issued for, plus the life of its code. */
+export type IResolveApplicationEmailLinkResponse = IBaseResponse<{
+  email: string;
+  sent_at: string;
   expires_at: string;
 }>;
 
