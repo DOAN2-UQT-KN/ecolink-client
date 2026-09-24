@@ -866,7 +866,6 @@
   "A reviewer will look at your paperwork. We emailed you a tracking link — keep it, you need it to follow the review, add missing documents or withdraw the application.": "Quản trị viên sẽ xem xét hồ sơ của bạn. Chúng tôi đã gửi liên kết tra cứu qua email — hãy giữ lại, bạn cần nó để theo dõi tiến trình, bổ sung giấy tờ hoặc rút hồ sơ.",
   "Account pending": "Chưa có tài khoản",
   "Add another channel": "Thêm kênh khác",
-  "An admin reviewed this organization's legal documents.": "Quản trị viên đã thẩm định giấy tờ pháp lý của tổ chức này.",
   "Application approved": "Đã duyệt hồ sơ",
   "Application not found": "Không tìm thấy hồ sơ",
   "Application rejected": "Đã từ chối hồ sơ",
@@ -1076,5 +1075,6 @@
   "No activity yet.": "Chưa có hoạt động nào.",
   "Cover image": "Ảnh bìa",
   "Map location": "Vị trí trên bản đồ",
-  "Information": "Thông tin"
+  "Information": "Thông tin",
+  "An admin reviewed this organization's legal documents and confirmed who runs it. The tick is hidden while a reported violation is being handled.": "Admin đã thẩm định giấy tờ pháp lý của tổ chức và xác nhận đơn vị vận hành. Dấu tick sẽ bị ẩn trong thời gian xử lý vi phạm bị báo cáo."
 }

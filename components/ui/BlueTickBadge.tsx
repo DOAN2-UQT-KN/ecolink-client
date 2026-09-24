@@ -3,6 +3,11 @@ import { useTranslation } from "react-i18next";
 import { RiVerifiedBadgeFill } from "react-icons/ri";
 
 import type { IOrganization } from "@/apis/organization/models/organization";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/libs/utils";
 
 /**
@@ -22,10 +27,13 @@ export function isBlueTickVisible(
 export const BlueTickBadge = memo(function BlueTickBadge({
   organization,
   className,
+  iconClassName,
   withLabel = false,
 }: {
   organization: Pick<IOrganization, "trust_tier" | "tick_suspended">;
   className?: string;
+  /** Size of the tick itself, e.g. larger next to a page title. */
+  iconClassName?: string;
   withLabel?: boolean;
 }) {
   const { t } = useTranslation();
@@ -34,15 +42,34 @@ export const BlueTickBadge = memo(function BlueTickBadge({
 
   const label = t("Verified organization");
 
+  // Hover or focus explains the tick: to a visitor it reads as an endorsement, so it should
+  // say what exactly was checked.
   return (
-    <span
-      className={cn("inline-flex items-center gap-1 text-[#1d9bf0]", className)}
-      title={label}
-      aria-label={label}
-    >
-      <RiVerifiedBadgeFill className="shrink-0" />
-      {withLabel && <span className="text-sm font-medium">{label}</span>}
-    </span>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span
+          tabIndex={0}
+          aria-label={label}
+          className={cn(
+            "inline-flex cursor-help items-center gap-1 rounded-sm text-[#1d9bf0] outline-none focus-visible:ring-2 focus-visible:ring-[#1d9bf0]/40",
+            className,
+          )}
+        >
+          <RiVerifiedBadgeFill className={cn("shrink-0", iconClassName)} />
+          {withLabel && <span className="text-sm font-medium">{label}</span>}
+        </span>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="max-w-xs">
+        <div className="flex flex-col gap-0.5 font-display-1">
+          <span className="font-semibold">{label}</span>
+          <span>
+            {t(
+              "An admin reviewed this organization's legal documents and confirmed who runs it. The tick is hidden while a reported violation is being handled.",
+            )}
+          </span>
+        </div>
+      </TooltipContent>
+    </Tooltip>
   );
 });
 

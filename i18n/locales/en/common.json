@@ -866,7 +866,6 @@
   "A reviewer will look at your paperwork. We emailed you a tracking link — keep it, you need it to follow the review, add missing documents or withdraw the application.": "A reviewer will look at your paperwork. We emailed you a tracking link — keep it, you need it to follow the review, add missing documents or withdraw the application.",
   "Account pending": "Account pending",
   "Add another channel": "Add another channel",
-  "An admin reviewed this organization's legal documents.": "An admin reviewed this organization's legal documents.",
   "Application approved": "Application approved",
   "Application not found": "Application not found",
   "Application rejected": "Application rejected",
@@ -1076,5 +1075,6 @@
   "No activity yet.": "No activity yet.",
   "Cover image": "Cover image",
   "Map location": "Map location",
-  "Information": "Information"
+  "Information": "Information",
+  "An admin reviewed this organization's legal documents and confirmed who runs it. The tick is hidden while a reported violation is being handled.": "An admin reviewed this organization's legal documents and confirmed who runs it. The tick is hidden while a reported violation is being handled."
 }
