@@ -61,6 +61,8 @@ export interface IApplicationEvent {
   id: string;
   event_type: string;
   actor_id: string | null;
+  /** Resolved from identity-service; null for the anonymous applicant or when unavailable. */
+  actor_name: string | null;
   payload: unknown;
   created_at: string;
 }

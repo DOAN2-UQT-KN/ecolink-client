@@ -36,6 +36,12 @@ import {
 import { RichTextContent } from "@/components/ui/RichTextContent";
 import { Skeleton } from "@/components/ui/skeleton";
 import TagStatus from "@/components/ui/TagStatus";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Tooltip,
@@ -43,6 +49,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { APPLICATION_STATUS_TAG } from "@/constants/organizationApplicationStatus";
+import { ApplicationActivity } from "./ApplicationActivity";
 import { queryClient } from "@/libs/queryClient";
 import { cn } from "@/libs/utils";
 import showMessage, { MessageLevel, MessageType } from "@/utils/showMessage";
@@ -362,399 +369,438 @@ export function ApplicationReviewDialog({
               </span>
             </div>
 
-            {/* The contact domain decides lane A, so it leads. */}
-            <SectionCard
-              title={t("Contact email")}
-              defaultOpen
-              isDark={isDark}
-            >
-              <p className="text-lg">
-                <span className="text-muted-foreground">
-                  {contactEmailParts.local}@
-                </span>
-                <span className="font-semibold">
-                  {contactEmailParts.domain}
-                </span>
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {t(
-                  "Ownership of this mailbox was confirmed by a one-time code before the application was submitted.",
+            <Tabs defaultValue="information" className="gap-4 text-xs">
+              <TabsList
+                className={cn(
+                  "h-10 border",
+                  isDark ? "border-zinc-700 bg-zinc-800" : "border-border bg-card",
                 )}
-              </p>
-            </SectionCard>
+              >
+                <TabsTrigger value="information">{t("Information")}</TabsTrigger>
+                <TabsTrigger value="activity">
+                  {t("Activity")}
+                  <span
+                    className={cn(
+                      "rounded-full px-1.5 text-xs tabular-nums",
+                      isDark ? "bg-zinc-700 text-zinc-200" : "bg-zinc-100 text-zinc-600",
+                    )}
+                  >
+                    {application.events?.length ?? 0}
+                  </span>
+                </TabsTrigger>
+              </TabsList>
 
-            <SectionCard
-              title={t("Organization profile")}
-              defaultOpen
-              isDark={isDark}
-            >
-              <Row label={t("Name")} value={application.profile?.name} />
-              <Row label={t("Type")} value={t(application.org_type)} />
-              <Row label={t("Address")} value={application.profile?.address} />
-              <Row
-                label={t("Description")}
-                value={
-                  <RichTextContent
-                    value={application.profile?.description}
-                    className="text-sm leading-relaxed"
-                    maxLines={4}
-                    showMoreLabel={t("Show more")}
-                    showLessLabel={t("Show less")}
-                    emptyFallback="—"
-                  />
-                }
-              />
-              <Row label={t("Tracking code")} value={application.code} />
-              <Row
-                label={t("Submitted")}
-                value={formattedDate(application.submitted_at)}
-              />
-            </SectionCard>
+              <TabsContent value="information" className="flex flex-col gap-3">
+                {/* The contact domain decides lane A, so it leads. */}
+                <SectionCard
+                  title={t("Contact email")}
+                  defaultOpen
+                  isDark={isDark}
+                >
+                  <p className="text-lg">
+                    <span className="text-muted-foreground">
+                      {contactEmailParts.local}@
+                    </span>
+                    <span className="font-semibold">
+                      {contactEmailParts.domain}
+                    </span>
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {t(
+                      "Ownership of this mailbox was confirmed by a one-time code before the application was submitted.",
+                    )}
+                  </p>
+                </SectionCard>
 
-            <SectionCard
-              title={t("Official channels")}
-              hint={t("{{count}} provided", {
-                count: application.channels?.length ?? 0,
-              })}
-              isDark={isDark}
-            >
-              {application.channels?.length ? (
-                application.channels.map((channel) => (
+                <SectionCard
+                  title={t("Organization profile")}
+                  defaultOpen
+                  isDark={isDark}
+                >
+                  <Row label={t("Name")} value={application.profile?.name} />
+                  <Row label={t("Type")} value={t(application.org_type)} />
+                  <Row label={t("Address")} value={application.profile?.address} />
                   <Row
-                    key={`${channel.type}-${channel.url}`}
-                    label={t(channel.type)}
+                    label={t("Description")}
                     value={
-                      <a
-                        href={channel.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={cn(
-                          "inline-flex items-center gap-1 underline",
-                          isDark ? "text-blue-300" : "text-blue-600",
-                        )}
-                      >
-                        {channel.url}
-                        <TbExternalLink />
-                      </a>
+                      <RichTextContent
+                        value={application.profile?.description}
+                        className="text-sm leading-relaxed"
+                        maxLines={4}
+                        showMoreLabel={t("Show more")}
+                        showLessLabel={t("Show less")}
+                        emptyFallback="—"
+                      />
                     }
                   />
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  {t("No channels provided.")}
-                </p>
-              )}
-            </SectionCard>
+                  <Row label={t("Tracking code")} value={application.code} />
+                  <Row
+                    label={t("Submitted")}
+                    value={formattedDate(application.submitted_at)}
+                  />
+                </SectionCard>
 
-            <SectionCard
-              title={t("Legal representative")}
-              hint={t(
-                "Review-only. Never shown publicly, and only the last 4 characters of the ID number are stored.",
-              )}
-              isDark={isDark}
-            >
-              <Row
-                label={t("Full name")}
-                value={application.legal_representative?.full_name}
-              />
-              <Row
-                label={t("ID number")}
-                value={
-                  application.legal_representative?.id_last4
-                    ? `${application.legal_representative.id_type} •••• ${application.legal_representative.id_last4}`
-                    : ""
-                }
-              />
-              <Row
-                label={t("Phone")}
-                value={application.legal_representative?.phone}
-              />
-              <Row
-                label={t("Position")}
-                value={application.legal_representative?.position}
-              />
-            </SectionCard>
-
-            <SectionCard
-              title={t("Legal documents")}
-              hint={t("{{count}} attached", {
-                count: application.documents?.length ?? 0,
-              })}
-              isDark={isDark}
-            >
-              {application.documents?.length ? (
-                <ul className="flex flex-col gap-2">
-                  {application.documents.map((document) => (
-                    <li key={document.id}>
-                      <a
-                        href={buildApplicationDocumentUrl(
-                          application.id,
-                          document.id,
-                        )}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={cn(
-                          "inline-flex items-center gap-2 text-sm underline",
-                          isDark ? "text-blue-300" : "text-blue-600",
-                        )}
-                      >
-                        <TbFileText />
-                        {document.file_name ?? document.doc_type}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  {t("No documents attached.")}
-                </p>
-              )}
-              <p className="text-xs text-muted-foreground">
-                {t("Every time a document is opened it is written to the audit log.")}
-              </p>
-            </SectionCard>
-
-            {isClosed ? (
-              <section
-                className={cn(
-                  "rounded-lg p-4 text-sm",
-                  isDark ? "bg-zinc-800" : "bg-zinc-100",
-                )}
-              >
-                {t("This application has already been decided.")}
-              </section>
-            ) : (
-              <section
-                className={cn(
-                  "flex flex-col gap-4 rounded-lg border p-4",
-                  isDark
-                    ? "border-zinc-700 bg-zinc-800/50"
-                    : "border-zinc-200 bg-white",
-                )}
-              >
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between gap-3">
-                    <h3 className="font-semibold">{t("Decision")}</h3>
-                    {application.status !== "UNDER_REVIEW" && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={isClaiming}
-                        onClick={() => claimAsync({ id: application.id })}
-                      >
-                        {t("Claim for review")}
-                      </Button>
-                    )}
-                  </div>
-                  {application.status !== "UNDER_REVIEW" && (
-                    <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
-                      <TbInfoCircle className="mt-0.5 size-3.5 shrink-0" />
-                      {t(
-                        "Claiming marks you as the reviewer and moves the application to Under review, so other admins know it is taken and cannot claim it at the same time. It is optional — you can decide without claiming.",
-                      )}
+                <SectionCard
+                  title={t("Official channels")}
+                  hint={t("{{count}} provided", {
+                    count: application.channels?.length ?? 0,
+                  })}
+                  isDark={isDark}
+                >
+                  {application.channels?.length ? (
+                    application.channels.map((channel) => (
+                      <Row
+                        key={`${channel.type}-${channel.url}`}
+                        label={t(channel.type)}
+                        value={
+                          <a
+                            href={channel.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={cn(
+                              "inline-flex items-center gap-1 underline",
+                              isDark ? "text-blue-300" : "text-blue-600",
+                            )}
+                          >
+                            {channel.url}
+                            <TbExternalLink />
+                          </a>
+                        }
+                      />
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      {t("No channels provided.")}
                     </p>
                   )}
-                </div>
+                </SectionCard>
 
-                <div className="flex flex-wrap gap-2">
-                  {(
-                    [
-                      ["APPROVE", t("Approve"), TbCircleCheck],
-                      [
-                        "REQUEST_INFO",
-                        t("Request more information"),
-                        TbMessageQuestion,
-                      ],
-                      ["REJECT", t("Reject"), TbCircleX],
-                    ] as const
-                  ).map(([value, label, Icon]) => (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => setDecision(value)}
-                      className={cn(
-                        "inline-flex cursor-pointer items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors",
-                        decision === value
-                          ? DECISION_STYLES[value].selected
-                          : isDark
-                            ? DECISION_STYLES[value].dark
-                            : DECISION_STYLES[value].light,
+                <SectionCard
+                  title={t("Legal representative")}
+                  hint={t(
+                    "Review-only. Never shown publicly, and only the last 4 characters of the ID number are stored.",
+                  )}
+                  isDark={isDark}
+                >
+                  <Row
+                    label={t("Full name")}
+                    value={application.legal_representative?.full_name}
+                  />
+                  <Row
+                    label={t("ID number")}
+                    value={
+                      application.legal_representative?.id_last4
+                        ? `${application.legal_representative.id_type} •••• ${application.legal_representative.id_last4}`
+                        : ""
+                    }
+                  />
+                  <Row
+                    label={t("Phone")}
+                    value={application.legal_representative?.phone}
+                  />
+                  <Row
+                    label={t("Position")}
+                    value={application.legal_representative?.position}
+                  />
+                </SectionCard>
+
+                <SectionCard
+                  title={t("Legal documents")}
+                  hint={t("{{count}} attached", {
+                    count: application.documents?.length ?? 0,
+                  })}
+                  isDark={isDark}
+                >
+                  {application.documents?.length ? (
+                    <ul className="flex flex-col gap-2">
+                      {application.documents.map((document) => (
+                        <li key={document.id}>
+                          <a
+                            href={buildApplicationDocumentUrl(
+                              application.id,
+                              document.id,
+                            )}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={cn(
+                              "inline-flex items-center gap-2 text-sm underline",
+                              isDark ? "text-blue-300" : "text-blue-600",
+                            )}
+                          >
+                            <TbFileText />
+                            {document.file_name ?? document.doc_type}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      {t("No documents attached.")}
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    {t("Every time a document is opened it is written to the audit log.")}
+                  </p>
+                </SectionCard>
+
+                {isClosed ? (
+                  <section
+                    className={cn(
+                      "rounded-lg p-4 text-sm",
+                      isDark ? "bg-zinc-800" : "bg-zinc-100",
+                    )}
+                  >
+                    {t("This application has already been decided.")}
+                  </section>
+                ) : (
+                  <section
+                    className={cn(
+                      "flex flex-col gap-4 rounded-lg border p-4",
+                      isDark
+                        ? "border-zinc-700 bg-zinc-800/50"
+                        : "border-zinc-200 bg-white",
+                    )}
+                  >
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center justify-between gap-3">
+                        <h3 className="font-semibold">{t("Decision")}</h3>
+                        {application.status !== "UNDER_REVIEW" && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={isClaiming}
+                            onClick={() => claimAsync({ id: application.id })}
+                          >
+                            {t("Claim for review")}
+                          </Button>
+                        )}
+                      </div>
+                      {application.status !== "UNDER_REVIEW" && (
+                        <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                          <TbInfoCircle className="mt-0.5 size-3.5 shrink-0" />
+                          {t(
+                            "Claiming marks you as the reviewer and moves the application to Under review, so other admins know it is taken and cannot claim it at the same time. It is optional — you can decide without claiming.",
+                          )}
+                        </p>
                       )}
-                    >
-                      <Icon className="size-4" />
-                      {label}
-                    </button>
-                  ))}
-                </div>
+                    </div>
 
-                {decision === "APPROVE" && (
-                  <div className="flex flex-col gap-3">
                     <div className="flex flex-wrap gap-2">
                       {(
                         [
+                          ["APPROVE", t("Approve"), TbCircleCheck],
                           [
-                            "A",
-                            t("Lane A"),
-                            t(
-                              "For bodies whose identity is proven by an official email domain, such as schools (.edu.vn) and government agencies (.gov.vn). Check the contact domain by eye; documents may be waived with a reason, and the Blue Tick is granted on approval.",
-                            ),
+                            "REQUEST_INFO",
+                            t("Request more information"),
+                            TbMessageQuestion,
                           ],
-                          [
-                            "B",
-                            t("Lane B"),
-                            t(
-                              "For clubs, NGOs and social enterprises, usually on Gmail or their own domain. Legal documents are required, and the organization is approved without a Blue Tick — it earns one later through its activity.",
-                            ),
-                          ],
-                        ] as [ApplicationLane, string, string][]
-                      ).map(([value, label, explanation]) => (
+                          ["REJECT", t("Reject"), TbCircleX],
+                        ] as const
+                      ).map(([value, label, Icon]) => (
                         <button
                           key={value}
                           type="button"
-                          onClick={() => handleLaneChange(value)}
+                          onClick={() => setDecision(value)}
                           className={cn(
-                            "inline-flex cursor-pointer items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-semibold transition-colors",
-                            lane === value
-                              ? isDark
-                                ? "border-zinc-100 bg-zinc-100 text-zinc-900"
-                                : "border-zinc-900 bg-zinc-900 text-white"
+                            "inline-flex cursor-pointer items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors",
+                            decision === value
+                              ? DECISION_STYLES[value].selected
                               : isDark
-                                ? "border-zinc-700 hover:bg-zinc-800"
-                                : "border-zinc-300 hover:bg-zinc-100",
+                                ? DECISION_STYLES[value].dark
+                                : DECISION_STYLES[value].light,
                           )}
                         >
+                          <Icon className="size-4" />
                           {label}
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span
-                                aria-label={explanation}
-                                className="inline-flex opacity-50 transition-opacity hover:opacity-100"
-                              >
-                                <TbHelpCircle className="size-3.5" />
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent
-                              side="top"
-                              className="max-w-xs font-normal leading-relaxed"
-                            >
-                              {explanation}
-                            </TooltipContent>
-                          </Tooltip>
                         </button>
                       ))}
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      {t(
-                        "Picking a lane pre-fills the waive and Blue Tick options below; you can still change both.",
-                      )}
-                    </p>
 
-                    <label className="flex items-start gap-3 text-sm">
-                      <Checkbox
-                        className={checkboxClassName}
-                        checked={waiveDocuments}
-                        onCheckedChange={(checked) =>
-                          setWaiveDocuments(checked === true)
-                        }
-                      />
-                      <span>
-                        {t(
-                          "Waive the document requirement (official domain confirmed by eye)",
-                        )}
-                      </span>
-                    </label>
+                    {decision === "APPROVE" && (
+                      <div className="flex flex-col gap-3">
+                        <div className="flex flex-wrap gap-2">
+                          {(
+                            [
+                              [
+                                "A",
+                                t("Lane A"),
+                                t(
+                                  "For bodies whose identity is proven by an official email domain, such as schools (.edu.vn) and government agencies (.gov.vn). Check the contact domain by eye; documents may be waived with a reason, and the Blue Tick is granted on approval.",
+                                ),
+                              ],
+                              [
+                                "B",
+                                t("Lane B"),
+                                t(
+                                  "For clubs, NGOs and social enterprises, usually on Gmail or their own domain. Legal documents are required, and the organization is approved without a Blue Tick — it earns one later through its activity.",
+                                ),
+                              ],
+                            ] as [ApplicationLane, string, string][]
+                          ).map(([value, label, explanation]) => (
+                            <button
+                              key={value}
+                              type="button"
+                              onClick={() => handleLaneChange(value)}
+                              className={cn(
+                                "inline-flex cursor-pointer items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-semibold transition-colors",
+                                lane === value
+                                  ? isDark
+                                    ? "border-zinc-100 bg-zinc-100 text-zinc-900"
+                                    : "border-zinc-900 bg-zinc-900 text-white"
+                                  : isDark
+                                    ? "border-zinc-700 hover:bg-zinc-800"
+                                    : "border-zinc-300 hover:bg-zinc-100",
+                              )}
+                            >
+                              {label}
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span
+                                    aria-label={explanation}
+                                    className="inline-flex opacity-50 transition-opacity hover:opacity-100"
+                                  >
+                                    <TbHelpCircle className="size-3.5" />
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent
+                                  side="top"
+                                  className="max-w-xs font-normal leading-relaxed"
+                                >
+                                  {explanation}
+                                </TooltipContent>
+                              </Tooltip>
+                            </button>
+                          ))}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {t(
+                            "Picking a lane pre-fills the waive and Blue Tick options below; you can still change both.",
+                          )}
+                        </p>
 
-                    {waiveDocuments && (
-                      <Textarea
-                        value={waiveReason}
-                        onChange={(event) => setWaiveReason(event.target.value)}
-                        placeholder={t(
-                          "Why are documents not needed? e.g. official uit.edu.vn domain",
-                        )}
-                        rows={2}
-                        className={textareaClassName}
-                      />
-                    )}
-
-                    <label className="flex items-start gap-3 text-sm">
-                      <Checkbox
-                        className={checkboxClassName}
-                        checked={grantBlueTick}
-                        onCheckedChange={(checked) =>
-                          setGrantBlueTick(checked === true)
-                        }
-                      />
-                      <span>
-                        {t(
-                          "Grant the Blue Tick now (lane B usually earns it later, once it has a track record)",
-                        )}
-                      </span>
-                    </label>
-                  </div>
-                )}
-
-                {decision === "REQUEST_INFO" && (
-                  <div className="flex flex-col gap-3">
-                    <p className="text-sm text-muted-foreground">
-                      {t("What does the applicant need to add?")}
-                    </p>
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      {REQUEST_INFO_REASONS.map((reason) => (
-                        <label
-                          key={reason}
-                          className="flex items-start gap-3 text-sm"
-                        >
+                        <label className="flex items-start gap-3 text-sm">
                           <Checkbox
                             className={checkboxClassName}
-                            checked={infoReasons.includes(reason)}
+                            checked={waiveDocuments}
                             onCheckedChange={(checked) =>
-                              toggleInfoReason(reason, checked === true)
+                              setWaiveDocuments(checked === true)
                             }
                           />
-                          <span>{t(reason)}</span>
+                          <span>
+                            {t(
+                              "Waive the document requirement (official domain confirmed by eye)",
+                            )}
+                          </span>
                         </label>
-                      ))}
-                    </div>
-                    {isOtherPicked && (
+
+                        {waiveDocuments && (
+                          <Textarea
+                            value={waiveReason}
+                            onChange={(event) => setWaiveReason(event.target.value)}
+                            placeholder={t(
+                              "Why are documents not needed? e.g. official uit.edu.vn domain",
+                            )}
+                            rows={2}
+                            className={textareaClassName}
+                          />
+                        )}
+
+                        <label className="flex items-start gap-3 text-sm">
+                          <Checkbox
+                            className={checkboxClassName}
+                            checked={grantBlueTick}
+                            onCheckedChange={(checked) =>
+                              setGrantBlueTick(checked === true)
+                            }
+                          />
+                          <span>
+                            {t(
+                              "Grant the Blue Tick now (lane B usually earns it later, once it has a track record)",
+                            )}
+                          </span>
+                        </label>
+                      </div>
+                    )}
+
+                    {decision === "REQUEST_INFO" && (
+                      <div className="flex flex-col gap-3">
+                        <p className="text-sm text-muted-foreground">
+                          {t("What does the applicant need to add?")}
+                        </p>
+                        <div className="grid gap-2 sm:grid-cols-2">
+                          {REQUEST_INFO_REASONS.map((reason) => (
+                            <label
+                              key={reason}
+                              className="flex items-start gap-3 text-sm"
+                            >
+                              <Checkbox
+                                className={checkboxClassName}
+                                checked={infoReasons.includes(reason)}
+                                onCheckedChange={(checked) =>
+                                  toggleInfoReason(reason, checked === true)
+                                }
+                              />
+                              <span>{t(reason)}</span>
+                            </label>
+                          ))}
+                        </div>
+                        {isOtherPicked && (
+                          <Textarea
+                            value={otherReason}
+                            onChange={(event) => setOtherReason(event.target.value)}
+                            placeholder={t("Describe the other reason")}
+                            rows={3}
+                            className={textareaClassName}
+                          />
+                        )}
+                        <p className="text-xs text-muted-foreground">
+                          {t(
+                            "The selected reasons are joined with commas and sent to the applicant.",
+                          )}
+                        </p>
+                      </div>
+                    )}
+
+                    {decision === "REJECT" && (
                       <Textarea
-                        value={otherReason}
-                        onChange={(event) => setOtherReason(event.target.value)}
-                        placeholder={t("Describe the other reason")}
-                        rows={3}
+                        value={rejectReason}
+                        onChange={(event) => setRejectReason(event.target.value)}
+                        placeholder={t("Why is this application not approved?")}
+                        rows={4}
                         className={textareaClassName}
                       />
                     )}
-                    <p className="text-xs text-muted-foreground">
-                      {t(
-                        "The selected reasons are joined with commas and sent to the applicant.",
-                      )}
-                    </p>
-                  </div>
-                )}
 
-                {decision === "REJECT" && (
-                  <Textarea
-                    value={rejectReason}
-                    onChange={(event) => setRejectReason(event.target.value)}
-                    placeholder={t("Why is this application not approved?")}
-                    rows={4}
-                    className={textareaClassName}
+                    <div className="flex justify-end gap-2">
+                      <Button variant="outline" onClick={onClose}>
+                        {t("Cancel")}
+                      </Button>
+                      <Button
+                        disabled={isDeciding || isRequestingInfo}
+                        onClick={handleSubmit}
+                      >
+                        {t("Confirm")}
+                      </Button>
+                    </div>
+                  </section>
+                )}
+              </TabsContent>
+
+              <TabsContent value="activity">
+                <div
+                  className={cn(
+                    "rounded-lg border p-4",
+                    isDark ? "border-zinc-700 bg-zinc-800/50" : "border-zinc-200 bg-white",
+                  )}
+                >
+                  <ApplicationActivity
+                    events={application.events ?? []}
+                    documents={application.documents ?? []}
+                    isDark={isDark}
                   />
-                )}
-
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={onClose}>
-                    {t("Cancel")}
-                  </Button>
-                  <Button
-                    disabled={isDeciding || isRequestingInfo}
-                    onClick={handleSubmit}
-                  >
-                    {t("Confirm")}
-                  </Button>
                 </div>
-              </section>
-            )}
+              </TabsContent>
+            </Tabs>
           </div>
         )}
       </DialogContent>
