@@ -1076,5 +1076,7 @@
   "Cover image": "Ảnh bìa",
   "Map location": "Vị trí trên bản đồ",
   "Information": "Thông tin",
-  "An admin reviewed this organization's legal documents and confirmed who runs it. The tick is hidden while a reported violation is being handled.": "Admin đã thẩm định giấy tờ pháp lý của tổ chức và xác nhận đơn vị vận hành. Dấu tick sẽ bị ẩn trong thời gian xử lý vi phạm bị báo cáo."
+  "An admin reviewed this organization's legal documents and confirmed who runs it. The tick is hidden while a reported violation is being handled.": "Admin đã thẩm định giấy tờ pháp lý của tổ chức và xác nhận đơn vị vận hành. Dấu tick sẽ bị ẩn trong thời gian xử lý vi phạm bị báo cáo.",
+  "Open in a new tab": "Mở trong tab mới",
+  "Could not open the document, please try again": "Không mở được giấy tờ, vui lòng thử lại"
 }

@@ -92,7 +92,7 @@ export default function ApplicationStatusPage() {
 
   return (
     <ApplicationPageLayout breadcrumbs={breadcrumbs}>
-      <ApplicationDetails application={application} />
+      <ApplicationDetails application={application} trackingToken={token} />
 
       {(canWithdraw || canEdit) && (
         <div className="flex flex-col-reverse gap-3 border-t border-[rgba(136,122,71,0.3)] pt-6 sm:flex-row sm:justify-end">

@@ -51,15 +51,22 @@ export const useGetAdminApplicationById = (
 };
 
 /**
- * Absolute URL of a stored document. The API streams the file itself — there is no provider
- * URL to link to — and records every view in the application's audit trail.
+ * Fetches one stored document as a blob. The API streams the file itself — there is no
+ * provider URL to link to — and records every view in the application's audit trail.
+ *
+ * It has to go through `requestApi`: a plain `<a href>` opens a tab that carries no
+ * `Authorization` header (the token lives in the client, not in a cookie), so the admin
+ * endpoint answers TOKEN_MISSING.
  */
-export const buildApplicationDocumentUrl = (
+export const fetchApplicationDocument = async (
   applicationId: string,
   documentId: string,
-): string => {
-  const base = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
-  return `${base}${url}/${applicationId}/documents/${documentId}/file`;
+): Promise<Blob> => {
+  return await requestApi.get<Blob>(
+    `${url}/${applicationId}/documents/${documentId}/file`,
+    undefined,
+    { responseType: "blob" },
+  );
 };
 
 export const claimApplication = async (req: {

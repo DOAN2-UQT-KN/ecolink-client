@@ -10,6 +10,7 @@ import {
 } from "../_services/application.service";
 import { useApplication } from "../_hooks/useApplication";
 import { SummaryRow } from "./ApplicationDetails";
+import { DocumentNameLink } from "./DocumentNameLink";
 
 export const StepReview = memo(function StepReview() {
   const { t } = useTranslation();
@@ -19,6 +20,8 @@ export const StepReview = memo(function StepReview() {
     isEditMode,
     existingDocuments,
     removedDocumentIds,
+    openDocumentPreview,
+    canPreviewDocument,
   } = useApplication();
   const {
     setValue,
@@ -129,7 +132,16 @@ export const StepReview = memo(function StepReview() {
                 DOC_TYPE_OPTIONS.find((o) => o.value === document.docType)
                   ?.label ?? document.docType,
               )}
-              value={document.fileName}
+              value={
+                <DocumentNameLink
+                  name={document.fileName}
+                  onOpen={
+                    canPreviewDocument(document.key)
+                      ? () => openDocumentPreview(document.key)
+                      : undefined
+                  }
+                />
+              }
             />
           ))
         ) : (

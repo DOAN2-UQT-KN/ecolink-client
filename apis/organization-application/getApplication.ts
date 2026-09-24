@@ -29,3 +29,18 @@ export const useGetApplication = (
     ...options,
   });
 };
+
+/**
+ * Opens one attached document from the tracking link. The API streams the private file
+ * inline, so the browser can preview it in a new tab; the token is the only credential.
+ */
+export const buildApplicantDocumentUrl = (
+  applicationId: string,
+  documentId: string,
+  trackingToken: string,
+): string => {
+  const base = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+  return `${base}${url}/${applicationId}/documents/${documentId}/file?token=${encodeURIComponent(
+    trackingToken,
+  )}`;
+};

@@ -12,7 +12,7 @@ import {
 } from "react-icons/tb";
 
 import {
-  buildApplicationDocumentUrl,
+  fetchApplicationDocument,
   useClaimApplication,
   useDecideApplication,
   useGetAdminApplicationById,
@@ -209,6 +209,42 @@ export function ApplicationReviewDialog({
 
   const isOtherPicked = infoReasons.includes(OTHER_REASON);
 
+  const [openingDocumentId, setOpeningDocumentId] = useState<string | null>(
+    null,
+  );
+  const openDocument = useCallback(
+    async (documentId: string) => {
+      if (!application) return;
+      // Open the tab now, inside the click, so pop-up blockers allow it; the file arrives
+      // after an authenticated fetch and is then loaded into that tab.
+      const tab = window.open("", "_blank");
+      setOpeningDocumentId(documentId);
+      try {
+        const blob = await fetchApplicationDocument(application.id, documentId);
+        const objectUrl = URL.createObjectURL(blob);
+        if (tab) {
+          tab.opener = null;
+          tab.location.href = objectUrl;
+        } else {
+          window.open(objectUrl, "_blank", "noopener,noreferrer");
+        }
+        // The tab has its own copy once loaded; free ours after a while.
+        window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+      } catch (error) {
+        console.error("Could not open the document:", error);
+        tab?.close();
+        showMessage({
+          type: MessageType.Toast,
+          level: MessageLevel.Error,
+          title: t("Could not open the document, please try again"),
+        });
+      } finally {
+        setOpeningDocumentId(null);
+      }
+    },
+    [application, t],
+  );
+
   const toggleInfoReason = useCallback((reason: string, checked: boolean) => {
     setInfoReasons((current) =>
       checked
@@ -362,8 +398,8 @@ export function ApplicationReviewDialog({
               <TagStatus
                 type={APPLICATION_STATUS_TAG[application.status].type}
                 label={t(APPLICATION_STATUS_TAG[application.status].label)}
-                className="!m-0"
-              />
+                className="!mx-0 min-w-0 justify-center"
+                />
               <span className="text-xs text-muted-foreground">
                 {application.code}
               </span>
@@ -515,21 +551,18 @@ export function ApplicationReviewDialog({
                     <ul className="flex flex-col gap-2">
                       {application.documents.map((document) => (
                         <li key={document.id}>
-                          <a
-                            href={buildApplicationDocumentUrl(
-                              application.id,
-                              document.id,
-                            )}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <button
+                            type="button"
+                            onClick={() => openDocument(document.id)}
+                            disabled={openingDocumentId === document.id}
                             className={cn(
-                              "inline-flex items-center gap-2 text-sm underline",
+                              "inline-flex cursor-pointer items-center gap-2 text-left text-sm underline disabled:cursor-wait disabled:opacity-60",
                               isDark ? "text-blue-300" : "text-blue-600",
                             )}
                           >
                             <TbFileText />
                             {document.file_name ?? document.doc_type}
-                          </a>
+                          </button>
                         </li>
                       ))}
                     </ul>

@@ -17,6 +17,7 @@ import showMessage, { MessageLevel, MessageType } from "@/utils/showMessage";
 import type { ApplicationDocType } from "@/apis/organization-application/models/application";
 import { DOC_TYPE_OPTIONS } from "../_services/application.service";
 import { useApplication } from "../_hooks/useApplication";
+import { DocumentNameLink } from "./DocumentNameLink";
 
 const MAX_FILES = 5;
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
@@ -39,6 +40,8 @@ export const StepDocuments = memo(function StepDocuments() {
     existingDocuments,
     removedDocumentIds,
     toggleExistingDocument,
+    openDocumentPreview,
+    canPreviewDocument,
   } = useApplication();
   const [docType, setDocType] = useState<ApplicationDocType>(
     "ESTABLISHMENT_DECISION",
@@ -162,7 +165,13 @@ export const StepDocuments = memo(function StepDocuments() {
                   <IoDocumentAttachOutline className="shrink-0 text-button-accent" />
                   <div className="min-w-0 flex-1">
                     <p className={cn("truncate text-sm", isRemoved && "line-through")}>
-                      {document.file_name ?? document.doc_type}
+                      {/* A file marked for removal is not offered for preview. */}
+                      <DocumentNameLink
+                        name={document.file_name ?? document.doc_type}
+                        onOpen={
+                          isRemoved ? undefined : () => openDocumentPreview(document.id)
+                        }
+                      />
                     </p>
                     <p className="text-xs text-foreground-tertiary">
                       {t(
@@ -205,7 +214,16 @@ export const StepDocuments = memo(function StepDocuments() {
             >
               <IoDocumentAttachOutline className="shrink-0 text-button-accent" />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm">{document.fileName}</p>
+                <p className="truncate text-sm">
+                  <DocumentNameLink
+                    name={document.fileName}
+                    onOpen={
+                      canPreviewDocument(document.documentId)
+                        ? () => openDocumentPreview(document.documentId)
+                        : undefined
+                    }
+                  />
+                </p>
                 <p className="text-xs text-foreground-tertiary">
                   {t(
                     DOC_TYPE_OPTIONS.find((o) => o.value === document.docType)

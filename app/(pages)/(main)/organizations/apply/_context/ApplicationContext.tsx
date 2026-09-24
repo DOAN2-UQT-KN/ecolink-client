@@ -11,6 +11,7 @@ import {
   useResolveApplicationEmailLink,
   useVerifyApplicationOtp,
 } from "@/apis/organization-application/emailOtp";
+import { buildApplicantDocumentUrl } from "@/apis/organization-application/getApplication";
 import { uploadApplicationDocument } from "@/apis/organization-application/presignDocument";
 import type {
   ApplicationDocType,
@@ -78,6 +79,10 @@ interface ApplicationContextType {
   existingDocuments: IApplicationDocument[];
   removedDocumentIds: string[];
   toggleExistingDocument: (documentId: string) => void;
+  /** Opens a document in a new tab: from memory if picked this session, else from the API. */
+  openDocumentPreview: (documentId: string) => void;
+  /** False when there is nothing to open (e.g. a new application's server-side copy). */
+  canPreviewDocument: (documentId: string) => boolean;
 
   submit: () => Promise<void>;
   isSubmitting: boolean;
@@ -122,6 +127,20 @@ export const ApplicationProvider = ({
   const existingDocuments = useMemo(
     () => edit?.application.documents ?? [],
     [edit],
+  );
+  // Object URLs for files picked in this session, so they preview without a server round trip.
+  const [localDocumentUrls, setLocalDocumentUrls] = React.useState<
+    Record<string, string>
+  >({});
+  const localDocumentUrlsRef = React.useRef(localDocumentUrls);
+  localDocumentUrlsRef.current = localDocumentUrls;
+  React.useEffect(
+    () => () => {
+      Object.values(localDocumentUrlsRef.current).forEach((objectUrl) =>
+        URL.revokeObjectURL(objectUrl),
+      );
+    },
+    [],
   );
 
   const form = useForm<ApplicationFormValues>({
@@ -244,6 +263,11 @@ export const ApplicationProvider = ({
           ],
           { shouldDirty: true },
         );
+        const objectUrl = URL.createObjectURL(file);
+        setLocalDocumentUrls((current) => ({
+          ...current,
+          [documentId]: objectUrl,
+        }));
       } catch (error) {
         console.error("Document upload failed:", error);
         showMessage({
@@ -266,8 +290,42 @@ export const ApplicationProvider = ({
     );
   }, []);
 
+  const documentPreviewUrl = useCallback(
+    (documentId: string): string | null => {
+      if (localDocumentUrls[documentId]) return localDocumentUrls[documentId];
+      if (edit) {
+        return buildApplicantDocumentUrl(
+          edit.application.id,
+          documentId,
+          edit.trackingToken,
+        );
+      }
+      return null;
+    },
+    [edit, localDocumentUrls],
+  );
+
+  const canPreviewDocument = useCallback(
+    (documentId: string) => documentPreviewUrl(documentId) !== null,
+    [documentPreviewUrl],
+  );
+
+  const openDocumentPreview = useCallback(
+    (documentId: string) => {
+      const previewUrl = documentPreviewUrl(documentId);
+      if (previewUrl) window.open(previewUrl, "_blank", "noopener,noreferrer");
+    },
+    [documentPreviewUrl],
+  );
+
   const removeDocument = useCallback(
     (documentId: string) => {
+      setLocalDocumentUrls((current) => {
+        if (!current[documentId]) return current;
+        URL.revokeObjectURL(current[documentId]);
+        const { [documentId]: _removed, ...rest } = current;
+        return rest;
+      });
       form.setValue(
         "documents",
         form.getValues("documents").filter((d) => d.documentId !== documentId),
@@ -377,11 +435,14 @@ export const ApplicationProvider = ({
       existingDocuments,
       removedDocumentIds,
       toggleExistingDocument,
+      openDocumentPreview,
+      canPreviewDocument,
       submit,
       isSubmitting: isCreating || isUpdating || isUploadingImages,
     }),
     [
       back,
+      canPreviewDocument,
       changeEmail,
       existingDocuments,
       form,
@@ -395,6 +456,7 @@ export const ApplicationProvider = ({
       isUploadingImages,
       isVerifyingOtp,
       next,
+      openDocumentPreview,
       otpExpiresAt,
       removeDocument,
       removedDocumentIds,

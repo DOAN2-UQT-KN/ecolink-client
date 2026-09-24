@@ -86,7 +86,7 @@ export default function ApplicationSubmittedPage() {
       ) : isLoading || !application ? (
         <ApplicationDetailsSkeleton />
       ) : (
-        <ApplicationDetails application={application} />
+        <ApplicationDetails application={application} trackingToken={token} />
       )}
 
       <div className="flex flex-col gap-3 border-t border-[rgba(136,122,71,0.3)] pt-6">

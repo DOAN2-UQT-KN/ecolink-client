@@ -6,6 +6,7 @@ import type { IApplication } from "@/apis/organization-application/models/applic
 import AppImage from "@/components/ui/AppImage";
 import { RichTextContent } from "@/components/ui/RichTextContent";
 import TagStatus from "@/components/ui/TagStatus";
+import { buildApplicantDocumentUrl } from "@/apis/organization-application/getApplication";
 import { APPLICATION_STATUS_TAG } from "@/constants/organizationApplicationStatus";
 import { formattedDate } from "@/utils/formattedDate";
 import showMessage, { MessageLevel, MessageType } from "@/utils/showMessage";
@@ -14,6 +15,7 @@ import {
   DOC_TYPE_OPTIONS,
   ORG_TYPE_OPTIONS,
 } from "../_services/application.service";
+import { DocumentNameLink } from "./DocumentNameLink";
 
 export function SummaryRow({
   label,
@@ -85,8 +87,11 @@ function TrackingCode({ code }: { code: string }) {
  */
 export const ApplicationDetails = memo(function ApplicationDetails({
   application,
+  trackingToken,
 }: {
   application: IApplication;
+  /** With the tracking token, document names open the file in a new tab. */
+  trackingToken?: string;
 }) {
   const { t } = useTranslation();
   const { profile, channels, documents, status } = application;
@@ -235,7 +240,20 @@ export const ApplicationDetails = memo(function ApplicationDetails({
                 DOC_TYPE_OPTIONS.find((o) => o.value === document.doc_type)
                   ?.label ?? document.doc_type,
               )}
-              value={document.file_name ?? ""}
+              value={
+                <DocumentNameLink
+                  name={document.file_name ?? document.doc_type}
+                  href={
+                    trackingToken && !document.purged_at
+                      ? buildApplicantDocumentUrl(
+                          application.id,
+                          document.id,
+                          trackingToken,
+                        )
+                      : undefined
+                  }
+                />
+              }
             />
           ))
         ) : (
