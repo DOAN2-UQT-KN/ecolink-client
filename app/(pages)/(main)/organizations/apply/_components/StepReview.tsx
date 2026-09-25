@@ -10,6 +10,7 @@ import {
 } from "../_services/application.service";
 import { useApplication } from "../_hooks/useApplication";
 import { SummaryRow } from "./ApplicationDetails";
+import FileTypeIcon from "@/components/ui/FileTypeIcon";
 import { DocumentNameLink } from "./DocumentNameLink";
 
 export const StepReview = memo(function StepReview() {
@@ -38,11 +39,13 @@ export const StepReview = memo(function StepReview() {
         key: document.id,
         docType: document.doc_type,
         fileName: document.file_name ?? "",
+        mimeType: document.mime_type,
       })),
     ...values.documents.map((document) => ({
       key: document.documentId,
       docType: document.docType,
       fileName: document.fileName,
+      mimeType: document.mimeType,
     })),
   ];
   // Left blank on a resubmission, the representative on file stays as it is.
@@ -133,14 +136,21 @@ export const StepReview = memo(function StepReview() {
                   ?.label ?? document.docType,
               )}
               value={
-                <DocumentNameLink
-                  name={document.fileName}
-                  onOpen={
-                    canPreviewDocument(document.key)
-                      ? () => openDocumentPreview(document.key)
-                      : undefined
-                  }
-                />
+                <span className="inline-flex max-w-full items-center gap-1.5">
+                  <FileTypeIcon
+                    mimeType={document.mimeType}
+                    fileName={document.fileName}
+                    className="size-4"
+                  />
+                  <DocumentNameLink
+                    name={document.fileName}
+                    onOpen={
+                      canPreviewDocument(document.key)
+                        ? () => openDocumentPreview(document.key)
+                        : undefined
+                    }
+                  />
+                </span>
               }
             />
           ))

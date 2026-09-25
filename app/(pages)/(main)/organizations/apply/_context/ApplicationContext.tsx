@@ -259,7 +259,7 @@ export const ApplicationProvider = ({
           "documents",
           [
             ...form.getValues("documents"),
-            { documentId, fileName: file.name, docType },
+            { documentId, fileName: file.name, docType, mimeType: file.type },
           ],
           { shouldDirty: true },
         );

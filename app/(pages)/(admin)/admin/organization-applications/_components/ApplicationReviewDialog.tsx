@@ -5,7 +5,6 @@ import {
   TbCircleCheck,
   TbCircleX,
   TbExternalLink,
-  TbFileText,
   TbHelpCircle,
   TbInfoCircle,
   TbMessageQuestion,
@@ -28,6 +27,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import FileTypeIcon from "@/components/ui/FileTypeIcon";
 import {
   Collapsible,
   CollapsibleContent,
@@ -560,7 +560,11 @@ export function ApplicationReviewDialog({
                               isDark ? "text-blue-300" : "text-blue-600",
                             )}
                           >
-                            <TbFileText />
+                            <FileTypeIcon
+                              mimeType={document.mime_type}
+                              fileName={document.file_name}
+                              className="size-4"
+                            />
                             {document.file_name ?? document.doc_type}
                           </button>
                         </li>
@@ -571,9 +575,7 @@ export function ApplicationReviewDialog({
                       {t("No documents attached.")}
                     </p>
                   )}
-                  <p className="text-xs text-muted-foreground">
-                    {t("Every time a document is opened it is written to the audit log.")}
-                  </p>
+                
                 </SectionCard>
 
                 {isClosed ? (

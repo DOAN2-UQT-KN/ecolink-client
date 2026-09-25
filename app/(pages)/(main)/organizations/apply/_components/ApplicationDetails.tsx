@@ -5,6 +5,7 @@ import { TbCheck, TbCopy } from "react-icons/tb";
 import type { IApplication } from "@/apis/organization-application/models/application";
 import AppImage from "@/components/ui/AppImage";
 import { RichTextContent } from "@/components/ui/RichTextContent";
+import FileTypeIcon from "@/components/ui/FileTypeIcon";
 import TagStatus from "@/components/ui/TagStatus";
 import { buildApplicantDocumentUrl } from "@/apis/organization-application/getApplication";
 import { APPLICATION_STATUS_TAG } from "@/constants/organizationApplicationStatus";
@@ -241,18 +242,25 @@ export const ApplicationDetails = memo(function ApplicationDetails({
                   ?.label ?? document.doc_type,
               )}
               value={
-                <DocumentNameLink
-                  name={document.file_name ?? document.doc_type}
-                  href={
-                    trackingToken && !document.purged_at
-                      ? buildApplicantDocumentUrl(
-                          application.id,
-                          document.id,
-                          trackingToken,
-                        )
-                      : undefined
-                  }
-                />
+                <span className="inline-flex max-w-full items-center gap-1.5">
+                  <FileTypeIcon
+                    mimeType={document.mime_type}
+                    fileName={document.file_name}
+                    className="size-4"
+                  />
+                  <DocumentNameLink
+                    name={document.file_name ?? document.doc_type}
+                    href={
+                      trackingToken && !document.purged_at
+                        ? buildApplicantDocumentUrl(
+                            application.id,
+                            document.id,
+                            trackingToken,
+                          )
+                        : undefined
+                    }
+                  />
+                </span>
               }
             />
           ))

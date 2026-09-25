@@ -1,9 +1,9 @@
 import { memo, useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BiTrash } from "react-icons/bi";
-import { IoDocumentAttachOutline } from "react-icons/io5";
 
 import { Button } from "@/components/client/shared/Button";
+import FileTypeIcon from "@/components/ui/FileTypeIcon";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import {
   Select,
@@ -162,7 +162,7 @@ export const StepDocuments = memo(function StepDocuments() {
                     isRemoved && "bg-[rgba(136,122,71,0.06)] opacity-60",
                   )}
                 >
-                  <IoDocumentAttachOutline className="shrink-0 text-button-accent" />
+                  <FileTypeIcon mimeType={document.mime_type} fileName={document.file_name} />
                   <div className="min-w-0 flex-1">
                     <p className={cn("truncate text-sm", isRemoved && "line-through")}>
                       {/* A file marked for removal is not offered for preview. */}
@@ -212,7 +212,7 @@ export const StepDocuments = memo(function StepDocuments() {
               key={document.documentId}
               className="flex items-center gap-3 rounded-md border border-[rgba(136,122,71,0.35)] px-3 py-2"
             >
-              <IoDocumentAttachOutline className="shrink-0 text-button-accent" />
+              <FileTypeIcon mimeType={document.mimeType} fileName={document.fileName} />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm">
                   <DocumentNameLink

@@ -20,6 +20,8 @@ export interface ApplicationDocumentValue {
   documentId: string;
   fileName: string;
   docType: ApplicationDocType;
+  /** From the picked `File`; only used to pick the file-type icon, never sent to the API. */
+  mimeType: string;
 }
 
 export interface ApplicationFormValues {
