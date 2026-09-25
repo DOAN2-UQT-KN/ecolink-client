@@ -1,5 +1,5 @@
 import React, { memo, useCallback, useMemo } from 'react';
-import { TbAlignLeft2, TbCalendarCheck, TbCircleCheck, TbCircleX, TbMailPin } from 'react-icons/tb';
+import { TbAlignLeft2, TbCalendarCheck, TbMailPin } from 'react-icons/tb';
 import { format, parseISO } from 'date-fns';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -72,19 +72,6 @@ export const GeneralInformation = memo(function GeneralInformation() {
                 >
                   <span className="font-display-1">{contactEmail}</span>
                 </a>
-                {isEmailVerified ? (
-                  <TbCircleCheck
-                    className="size-4 shrink-0 text-emerald-500"
-                    aria-label={t('Verified')}
-                    title={t('Verified')}
-                  />
-                ) : (
-                  <TbCircleX
-                    className="size-4 shrink-0 text-red-500"
-                    aria-label={t('Unverified')}
-                    title={t('Unverified')}
-                  />
-                )}
               </div>
               {showResendContactEmail ? (
                 <div className="mt-2">

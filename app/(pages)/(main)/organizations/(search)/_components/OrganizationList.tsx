@@ -90,7 +90,9 @@ export const OrganizationList = memo(function OrganizationList() {
             requestStatus={org.request_status}
               isMember={Boolean(org.is_member)}
             joinRequestId={org.join_request_id}
-            ownerId={org.owner_id}
+            ownerId={org.owner_id ?? undefined}
+            trustTier={org.trust_tier}
+            tickSuspended={org.tick_suspended}
           />
         ))}
       </div>

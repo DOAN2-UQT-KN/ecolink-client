@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from 'react';
+import BlueTickBadge from '@/components/ui/BlueTickBadge';
 import { useTranslation } from 'react-i18next';
 
 import type { IOrganization } from '@/apis/organization/models/organization';
@@ -12,7 +13,7 @@ import {
 } from '@/components/admin/shared/DataTable';
 import { PreviewOrganizationPopover } from './PreviewOrganizationPopover';
 import { ApproveOrganizationConfirm } from './ApproveOrganizationConfirm';
-import { TbCircleCheck, TbCircleX, TbScanEye } from 'react-icons/tb';
+import { TbScanEye } from 'react-icons/tb';
 import { RichTextContent } from '@/components/ui/RichTextContent';
 import { formattedDate } from '@/utils/formattedDate';
 import Image from '@/components/ui/AppImage';
@@ -90,19 +91,7 @@ export function DataTable() {
                 )}
               >
                 <span className="truncate">{record.name}</span>
-                {record.is_email_verified ? (
-                  <TbCircleCheck
-                    className="size-4 shrink-0 text-emerald-500"
-                    aria-label={t('Verified')}
-                    title={t('Verified')}
-                  />
-                ) : (
-                  <TbCircleX
-                    className="size-4 shrink-0 text-red-500"
-                    aria-label={t('Unverified')}
-                    title={t('Unverified')}
-                  />
-                )}
+                <BlueTickBadge organization={record} className='shrink-0' />
               </div>
               <span
                 className={cn(

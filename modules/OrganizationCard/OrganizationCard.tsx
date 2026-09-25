@@ -15,6 +15,8 @@ import {
 } from '@/apis/organization/joinRequest';
 import { useLeaveOrganization } from '@/apis/organization/leaveOrganization';
 import useAuthStore from '@/stores/useAuthStore';
+import BlueTickBadge from '@/components/ui/BlueTickBadge';
+import type { TrustTier } from '@/apis/organization/models/organization';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from '@/libs/router';
 import { useQueryClient } from '@tanstack/react-query';
@@ -50,6 +52,9 @@ export interface OrganizationCardProps {
   joinRequestId?: string;
   /** When set and equal to the signed-in user id, a "Your group" tag is shown next to the name. */
   ownerId?: string;
+  /** Blue Tick level; only `VERIFIED` (and not suspended) shows the badge. */
+  trustTier?: TrustTier;
+  tickSuspended?: boolean;
   onSave?: (payload: OrganizationCardSavePayload) => void | Promise<void>;
   saveLabel?: string;
 }
@@ -68,6 +73,8 @@ export const OrganizationCard = memo(function OrganizationCard({
   isMember = false,
   joinRequestId,
   ownerId,
+  trustTier,
+  tickSuspended,
   onSave,
   saveLabel = 'Save',
 }: OrganizationCardProps) {
@@ -286,8 +293,14 @@ export const OrganizationCard = memo(function OrganizationCard({
                 aria-label={t('Organization name')}
               />
             ) : (
-              <h2 className="font-display-5 font-semibold text-foreground break-words text-center max-w-full">
+              <h2 className="font-display-5 font-semibold text-foreground break-words text-center max-w-full inline-flex items-center gap-1.5">
                 {displayName}
+                <BlueTickBadge
+                  organization={{
+                    trust_tier: trustTier,
+                    tick_suspended: tickSuspended,
+                  }}
+                />
               </h2>
             )}
             {showYourGroupTag ? (

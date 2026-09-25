@@ -6,6 +6,7 @@ import {
   TbGift,
   TbFlag,
   TbUser,
+  TbFileCheck,
 } from 'react-icons/tb';
 import { IconType } from 'react-icons';
 
@@ -46,6 +47,12 @@ export const adminNavItems: AdminNavItem[] = [
     href: '/admin/organizations',
     labelKey: 'Organizations',
     icon: TbUsersGroup,
+  },
+  {
+    kind: 'link',
+    href: '/admin/organization-applications',
+    labelKey: 'Organization applications',
+    icon: TbFileCheck,
   },
   {
     kind: 'link',

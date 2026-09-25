@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { HiEye, HiPencilAlt } from "react-icons/hi";
 
 import { Button as SharedButton } from "@/components/client/shared/Button";
+import BlueTickBadge from "@/components/ui/BlueTickBadge";
 import { cn } from "@/libs/utils";
 import { ConfirmPopoverModal } from "@/modules/OrganizationCard/components/ConfirmPopoverModal";
 import { UpdateOrganizationPopover } from "@/app/(pages)/(main)/organizations/me/_components/UpdateOrganizationPopover";
@@ -150,6 +151,12 @@ export const HeroSection = memo(function HeroSection() {
               <div className="font-display-8 font-title font-semibold text-foreground break-words text-left">
                 {name}
               </div>
+              {organization && (
+                <BlueTickBadge
+                  organization={organization}
+                  iconClassName="size-6 sm:size-7"
+                />
+              )}
               {showYourGroupTag ? (
                 <span
                   className="shrink-0 inline-flex items-center rounded-sm border border-[rgba(136,122,71,0.45)] bg-button-accent/10 px-2.5 py-0.5 text-xs font-semibold text-button-accent"
