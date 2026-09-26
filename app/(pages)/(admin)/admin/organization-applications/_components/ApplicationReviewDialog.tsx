@@ -179,10 +179,10 @@ function OwnerRow({ owner }: { owner: IAdminOwnerCandidate }) {
         }
       />
       {owner.same_ip_cluster && (
-        <p className="flex items-start gap-1.5 text-xs text-orange-600">
+        <p className="flex items-start gap-1.5 text-xs text-orange-600 pt-1">
           <TbAlertTriangle className="mt-0.5 size-3.5 shrink-0" />
           {t(
-            "Another owner confirmed from the same IP within 5 minutes. Not a reason to reject on its own, but worth a request for more information if anything else looks off.",
+            "Another owner confirmed from the same IP within 5 minutes.",
           )}
         </p>
       )}
@@ -525,17 +525,6 @@ export function ApplicationReviewDialog({
                     <span className="font-semibold">
                       {contactEmailParts.domain}
                     </span>
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {application.contact_email &&
-                    application.contact_email !== application.submitter_email
-                      ? t(
-                          "Not verified: the one-time code was sent to the submitter ({{email}}), not to this address.",
-                          { email: application.submitter_email },
-                        )
-                      : t(
-                          "Ownership of this mailbox was confirmed by a one-time code before the application was submitted.",
-                        )}
                   </p>
                 </SectionCard>
 
