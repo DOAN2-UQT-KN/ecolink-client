@@ -407,6 +407,18 @@ export function ApplicationReviewDialog({
       return;
     }
 
+    if (application.type === "ADD_OWNER") {
+      // An owner proposal needs no lane, documents or Blue Tick decision.
+      await decideAsync({ id: application.id, decision: "APPROVE" });
+      showMessage({
+        type: MessageType.Toast,
+        level: MessageLevel.Success,
+        title: t("Owner proposal approved"),
+      });
+      onClose();
+      return;
+    }
+
     await decideAsync({
       id: application.id,
       decision: "APPROVE",
@@ -512,6 +524,38 @@ export function ApplicationReviewDialog({
               </TabsList>
 
               <TabsContent value="information" className="flex flex-col gap-3">
+                {application.type === "ADD_OWNER" && (
+                  <section
+                    className={cn(
+                      "rounded-lg border p-4 text-sm",
+                      isDark
+                        ? "border-blue-500/40 bg-blue-500/10 text-blue-200"
+                        : "border-blue-200 bg-blue-50 text-blue-900",
+                    )}
+                  >
+                    <p className="font-semibold">
+                      {t("Proposal to add owners to {{name}}", {
+                        name: application.profile?.name ?? "",
+                      })}
+                    </p>
+                    <p className="mt-1">
+                      {t(
+                        "Proposed by {{email}}. Every person below confirmed by email. Approving makes them owners of the existing organization.",
+                        { email: application.submitter_email },
+                      )}
+                    </p>
+                    {(application.profile as { proposal_reason?: string | null })
+                      ?.proposal_reason && (
+                      <p className="mt-2 whitespace-pre-line">
+                        {t("Reason")}:{" "}
+                        {
+                          (application.profile as { proposal_reason?: string | null })
+                            .proposal_reason
+                        }
+                      </p>
+                    )}
+                  </section>
+                )}
                 {/* The contact domain decides lane A, so it leads. */}
                 <SectionCard
                   title={t("Contact email")}
@@ -563,6 +607,7 @@ export function ApplicationReviewDialog({
                   />
                 </SectionCard>
 
+                {application.type !== "ADD_OWNER" && (
                 <SectionCard
                   title={t("Official channels")}
                   hint={t("{{count}} provided", {
@@ -597,6 +642,7 @@ export function ApplicationReviewDialog({
                     </p>
                   )}
                 </SectionCard>
+                )}
 
                 <SectionCard
                   title={t("Owners")}
@@ -611,6 +657,7 @@ export function ApplicationReviewDialog({
                   ))}
                 </SectionCard>
 
+                {application.type !== "ADD_OWNER" && (
                 <SectionCard
                   title={t("Legal representative")}
                   hint={t(
@@ -643,7 +690,9 @@ export function ApplicationReviewDialog({
                     value={application.legal_representative?.position}
                   />
                 </SectionCard>
+                )}
 
+                {application.type !== "ADD_OWNER" && (
                 <SectionCard
                   title={t("Legal documents")}
                   hint={t("{{count}} attached", {
@@ -681,6 +730,7 @@ export function ApplicationReviewDialog({
                   )}
                 
                 </SectionCard>
+                )}
 
                 {isClosed || isWithApplicant ? (
                   <section
@@ -739,7 +789,13 @@ export function ApplicationReviewDialog({
                           ],
                           ["REJECT", t("Reject"), TbCircleX],
                         ] as const
-                      ).map(([value, label, Icon]) => (
+                      )
+                        // An owner proposal cannot be sent back for changes.
+                        .filter(
+                          ([value]) =>
+                            application.type !== "ADD_OWNER" || value !== "REQUEST_INFO",
+                        )
+                        .map(([value, label, Icon]) => (
                         <button
                           key={value}
                           type="button"
@@ -759,7 +815,7 @@ export function ApplicationReviewDialog({
                       ))}
                     </div>
 
-                    {decision === "APPROVE" && (
+                    {decision === "APPROVE" && application.type !== "ADD_OWNER" && (
                       <div className="flex flex-col gap-3">
                         <div className="flex flex-wrap gap-2">
                           {(

@@ -16,6 +16,8 @@ export interface IOwnerConfirmation {
   expired: boolean;
   expires_at: string | null;
   application_code: string;
+  /** `ADD_OWNER`: joining an existing organization as an owner. */
+  application_type: "NEW_ORG" | "ADD_OWNER";
   organization: {
     name: string | null;
     org_type: OrgType | null;

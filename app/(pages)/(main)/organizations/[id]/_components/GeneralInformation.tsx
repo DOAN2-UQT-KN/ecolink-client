@@ -23,7 +23,7 @@ function formatCreatedAt(iso: string | undefined): string {
 export const GeneralInformation = memo(function GeneralInformation() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const { organization, organizationId, showYourGroupTag } = useOrganizationDetail();
+  const { organization, organizationId, canEditOrg } = useOrganizationDetail();
   const { description: localizedDescription } = useLocalizedDisplay();
 
   const contactEmail = organization?.contact_email?.trim() ?? '';
@@ -45,7 +45,7 @@ export const GeneralInformation = memo(function GeneralInformation() {
     resendVerificationEmail(organizationId);
   }, [organizationId, resendVerificationEmail]);
 
-  const showResendContactEmail = showYourGroupTag && Boolean(contactEmail) && !isEmailVerified;
+  const showResendContactEmail = canEditOrg && Boolean(contactEmail) && !isEmailVerified;
   const createdLabel = useMemo(
     () => formatCreatedAt(organization?.created_at),
     [organization?.created_at],

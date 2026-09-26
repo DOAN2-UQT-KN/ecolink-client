@@ -89,7 +89,12 @@ function ConfirmationSummary({ confirmation }: { confirmation: IOwnerConfirmatio
       </header>
 
       <p className="text-sm">
-        {candidate.is_legal_rep
+        {confirmation.application_type === "ADD_OWNER"
+          ? t(
+              "{{submitter}}, an owner of this organization, proposed you ({{email}}) as an additional owner.",
+              { submitter: confirmation.submitter_email, email: candidate.email },
+            )
+          : candidate.is_legal_rep
           ? t(
               "{{submitter}} listed you ({{email}}) as an owner and the legal representative of this organization.",
               { submitter: confirmation.submitter_email, email: candidate.email },

@@ -80,6 +80,15 @@ export function DataTable() {
         ),
       },
       {
+        key: "type",
+        title: t("Application type"),
+        render: (_, record) => (
+          <span className="text-sm">
+            {record.type === "ADD_OWNER" ? t("Add owners") : t("New organization")}
+          </span>
+        ),
+      },
+      {
         key: "org_type",
         title: t("Type"),
         render: (_, record) => (

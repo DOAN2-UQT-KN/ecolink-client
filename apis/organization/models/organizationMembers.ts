@@ -1,11 +1,12 @@
 import { IUser } from "@/apis/auth/models/user";
+import type { OrgMemberRole } from "./organization";
 import { IBaseResponse } from "@/types/BaseResponse";
 
 export interface IMember {
   organization_id: string;
   user_id: string;
   /** `OrgMemberRole` — owners are members too. */
-  role?: string;
+  role?: OrgMemberRole;
   user: Pick<IUser, "id" | "name" | "email" | "avatar">;
   created_at: string;
 }

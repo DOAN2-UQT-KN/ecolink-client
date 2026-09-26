@@ -10,6 +10,7 @@ import { Button as SharedButton } from "@/components/client/shared/Button";
 import BlueTickBadge from "@/components/ui/BlueTickBadge";
 import { cn } from "@/libs/utils";
 import { ConfirmPopoverModal } from "@/modules/OrganizationCard/components/ConfirmPopoverModal";
+import { RoleBadge } from "@/components/ui/RoleBadge";
 import { UpdateOrganizationPopover } from "@/app/(pages)/(main)/organizations/me/_components/UpdateOrganizationPopover";
 
 import { useOrganizationDetail } from "../_hooks/useOrganizationDetail";
@@ -24,6 +25,8 @@ export const HeroSection = memo(function HeroSection() {
     organization,
     organizationId,
     showYourGroupTag,
+    canEditOrg,
+    myRole,
     showJoinButton,
     showCancelButton,
     showLeaveButton,
@@ -165,6 +168,7 @@ export const HeroSection = memo(function HeroSection() {
                   {t("Your group")}
                 </span>
               ) : null}
+              <RoleBadge role={myRole} />
             </div>
 
             <div className="flex flex-wrap items-stretch gap-2 w-full max-w-md">
@@ -213,7 +217,8 @@ export const HeroSection = memo(function HeroSection() {
                 >
                   {t("Join")}
                 </SharedButton>
-              ) : showYourGroupTag ? (
+              ) : null}
+              {canEditOrg ? (
                 <SharedButton
                   variant="outlined-brown"
                   size="medium"

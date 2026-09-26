@@ -45,6 +45,7 @@ export const router = createBrowserRouter([
           { path: "organizations/apply", element: lazyPage(() => import("@/app/(pages)/(main)/organizations/apply/page"), "organizations-apply") },
           { path: "organizations/apply/status/:id", element: lazyPage(() => import("@/app/(pages)/(main)/organizations/apply/status/page"), "organizations-apply-status") },
           { path: "organizations/apply/edit/:id", element: lazyPage(() => import("@/app/(pages)/(main)/organizations/apply/edit/page"), "organizations-apply-edit") },
+          { path: "organizations/invitations", element: lazyPage(() => import("@/app/(pages)/(main)/organizations/invitations/page"), "organizations-invitations") },
           { path: "organizations/owner-confirm", element: lazyPage(() => import("@/app/(pages)/(main)/organizations/owner-confirm/page"), "organizations-owner-confirm") },
           { path: "organizations/email-verified", element: lazyPage(() => import("@/app/(pages)/(main)/organizations/email-verified/page"), "organizations-email-verified") },
           { path: "organizations/me", element: lazyPage(() => import("@/app/(pages)/(main)/organizations/me/page"), "organizations-me") },

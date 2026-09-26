@@ -16,6 +16,7 @@ import { useMediaQuery } from '@/hooks/useMediaQuery';
 import Logo from './Logo';
 import LanguageSwitcher from '../shared/LanguageSwitcher';
 import { NotificationMenu } from './NotificationMenu';
+import { OrgContextSwitcher } from './OrgContextSwitcher';
 import SpotlightCard from '../shared/SpotlightCard';
 import useAuthStore from '@/stores/useAuthStore';
 import { useRouter } from '@/libs/router';
@@ -350,6 +351,7 @@ const Header: React.FC<CardNavProps> = ({ ease = 'power3.out', menuColor }) => {
                 <Link href="/admin">{t('Admin')}</Link>
               </DropdownMenuItem>
             )}
+            <OrgContextSwitcher />
             <DropdownMenuItem
               variant="destructive"
               onSelect={(e) => {

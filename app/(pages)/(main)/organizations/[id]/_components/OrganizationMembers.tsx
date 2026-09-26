@@ -25,6 +25,26 @@ import useAuthStore from "@/stores/useAuthStore";
 import { useOrganizationDetail } from "../_hooks/useOrganizationDetail";
 import Image from "@/components/ui/AppImage";
 import defaultAvatar from "@/public/default-avatar.png";
+import {
+  canActOnMember,
+  type OrgMemberRole,
+} from "@/apis/organization/models/organization";
+import {
+  useChangeMemberRole,
+  useRemoveMember,
+} from "@/apis/organization/memberManagement";
+import { Button } from "@/components/client/shared/Button";
+import { ORG_ROLE_LABEL, RoleBadge } from "@/components/ui/RoleBadge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ConfirmPopoverModal } from "@/modules/OrganizationCard/components/ConfirmPopoverModal";
+import { InviteMemberDialog } from "./InviteMemberDialog";
+import { OwnerProposals } from "./OwnerProposals";
 
 const FILTER_PANEL_CLASS =
   "w-full space-y-2 p-6 border-1 border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5 h-fit";
@@ -150,8 +170,11 @@ export const OrganizationMembers = memo(function OrganizationMembers({
   enabled: boolean;
 }) {
   const { t } = useTranslation();
-  const { organizationId, organization } = useOrganizationDetail();
+  const { organizationId, organization, permissions, myRole } =
+    useOrganizationDetail();
   const currentUserId = useAuthStore((s) => s.user?.id);
+  const { mutate: changeRole, isPending: isChangingRole } = useChangeMemberRole();
+  const { mutateAsync: removeMember, isPending: isRemoving } = useRemoveMember();
 
   const [searchValue, setSearchValue] = useState("");
   const debouncedSearch = useDebounce(searchValue, 500);
@@ -220,11 +243,7 @@ export const OrganizationMembers = memo(function OrganizationMembers({
               <span className="text-sm font-medium text-foreground break-all">
                 {owner.name || "—"}
               </span>
-              {owner.role === "LEGAL_REPRESENTATIVE" && (
-                <span className="text-xs text-foreground-tertiary">
-                  {t("Legal representative")}
-                </span>
-              )}
+              <RoleBadge role={owner.role} />
               {currentUserId != null && owner.id === currentUserId && (
                 <span className="text-xs font-medium text-button-accent bg-background-primary px-2 py-1 rounded-md">
                   {t("You")}
@@ -233,6 +252,11 @@ export const OrganizationMembers = memo(function OrganizationMembers({
             </div>
           ))}
         </div>
+        <OwnerProposals />
+      </div>
+
+      <div className="flex justify-end">
+        <InviteMemberDialog />
       </div>
 
       <div className={FILTER_PANEL_CLASS}>
@@ -319,10 +343,62 @@ export const OrganizationMembers = memo(function OrganizationMembers({
                       {t("You")}
                     </span>
                   ) : null}
+                  <RoleBadge role={m.role} />
                 </div>
-                <span className="text-xs text-foreground-secondary shrink-0">
-                  {formatMemberDate(m.created_at)}
-                </span>
+                <div className="flex shrink-0 flex-wrap items-center gap-2">
+                  <span className="text-xs text-foreground-secondary">
+                    {formatMemberDate(m.created_at)}
+                  </span>
+                  {canActOnMember({
+                    permissions,
+                    myRole,
+                    myUserId: currentUserId,
+                    targetRole: m.role,
+                    targetUserId: m.user_id,
+                  }) && (
+                    <>
+                      <Select
+                        value={m.role}
+                        disabled={isChangingRole}
+                        onValueChange={(role) =>
+                          role !== m.role &&
+                          changeRole({
+                            organizationId,
+                            userId: m.user_id,
+                            role: role as OrgMemberRole,
+                          })
+                        }
+                      >
+                        <SelectTrigger className="h-8 w-[170px] text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(permissions?.assignable_roles ?? []).map((role) => (
+                            <SelectItem key={role} value={role}>
+                              <span className="text-sm">{t(ORG_ROLE_LABEL[role])}</span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <ConfirmPopoverModal
+                        title={t("Remove this member?")}
+                        description={t(
+                          "They lose access to the organization and will need a new invitation to come back.",
+                        )}
+                        confirmLabel={t("Remove")}
+                        confirmPending={isRemoving}
+                        onConfirm={async () => {
+                          await removeMember({ organizationId, userId: m.user_id });
+                        }}
+                        trigger={
+                          <Button variant="outlined-brown" size="small">
+                            {t("Remove")}
+                          </Button>
+                        }
+                      />
+                    </>
+                  )}
+                </div>
               </li>
             ))}
           </ul>

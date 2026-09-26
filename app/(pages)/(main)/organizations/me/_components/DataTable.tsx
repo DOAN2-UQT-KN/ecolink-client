@@ -13,6 +13,8 @@ import useAuthStore from "@/stores/useAuthStore";
 import { useLeaveOrganization } from "@/apis/organization/leaveOrganization";
 import { STATUS } from "@/constants/status";
 import { useLocalizedDisplay } from "@/hooks/useLocalizedDisplay";
+import { RoleBadge } from "@/components/ui/RoleBadge";
+import useOrgContextStore from "@/stores/useOrgContextStore";
 
 const defaultPagination = { current: 1, pageSize: 10 };
 
@@ -25,6 +27,7 @@ const DataTableComponent = memo(function DataTableComponent() {
   const context = useContext(OrganizationMeContext);
   const router = useRouter();
   const currentUserId = useAuthStore((s) => s.user?.id);
+  const activeOrganizationId = useOrgContextStore((s) => s.activeOrganizationId);
 
   const { mutate: leaveMutate, isPending: isLeavePending } =
     useLeaveOrganization();
@@ -73,6 +76,11 @@ const DataTableComponent = memo(function DataTableComponent() {
               <div className="flex min-w-0 items-center gap-1.5">
                 <span className="font-bold text-sm truncate">{record.name}</span>
                 <BlueTickBadge organization={record} className="shrink-0" />
+                {record.id === activeOrganizationId && (
+                  <span className="shrink-0 rounded-sm bg-button-accent/10 px-1.5 py-0.5 text-[10px] font-semibold text-button-accent">
+                    {t("Active context")}
+                  </span>
+                )}
               </div>
               <span className="text-xs text-muted-foreground truncate">
                 {record.contact_email || "—"}
@@ -81,6 +89,12 @@ const DataTableComponent = memo(function DataTableComponent() {
           </div>
         ),
         width: 280,
+      },
+      {
+        title: t("Your role"),
+        key: "my_role",
+        render: (_, record) => <RoleBadge role={record.my_role} />,
+        width: 150,
       },
       {
         title: t("Members"),
@@ -162,6 +176,7 @@ const DataTableComponent = memo(function DataTableComponent() {
       t,
       i18n.language,
       currentUserId,
+      activeOrganizationId,
       isLeavePending,
       handleLeave,
       localizedDescription,

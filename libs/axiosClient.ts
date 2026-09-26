@@ -60,6 +60,8 @@ const PUBLIC_AUTH_PATHS = [
     // link expired, not that a session needs refreshing. Bouncing an anonymous
     // visitor to /sign-in would throw away everything they typed.
     "/api/v1/organization-applications",
+    // Invitation links are opened from an email, often by someone not signed in.
+    "/api/v1/organization-invitations",
 ]
 
 const isPublicAuthRequest = (url?: string): boolean =>

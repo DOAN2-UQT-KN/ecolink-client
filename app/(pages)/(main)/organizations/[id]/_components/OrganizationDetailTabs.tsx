@@ -9,6 +9,7 @@ import { STATUS } from "@/constants/status";
 
 import { CampaignList } from "./CampaignList";
 import { OrganizationJoinRequests } from "./OrganizationJoinRequests";
+import { OrganizationInvitations } from "./OrganizationInvitations";
 import { OrganizationMembers } from "./OrganizationMembers";
 import { useOrganizationDetail } from "../_hooks/useOrganizationDetail";
 
@@ -21,19 +22,22 @@ const ALL_ORGANIZATION_DETAIL_TAB_ITEMS = [
   { value: "campaign", labelKey: "Campaign" },
   { value: "members", labelKey: "Members" },
   { value: "join-requests", labelKey: "Join requests" },
+  { value: "invitations", labelKey: "Invitations" },
 ] as const;
 
 export type OrganizationDetailTabValue =
   (typeof ALL_ORGANIZATION_DETAIL_TAB_ITEMS)[number]["value"];
 
-/** Tabs shown to visitors (group owner also sees these plus join-requests). */
+/** Tabs shown to visitors; members also see invitations, approvers also join requests. */
 export const ORGANIZATION_DETAIL_TAB_ITEMS = ALL_ORGANIZATION_DETAIL_TAB_ITEMS.filter(
-  (item) => item.value !== "join-requests",
+  (item) => item.value !== "join-requests" && item.value !== "invitations",
 );
 
 export const OrganizationDetailTabs = memo(function OrganizationDetailTabs() {
   const { t } = useTranslation();
-  const { showYourGroupTag, organizationId } = useOrganizationDetail();
+  const { permissions, organizationId } = useOrganizationDetail();
+  const canApproveMembers = Boolean(permissions?.can_approve_members);
+  const canInvite = Boolean(permissions?.can_invite);
   const [tab, setTab] = useState<OrganizationDetailTabValue>("campaign");
 
   const joinRequestsCountQuery = useMemo((): IGetJoinRequestsRequest => {
@@ -50,17 +54,19 @@ export const OrganizationDetailTabs = memo(function OrganizationDetailTabs() {
   const { data: joinRequestsData } = useGetJoinRequestsByOrg(
     joinRequestsCountQuery,
     {
-      enabled: showYourGroupTag && Boolean(organizationId),
+      enabled: canApproveMembers && Boolean(organizationId),
     },
   );
 
   const pendingApprovalCount = joinRequestsData?.data?.total ?? 0;
 
   const tabItems = useMemo(() => {
-    return showYourGroupTag
-      ? [...ALL_ORGANIZATION_DETAIL_TAB_ITEMS]
-      : [...ORGANIZATION_DETAIL_TAB_ITEMS];
-  }, [showYourGroupTag]);
+    return ALL_ORGANIZATION_DETAIL_TAB_ITEMS.filter((item) => {
+      if (item.value === "join-requests") return canApproveMembers;
+      if (item.value === "invitations") return canInvite;
+      return true;
+    });
+  }, [canApproveMembers, canInvite]);
 
   return (
     <Tabs
@@ -96,6 +102,9 @@ export const OrganizationDetailTabs = memo(function OrganizationDetailTabs() {
       </TabsContent>
       <TabsContent value="join-requests" className="mt-0">
         <OrganizationJoinRequests enabled={tab === "join-requests"} />
+      </TabsContent>
+      <TabsContent value="invitations" className="mt-0">
+        <OrganizationInvitations enabled={tab === "invitations"} />
       </TabsContent>
     </Tabs>
   );
