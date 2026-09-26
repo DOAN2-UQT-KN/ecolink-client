@@ -12,12 +12,14 @@ import Stepper from "./Stepper";
 import StepEmail, { stepCardClassName } from "./StepEmail";
 import StepProfile from "./StepProfile";
 import StepContact from "./StepContact";
+import StepOwners from "./StepOwners";
 import StepDocuments from "./StepDocuments";
 import StepReview from "./StepReview";
 
 /**
- * The step-by-step form, shared by a new application and a resubmission. Must render inside
- * `ApplicationProvider`, which decides which steps exist.
+ * The step-by-step form: the email gate for a new application, or the draft editor behind
+ * the tracking link. Must render inside `ApplicationProvider`, which decides which steps
+ * exist.
  */
 export function ApplyForm({
   breadcrumbs,
@@ -28,8 +30,17 @@ export function ApplyForm({
   notice?: ReactNode;
 }) {
   const { t } = useTranslation();
-  const { step, stepIndex, isEditMode, back, next, submit, isSubmitting } =
-    useApplication();
+  const {
+    step,
+    stepIndex,
+    application,
+    back,
+    next,
+    submit,
+    isSubmitting,
+    saveDraft,
+    isSaving,
+  } = useApplication();
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -40,8 +51,9 @@ export function ApplyForm({
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // The first step of a resubmission has nothing before it to go back to.
-  const canGoBack = !(isEditMode && stepIndex === 0);
+  // The first step of the editor has nothing before it to go back to.
+  const canGoBack = stepIndex > 0;
+  const isRevision = application?.status === "NEEDS_REVISION";
 
   return (
     <div className="w-full h-full">
@@ -68,40 +80,47 @@ export function ApplyForm({
           <div className={stepCardClassName}>
             {step === "profile" && <StepProfile />}
             {step === "contact" && <StepContact />}
+            {step === "owners" && <StepOwners />}
             {step === "documents" && <StepDocuments />}
             {step === "review" && <StepReview />}
           </div>
         )}
 
         {step !== "email" && (
-          <div
-            className={cn(
-              "flex gap-3",
-              canGoBack ? "justify-between" : "justify-end",
-            )}
-          >
-            {canGoBack && (
-              <Button variant="outlined-brown" onClick={back}>
-                {t("Back")}
-              </Button>
-            )}
-            {step === "review" ? (
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
+            <div className="flex gap-3">
+              {canGoBack && (
+                <Button variant="outlined-brown" onClick={back}>
+                  {t("Back")}
+                </Button>
+              )}
+            </div>
+            <div className="flex flex-col-reverse gap-3 sm:flex-row">
               <Button
-                variant="brown"
-                onClick={submit}
-                isDisabled={isSubmitting}
+                variant="outlined-brown"
+                onClick={() => void saveDraft()}
+                isDisabled={isSaving || isSubmitting}
               >
-                {isSubmitting
-                  ? t("Submitting...")
-                  : isEditMode
-                    ? t("Resubmit application")
-                    : t("Submit application")}
+                {isSaving ? t("Saving...") : t("Save draft")}
               </Button>
-            ) : (
-              <Button variant="brown" onClick={next}>
-                {t("Continue")}
-              </Button>
-            )}
+              {step === "review" ? (
+                <Button
+                  variant="brown"
+                  onClick={submit}
+                  isDisabled={isSubmitting}
+                >
+                  {isSubmitting
+                    ? t("Submitting...")
+                    : isRevision
+                      ? t("Resubmit application")
+                      : t("Submit application")}
+                </Button>
+              ) : (
+                <Button variant="brown" onClick={next} isDisabled={isSaving}>
+                  {t("Continue")}
+                </Button>
+              )}
+            </div>
           </div>
         )}
       </div>

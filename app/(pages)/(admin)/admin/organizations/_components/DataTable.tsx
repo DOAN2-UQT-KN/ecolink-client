@@ -124,25 +124,36 @@ export function DataTable() {
         key: COLUMN_KEYS.CREATED,
         title: t('Owner'),
         className: 'min-w-[180px]',
-        render: (_, record) => (
+        render: (_, record) => {
+          // The legal representative leads; the rest are counted.
+          const owners = record?.owners ?? [];
+          const primary =
+            owners.find((owner) => owner.role === 'LEGAL_REPRESENTATIVE') ?? owners[0];
+          return (
           <div className="flex flex-row items-center justify-start gap-2">
             <Image
-              src={record?.owner?.avatar || defaultAvatar}
-              alt={record?.owner?.name}
+              src={primary?.avatar || defaultAvatar}
+              alt={primary?.name ?? ''}
               width={40}
               height={40}
               className="rounded-full"
             />
             <div className="flex flex-col">
               <span className={cn('font-medium', isDark ? 'text-zinc-100' : 'text-zinc-900')}>
-                {record?.owner?.name}
+                {primary?.name ?? '—'}
+                {owners.length > 1 && (
+                  <span className={cn('ml-1 text-xs', isDark ? 'text-zinc-400' : 'text-zinc-500')}>
+                    +{owners.length - 1}
+                  </span>
+                )}
               </span>
               <p className={cn('font-display-1', isDark ? 'text-zinc-500' : 'text-zinc-600')}>
                 {formattedDate(record.created_at ?? undefined)}
               </p>
             </div>
           </div>
-        ),
+          );
+        },
       },
       {
         key: COLUMN_KEYS.STATUS,

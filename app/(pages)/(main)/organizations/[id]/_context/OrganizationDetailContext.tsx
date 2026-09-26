@@ -18,7 +18,6 @@ import {
   joinListingShowsCancelButton,
   joinListingShowsJoinButton,
 } from "@/modules/OrganizationCard/utils/joinRequestListingUi";
-import useAuthStore from "@/stores/useAuthStore";
 
 export interface OrganizationDetailContextType {
   organizationSlug: string;
@@ -52,7 +51,6 @@ export function OrganizationDetailProvider({
   children: ReactNode;
 }) {
   const queryClient = useQueryClient();
-  const currentUserId = useAuthStore((s) => s.user?.id);
 
   const { data, isLoading, isError, isFetching } = useGetOrganizationBySlug(
     organizationSlug,
@@ -89,15 +87,11 @@ export function OrganizationDetailProvider({
       onSettled: invalidateAfterMutation,
     });
 
-  const ownerId = organization?.owner_id;
   const requestStatus = organization?.request_status;
   const joinRequestId = organization?.join_request_id;
   const isMember = Boolean(organization?.is_member);
 
-  const showYourGroupTag =
-    ownerId != null &&
-    currentUserId != null &&
-    ownerId === currentUserId;
+  const showYourGroupTag = Boolean(organization?.is_owner);
 
   const showJoinButton =
     !showYourGroupTag && !isMember && joinListingShowsJoinButton(requestStatus);

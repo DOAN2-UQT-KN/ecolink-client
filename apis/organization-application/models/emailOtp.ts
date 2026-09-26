@@ -26,8 +26,13 @@ export interface IVerifyApplicationOtpRequest {
   otp: string;
 }
 
+/**
+ * The code opens (or reopens) the mailbox's draft. The tracking token is the credential for
+ * every later call (`?token=`), and it is also what the tracking link carries.
+ */
 export type IVerifyApplicationOtpResponse = IBaseResponse<{
-  /** Single-use; sent back as the `x-submission-token` header on later calls. */
-  submission_token: string;
-  expires_at: string;
+  application_id: string;
+  tracking_token: string;
+  /** True when an open application already existed and was handed back. */
+  resumed: boolean;
 }>;

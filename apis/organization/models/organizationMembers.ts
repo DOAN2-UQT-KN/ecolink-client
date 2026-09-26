@@ -4,6 +4,8 @@ import { IBaseResponse } from "@/types/BaseResponse";
 export interface IMember {
   organization_id: string;
   user_id: string;
+  /** `OrgMemberRole` — owners are members too. */
+  role?: string;
   user: Pick<IUser, "id" | "name" | "email" | "avatar">;
   created_at: string;
 }

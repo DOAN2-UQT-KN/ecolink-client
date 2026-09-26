@@ -1,30 +1,11 @@
 import axios from "axios";
 import requestApi from "@/utils/requestApi";
-import { usePost, UsePostOptions } from "@/hooks/reactQuery";
-import { MessageType } from "@/utils/showMessage";
 import {
   IPresignDocumentRequest,
   IPresignDocumentResponse,
 } from "./models/presignDocument";
-import { SUBMISSION_TOKEN_HEADER } from "./submissionToken";
 
-const url = "/api/v1/organization-applications/documents/presign";
-
-export interface IPresignDocumentVariables {
-  submissionToken: string;
-  data: IPresignDocumentRequest;
-}
-
-export const presignDocument = async ({
-  submissionToken,
-  data,
-}: IPresignDocumentVariables): Promise<IPresignDocumentResponse> => {
-  return await requestApi.post<IPresignDocumentResponse>(url, data, {
-    headers: { [SUBMISSION_TOKEN_HEADER]: submissionToken },
-  });
-};
-
-/** Presign for a resubmission: the one-time submission token is spent, the tracking link isn't. */
+/** Upload slot while the application is editable; the tracking link authorises it. */
 export const presignDocumentForApplication = async ({
   applicationId,
   trackingToken,
@@ -42,19 +23,10 @@ export const presignDocumentForApplication = async ({
   );
 };
 
-/** Who is uploading: a fresh applicant, or one fixing an application a reviewer sent back. */
-export type ApplicationUploadCredential =
-  | { submissionToken: string }
-  | { applicationId: string; trackingToken: string };
-
-export const usePresignDocument = (
-  options?: UsePostOptions<IPresignDocumentResponse, IPresignDocumentVariables>,
-) => {
-  return usePost({
-    mutationFn: presignDocument,
-    messageError: { type: MessageType.Toast },
-    ...options,
-  });
+/** The draft being edited; its tracking token authorises uploads. */
+export type ApplicationUploadCredential = {
+  applicationId: string;
+  trackingToken: string;
 };
 
 /**
@@ -76,13 +48,7 @@ export const uploadApplicationDocument = async (
     mime_type: file.type,
     size_bytes: file.size,
   };
-  const presigned =
-    "submissionToken" in credential
-      ? await presignDocument({
-          submissionToken: credential.submissionToken,
-          data,
-        })
-      : await presignDocumentForApplication({ ...credential, data });
+  const presigned = await presignDocumentForApplication({ ...credential, data });
 
   const { document_id, upload_url, fields } = presigned.data;
 

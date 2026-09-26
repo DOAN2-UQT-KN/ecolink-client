@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { TbAlertTriangle, TbFileSearch } from "react-icons/tb";
+import { TbFileSearch } from "react-icons/tb";
 
 import type { IAdminApplication } from "@/apis/organization-application/models/application";
 import { useAdminLayout } from "@/app/(pages)/(admin)/_context/AdminLayoutContext";
@@ -59,7 +59,9 @@ export function DataTable() {
         render: (_, record) => {
           // Split around the `@` so the domain — the thing that decides lane A — is the
           // first thing a reviewer reads.
-          const [local, domain] = record.contact_email.split("@");
+          const [local, domain] = (
+            record.contact_email ?? record.submitter_email
+          ).split("@");
           return (
             <div className="min-w-[220px] text-sm">
               <span className="text-muted-foreground">{local}@</span>
@@ -69,10 +71,19 @@ export function DataTable() {
         },
       },
       {
+        key: "owners",
+        title: t("Owners"),
+        render: (_, record) => (
+          <span className="text-sm tabular-nums">
+            {record.owners?.length ?? 0}
+          </span>
+        ),
+      },
+      {
         key: "org_type",
         title: t("Type"),
         render: (_, record) => (
-          <span className="text-sm">{t(record.org_type)}</span>
+          <span className="text-sm">{record.org_type ? t(record.org_type) : "—"}</span>
         ),
       },
       {
@@ -96,18 +107,6 @@ export function DataTable() {
               label={t(APPLICATION_STATUS_TAG[record.status].label)}
               className="!mx-0 min-w-0 justify-center"
             />
-            {/* Approved but no ORG account yet: provisioning is still retrying, or stuck. */}
-            {record.status === "APPROVED" && !record.account_provisioned_at && (
-              <span
-                className="inline-flex items-center gap-1 text-xs font-medium text-red-600"
-                title={t(
-                  "The organization account has not been created yet. The system keeps retrying.",
-                )}
-              >
-                <TbAlertTriangle />
-                {t("Account pending")}
-              </span>
-            )}
           </div>
         ),
       },
@@ -115,7 +114,9 @@ export function DataTable() {
         key: "submitted_at",
         title: t("Submitted"),
         render: (_, record) => (
-          <span className="text-sm">{formattedDate(record.submitted_at)}</span>
+          <span className="text-sm">
+            {record.submitted_at ? formattedDate(record.submitted_at) : "—"}
+          </span>
         ),
       },
       {

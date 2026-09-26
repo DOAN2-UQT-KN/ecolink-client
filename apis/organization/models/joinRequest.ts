@@ -8,7 +8,7 @@ export interface IJoinRequest {
   status: number;
   created_at: string;
   updated_at: string;
-  organization?: Pick<IOrganization, "id" | "name" | "owner_id">;
+  organization?: Pick<IOrganization, "id" | "name">;
   requester?: Pick<IUser, "id" | "name" | "email" | "avatar">;
 }
 

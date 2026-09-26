@@ -14,6 +14,20 @@ export interface IOrganizationChannel {
   is_primary: boolean;
 }
 
+/** Mirrors `OrgMemberRole` on the server. */
+export type OrgMemberRole =
+  | "LEGAL_REPRESENTATIVE"
+  | "OWNER"
+  | "ADMIN"
+  | "CAMPAIGN_MANAGER"
+  | "MEMBER";
+
+export const OWNER_ROLES: OrgMemberRole[] = ["LEGAL_REPRESENTATIVE", "OWNER"];
+
+export interface IOrganizationOwner extends Pick<IUser, "id" | "name" | "avatar"> {
+  role: OrgMemberRole;
+}
+
 export interface IOrganization {
   id: string;
   name: string;
@@ -45,19 +59,21 @@ export interface IOrganization {
   longitude?: number | null;
   channels?: IOrganizationChannel[];
   /**
-   * The dedicated ORG login. `null` in the short window between an approval and the account
-   * being provisioned, so consumers must tolerate it.
+   * People with an owner role. An organization never logs in: these are the users who act
+   * for it. Never empty for an active organization.
    */
-  owner_id: string | null;
-  /** True when the signed-in user is an active member of this org. */
+  owners: IOrganizationOwner[];
+  /** The signed-in user's role here (`OrgMemberRole`), or null when not a member. */
+  my_role?: OrgMemberRole | null;
+  /** True when the signed-in user holds an owner role. */
+  is_owner?: boolean;
+  /** True when the signed-in user holds any active membership (owners included). */
   is_member?: boolean;
-  /** Active member count (owner is not included). */
+  /** Active member count, owners included. */
   members?: number;
   created_at: string;
   updated_at: string;
   request_status?: number;
   /** Present when the current user has a join request; required to cancel while pending. */
   join_request_id?: string;
-  /** `null` while `owner_id` is null. */
-  owner: Pick<IUser, "id" | "name" | "email" | "avatar"> | null;
 }

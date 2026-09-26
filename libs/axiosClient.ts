@@ -53,10 +53,11 @@ const PUBLIC_AUTH_PATHS = [
     "/api/v1/auth/refresh-token",
     "/api/v1/auth/request-password-reset",
     "/api/v1/auth/reset-password",
-    "/api/v1/auth/activate-org-account",
+    "/api/v1/auth/activate-account",
+    "/api/v1/auth/activation/resend",
     "/api/v1/auth/oauth/",
-    // The organization application form has no login at all: a 401 there means the OTP
-    // submission token expired, not that a session needs refreshing. Bouncing an anonymous
+    // The organization application form has no login at all: a 401 there means the tracking
+    // link expired, not that a session needs refreshing. Bouncing an anonymous
     // visitor to /sign-in would throw away everything they typed.
     "/api/v1/organization-applications",
 ]

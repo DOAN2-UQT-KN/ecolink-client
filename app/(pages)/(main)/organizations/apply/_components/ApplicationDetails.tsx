@@ -35,6 +35,34 @@ export function SummaryRow({
   );
 }
 
+/**
+ * Several values under one label, as bullets. A single value is drawn as-is, so a label with
+ * one entry looks exactly like a plain row.
+ */
+export function SummaryList({ items }: { items: { key: string; node: ReactNode }[] }) {
+  if (items.length === 0) return null;
+  if (items.length === 1) return <>{items[0].node}</>;
+  return (
+    <ul className="flex list-disc flex-col gap-1 pl-5">
+      {items.map((item) => (
+        <li key={item.key}>{item.node}</li>
+      ))}
+    </ul>
+  );
+}
+
+/** Groups items by key, keeping the order in which each group first appears. */
+export function groupBy<T>(items: T[], keyOf: (item: T) => string): [string, T[]][] {
+  const groups = new Map<string, T[]>();
+  for (const item of items) {
+    const key = keyOf(item);
+    const list = groups.get(key);
+    if (list) list.push(item);
+    else groups.set(key, [item]);
+  }
+  return [...groups.entries()];
+}
+
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="flex flex-col gap-3 rounded-md border border-[rgba(136,122,71,0.35)] p-4">
@@ -82,9 +110,9 @@ function TrackingCode({ code }: { code: string }) {
 }
 
 /**
- * Everything an applicant may see about their submission. The legal representative is
- * review-only and never reaches the public endpoints, so it is not shown here. The pages
- * around it supply the card and the actions.
+ * Everything an applicant may see about their submission. The legal representative's ID is
+ * review-only (only its last 4 characters exist), so it is not shown here. The pages around
+ * it supply the card and the actions.
  */
 export const ApplicationDetails = memo(function ApplicationDetails({
   application,
@@ -111,7 +139,7 @@ export const ApplicationDetails = memo(function ApplicationDetails({
         {profile.logo_url && (
           <AppImage
             src={profile.logo_url}
-            alt={profile.name}
+            alt={profile.name ?? ""}
             className="size-[72px] shrink-0 rounded-full border border-[rgba(136,122,71,0.35)] bg-white object-cover"
           />
         )}
@@ -119,7 +147,7 @@ export const ApplicationDetails = memo(function ApplicationDetails({
           <div className="flex flex-wrap items-center gap-3">
             {/* h2, not h1: the global `h1` rule in globals.css forces the Playfair title font. */}
             <h2 className="font-display-6 font-semibold !text-button-accent break-words">
-              {profile.name}
+              {profile.name || t("Untitled organization")}
             </h2>
             <TagStatus
               type={APPLICATION_STATUS_TAG[status].type}
@@ -129,9 +157,11 @@ export const ApplicationDetails = memo(function ApplicationDetails({
           </div>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-foreground-tertiary">
             <TrackingCode code={application.code} />
-            <span>
-              {t("Submitted on")} {formattedDate(application.submitted_at, true)}
-            </span>
+            {application.submitted_at && (
+              <span>
+                {t("Submitted on")} {formattedDate(application.submitted_at, true)}
+              </span>
+            )}
             {application.reviewed_at && (
               <span>
                 {t("Reviewed on")} {formattedDate(application.reviewed_at, true)}
@@ -141,10 +171,10 @@ export const ApplicationDetails = memo(function ApplicationDetails({
         </div>
       </header>
 
-      {status === "NEEDS_MORE_INFO" && application.review_note && (
+      {status === "NEEDS_REVISION" && application.review_note && (
         <section className="rounded-md border border-orange-200 bg-orange-50 p-4">
           <h3 className="font-semibold text-orange-900">
-            {t("A reviewer asked for more information")}
+            {t("Changes needed")}
           </h3>
           <p className="mt-1 whitespace-pre-line text-sm text-orange-900">
             {application.review_note}
@@ -170,7 +200,7 @@ export const ApplicationDetails = memo(function ApplicationDetails({
           </h3>
           <p className="mt-1 text-sm text-emerald-900">
             {t(
-              "We emailed a link to the contact address so you can set the password of the organization's account.",
+              "Every owner has been given their role. Owners without an Ecolink account received an activation email; the others can sign in as usual.",
             )}
           </p>
         </section>
@@ -181,11 +211,14 @@ export const ApplicationDetails = memo(function ApplicationDetails({
           label={t("Type of organization")}
           value={t(
             ORG_TYPE_OPTIONS.find((o) => o.value === application.org_type)
-              ?.label ?? application.org_type,
+              ?.label ?? application.org_type ?? "",
           )}
         />
-        <SummaryRow label={t("Name")} value={profile.name} />
-        <SummaryRow label={t("Contact email")} value={profile.contact_email} />
+        <SummaryRow label={t("Name")} value={profile.name ?? ""} />
+        <SummaryRow
+          label={t("Contact email")}
+          value={profile.contact_email ?? application.contact_email ?? ""}
+        />
         <SummaryRow label={t("Address")} value={profile.address ?? ""} />
         <SummaryRow
           label={t("Description")}
@@ -206,22 +239,28 @@ export const ApplicationDetails = memo(function ApplicationDetails({
 
       <Section title={t("Channels")}>
         {channels.length ? (
-          channels.map((channel) => (
+          groupBy(channels, (channel) => channel.type).map(([type, group]) => (
             <SummaryRow
-              key={`${channel.type}-${channel.url}`}
+              key={type}
               label={t(
-                CHANNEL_TYPE_OPTIONS.find((o) => o.value === channel.type)
-                  ?.label ?? channel.type,
+                CHANNEL_TYPE_OPTIONS.find((o) => o.value === type)?.label ?? type,
               )}
               value={
-                <a
-                  href={channel.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-button-accent underline-offset-4 hover:underline"
-                >
-                  {channel.url}
-                </a>
+                <SummaryList
+                  items={group.map((channel) => ({
+                    key: channel.url,
+                    node: (
+                      <a
+                        href={channel.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-button-accent underline-offset-4 hover:underline"
+                      >
+                        {channel.url}
+                      </a>
+                    ),
+                  }))}
+                />
               }
             />
           ))
@@ -234,33 +273,39 @@ export const ApplicationDetails = memo(function ApplicationDetails({
 
       <Section title={t("Legal documents")}>
         {documents.length ? (
-          documents.map((document) => (
+          groupBy(documents, (document) => document.doc_type).map(([docType, group]) => (
             <SummaryRow
-              key={document.id}
+              key={docType}
               label={t(
-                DOC_TYPE_OPTIONS.find((o) => o.value === document.doc_type)
-                  ?.label ?? document.doc_type,
+                DOC_TYPE_OPTIONS.find((o) => o.value === docType)?.label ?? docType,
               )}
               value={
-                <span className="inline-flex max-w-full items-center gap-1.5">
-                  <FileTypeIcon
-                    mimeType={document.mime_type}
-                    fileName={document.file_name}
-                    className="size-4"
-                  />
-                  <DocumentNameLink
-                    name={document.file_name ?? document.doc_type}
-                    href={
-                      trackingToken && !document.purged_at
-                        ? buildApplicantDocumentUrl(
-                            application.id,
-                            document.id,
-                            trackingToken,
-                          )
-                        : undefined
-                    }
-                  />
-                </span>
+                <SummaryList
+                  items={group.map((document) => ({
+                    key: document.id,
+                    node: (
+                      <span className="inline-flex max-w-full items-center gap-1.5 align-middle">
+                        <FileTypeIcon
+                          mimeType={document.mime_type}
+                          fileName={document.file_name}
+                          className="size-4"
+                        />
+                        <DocumentNameLink
+                          name={document.file_name ?? document.doc_type}
+                          href={
+                            trackingToken && !document.purged_at
+                              ? buildApplicantDocumentUrl(
+                                  application.id,
+                                  document.id,
+                                  trackingToken,
+                                )
+                              : undefined
+                          }
+                        />
+                      </span>
+                    ),
+                  }))}
+                />
               }
             />
           ))

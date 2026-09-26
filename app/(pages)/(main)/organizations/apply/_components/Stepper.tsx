@@ -7,7 +7,8 @@ import { useApplication } from "../_hooks/useApplication";
 const STEP_LABELS: Record<(typeof APPLICATION_STEPS)[number], string> = {
   email: "Verify email",
   profile: "Organization profile",
-  contact: "Contact & representative",
+  contact: "Contact",
+  owners: "Owners",
   documents: "Legal documents",
   review: "Review & submit",
 };

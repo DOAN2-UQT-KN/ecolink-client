@@ -8,6 +8,7 @@ import {
   TbHelpCircle,
   TbInfoCircle,
   TbMessageQuestion,
+  TbAlertTriangle,
 } from "react-icons/tb";
 
 import {
@@ -17,7 +18,10 @@ import {
   useGetAdminApplicationById,
   useRequestMoreInfo,
 } from "@/apis/organization-application/adminApplications";
-import type { ApplicationLane } from "@/apis/organization-application/models/application";
+import type {
+  ApplicationLane,
+  IAdminOwnerCandidate,
+} from "@/apis/organization-application/models/application";
 import { useAdminLayout } from "@/app/(pages)/(admin)/_context/AdminLayoutContext";
 import {
   Dialog,
@@ -48,7 +52,10 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { APPLICATION_STATUS_TAG } from "@/constants/organizationApplicationStatus";
+import {
+  APPLICATION_STATUS_TAG,
+  OWNER_CANDIDATE_STATUS_TAG,
+} from "@/constants/organizationApplicationStatus";
 import { ApplicationActivity } from "./ApplicationActivity";
 import { queryClient } from "@/libs/queryClient";
 import { cn } from "@/libs/utils";
@@ -108,6 +115,77 @@ function Row({ label, value }: { label: string; value: ReactNode }) {
         {label}
       </span>
       <div className="min-w-0 flex-1 break-words text-sm">{value || "—"}</div>
+    </div>
+  );
+}
+
+/** identity-service `users.status`. */
+const ACCOUNT_STATUS_LABEL: Record<number, string> = {
+  1: "Active",
+  2: "Suspended",
+  3: "Not activated",
+};
+
+/**
+ * One owner as the reviewer sees them: the person, not just the paperwork. The two signals
+ * worth a look are how close they are to the 3-organization cap, and confirmations from the
+ * same IP within minutes (people registering together — or one person filling in for all).
+ */
+function OwnerRow({ owner }: { owner: IAdminOwnerCandidate }) {
+  const { t } = useTranslation();
+  const tag = OWNER_CANDIDATE_STATUS_TAG[owner.status];
+  return (
+    <div className="flex flex-col gap-1.5 border-b py-3 last:border-b-0">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="min-w-0">
+          <p className="font-medium break-words">
+            {owner.full_name}{" "}
+            <span className="font-normal text-muted-foreground">&lt;{owner.email}&gt;</span>
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {owner.is_legal_rep ? t("Legal representative") : t("Owner")}
+            {owner.is_submitter && ` · ${t("Submitter")}`}
+          </p>
+        </div>
+        <TagStatus type={tag.type} label={t(tag.label)} className="!m-0" />
+      </div>
+      <Row
+        label={t("Confirmed at")}
+        value={
+          owner.responded_at
+            ? `${formattedDate(owner.responded_at, true)}${owner.confirm_ip ? ` · ${owner.confirm_ip}` : ""}`
+            : ""
+        }
+      />
+      <Row
+        label={t("Ecolink account")}
+        value={
+          owner.account
+            ? `${t(ACCOUNT_STATUS_LABEL[owner.account.status] ?? "Unknown")} · ${t("since")} ${formattedDate(owner.account.created_at)}`
+            : t("No account yet")
+        }
+      />
+      <Row
+        label={t("Organizations owned")}
+        value={
+          <span
+            className={cn(
+              "tabular-nums",
+              owner.active_owner_org_count >= 2 && "font-semibold text-orange-600",
+            )}
+          >
+            {owner.active_owner_org_count} / 3
+          </span>
+        }
+      />
+      {owner.same_ip_cluster && (
+        <p className="flex items-start gap-1.5 text-xs text-orange-600">
+          <TbAlertTriangle className="mt-0.5 size-3.5 shrink-0" />
+          {t(
+            "Another owner confirmed from the same IP within 5 minutes. Not a reason to reject on its own, but worth a request for more information if anything else looks off.",
+          )}
+        </p>
+      )}
     </div>
   );
 }
@@ -198,14 +276,21 @@ export function ApplicationReviewDialog({
     useDecideApplication({ onSuccess: invalidate });
 
   const contactEmailParts = useMemo(() => {
-    const [local, domain] = (application?.contact_email ?? "").split("@");
+    const [local, domain] = (
+      application?.contact_email ??
+      application?.submitter_email ??
+      ""
+    ).split("@");
     return { local, domain };
-  }, [application?.contact_email]);
+  }, [application?.contact_email, application?.submitter_email]);
 
   const isClosed =
     application?.status === "APPROVED" ||
     application?.status === "REJECTED" ||
     application?.status === "WITHDRAWN";
+  // Sent back to the applicant: nothing to decide until they resubmit and every owner
+  // confirms again.
+  const isWithApplicant = application?.status === "NEEDS_REVISION";
 
   const isOtherPicked = infoReasons.includes(OTHER_REASON);
 
@@ -442,9 +527,15 @@ export function ApplicationReviewDialog({
                     </span>
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {t(
-                      "Ownership of this mailbox was confirmed by a one-time code before the application was submitted.",
-                    )}
+                    {application.contact_email &&
+                    application.contact_email !== application.submitter_email
+                      ? t(
+                          "Not verified: the one-time code was sent to the submitter ({{email}}), not to this address.",
+                          { email: application.submitter_email },
+                        )
+                      : t(
+                          "Ownership of this mailbox was confirmed by a one-time code before the application was submitted.",
+                        )}
                   </p>
                 </SectionCard>
 
@@ -454,7 +545,10 @@ export function ApplicationReviewDialog({
                   isDark={isDark}
                 >
                   <Row label={t("Name")} value={application.profile?.name} />
-                  <Row label={t("Type")} value={t(application.org_type)} />
+                  <Row
+                    label={t("Type")}
+                    value={application.org_type ? t(application.org_type) : ""}
+                  />
                   <Row label={t("Address")} value={application.profile?.address} />
                   <Row
                     label={t("Description")}
@@ -472,7 +566,11 @@ export function ApplicationReviewDialog({
                   <Row label={t("Tracking code")} value={application.code} />
                   <Row
                     label={t("Submitted")}
-                    value={formattedDate(application.submitted_at)}
+                    value={
+                      application.submitted_at
+                        ? formattedDate(application.submitted_at)
+                        : ""
+                    }
                   />
                 </SectionCard>
 
@@ -512,6 +610,19 @@ export function ApplicationReviewDialog({
                 </SectionCard>
 
                 <SectionCard
+                  title={t("Owners")}
+                  hint={t(
+                    "Every owner confirmed by email before this application reached the queue.",
+                  )}
+                  defaultOpen
+                  isDark={isDark}
+                >
+                  {application.owners?.map((owner) => (
+                    <OwnerRow key={owner.id} owner={owner} />
+                  ))}
+                </SectionCard>
+
+                <SectionCard
                   title={t("Legal representative")}
                   hint={t(
                     "Review-only. Never shown publicly, and only the last 4 characters of the ID number are stored.",
@@ -521,6 +632,10 @@ export function ApplicationReviewDialog({
                   <Row
                     label={t("Full name")}
                     value={application.legal_representative?.full_name}
+                  />
+                  <Row
+                    label={t("Email")}
+                    value={application.legal_representative?.email}
                   />
                   <Row
                     label={t("ID number")}
@@ -578,14 +693,18 @@ export function ApplicationReviewDialog({
                 
                 </SectionCard>
 
-                {isClosed ? (
+                {isClosed || isWithApplicant ? (
                   <section
                     className={cn(
                       "rounded-lg p-4 text-sm",
                       isDark ? "bg-zinc-800" : "bg-zinc-100",
                     )}
                   >
-                    {t("This application has already been decided.")}
+                    {isWithApplicant
+                      ? t(
+                          "Sent back to the applicant. It returns to the queue once they resubmit and every owner confirms again.",
+                        )
+                      : t("This application has already been decided.")}
                   </section>
                 ) : (
                   <section
@@ -599,7 +718,7 @@ export function ApplicationReviewDialog({
                     <div className="flex flex-col gap-2">
                       <div className="flex items-center justify-between gap-3">
                         <h3 className="font-semibold">{t("Decision")}</h3>
-                        {application.status !== "UNDER_REVIEW" && (
+                        {!application.claimed_at && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -610,11 +729,11 @@ export function ApplicationReviewDialog({
                           </Button>
                         )}
                       </div>
-                      {application.status !== "UNDER_REVIEW" && (
+                      {!application.claimed_at && (
                         <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
                           <TbInfoCircle className="mt-0.5 size-3.5 shrink-0" />
                           {t(
-                            "Claiming marks you as the reviewer and moves the application to Under review, so other admins know it is taken and cannot claim it at the same time. It is optional — you can decide without claiming.",
+                            "Claiming marks you as the reviewer, so other admins know it is taken and cannot claim it at the same time. It is optional — you can decide without claiming.",
                           )}
                         </p>
                       )}

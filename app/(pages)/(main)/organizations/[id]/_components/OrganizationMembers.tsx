@@ -178,7 +178,7 @@ export const OrganizationMembers = memo(function OrganizationMembers({
     enabled: enabled && Boolean(organizationId),
   });
 
-  const ownerId = organization?.owner_id;
+  const owners = organization?.owners ?? [];
 
   const handleSort = useCallback(
     (sort_by: "created_at" | "updated_at", sort_order: "asc" | "desc") => {
@@ -188,10 +188,11 @@ export const OrganizationMembers = memo(function OrganizationMembers({
   );
 
   const membersRaw = data?.data?.members ?? [];
+  // Owners are listed in their own card above.
   const membersList = useMemo(() => {
-    if (!ownerId) return membersRaw;
-    return membersRaw.filter((m) => m.user_id !== ownerId);
-  }, [membersRaw, ownerId]);
+    const ownerIds = new Set((organization?.owners ?? []).map((o) => o.id));
+    return membersRaw.filter((m) => !ownerIds.has(m.user_id));
+  }, [membersRaw, organization?.owners]);
 
   if (!organization) {
     return null;
@@ -201,29 +202,36 @@ export const OrganizationMembers = memo(function OrganizationMembers({
     <div className="space-y-4">
       <div className="w-full rounded-xl border border-[rgba(136,122,71,0.35)] bg-white/70 p-4 sm:p-5 shadow-sm">
         <p className="text-xs font-medium text-foreground-tertiary uppercase tracking-wide">
-          {t("Owner")}
+          {owners.length > 1 ? t("Owners") : t("Owner")}
         </p>
-        <div className="mt-3 flex items-center gap-3 min-w-0 justify-center">
-          {/* <div className="flex size-10 shrink-0 items-center justify-center rounded-full border border-[rgba(136,122,71,0.35)] bg-white/80">
-            <Crown className="size-5 text-button-accent" aria-hidden />
-          </div> */}
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              {/* <User className="size-4 shrink-0 text-muted-foreground" aria-hidden />
-               */}  
-              <Image src={organization?.owner?.avatar || defaultAvatar} alt={organization?.owner?.name} width={40} height={40} className="rounded-full" />
+        <div className="mt-3 flex flex-col gap-3">
+          {owners.length === 0 && (
+            <span className="text-sm text-foreground-tertiary">—</span>
+          )}
+          {owners.map((owner) => (
+            <div key={owner.id} className="flex min-w-0 flex-wrap items-center gap-2">
+              <Image
+                src={owner.avatar || defaultAvatar}
+                alt={owner.name}
+                width={40}
+                height={40}
+                className="rounded-full"
+              />
               <span className="text-sm font-medium text-foreground break-all">
-                {ownerId ? organization?.owner?.name : "—"}
+                {owner.name || "—"}
               </span>
-              {ownerId &&
-              currentUserId != null &&
-              ownerId === currentUserId ? (
+              {owner.role === "LEGAL_REPRESENTATIVE" && (
+                <span className="text-xs text-foreground-tertiary">
+                  {t("Legal representative")}
+                </span>
+              )}
+              {currentUserId != null && owner.id === currentUserId && (
                 <span className="text-xs font-medium text-button-accent bg-background-primary px-2 py-1 rounded-md">
                   {t("You")}
                 </span>
-              ) : null}
+              )}
             </div>
-          </div>
+          ))}
         </div>
       </div>
 

@@ -13,6 +13,12 @@ import {
   TbRefresh,
   TbSend,
   TbUserCheck,
+  TbUserX,
+  TbClockOff,
+  TbUserMinus,
+  TbMailForward,
+  TbListCheck,
+  TbArrowsShuffle,
 } from "react-icons/tb";
 
 import type {
@@ -40,12 +46,37 @@ const EVENT_META: Record<string, { label: string; icon: IconType; tone: Tone }> 
   REJECTED: { label: "Rejected", icon: TbCircleX, tone: "red" },
   WITHDRAWN: { label: "Withdrawn by applicant", icon: TbArrowBackUp, tone: "zinc" },
   DOCUMENT_VIEWED: { label: "Document opened", icon: TbEye, tone: "zinc" },
-  ACCOUNT_PROVISIONED: {
-    label: "Organization account created",
+  OWNER_CONFIRMED: { label: "Owner confirmed", icon: TbUserCheck, tone: "emerald" },
+  OWNER_DECLINED: { label: "Owner declined", icon: TbUserX, tone: "red" },
+  OWNER_EXPIRED: { label: "Owner confirmation expired", icon: TbClockOff, tone: "amber" },
+  OWNER_CANDIDATE_REMOVED: { label: "Owner removed from the list", icon: TbUserMinus, tone: "zinc" },
+  OWNER_CONFIRMATIONS_RESET: {
+    label: "Confirmations reset",
+    icon: TbArrowsShuffle,
+    tone: "amber",
+  },
+  OWNER_INVITE_RESENT: { label: "Confirmation email resent", icon: TbMailForward, tone: "zinc" },
+  READY_FOR_REVIEW: { label: "All owners confirmed", icon: TbListCheck, tone: "blue" },
+  DRAFT_UPDATE_NOTIFIED: {
+    label: "Applicant saved the draft (email sent)",
+    icon: TbMailForward,
+    tone: "zinc",
+  },
+  OWNER_ATTACHED: {
+    label: "Owner notified of their role",
     icon: TbBuildingCommunity,
     tone: "emerald",
   },
 };
+
+/** Events written by the system or by an owner answering their email, not by the submitter. */
+const NON_APPLICANT_EVENTS = new Set([
+  "OWNER_CONFIRMED",
+  "OWNER_DECLINED",
+  "OWNER_EXPIRED",
+  "READY_FOR_REVIEW",
+  "OWNER_ATTACHED",
+]);
 
 const TONE_CLASSES: Record<Tone, { light: string; dark: string }> = {
   cyan: { light: "bg-cyan-100 text-cyan-700", dark: "bg-cyan-500/15 text-cyan-300" },
@@ -69,8 +100,11 @@ const FIELD_LABELS: Record<string, string> = {
   "profile.backgroundUrl": "Cover image",
   "profile.latitude": "Map location",
   "profile.longitude": "Map location",
+  "profile.location": "Map location",
+  "profile.contactEmail": "Contact email",
   channels: "Official channels",
   legalRepresentative: "Legal representative",
+  owners: "Owners",
 };
 
 // The payload is free-form JSON written by several code paths; read it defensively.
@@ -125,7 +159,10 @@ export const ApplicationActivity = memo(function ApplicationActivity({
   const actorOf = (event: IApplicationEvent) => {
     if (event.actor_name) return event.actor_name;
     if (event.actor_id) return t("Admin");
-    return event.event_type === "ACCOUNT_PROVISIONED" ? t("System") : t("Applicant");
+    if (event.event_type === "OWNER_CONFIRMED" || event.event_type === "OWNER_DECLINED") {
+      return readString(event.payload, "email") ?? t("Owner");
+    }
+    return NON_APPLICANT_EVENTS.has(event.event_type) ? t("System") : t("Applicant");
   };
 
   const quote = (text: string) => (
@@ -155,12 +192,26 @@ export const ApplicationActivity = memo(function ApplicationActivity({
     const { payload } = event;
     switch (event.event_type) {
       case "SUBMITTED": {
-        const count = readNumber(payload, "documentCount");
+        const count = readNumber(payload, "ownerCount");
         return count === null ? null : (
           <p className="text-xs text-muted-foreground">
-            {t("{{count}} documents attached", { count })}
+            {t("{{count}} owners listed", { count })}
           </p>
         );
+      }
+      case "OWNER_DECLINED": {
+        const reason = readString(payload, "reason");
+        return reason ? quote(reason) : null;
+      }
+      case "OWNER_EXPIRED":
+      case "OWNER_CANDIDATE_REMOVED": {
+        const emails = [
+          ...readArray(payload, "emails"),
+          ...(readString(payload, "email") ? [readString(payload, "email") as string] : []),
+        ];
+        return emails.length ? (
+          <p className="text-xs text-muted-foreground">{emails.join(", ")}</p>
+        ) : null;
       }
       case "RESUBMITTED": {
         // Latitude and longitude share one label; show it once.

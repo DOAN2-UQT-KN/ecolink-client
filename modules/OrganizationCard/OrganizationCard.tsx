@@ -14,7 +14,6 @@ import {
   useCreateOrganizationJoinRequest,
 } from '@/apis/organization/joinRequest';
 import { useLeaveOrganization } from '@/apis/organization/leaveOrganization';
-import useAuthStore from '@/stores/useAuthStore';
 import BlueTickBadge from '@/components/ui/BlueTickBadge';
 import type { TrustTier } from '@/apis/organization/models/organization';
 import { useTranslation } from 'react-i18next';
@@ -50,8 +49,8 @@ export interface OrganizationCardProps {
   isMember?: boolean;
   /** Join request id when pending; used by cancel. */
   joinRequestId?: string;
-  /** When set and equal to the signed-in user id, a "Your group" tag is shown next to the name. */
-  ownerId?: string;
+  /** True when the signed-in user holds an owner role here; shows a "Your group" tag. */
+  isOwner?: boolean;
   /** Blue Tick level; only `VERIFIED` (and not suspended) shows the badge. */
   trustTier?: TrustTier;
   tickSuspended?: boolean;
@@ -72,7 +71,7 @@ export const OrganizationCard = memo(function OrganizationCard({
   requestStatus,
   isMember = false,
   joinRequestId,
-  ownerId,
+  isOwner = false,
   trustTier,
   tickSuspended,
   onSave,
@@ -81,8 +80,7 @@ export const OrganizationCard = memo(function OrganizationCard({
   const { t } = useTranslation();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const currentUserId = useAuthStore((s) => s.user?.id);
-  const showYourGroupTag = ownerId != null && currentUserId != null && ownerId === currentUserId;
+  const showYourGroupTag = isOwner;
 
   const logoInputRef = useRef<HTMLInputElement>(null);
   const backgroundInputRef = useRef<HTMLInputElement>(null);
