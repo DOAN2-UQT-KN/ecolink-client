@@ -3,7 +3,7 @@ import { memo, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useGetMyOrganizations } from '@/apis/organization/getMyOrganizations';
-import { IOrganization } from '@/apis/organization/models/organization';
+import type { IOrganization, OrgMemberRole } from '@/apis/organization/models/organization';
 import {
   Select,
   SelectContent,
@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { buildMyOrganizationsSelectParams } from '@/hooks/useCampaignCreatorOrganizations';
 
 export const ALL_ORGANIZATIONS_VALUE = '-1';
 
@@ -22,6 +23,11 @@ interface SelectListOrganizationProps {
   className?: string;
   /** When true, prepends an "All" option with value "-1" so the parent can detect "no filter". Default: false. */
   allOptions?: boolean;
+  /**
+   * Only list organizations where the viewer holds one of these roles. When omitted, keeps the
+   * legacy `is_owner: true` filter.
+   */
+  roles?: OrgMemberRole[];
 }
 
 const SelectListOrganization = memo(function SelectListOrganization({
@@ -29,19 +35,15 @@ const SelectListOrganization = memo(function SelectListOrganization({
   onChange,
   disabled = false,
   allOptions = false,
+  roles,
   ...props
 }: SelectListOrganizationProps) {
   const { t } = useTranslation();
 
+  const rolesKey = roles?.join(',') ?? '';
   const params = useMemo(
-    () => ({
-      page: 1,
-      limit: 100,
-      is_owner: true,
-      sort_by: 'created_at' as const,
-      sort_order: 'desc' as const,
-    }),
-    [],
+    () => buildMyOrganizationsSelectParams(rolesKey ? (rolesKey.split(',') as OrgMemberRole[]) : undefined),
+    [rolesKey],
   );
 
   const { data, isLoading } = useGetMyOrganizations(params, {

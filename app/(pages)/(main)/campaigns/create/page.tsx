@@ -13,12 +13,11 @@ import LeafletAddress from "./_components/LeafletAddress";
 import { CampaignProvider } from "./_context/CampaignContext";
 import { useCampaign } from "./_hooks/useCampaign";
 import { cn } from "@/libs/utils";
+import { useSearchParams } from "@/libs/router";
+import useOrgContextStore from "@/stores/useOrgContextStore";
+import { useCampaignCreatorOrganizations } from "@/hooks/useCampaignCreatorOrganizations";
 
-const CreateCampaignContent = memo(function CreateCampaignContent({
-  organizationId,
-}: {
-  organizationId?: string;
-}) {
+const CreateCampaignContent = memo(function CreateCampaignContent() {
   const { t } = useTranslation("common");
   const { form, onSubmit, isPending, isUploading } = useCampaign();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -55,7 +54,7 @@ const CreateCampaignContent = memo(function CreateCampaignContent({
         <Breadcrumbs breadcrumbs={breadcrumbs} />
       </div>
       <div className="flex flex-col gap-[20px] w-full h-full pt-5">
-        <GeneralInformation organizationId={organizationId} />
+        <GeneralInformation />
         <div className="flex flex-col md:flex-row gap-[20px] w-full h-full md:items-start">
           <div className="w-full md:w-1/2 h-full">
             <LeafletAddress />
@@ -82,14 +81,27 @@ const CreateCampaignContent = memo(function CreateCampaignContent({
   );
 });
 
-export default function CreateCampaignPage({
-  organizationId,
-}: {
-  organizationId?: string;
-}) {
+export default function CreateCampaignPage() {
+  const searchParams = useSearchParams();
+  const urlOrganizationId = searchParams.get("organizationId") ?? "";
+  const activeOrganizationId = useOrgContextStore((s) => s.activeOrganizationId);
+  const { organizations } = useCampaignCreatorOrganizations();
+
+  // ?organizationId= → active org context (only if the viewer may create campaigns there) → none.
+  const defaultOrganizationId = useMemo(() => {
+    if (urlOrganizationId) return urlOrganizationId;
+    if (
+      activeOrganizationId &&
+      organizations.some((org) => org.id === activeOrganizationId)
+    ) {
+      return activeOrganizationId;
+    }
+    return "";
+  }, [urlOrganizationId, activeOrganizationId, organizations]);
+
   return (
-    <CampaignProvider organizationId={organizationId}>
-      <CreateCampaignContent organizationId={organizationId} />
+    <CampaignProvider organizationId={defaultOrganizationId || undefined}>
+      <CreateCampaignContent />
     </CampaignProvider>
   );
 }

@@ -56,8 +56,15 @@ export interface ICampaign {
   /** Campaign owner; may be omitted in some responses; see also `created_by` */
   owner?: Pick<IUser, 'id' | 'name' | 'email' | 'avatar'> | null;
 
-  /** Creator or assigned campaign manager (from GET campaign when authenticated). */
+  /**
+   * Viewer may manage this campaign (edit, tasks, join requests, QR, mark done, managers):
+   * the creator, an assigned manager, or an LR/OWNER of the campaign's organization. Creator and
+   * managers only count while they are still active members of that organization.
+   */
   can_manage_campaign?: boolean;
+
+  /** Viewer may delete this campaign: the creator (while an active member) or an LR/OWNER. */
+  can_delete_campaign?: boolean;
 
   /** Populated by admin-facing endpoints */
   organization?: {

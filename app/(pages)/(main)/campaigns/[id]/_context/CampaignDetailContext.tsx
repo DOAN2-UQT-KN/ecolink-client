@@ -11,15 +11,15 @@ import {
 import type { ICampaign } from '@/apis/campaign/models/campaign';
 import { STATUS } from '@/constants/status';
 
-import useAuthStore from '@/stores/useAuthStore';
-
 import { parseCampaignDetailData } from '../_services/campaignDetailService';
 
 export interface CampaignDetailContextType {
   campaignId: string;
   campaign: ICampaign | undefined;
-  isCampaignOwner: boolean;
-  /** Campaign creator or assigned manager (from API `can_manage_campaign`). */
+  /**
+   * From API `can_manage_campaign`: creator, assigned manager, or LR/OWNER of the campaign's
+   * organization (creator/manager only while still an active member).
+   */
   canManageCampaign: boolean;
   isLoading: boolean;
   isError: boolean;
@@ -48,7 +48,6 @@ export function CampaignDetailProvider({
   children: ReactNode;
 }) {
   const queryClient = useQueryClient();
-  const currentUserId = useAuthStore((s) => s.user?.id);
   const { data, isLoading, isError, isFetching } = useGetCampaignById(campaignId, {
     enabled: Boolean(campaignId),
   });
@@ -66,12 +65,6 @@ export function CampaignDetailProvider({
   });
 
   const campaign = data?.data?.campaign;
-
-  const isCampaignOwner = useMemo(
-    () =>
-      currentUserId != null && campaign?.owner?.id != null && campaign.owner.id === currentUserId,
-    [currentUserId, campaign?.owner?.id],
-  );
 
   const canManageCampaign = Boolean(campaign?.can_manage_campaign);
 
@@ -131,7 +124,6 @@ export function CampaignDetailProvider({
     () => ({
       campaignId,
       campaign,
-      isCampaignOwner,
       canManageCampaign,
       isLoading,
       isError,
@@ -149,7 +141,6 @@ export function CampaignDetailProvider({
     [
       campaignId,
       campaign,
-      isCampaignOwner,
       canManageCampaign,
       isLoading,
       isError,

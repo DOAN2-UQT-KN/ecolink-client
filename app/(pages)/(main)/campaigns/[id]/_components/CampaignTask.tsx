@@ -10,7 +10,7 @@ import { TbCirclePlus } from 'react-icons/tb';
 
 export const CampaignTask = memo(function CampaignTask() {
   const { t } = useTranslation('common');
-  const { campaignId, isCampaignOwner } = useCampaignDetail();
+  const { campaignId, canManageCampaign } = useCampaignDetail();
 
   const { data: tasksData, refetch } = useGetCampaignTasks(
     { campaignId: campaignId! },
@@ -46,7 +46,7 @@ export const CampaignTask = memo(function CampaignTask() {
     <div className="rounded-xl border border-[rgba(136,122,71,0.4)] bg-white/60 p-5 sm:p-6 shadow-sm">
       <div className="flex items-center justify-between mb-4">
         {/* <h3 className="font-display-6 font-semibold text-button-accent">{t('Tasks')}</h3> */}
-        {isCampaignOwner && (
+        {canManageCampaign && (
           // <div className="flex w-full justify-end">
           <Button onClick={handleCreate} size="medium" variant="brown" className="!h-[45px]">
             <div className="flex items-center gap-2">
@@ -63,7 +63,7 @@ export const CampaignTask = memo(function CampaignTask() {
           <CampaignTaskCard
             key={task.id}
             task={task}
-            isOwner={isCampaignOwner}
+            isOwner={canManageCampaign}
             onEdit={handleEdit}
             onDelete={handleDelete}
           />

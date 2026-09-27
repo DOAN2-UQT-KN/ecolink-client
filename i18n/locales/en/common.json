@@ -1314,5 +1314,20 @@
   "Pick someone other than the current legal representative.": "Pick someone other than the current legal representative.",
   "Pick a replacement and fill in their full name": "Pick a replacement and fill in their full name",
   "How does this work?": "How does this work?",
-  "Pick who takes the role over.": "Pick who takes the role over."
+  "Pick who takes the role over.": "Pick who takes the role over.",
+  "You do not have permission to manage this campaign": "You do not have permission to manage this campaign",
+  "Only the campaign's managers can resolve this SOS": "Only the campaign's managers can resolve this SOS",
+  "Campaign managers must be active members of the campaign's organization": "Campaign managers must be active members of the campaign's organization",
+  "The campaign creator cannot be removed as a manager": "The campaign creator cannot be removed as a manager",
+  "Manager added successfully": "Manager added successfully",
+  "Manager removed successfully": "Manager removed successfully",
+  "Add manager": "Add manager",
+  "Add a campaign manager": "Add a campaign manager",
+  "Only active members of the organization can manage this campaign.": "Only active members of the organization can manage this campaign.",
+  "Pick an existing member of the organization.": "Pick an existing member of the organization.",
+  "Remove manager": "Remove manager",
+  "Remove {{name}} as manager?": "Remove {{name}} as manager?",
+  "They will no longer be able to manage this campaign.": "They will no longer be able to manage this campaign.",
+  "Creator": "Creator",
+  "Only managers and approved volunteers can see the volunteer list.": "Only managers and approved volunteers can see the volunteer list."
 }

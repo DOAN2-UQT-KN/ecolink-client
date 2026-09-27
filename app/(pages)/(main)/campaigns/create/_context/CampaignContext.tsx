@@ -29,6 +29,7 @@ export const CampaignProvider = memo(function CampaignProvider({
   organizationId,
 }: {
   children: ReactNode;
+  /** Pre-selected organization; applied once it resolves unless the user already picked one. */
   organizationId?: string;
 }) {
   const router = useRouter();
@@ -45,6 +46,7 @@ export const CampaignProvider = memo(function CampaignProvider({
 
   useEffect(() => {
     if (!organizationId) return;
+    if (form.getValues('organization_id')) return;
     form.setValue('organization_id', organizationId, { shouldDirty: false });
   }, [form, organizationId]);
 

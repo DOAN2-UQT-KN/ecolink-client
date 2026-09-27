@@ -7,10 +7,13 @@ import { Breadcrumbs, BreadcrumbItemProps } from "@/components/client/shared/Bre
 import { Button } from "@/components/client/shared/Button";
 import { CampaignMeProvider } from "./_context/CampaignMeContext";
 import DataTable from "./_components/DataTable";
+import { useCampaignCreatorOrganizations } from "@/hooks/useCampaignCreatorOrganizations";
 
 function MyCampaignsPage() {
   const { t } = useTranslation();
   const router = useRouter();
+  const { organizations: creatableOrganizations } = useCampaignCreatorOrganizations();
+  const canCreateCampaign = creatableOrganizations.length > 0;
 
   const breadcrumbs: BreadcrumbItemProps[] = React.useMemo(
     () => [
@@ -28,19 +31,21 @@ function MyCampaignsPage() {
     <CampaignMeProvider>
       <div>
         <Breadcrumbs breadcrumbs={breadcrumbs} />
-        <div className="w-full flex items-center justify-end">
-          <Button
-            variant="brown"
-            size="medium"
-            className="h-[45px]"
-            onClick={handleCreateCampaign}
-          >
-            <div className="flex items-center gap-2">
-              <HiOutlinePlusCircle className="h-5 w-5" />
-              {t("Add Campaign")}
-            </div>
-          </Button>
-        </div>
+        {canCreateCampaign ? (
+          <div className="w-full flex items-center justify-end">
+            <Button
+              variant="brown"
+              size="medium"
+              className="h-[45px]"
+              onClick={handleCreateCampaign}
+            >
+              <div className="flex items-center gap-2">
+                <HiOutlinePlusCircle className="h-5 w-5" />
+                {t("Add Campaign")}
+              </div>
+            </Button>
+          </div>
+        ) : null}
         <div className="flex flex-col gap-8 items-start pt-8 animate-in fade-in slide-in-from-top-4 duration-500">
           <DataTable />
         </div>

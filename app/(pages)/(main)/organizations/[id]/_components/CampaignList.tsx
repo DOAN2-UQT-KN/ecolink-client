@@ -1,6 +1,7 @@
 import React, { memo, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, Inbox } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { HiOutlinePlusCircle } from 'react-icons/hi';
 
 import { useGetCampaigns } from '@/apis/campaign/getCampaigns';
 import {
@@ -12,18 +13,22 @@ import {
 } from '@/components/ui/empty';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/libs/utils';
+import { useRouter } from '@/libs/router';
+import { Button } from '@/components/client/shared/Button';
 
 import { useOrganizationDetail } from '../_hooks/useOrganizationDetail';
 import SummaryCampaignCard from '@/components/client/shared/SummaryCampaignCard';
 
 export const CampaignList = memo(function CampaignList({ enabled }: { enabled: boolean }) {
   const { t } = useTranslation();
-  const { organizationId, organization } = useOrganizationDetail();
+  const router = useRouter();
+  const { organizationId, organization, permissions } = useOrganizationDetail();
   const [page, setPage] = useState(1);
+  const canCreateCampaign = Boolean(permissions?.can_create_campaign);
 
   const request = useMemo(
     () => ({
-      organization_id: organizationId,
+      organizationId,
       page,
       limit: 10,
     }),
@@ -56,6 +61,20 @@ export const CampaignList = memo(function CampaignList({ enabled }: { enabled: b
   return (
     <div className="w-full min-h-[220px] rounded-xl border border-[rgba(136,122,71,0.35)] bg-white/60 p-6 shadow-sm">
       {/* <div className="text-sm font-medium text-foreground">{t("Campaign")}</div> */}
+      {canCreateCampaign ? (
+        <div className="flex justify-end">
+          <Button
+            variant="brown"
+            size="medium"
+            iconLeft={<HiOutlinePlusCircle className="size-5" />}
+            onClick={() =>
+              router.push(`/campaigns/create?organizationId=${encodeURIComponent(organizationId)}`)
+            }
+          >
+            {t('Create campaign')}
+          </Button>
+        </div>
+      ) : null}
       {isLoading ? (
         <div className="mt-4 space-y-3">
           <Skeleton className="h-12 w-full rounded-lg" />

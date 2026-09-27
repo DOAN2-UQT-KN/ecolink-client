@@ -34,7 +34,7 @@ const CAMPAIGN_TAB_ITEMS_PUBLIC = ALL_CAMPAIGN_TAB_ITEMS.filter(
 
 export const CampaignTabs = memo(function CampaignTabs() {
   const { t } = useTranslation('common');
-  const { campaignId, isCampaignOwner } = useCampaignDetail();
+  const { campaignId, canManageCampaign } = useCampaignDetail();
   const [tab, setTab] = useState<CampaignTabValue>('detail');
 
   const joinRequestsCountQuery = useMemo((): IGetJoinCampaignRequest => {
@@ -49,14 +49,14 @@ export const CampaignTabs = memo(function CampaignTabs() {
   }, [campaignId]);
 
   const { data: joinRequestsData } = useGetJoinRequests(joinRequestsCountQuery, {
-    enabled: isCampaignOwner && Boolean(campaignId),
+    enabled: canManageCampaign && Boolean(campaignId),
   });
 
   const pendingApprovalCount = joinRequestsData?.data?.total ?? 0;
 
   const tabItems = useMemo(() => {
-    return isCampaignOwner ? [...ALL_CAMPAIGN_TAB_ITEMS] : [...CAMPAIGN_TAB_ITEMS_PUBLIC];
-  }, [isCampaignOwner]);
+    return canManageCampaign ? [...ALL_CAMPAIGN_TAB_ITEMS] : [...CAMPAIGN_TAB_ITEMS_PUBLIC];
+  }, [canManageCampaign]);
 
   return (
     <Tabs value={tab} onValueChange={(v) => setTab(v as CampaignTabValue)}>

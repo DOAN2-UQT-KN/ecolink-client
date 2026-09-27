@@ -27,6 +27,11 @@ const API_ERROR_MESSAGES: Record<string, string> = {
   OWNERS_NOT_ALL_CONFIRMED: "Not every owner has confirmed yet",
   ORG_MUST_HAVE_OWNER: "An organization must keep at least one owner",
   ORG_PERMISSION_DENIED: "Your role in this organization does not allow this action",
+  CAMPAIGN_PERMISSION_DENIED: "You do not have permission to manage this campaign",
+  SOS_PERMISSION_DENIED: "Only the campaign's managers can resolve this SOS",
+  CAMPAIGN_MANAGER_NOT_MEMBER:
+    "Campaign managers must be active members of the campaign's organization",
+  CANNOT_REMOVE_CAMPAIGN_CREATOR: "The campaign creator cannot be removed as a manager",
   ROLE_NOT_ASSIGNABLE: "You cannot assign this role",
   CANNOT_ACT_ON_MEMBER: "You cannot change or remove this member",
   MEMBER_NOT_FOUND: "This person is not a member of the organization",

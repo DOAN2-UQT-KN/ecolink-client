@@ -12,6 +12,7 @@ import { Slider } from '@/components/ui/slider';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { cn } from '@/libs/utils';
 import SelectListOrganization from '@/components/form/SelectListOrganization';
+import { CAMPAIGN_CREATOR_ROLES } from '@/hooks/useCampaignCreatorOrganizations';
 
 import { useCampaign } from '../_hooks/useCampaign';
 import { TITLE_MAX_LENGTH } from '../_services/campaign.service';
@@ -39,11 +40,7 @@ const parseApiDate = (date?: string): Date | undefined => {
   return Number.isNaN(parsed.getTime()) ? undefined : parsed;
 };
 
-const GeneralInformation = memo(function GeneralInformation({
-  organizationId,
-}: {
-  organizationId?: string;
-}) {
+const GeneralInformation = memo(function GeneralInformation() {
   const { t } = useTranslation();
   const { form } = useCampaign();
   const {
@@ -82,7 +79,7 @@ const GeneralInformation = memo(function GeneralInformation({
                 <SelectListOrganization
                   value={field.value}
                   onChange={field.onChange}
-                  disabled={Boolean(organizationId)}
+                  roles={CAMPAIGN_CREATOR_ROLES}
                 />
               )}
             />

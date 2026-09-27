@@ -1314,5 +1314,20 @@
   "Pick someone other than the current legal representative.": "Hãy chọn người khác với người đại diện pháp lý hiện tại.",
   "Pick a replacement and fill in their full name": "Hãy chọn người thay và điền họ tên",
   "How does this work?": "Cơ chế hoạt động thế nào?",
-  "Pick who takes the role over.": "Chọn người nhận lại vai này."
+  "Pick who takes the role over.": "Chọn người nhận lại vai này.",
+  "You do not have permission to manage this campaign": "Bạn không có quyền quản lý chiến dịch này",
+  "Only the campaign's managers can resolve this SOS": "Chỉ người quản lý chiến dịch mới có thể xử lý SOS này",
+  "Campaign managers must be active members of the campaign's organization": "Người quản lý chiến dịch phải là thành viên đang hoạt động của tổ chức sở hữu chiến dịch",
+  "The campaign creator cannot be removed as a manager": "Không thể gỡ người tạo chiến dịch khỏi vai trò quản lý",
+  "Manager added successfully": "Đã thêm người quản lý",
+  "Manager removed successfully": "Đã gỡ người quản lý",
+  "Add manager": "Thêm người quản lý",
+  "Add a campaign manager": "Thêm người quản lý chiến dịch",
+  "Only active members of the organization can manage this campaign.": "Chỉ thành viên đang hoạt động của tổ chức mới có thể quản lý chiến dịch này.",
+  "Pick an existing member of the organization.": "Hãy chọn một thành viên hiện có của tổ chức.",
+  "Remove manager": "Gỡ người quản lý",
+  "Remove {{name}} as manager?": "Gỡ {{name}} khỏi vai trò quản lý?",
+  "They will no longer be able to manage this campaign.": "Người này sẽ không còn quản lý được chiến dịch này.",
+  "Creator": "Người tạo",
+  "Only managers and approved volunteers can see the volunteer list.": "Chỉ người quản lý và tình nguyện viên đã được duyệt mới xem được danh sách tình nguyện viên."
 }

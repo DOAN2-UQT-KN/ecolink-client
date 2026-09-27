@@ -3,10 +3,12 @@ import { IPaginationResponse } from '@/types/PaginationResponse';
 
 export interface IGetCampaignVolunteerRequest {
   campaignId: string;
-  volunteerId?: number;
+  volunteerId?: string;
+  page?: number;
   limit?: number;
-  sort_by?: 'created_at' | 'updated_at';
-  sort_order?: 'asc' | 'desc';
+  /** Query params are not case-converted server-side, so they stay camelCase. */
+  sortBy?: 'createdAt' | 'updatedAt';
+  sortOrder?: 'asc' | 'desc';
 }
 
 export interface IGetCampaignVolunteerItem {
@@ -17,12 +19,9 @@ export interface IGetCampaignVolunteerItem {
   status: number;
   created_at: string;
   updated_at: string;
-  volunteer: Pick<IUser, 'id' | 'name' | 'email' | 'avatar'>;
+  volunteer: Pick<IUser, 'id' | 'name' | 'avatar'>;
   /** ISO datetime when volunteer checked in via QR; absent if not yet. */
   checked_in_at?: string | null;
 }
 
-export interface IGetCampaignVolunteerResponse extends IPaginationResponse<
-  IGetCampaignVolunteerItem[],
-  'volunteers'
-> {}
+export type IGetCampaignVolunteerResponse = IPaginationResponse<IGetCampaignVolunteerItem[], 'volunteers'>;

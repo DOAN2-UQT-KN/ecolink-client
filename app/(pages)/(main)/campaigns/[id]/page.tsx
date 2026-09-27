@@ -37,7 +37,7 @@ function CampaignDetailBody() {
     campaign,
     isLoading,
     isError,
-    isCampaignOwner,
+    canManageCampaign,
     handleJoinCampaign,
     isJoining,
     handleCancelJoinRequest,
@@ -50,11 +50,11 @@ function CampaignDetailBody() {
   const showJoinCta = !isApproved && !isPending;
 
   const canOwnerSubmitCompletion =
-    isCampaignOwner &&
+    canManageCampaign &&
     (campaign?.status === STATUS.ACTIVE || campaign?.status === STATUS.INREVIEW);
 
   const showAwaitingAdminCompletion =
-    isCampaignOwner && campaign?.status === STATUS.WAITING_CONFIRMED;
+    canManageCampaign && campaign?.status === STATUS.WAITING_CONFIRMED;
 
   const showCompletionVerification =
     campaign?.status === STATUS.WAITING_CONFIRMED ||
@@ -156,7 +156,7 @@ function CampaignDetailBody() {
 
       <div className="pt-5 space-y-6">
         {(showCompletionVerification ||
-          (!isApproved && !isCampaignOwner)) && (
+          (!isApproved && !canManageCampaign)) && (
           <div className="flex flex-wrap items-center justify-end gap-2">
             {showCompletionVerification ? (
               <CampaignCompletionVerifyButton
@@ -166,7 +166,7 @@ function CampaignDetailBody() {
                 myVerification={completionVerification?.my_verification ?? null}
               />
             ) : null}
-            {!isApproved && !isCampaignOwner ? (
+            {!isApproved && !canManageCampaign ? (
               isPending ? (
                 <Button
                   type="button"
@@ -205,9 +205,9 @@ function CampaignDetailBody() {
         ) : null}
 
         {canOwnerSubmitCompletion ||
-        (campaign?.can_manage_campaign && campaign?.status === STATUS.ACTIVE) ? (
+        (canManageCampaign && campaign?.status === STATUS.ACTIVE) ? (
           <div className="flex flex-wrap justify-end gap-2">
-            {campaign?.can_manage_campaign && campaign?.status === STATUS.ACTIVE ? (
+            {canManageCampaign && campaign?.status === STATUS.ACTIVE ? (
               <CampaignAttendanceQrButton />
             ) : null}
             {canOwnerSubmitCompletion ? (
