@@ -63,18 +63,44 @@ export interface IInvitationSummary {
   session_mismatch: boolean;
 }
 
-export interface IOwnerProposal {
+export type OwnerChangeType = "ADD_OWNER" | "REMOVE_OWNER";
+export type OwnerApprovalStatus = "PENDING" | "APPROVED" | "REJECTED" | "EXPIRED";
+/** Role kept by the owner stepping out; null = leaves the organization. */
+export type OwnerDemoteRole = "ADMIN" | "MEMBER" | null;
+
+export interface IOwnerChangePerson {
+  user_id: string;
+  name: string | null;
+  avatar: string | null;
+}
+
+export interface IOwnerChangeApproval extends IOwnerChangePerson {
+  status: OwnerApprovalStatus;
+  note: string | null;
+  decided_at: string | null;
+  expires_at: string;
+  /** The approver stopped being an owner; their answer no longer counts. */
+  void: boolean;
+}
+
+/** ADD_OWNER / REMOVE_OWNER, decided by the organization's owners. */
+export interface IOwnerChange {
   id: string;
   code: string;
+  type: OwnerChangeType;
   status: string;
   reason: string | null;
   review_note: string | null;
   reject_reason: string | null;
-  submitter_email: string;
+  proposer: IOwnerChangePerson & { email: string };
+  target: IOwnerChangePerson | null;
+  demote_to: OwnerDemoteRole;
   owners: IOwnerCandidate[];
   confirmed_count: number;
+  approvals: IOwnerChangeApproval[];
+  my_approval: OwnerApprovalStatus | null;
+  can_cancel: boolean;
   created_at: string;
-  submitted_at: string | null;
   reviewed_at: string | null;
 }
 
@@ -92,6 +118,6 @@ export type IInvitationSummaryResponse = IBaseResponse<{
   invitation: IInvitationSummary;
 }>;
 export type IAcceptInvitationResponse = IBaseResponse<{ organization_slug: string }>;
-export type IOwnerProposalResponse = IBaseResponse<{ proposal: IOwnerProposal }>;
-export type IOwnerProposalsResponse = IBaseResponse<{ proposals: IOwnerProposal[] }>;
+export type IOwnerChangeResponse = IBaseResponse<{ change: IOwnerChange }>;
+export type IOwnerChangesResponse = IBaseResponse<{ changes: IOwnerChange[] }>;
 export type IEmptyResponse = IBaseResponse<unknown>;

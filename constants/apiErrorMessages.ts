@@ -37,7 +37,14 @@ const API_ERROR_MESSAGES: Record<string, string> = {
   INVITATION_NOT_ACTIVE: "This invitation is no longer active",
   INVITEE_NOT_AVAILABLE: "This account cannot be invited",
   ALREADY_OWNER: "{{email}} is already an owner of this organization",
-  OWNER_PROPOSAL_ALREADY_OPEN: "This organization already has an open owner proposal",
+  OWNER_CHANGE_ALREADY_OPEN: "A matching owner change is already open",
+  OWNER_CHANGE_NOT_FOUND: "Owner change not found",
+  OWNER_CHANGE_NOT_OPEN: "This owner change is no longer open",
+  TARGET_NOT_OWNER: "This person is not an owner of the organization",
+  NOT_PENDING_APPROVER: "Your approval is not being asked for on this owner change",
+  CANNOT_TARGET_SELF: "Use step down or leave to change your own role",
+  LEGAL_REP_REPLACEMENT_REQUIRED:
+    "The legal representative must be replaced: pick someone to take the role over",
   ORGANIZATION_APPLICATION_NOT_EDITABLE: "This application can no longer be edited.",
   TRACKING_TOKEN_INVALID: "This tracking link is invalid or has expired.",
   ACCOUNT_PENDING_ACTIVATION:

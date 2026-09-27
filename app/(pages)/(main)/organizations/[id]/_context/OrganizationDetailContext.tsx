@@ -110,7 +110,7 @@ export function OrganizationDetailProvider({
   const showJoinButton =
     !showYourGroupTag && !isMember && joinListingShowsJoinButton(requestStatus);
   const showCancelButton = joinListingShowsCancelButton(requestStatus);
-  // Owners cannot leave yet (revoking or transferring ownership is phase 3).
+  // Owners leave or step down from their row in the owners card (blocked for the last one).
   const showLeaveButton = Boolean(myRole) && !isOwnerRole(myRole);
 
   const handleJoinClick = useCallback(() => {

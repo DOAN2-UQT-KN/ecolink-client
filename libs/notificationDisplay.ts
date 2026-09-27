@@ -70,6 +70,10 @@ export function getNotificationHref(
     case 'ORG_INVITATION_PENDING':
     case 'ORG_INVITATION_REJECTED':
     case 'ORG_MEMBERSHIP_CHANGED':
+    case 'ORG_OWNER_CHANGE_APPROVAL_REQUEST':
+    case 'ORG_OWNER_CHANGE_DECIDED':
+    case 'ORG_OWNER_REMOVAL_PROPOSED':
+    case 'ORG_OWNER_LEFT':
       if (campaignId) return `/campaigns/${campaignId}`;
       const organizationSlug =
         typeof p.organizationSlug === "string"

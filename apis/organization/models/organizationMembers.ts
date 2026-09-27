@@ -14,6 +14,8 @@ export interface IMember {
 export interface IGetMembersRequest {
   organization_id: string;
   search?: string;
+  /** Comma-separated `OrgMemberRole`s, e.g. "ADMIN,CAMPAIGN_MANAGER,MEMBER". */
+  roles?: string;
   user_id?: string;
   page?: number;
   limit?: number;

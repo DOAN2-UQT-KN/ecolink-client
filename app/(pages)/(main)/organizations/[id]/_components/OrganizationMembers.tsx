@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { format, parseISO } from "date-fns";
 import { Inbox } from "lucide-react";
 import { HiOutlineSortAscending, HiOutlineSortDescending } from "react-icons/hi";
-import { TbZoom } from "react-icons/tb";
+import { TbLogout, TbZoom } from "react-icons/tb";
 
 import { useGetMembersByOrg } from "@/apis/organization/organizationById";
 import type { IGetMembersRequest } from "@/apis/organization/models/organizationMembers";
@@ -25,26 +25,15 @@ import useAuthStore from "@/stores/useAuthStore";
 import { useOrganizationDetail } from "../_hooks/useOrganizationDetail";
 import Image from "@/components/ui/AppImage";
 import defaultAvatar from "@/public/default-avatar.png";
-import {
-  canActOnMember,
-  type OrgMemberRole,
-} from "@/apis/organization/models/organization";
-import {
-  useChangeMemberRole,
-  useRemoveMember,
-} from "@/apis/organization/memberManagement";
-import { Button } from "@/components/client/shared/Button";
-import { ORG_ROLE_LABEL, RoleBadge } from "@/components/ui/RoleBadge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { canActOnMember } from "@/apis/organization/models/organization";
+import { useRemoveMember } from "@/apis/organization/memberManagement";
+import { RoleBadge } from "@/components/ui/RoleBadge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ConfirmPopoverModal } from "@/modules/OrganizationCard/components/ConfirmPopoverModal";
 import { InviteMemberDialog } from "./InviteMemberDialog";
-import { OwnerProposals } from "./OwnerProposals";
+import { OwnerActions } from "./OwnerActions";
+import { OwnerChangeHistory, OwnerChangesPanel } from "./OwnerChanges";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const FILTER_PANEL_CLASS =
   "w-full space-y-2 p-6 border-1 border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5 h-fit";
@@ -173,7 +162,6 @@ export const OrganizationMembers = memo(function OrganizationMembers({
   const { organizationId, organization, permissions, myRole } =
     useOrganizationDetail();
   const currentUserId = useAuthStore((s) => s.user?.id);
-  const { mutate: changeRole, isPending: isChangingRole } = useChangeMemberRole();
   const { mutateAsync: removeMember, isPending: isRemoving } = useRemoveMember();
 
   const [searchValue, setSearchValue] = useState("");
@@ -217,6 +205,39 @@ export const OrganizationMembers = memo(function OrganizationMembers({
     return membersRaw.filter((m) => !ownerIds.has(m.user_id));
   }, [membersRaw, organization?.owners]);
 
+  const ownerList = (
+    <div className="flex flex-col gap-3">
+      {owners.length === 0 && (
+        <span className="text-sm text-foreground-tertiary">—</span>
+      )}
+      {owners.map((owner) => (
+        <div key={owner.id} className="flex min-w-0 flex-wrap items-center gap-2">
+          <Image
+            src={owner.avatar || defaultAvatar}
+            alt={owner.name}
+            width={40}
+            height={40}
+            className="rounded-full"
+          />
+          <span className="text-sm font-medium text-foreground break-all">
+            {owner.name || "—"}
+          </span>
+          <RoleBadge role={owner.role} />
+          {currentUserId != null && owner.id === currentUserId && (
+            <span className="text-xs font-medium text-button-accent bg-background-primary px-2 py-1 rounded-md">
+              {t("You")}
+            </span>
+          )}
+          <OwnerActions
+            owner={owner}
+            ownerCount={owners.length}
+            isSelf={currentUserId != null && owner.id === currentUserId}
+          />
+        </div>
+      ))}
+    </div>
+  );
+
   if (!organization) {
     return null;
   }
@@ -224,35 +245,39 @@ export const OrganizationMembers = memo(function OrganizationMembers({
   return (
     <div className="space-y-4">
       <div className="w-full rounded-xl border border-[rgba(136,122,71,0.35)] bg-white/70 p-4 sm:p-5 shadow-sm">
-        <p className="text-xs font-medium text-foreground-tertiary uppercase tracking-wide">
-          {owners.length > 1 ? t("Owners") : t("Owner")}
-        </p>
-        <div className="mt-3 flex flex-col gap-3">
-          {owners.length === 0 && (
-            <span className="text-sm text-foreground-tertiary">—</span>
-          )}
-          {owners.map((owner) => (
-            <div key={owner.id} className="flex min-w-0 flex-wrap items-center gap-2">
-              <Image
-                src={owner.avatar || defaultAvatar}
-                alt={owner.name}
-                width={40}
-                height={40}
-                className="rounded-full"
-              />
-              <span className="text-sm font-medium text-foreground break-all">
-                {owner.name || "—"}
-              </span>
-              <RoleBadge role={owner.role} />
-              {currentUserId != null && owner.id === currentUserId && (
-                <span className="text-xs font-medium text-button-accent bg-background-primary px-2 py-1 rounded-md">
-                  {t("You")}
-                </span>
-              )}
-            </div>
-          ))}
-        </div>
-        <OwnerProposals />
+        {permissions?.can_propose_owners ? (
+          // Owners see the owner changes too: open ones with the list, closed ones in History.
+          <Tabs defaultValue="owners">
+            <TabsList className="border border-[rgba(136,122,71,0.5)] rounded-[8px] bg-background-primary/10">
+              <TabsTrigger
+                value="owners"
+                className="rounded-[8px] px-4 py-2 h-full data-active:bg-background data-active:shadow-sm transition-all"
+              >
+                {owners.length > 1 ? t("Owners") : t("Owner")}
+              </TabsTrigger>
+              <TabsTrigger
+                value="history"
+                className="rounded-[8px] px-4 py-2 h-full data-active:bg-background data-active:shadow-sm transition-all"
+              >
+                {t("History")}
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="owners" className="mt-2">
+              {ownerList}
+              <OwnerChangesPanel />
+            </TabsContent>
+            <TabsContent value="history" className="mt-2">
+              <OwnerChangeHistory />
+            </TabsContent>
+          </Tabs>
+        ) : (
+          <>
+            <p className="text-xs font-medium text-foreground-tertiary uppercase tracking-wide">
+              {owners.length > 1 ? t("Owners") : t("Owner")}
+            </p>
+            <div className="mt-3">{ownerList}</div>
+          </>
+        )}
       </div>
 
       <div className="flex justify-end">
@@ -356,30 +381,6 @@ export const OrganizationMembers = memo(function OrganizationMembers({
                     targetRole: m.role,
                     targetUserId: m.user_id,
                   }) && (
-                    <>
-                      <Select
-                        value={m.role}
-                        disabled={isChangingRole}
-                        onValueChange={(role) =>
-                          role !== m.role &&
-                          changeRole({
-                            organizationId,
-                            userId: m.user_id,
-                            role: role as OrgMemberRole,
-                          })
-                        }
-                      >
-                        <SelectTrigger className="h-8 w-[170px] text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {(permissions?.assignable_roles ?? []).map((role) => (
-                            <SelectItem key={role} value={role}>
-                              <span className="text-sm">{t(ORG_ROLE_LABEL[role])}</span>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
                       <ConfirmPopoverModal
                         title={t("Remove this member?")}
                         description={t(
@@ -391,12 +392,24 @@ export const OrganizationMembers = memo(function OrganizationMembers({
                           await removeMember({ organizationId, userId: m.user_id });
                         }}
                         trigger={
-                          <Button variant="outlined-brown" size="small">
-                            {t("Remove")}
-                          </Button>
+                          <span className="inline-flex">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  aria-label={t("Remove from organization")}
+                                  className="flex size-9 cursor-pointer items-center justify-center rounded-md border border-[rgba(136,122,71,0.45)] text-button-accent transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-700"
+                                >
+                                  <TbLogout className="size-5" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{t("Remove from organization")}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </span>
                         }
                       />
-                    </>
                   )}
                 </div>
               </li>

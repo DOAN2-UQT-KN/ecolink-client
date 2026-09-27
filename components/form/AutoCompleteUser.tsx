@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { TbUserPlus, TbX } from "react-icons/tb";
 
 import { useSearchOrganizationUsers } from "@/apis/organization/memberManagement";
+import type { IUserSearchResult } from "@/apis/organization/models/membership";
 import Image from "@/components/ui/AppImage";
 import { Input } from "@/components/ui/input";
 import { RoleBadge } from "@/components/ui/RoleBadge";
@@ -18,21 +19,28 @@ export interface AutoCompleteUserValue {
   name?: string;
 }
 
+/** Default for "propose new owners": people who already own the organization can't be picked. */
+const isOwnerSuggestion = (user: IUserSearchResult) =>
+  user.role === "OWNER" || user.role === "LEGAL_REPRESENTATIVE";
+
 /**
- * Picks a person for an owner proposal: an existing account from the suggestions (full email
+ * Picks a person for an owner change: an existing account from the suggestions (full email
  * shown to owners), or — when nobody matches — the typed email of someone without an
- * account yet. That account is only created if the proposal is approved.
+ * account yet. That account is only created if the change is applied. `isUserDisabled`
+ * decides which suggestions are greyed out (owners by default).
  */
 export const AutoCompleteUser = memo(function AutoCompleteUser({
   organizationId,
   value,
   onChange,
   invalid,
+  isUserDisabled = isOwnerSuggestion,
 }: {
   organizationId: string;
   value: AutoCompleteUserValue | null;
   onChange: (value: AutoCompleteUserValue | null) => void;
   invalid?: boolean;
+  isUserDisabled?: (user: IUserSearchResult) => boolean;
 }) {
   const { t } = useTranslation();
   const [q, setQ] = useState("");
@@ -86,7 +94,7 @@ export const AutoCompleteUser = memo(function AutoCompleteUser({
             <li key={user.id}>
               <button
                 type="button"
-                disabled={user.role === "OWNER" || user.role === "LEGAL_REPRESENTATIVE"}
+                disabled={isUserDisabled(user)}
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => {
                   onChange({ userId: user.id, email: user.email, name: user.name });

@@ -35,3 +35,24 @@ export const OWNER_CANDIDATE_STATUS_TAG: Record<
   DECLINED: { type: STATUS.REJECTED, label: 'Declined' },
   EXPIRED: { type: STATUS.CANCELED, label: 'Expired' },
 };
+
+/** Where an owner change (add / remove) stands. */
+export const OWNER_CHANGE_STATUS_TAG: Record<string, { type: STATUS; label: string }> = {
+  AWAITING_OWNER_CONFIRMATION: { type: STATUS.WAITING_CONFIRMED, label: 'Waiting for answers' },
+  APPROVED: { type: STATUS.APPROVED, label: 'Applied' },
+  REJECTED: { type: STATUS.REJECTED, label: 'Rejected' },
+  WITHDRAWN: { type: STATUS.CANCELED, label: 'Cancelled' },
+};
+
+/** One co-owner's answer on an owner change. */
+export const OWNER_APPROVAL_STATUS_TAG: Record<string, { type: STATUS; label: string }> = {
+  PENDING: { type: STATUS.PENDING, label: 'Waiting for approval' },
+  APPROVED: { type: STATUS.APPROVED, label: 'Approved' },
+  REJECTED: { type: STATUS.REJECTED, label: 'Rejected' },
+  EXPIRED: { type: STATUS.CANCELED, label: 'Expired' },
+};
+
+export const OWNER_CHANGE_TYPE_LABEL: Record<string, string> = {
+  ADD_OWNER: 'Add owners',
+  REMOVE_OWNER: 'Remove owner',
+};

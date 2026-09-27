@@ -211,9 +211,13 @@ export default function OwnerConfirmPage() {
         <Outcome
           tone="success"
           title={t("You confirmed")}
-          message={t(
-            "Thank you. The application goes to review once every owner has confirmed; you will get an email when it is decided.",
-          )}
+          message={
+            confirmation.application_type === "ADD_OWNER"
+              ? t("Thank you. You become an owner once the other owners of the organization agree.")
+              : t(
+                  "Thank you. The application goes to review once every owner has confirmed; you will get an email when it is decided.",
+                )
+          }
         />
       )}
       {status === "DECLINED" && (

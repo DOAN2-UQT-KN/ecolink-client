@@ -92,3 +92,30 @@ export const useSearchOrganizationUsers = (
     ...options,
   });
 };
+
+export interface IStepDownRequest {
+  organizationId: string;
+  role: "ADMIN" | "MEMBER";
+}
+
+/** An owner keeps a lesser role, effective immediately (another owner must remain). */
+export const stepDown = async ({
+  organizationId,
+  role,
+}: IStepDownRequest): Promise<IEmptyResponse> => {
+  return await requestApi.patch<IEmptyResponse>(
+    `${url}/${organizationId}/members/me/role`,
+    { role },
+  );
+};
+
+export const useStepDown = (options?: UsePostOptions<IEmptyResponse, IStepDownRequest>) => {
+  const { t } = useTranslation();
+  return usePost({
+    mutationFn: stepDown,
+    queryKey: ["organization-members"],
+    messageSuccess: { content: t("You are no longer an owner"), type: MessageType.Toast },
+    messageError: { type: MessageType.Toast },
+    ...options,
+  });
+};
