@@ -10,10 +10,12 @@ import { Button as SharedButton } from "@/components/client/shared/Button";
 import BlueTickBadge from "@/components/ui/BlueTickBadge";
 import { cn } from "@/libs/utils";
 import { ConfirmPopoverModal } from "@/modules/OrganizationCard/components/ConfirmPopoverModal";
+import { RoleBadge } from "@/components/ui/RoleBadge";
 import { UpdateOrganizationPopover } from "@/app/(pages)/(main)/organizations/me/_components/UpdateOrganizationPopover";
 
 import { useOrganizationDetail } from "../_hooks/useOrganizationDetail";
 import { HiXMark } from "react-icons/hi2";
+import { Pill } from "@/components/ui/Pill";
 
 export const HeroSection = memo(function HeroSection() {
   const { t } = useTranslation();
@@ -24,6 +26,8 @@ export const HeroSection = memo(function HeroSection() {
     organization,
     organizationId,
     showYourGroupTag,
+    canEditOrg,
+    myRole,
     showJoinButton,
     showCancelButton,
     showLeaveButton,
@@ -158,13 +162,11 @@ export const HeroSection = memo(function HeroSection() {
                 />
               )}
               {showYourGroupTag ? (
-                <span
-                  className="shrink-0 inline-flex items-center rounded-sm border border-[rgba(136,122,71,0.45)] bg-button-accent/10 px-2.5 py-0.5 text-xs font-semibold text-button-accent"
-                  aria-label={t("Your group")}
-                >
+                <Pill tone="brand" aria-label={t("Your group")}>
                   {t("Your group")}
-                </span>
+                </Pill>
               ) : null}
+              <RoleBadge role={myRole} />
             </div>
 
             <div className="flex flex-wrap items-stretch gap-2 w-full max-w-md">
@@ -213,7 +215,8 @@ export const HeroSection = memo(function HeroSection() {
                 >
                   {t("Join")}
                 </SharedButton>
-              ) : showYourGroupTag ? (
+              ) : null}
+              {canEditOrg ? (
                 <SharedButton
                   variant="outlined-brown"
                   size="medium"

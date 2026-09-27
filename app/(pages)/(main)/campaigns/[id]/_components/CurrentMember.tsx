@@ -4,9 +4,9 @@ import { useTranslation } from 'react-i18next';
 
 import { useGetCampaignManager } from '@/apis/campaign/campaignManager';
 import { useGetCampaignVolunteer } from '@/apis/campaign/campaignVolunteer';
+import { Pill } from '@/components/ui/Pill';
 import { Skeleton } from '@/components/ui/skeleton';
 import defaultAvatar from '@/public/default-avatar.png';
-import { cn } from '@/libs/utils';
 
 import { useCampaignDetail } from '../_hooks/useCampaignDetail';
 
@@ -55,16 +55,9 @@ function AvatarList({
               {item.name || item.email}
             </span>
             {showAttendance ? (
-              <span
-                className={cn(
-                  'inline-flex w-fit rounded-full border px-2 py-0.5 text-[11px] font-medium',
-                  item.checkedIn
-                    ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
-                    : 'border-amber-200 bg-amber-50 text-amber-900',
-                )}
-              >
+              <Pill tone={item.checkedIn ? 'green' : 'amber'}>
                 {item.checkedIn ? t('Attendance checked in') : t('Attendance not checked in')}
-              </span>
+              </Pill>
             ) : null}
           </div>
         </li>

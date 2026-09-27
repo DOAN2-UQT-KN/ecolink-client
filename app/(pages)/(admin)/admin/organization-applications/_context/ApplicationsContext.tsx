@@ -65,12 +65,11 @@ const DEFAULT_FILTERS: ApplicationFilterValues = {
   lane: "all",
 };
 
-/** `open` is a UI shorthand for the three statuses that still need a decision. */
-const OPEN_STATUSES: ApplicationStatus[] = [
-  "SUBMITTED",
-  "UNDER_REVIEW",
-  "NEEDS_MORE_INFO",
-];
+/**
+ * `open` is a UI shorthand for the statuses that still need a decision. Drafts and
+ * applications still waiting on owner confirmations never reach this console at all.
+ */
+const OPEN_STATUSES: ApplicationStatus[] = ["PENDING_REVIEW", "NEEDS_REVISION"];
 
 export function ApplicationsProvider({
   children,

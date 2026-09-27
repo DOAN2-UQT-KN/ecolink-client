@@ -48,6 +48,7 @@ import { DataTable as SharedDataTable, type DataTableColumn } from "@/components
 - Số thứ tự: `(pagination.current - 1) * pagination.pageSize + index + 1`.
 - `pagination` là **1-based**: `{ page: pagination.current, pageSize, total, onPageChange, onPageSizeChange }`.
 - Cell chứa nút phải chặn lan: `<div onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()} role="presentation">`.
+- Cột status: `<StatusTag status={record.status} isDark={isDark} />` (render `Pill`) — không cần override `!mx-0 min-w-0`.
 
 ## `ConfirmPopover`
 
@@ -57,6 +58,10 @@ import { DataTable as SharedDataTable, type DataTableColumn } from "@/components
 ## Dark theme
 
 Truyền **prop `isDark: boolean`** rồi rẽ nhánh trong `cn()`. **Không dùng biến thể `dark:` của Tailwind** — theme là React context (`AdminLayoutContext`).
+
+## Guard & dữ liệu
+
+`AdminLayout` chỉ kiểm đăng nhập (check `roleId` bị comment out) — chặn quyền thật ở server. Trang admin campaigns/incidents dùng endpoint list công khai: kiểm server có trả đủ mọi status.
 
 ## Thêm trang admin mới
 

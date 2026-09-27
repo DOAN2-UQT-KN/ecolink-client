@@ -13,6 +13,9 @@ import useAuthStore from "@/stores/useAuthStore";
 import { useLeaveOrganization } from "@/apis/organization/leaveOrganization";
 import { STATUS } from "@/constants/status";
 import { useLocalizedDisplay } from "@/hooks/useLocalizedDisplay";
+import { RoleBadge } from "@/components/ui/RoleBadge";
+import useOrgContextStore from "@/stores/useOrgContextStore";
+import { Pill } from "@/components/ui/Pill";
 
 const defaultPagination = { current: 1, pageSize: 10 };
 
@@ -25,6 +28,7 @@ const DataTableComponent = memo(function DataTableComponent() {
   const context = useContext(OrganizationMeContext);
   const router = useRouter();
   const currentUserId = useAuthStore((s) => s.user?.id);
+  const activeOrganizationId = useOrgContextStore((s) => s.activeOrganizationId);
 
   const { mutate: leaveMutate, isPending: isLeavePending } =
     useLeaveOrganization();
@@ -73,6 +77,11 @@ const DataTableComponent = memo(function DataTableComponent() {
               <div className="flex min-w-0 items-center gap-1.5">
                 <span className="font-bold text-sm truncate">{record.name}</span>
                 <BlueTickBadge organization={record} className="shrink-0" />
+                {record.id === activeOrganizationId && (
+                  <Pill tone="brand">
+                    {t("Active context")}
+                  </Pill>
+                )}
               </div>
               <span className="text-xs text-muted-foreground truncate">
                 {record.contact_email || "—"}
@@ -81,6 +90,12 @@ const DataTableComponent = memo(function DataTableComponent() {
           </div>
         ),
         width: 280,
+      },
+      {
+        title: t("Your role"),
+        key: "my_role",
+        render: (_, record) => <RoleBadge role={record.my_role} />,
+        width: 150,
       },
       {
         title: t("Members"),
@@ -123,7 +138,7 @@ const DataTableComponent = memo(function DataTableComponent() {
         title: t("Status"),
         key: "status",
         render: (_, record) => {
-          return <StatusTag status={record.status} className="!mx-0 min-w-0 justify-center" label={record.status === STATUS.INACTIVE ? t("Banned") : undefined} />;
+          return <StatusTag status={record.status} label={record.status === STATUS.INACTIVE ? t("Banned") : undefined} />;
         },
         width: 140,
         align: "center",
@@ -162,6 +177,7 @@ const DataTableComponent = memo(function DataTableComponent() {
       t,
       i18n.language,
       currentUserId,
+      activeOrganizationId,
       isLeavePending,
       handleLeave,
       localizedDescription,

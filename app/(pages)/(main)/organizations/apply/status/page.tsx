@@ -4,23 +4,31 @@ import { TbPencil } from "react-icons/tb";
 import {
   useGetApplication,
 } from "@/apis/organization-application/getApplication";
-import { useWithdrawApplication } from "@/apis/organization-application/createApplication";
-import type { ApplicationStatus } from "@/apis/organization-application/models/application";
+import { useWithdrawApplication } from "@/apis/organization-application/saveApplication";
+import {
+  EDITABLE_APPLICATION_STATUSES,
+  type ApplicationStatus,
+} from "@/apis/organization-application/models/application";
+import { ConfirmPopoverModal } from "@/modules/OrganizationCard/components/ConfirmPopoverModal";
 import { BreadcrumbItemProps } from "@/components/client/shared/Breadcrumbs";
 import { Button } from "@/components/client/shared/Button";
 import { Link, useParams, useSearchParams } from "@/libs/router";
 import { queryClient } from "@/libs/queryClient";
 import ApplicationDetails from "../_components/ApplicationDetails";
+import OwnerConfirmations from "../_components/OwnerConfirmations";
+import { applicationEditPath } from "../_context/ApplicationContext";
 import {
   ApplicationDetailsSkeleton,
   ApplicationNotFound,
   ApplicationPageLayout,
 } from "../_components/ApplicationPageLayout";
 
+/** Anything before a decision can be withdrawn, drafts included. */
 const OPEN_STATUSES: ApplicationStatus[] = [
-  "SUBMITTED",
-  "UNDER_REVIEW",
-  "NEEDS_MORE_INFO",
+  "DRAFT",
+  "AWAITING_OWNER_CONFIRMATION",
+  "PENDING_REVIEW",
+  "NEEDS_REVISION",
 ];
 
 /**
@@ -87,35 +95,57 @@ export default function ApplicationStatusPage() {
   }
 
   const canWithdraw = OPEN_STATUSES.includes(application.status);
-  // Only a reviewer's request for more information reopens the form.
-  const canEdit = application.status === "NEEDS_MORE_INFO";
+  // A draft, or an application sent back by a reviewer or an owner, reopens the form.
+  const canEdit = EDITABLE_APPLICATION_STATUSES.includes(application.status);
+  const hasConfirmedOwners = application.owners.some(
+    (owner) => owner.status === "CONFIRMED" && !owner.is_submitter,
+  );
 
   return (
     <ApplicationPageLayout breadcrumbs={breadcrumbs}>
       <ApplicationDetails application={application} trackingToken={token} />
 
+      {application.status !== "DRAFT" && (
+        <OwnerConfirmations application={application} trackingToken={token} />
+      )}
+
       {(canWithdraw || canEdit) && (
         <div className="flex flex-col-reverse gap-3 border-t border-[rgba(136,122,71,0.3)] pt-6 sm:flex-row sm:justify-end">
           {canWithdraw && (
-            <Button
-              variant="outlined-brown"
-              onClick={() => withdraw({ id, token })}
-              isDisabled={isWithdrawing}
-              className="w-full sm:w-auto"
-            >
-              {t("Withdraw application")}
-            </Button>
+            <ConfirmPopoverModal
+              title={t("Withdraw this application?")}
+              description={
+                hasConfirmedOwners
+                  ? t(
+                      "Unanswered confirmation links stop working, and owners who already confirmed will be told by email.",
+                    )
+                  : t("Unanswered confirmation links stop working.")
+              }
+              confirmLabel={t("Withdraw application")}
+              cancelLabel={t("Keep it")}
+              confirmPending={isWithdrawing}
+              onConfirm={() => withdraw({ id, token })}
+              trigger={
+                <Button
+                  variant="outlined-brown"
+                  isDisabled={isWithdrawing}
+                  className="w-full sm:w-auto"
+                >
+                  {t("Withdraw application")}
+                </Button>
+              }
+            />
           )}
           {canEdit && (
-            <Link
-              href={`/organizations/apply/edit/${id}?token=${encodeURIComponent(token)}`}
-            >
+            <Link href={applicationEditPath(id, token)}>
               <Button
                 variant="brown"
                 iconLeft={<TbPencil className="size-5" />}
                 className="w-full sm:w-auto"
               >
-                {t("Edit application")}
+                {application.status === "DRAFT"
+                  ? t("Continue your application")
+                  : t("Edit application")}
               </Button>
             </Link>
           )}

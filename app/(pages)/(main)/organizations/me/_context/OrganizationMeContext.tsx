@@ -75,7 +75,7 @@ export const OrganizationMeProvider = ({
   const { data, isLoading, refetch } = useGetMyOrganizations({
     page: pagination.current,
     limit: pagination.pageSize,
-    is_owner: true,
+    // Every organization the user holds a role in, not only the ones they own.
     ...filters,
   });
 

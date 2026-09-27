@@ -24,7 +24,7 @@ Mỗi dạng có: `page.tsx` (default export) · `loading.tsx` (dead code) · `_
 
 `MainLayout` đã bọc `<main className="py-[92px] px-[20px] lg:px-[80px]">` — đừng thêm padding ngoài cùng trong `page.tsx`.
 
-⚠️ `organizations/` là ngoại lệ: `organizations/create` chỉ còn là redirect sang `organizations/apply` — wizard nhiều bước, công khai, không cần đăng nhập. Và `IOrganization.owner_id` là `string | null`.
+⚠️ `organizations/` là ngoại lệ: `organizations/create` chỉ còn là redirect sang `organizations/apply` — wizard công khai, không cần đăng nhập: `/organizations/apply` (OTP) → `/apply/edit/:id?token=` → `/apply/status/:id?token=` (không có route `submitted`). Và `IOrganization.owner_id` là `string | null`.
 
 ## Page header — chỉ breadcrumbs
 
@@ -86,13 +86,16 @@ Form value types, defaults, parser, `transformToApiData()` (camelCase form → s
 
 ```tsx
 const canManageCampaign = Boolean(campaign?.can_manage_campaign);
+const myRole = organization?.my_role ?? null;                  // + organization.permissions.*
 ```
+
+Dùng lại helper: `canActOnMember()`, `joinListingShows*()`, `isBlueTickVisible()`. Đăng nhập luôn qua `handleSignInSuccess`.
 
 Đọc user: `useAuthStore((s) => s.user?.id)` trong component; `useAuthStore.getState()` ngoài React.
 
 ## Component dùng chung
 
-`components/client/shared/` — kiểm tra trước khi viết mới: `Breadcrumbs`, `Button`, `CampaignTaskCard`, `CollapseCard`, `ContentCard`, `DataTable`, `StatsCard`, `SummaryCampaignCard`, `SingleImageFileField`, `Tag`, `PageSuspense`, `LanguageSwitcher`...
+`components/client/shared/` — kiểm tra trước khi viết mới: `Breadcrumbs`, `Button`, `CampaignTaskCard`, `CollapseCard`, `ContentCard`, `DataTable`, `StatsCard`, `SummaryCampaignCard`, `SingleImageFileField`, `PageSuspense`, `LanguageSwitcher`... Tag / nhãn dùng `@/components/ui/Pill`.
 
 Nút phía public dùng `components/client/shared/Button` (`variant="green"|"brown"|"outlined-green"|"outlined-brown"`), **không** dùng `components/ui/button`.
 

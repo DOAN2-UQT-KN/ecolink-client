@@ -51,18 +51,18 @@ export const StepEmail = memo(function StepEmail() {
       <div className={cn(stepCardClassName, "flex flex-1 flex-col gap-6")}>
         <div className="flex flex-col gap-1">
           <h2 className="font-display-5 font-semibold !text-button-accent">
-            {t("Verify your organization's contact email")}
+            {t("Verify your email")}
           </h2>
           <p className="text-sm text-foreground-tertiary">
             {t(
-              "This address becomes the organization's public contact and the login of its account, so make sure you can read mail there.",
+              "Use your own email: you will be one of the organization's owners. We save your draft and send a tracking link here, so you can come back later.",
             )}
           </p>
         </div>
 
         <Field>
           <FieldLabel className="text-foreground-tertiary font-display-3">
-            {t("Contact email")} <span className="text-destructive">*</span>
+            {t("Your email")} <span className="text-destructive">*</span>
           </FieldLabel>
           <div className="relative">
             <Input
@@ -70,7 +70,7 @@ export const StepEmail = memo(function StepEmail() {
               autoComplete="email"
               disabled={isOtpSent || isEmailLocked}
               {...register("email", {
-                required: t("Contact email is required"),
+                required: t("Email is required"),
                 pattern: {
                   value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
                   message: t("Invalid email address"),

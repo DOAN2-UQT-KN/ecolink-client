@@ -35,8 +35,19 @@ app/(pages)/(main)/campaigns/
 
 ⚠️ **`organizations/` là ngoại lệ**: tổ chức không còn được tạo trực tiếp. `organizations/create`
 chỉ còn là `<Navigate to="/organizations/apply" replace />` trong `src/routes/index.tsx`, và dạng
-trang thứ 5 `apply/` mới là nơi nộp hồ sơ — **wizard nhiều bước, công khai, không cần đăng nhập**
-(`apply/`, `apply/submitted/`, `apply/status/:id`). Tổ chức chỉ ra đời sau khi admin duyệt hồ sơ.
+trang thứ 5 `apply/` mới là nơi nộp hồ sơ — **wizard nhiều bước, công khai, không cần đăng nhập**.
+Tổ chức chỉ ra đời sau khi admin duyệt hồ sơ. Route thật (không có route `submitted`):
+
+| Route | Vai trò |
+|---|---|
+| `/organizations/apply` | Cổng OTP email (chỉ bước `email`); xác thực xong push sang edit |
+| `/organizations/apply/edit/:id?token=` | Trình soạn nháp, chỉ khi status ∈ `EDITABLE_APPLICATION_STATUSES` (DRAFT, NEEDS_REVISION); status khác → `replace` sang trang status |
+| `/organizations/apply/status/:id?token=` | Theo dõi hồ sơ, withdraw, gửi lại lời mời owner |
+
+Luồng editor (`apply/_context/ApplicationContext.tsx`): các step `profile → contact → owners → documents → review`.
+"Continue" validate `STEP_FIELDS` của bước rồi `saveDraft({ silent: true })` (không toast, không email);
+"Save draft" lưu có toast và gửi `notify_submitter: true`; ảnh chọn từ máy upload Cloudinary trước mỗi lần lưu;
+`submit()` = lưu im lặng + `POST /submit` → push trang status. Thêm bước mới thì thêm vào `APPLICATION_STEPS`, `EDITOR_STEPS` và `STEP_FIELDS`.
 
 Cùng bộ thư mục con:
 
@@ -201,9 +212,22 @@ const canManageCampaign = Boolean(campaign?.can_manage_campaign);
 ```
 
 ```tsx
-// app/(pages)/(main)/organizations/[id]/_context/OrganizationDetailContext.tsx
-// so sánh organization.owner_id === currentUserId, và is_member
+// organizations/[id]/_context/OrganizationDetailContext.tsx
+const myRole = organization?.my_role ?? null;            // vai trong tổ chức, do API trả
+// organizations/[id]/_components/OrganizationDetailTabs.tsx
+const canApproveMembers = Boolean(permissions?.can_approve_members);   // organization.permissions.*
+// can_edit_org, can_invite, can_approve_members, can_propose_owners, assignable_roles...
 ```
+
+Helper quyền có sẵn — **dùng lại, đừng tự viết điều kiện**:
+
+| Helper | File |
+|---|---|
+| `canActOnMember()` — gỡ/tác động thành viên (bản client của rule server) | `apis/organization/models/organization.ts` |
+| `joinListingShowsJoinButton()` / `joinListingShowsCancelButton()` | `modules/OrganizationCard/utils/joinRequestListingUi.ts` |
+| `isBlueTickVisible()` — hiện tick xanh | `components/ui/BlueTickBadge.tsx` |
+
+⚠️ `components/form/SelectListOrganization.tsx` luôn lọc `is_owner: true` — chỉ ra tổ chức mình sở hữu. Cần danh sách mọi vai thì gọi `useGetMyOrganizations` trực tiếp.
 
 ⚠️ `IOrganization.owner_id` là **`string | null`**: tổ chức vừa được duyệt tồn tại một lúc ngắn
 trước khi tài khoản ORG được tạo xong. Mọi so sánh chủ sở hữu phải chịu được `null`, đừng
@@ -218,13 +242,28 @@ const userId = useAuthStore((s) => s.user?.id);          // trong component
 useAuthStore.getState().accessToken;                      // ngoài React
 ```
 
+Đăng nhập: **luôn** đi qua `handleSignInSuccess(res, router, redirect)` (`app/(pages)/(auth)/sign-in/_services/auth.service.ts`) — nó set store, ghi cookie `refresh_token` và điều hướng. Luồng đăng nhập mới (OAuth, activate...) đừng tự gọi `setLoginSuccess`.
+
 Đăng xuất: gọi API `signOut()` → `clearAuthStorage()` (`utils/logout.ts`) → `setLogoutSuccess()` → `router.push('/authenticate')`.
+
+## Notification
+
+- Text hiển thị: `getLocalizedNotificationText(item, lang)` (`libs/notificationDisplay.ts`) — chọn `payload.locales.{en,vi}`, đừng tự đọc `title`/`body`.
+- Link: `getNotificationHref(kind, payload)`. Kind mới của tổ chức phải có `organization_slug` trong payload — fallback về `organizationId` sẽ ra `/organizations/<id>`, trang detail tra `by-slug` nên không tìm thấy.
+
+## Code cũ không được làm theo
+
+- **Toast trực tiếp bằng sonner** (trái quy ước, đừng chép): `CampaignAttendanceQrButton`, `CampaignAttendanceCheckInHandler`, `PopoverCreateUpdateTask`, `AiChatWidget`, `UploadBanner`, `FileUpload`, `LeafletAddress`, `Address`, `ApplicationAddress`, `ApplicationImageField`, `SingleImageFileField`, `UpdateOrganizationPopover`, các component `profile/*`... Code mới dùng `showMessage`.
+- **Mock / code chết**: `campaigns/[id]/_services/campaignDetailService.ts > MOCK_ARCHIVED_TASKS` (luôn 8), `modules/ReportDetailCard/_services/voting.service.ts` (vote ngẫu nhiên, vote thật ở `apis/vote`), `campaigns/me/_components/UpdateCampaignPopover.tsx` (không được render), `organizations/create/*` (route đã redirect; `UpdateOrganizationPopover` vẫn import `organization.service`, `upload.service` và `OrganizationImageUpload` từ đây — đừng xoá thư mục, cũng đừng thêm code mới vào).
+- **Địa chỉ / bản đồ**: Nominatim đã được bọc trong `LeafletAddress` (campaign), `Address` (incident), `ApplicationAddress`, `ProfileLocationSection`, `AddressPickerCard` (chat), cộng `modules/LeafletAddressMap.tsx`. Dùng lại, đừng viết thêm lời gọi Nominatim.
 
 ## Component dùng chung phía client
 
 `components/client/shared/` — dùng lại trước khi viết mới:
 
-`Breadcrumbs` · `Button` · `CampaignTaskCard` · `CollapseCard` · `ContentCard` · `DataTable` (bản antd-flavour, khác bản admin) · `Divider` · `DropdownMenu` · `FeatureCard` · `LanguageSwitcher` · `PageSuspense` · `PopoverCreateUpdateTask` · `SingleImageFileField` · `SpotlightCard` · `StatsCard` · `SummaryCampaignCard` · `Tag`
+`Breadcrumbs` · `Button` · `CampaignTaskCard` · `CollapseCard` · `ContentCard` · `DataTable` (bản antd-flavour, khác bản admin) · `Divider` · `DropdownMenu` · `FeatureCard` · `LanguageSwitcher` · `PageSuspense` · `PopoverCreateUpdateTask` · `SingleImageFileField` · `SpotlightCard` · `StatsCard` · `SummaryCampaignCard`
+
+Tag / nhãn ("Your group", "You", trạng thái...) dùng `@/components/ui/Pill` — `components/client/shared/Tag` đã bỏ. Xem skill `ecolink-ui-and-forms`.
 
 `components/client/shared/DataTable.tsx` có API kiểu antd: `columns: ColumnType<T>[]`, `dataSource`, `pagination: {current,pageSize,total} | false`, `onChange(pagination, filters)`, `filter`, `emptyText`. **Khác hoàn toàn** bản `components/admin/shared/DataTable` — đừng lẫn.
 
@@ -238,6 +277,6 @@ Nút phía public dùng `components/client/shared/Button` với `variant="green"
 - [ ] Đăng ký route trong `src/routes/index.tsx` dưới đúng nhánh layout.
 - [ ] Navigation import từ `@/libs/router` (`<Link href>`, `useRouter()`).
 - [ ] Dữ liệu qua hook trong `apis/` (skill `ecolink-api-layer`).
-- [ ] Ẩn/hiện chức năng theo cờ quyền do API trả về, không tự suy từ role.
+- [ ] Ẩn/hiện chức năng theo cờ quyền do API trả về (`my_role`, `permissions.*`, `can_manage_campaign`), không tự suy từ role.
 - [ ] Chuỗi mới thêm vào **cả** `en/common.json` và `vi/common.json`.
 - [ ] `npm run build` pass.

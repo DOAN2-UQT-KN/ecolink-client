@@ -12,13 +12,17 @@ import {
   useCreateOrganizationJoinRequest,
 } from "@/apis/organization/joinRequest";
 import { useLeaveOrganization } from "@/apis/organization/leaveOrganization";
-import type { IOrganization } from "@/apis/organization/models/organization";
+import {
+  isOwnerRole,
+  type IOrganization,
+  type IOrgPermissions,
+  type OrgMemberRole,
+} from "@/apis/organization/models/organization";
 import { invalidateOrganizationListsQuery } from "@/modules/OrganizationCard/services/invalidateOrganizationLists";
 import {
   joinListingShowsCancelButton,
   joinListingShowsJoinButton,
 } from "@/modules/OrganizationCard/utils/joinRequestListingUi";
-import useAuthStore from "@/stores/useAuthStore";
 
 export interface OrganizationDetailContextType {
   organizationSlug: string;
@@ -27,7 +31,13 @@ export interface OrganizationDetailContextType {
   isLoading: boolean;
   isError: boolean;
   isFetching: boolean;
+  /** The viewer's role here, or null when not a member. */
+  myRole: OrgMemberRole | null;
+  /** What the viewer may do here (from the server); undefined for anonymous visitors. */
+  permissions: IOrgPermissions | undefined;
+  /** The viewer holds any role here. */
   showYourGroupTag: boolean;
+  canEditOrg: boolean;
   showJoinButton: boolean;
   showCancelButton: boolean;
   showLeaveButton: boolean;
@@ -52,7 +62,6 @@ export function OrganizationDetailProvider({
   children: ReactNode;
 }) {
   const queryClient = useQueryClient();
-  const currentUserId = useAuthStore((s) => s.user?.id);
 
   const { data, isLoading, isError, isFetching } = useGetOrganizationBySlug(
     organizationSlug,
@@ -89,20 +98,20 @@ export function OrganizationDetailProvider({
       onSettled: invalidateAfterMutation,
     });
 
-  const ownerId = organization?.owner_id;
   const requestStatus = organization?.request_status;
   const joinRequestId = organization?.join_request_id;
   const isMember = Boolean(organization?.is_member);
 
-  const showYourGroupTag =
-    ownerId != null &&
-    currentUserId != null &&
-    ownerId === currentUserId;
+  const myRole = organization?.my_role ?? null;
+  const permissions = organization?.permissions;
+  const showYourGroupTag = Boolean(myRole);
+  const canEditOrg = Boolean(permissions?.can_edit_org);
 
   const showJoinButton =
     !showYourGroupTag && !isMember && joinListingShowsJoinButton(requestStatus);
   const showCancelButton = joinListingShowsCancelButton(requestStatus);
-  const showLeaveButton = !showYourGroupTag && isMember;
+  // Owners leave or step down from their row in the owners card (blocked for the last one).
+  const showLeaveButton = Boolean(myRole) && !isOwnerRole(myRole);
 
   const handleJoinClick = useCallback(() => {
     if (!organizationId) return;
@@ -127,7 +136,10 @@ export function OrganizationDetailProvider({
       isLoading,
       isError,
       isFetching,
+      myRole,
+      permissions,
       showYourGroupTag,
+      canEditOrg,
       showJoinButton,
       showCancelButton,
       showLeaveButton,
@@ -146,7 +158,10 @@ export function OrganizationDetailProvider({
       isLoading,
       isError,
       isFetching,
+      myRole,
+      permissions,
       showYourGroupTag,
+      canEditOrg,
       showJoinButton,
       showCancelButton,
       showLeaveButton,

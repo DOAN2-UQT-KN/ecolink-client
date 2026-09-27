@@ -3,9 +3,9 @@ import { FormProvider, useForm, UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
 import {
-  useCreateApplication,
-  useUpdateApplication,
-} from "@/apis/organization-application/createApplication";
+  useSaveApplication,
+  useSubmitApplication,
+} from "@/apis/organization-application/saveApplication";
 import {
   useRequestApplicationOtp,
   useResolveApplicationEmailLink,
@@ -13,10 +13,11 @@ import {
 } from "@/apis/organization-application/emailOtp";
 import { buildApplicantDocumentUrl } from "@/apis/organization-application/getApplication";
 import { uploadApplicationDocument } from "@/apis/organization-application/presignDocument";
-import type {
-  ApplicationDocType,
-  IApplication,
-  IApplicationDocument,
+import {
+  EDITABLE_APPLICATION_STATUSES,
+  type ApplicationDocType,
+  type IApplication,
+  type IApplicationDocument,
 } from "@/apis/organization-application/models/application";
 import { uploadToCloudinary } from "@/app/(pages)/(main)/incidents/create/_services/upload.service";
 import { queryClient } from "@/libs/queryClient";
@@ -24,33 +25,50 @@ import { useRouter, useSearchParams } from "@/libs/router";
 import showMessage, { MessageLevel, MessageType } from "@/utils/showMessage";
 import {
   ApplicationFormValues,
+  ApplicationImageSource,
   applicationToFormValues,
   DEFAULT_APPLICATION_FORM_VALUES,
-  toCreateApplicationRequest,
+  toSaveApplicationRequest,
 } from "../_services/application.service";
 
 export const APPLICATION_STEPS = [
   "email",
   "profile",
   "contact",
+  "owners",
   "documents",
   "review",
 ] as const;
 
 export type ApplicationStep = (typeof APPLICATION_STEPS)[number];
 
-/** Resubmitting after a reviewer asked for more: the mailbox is already proven. */
-const EDIT_STEPS: ApplicationStep[] = ["profile", "contact", "documents", "review"];
+/** The OTP gate alone: passing it opens the draft editor on its own URL. */
+const GATE_STEPS: ApplicationStep[] = ["email"];
+
+/** The draft editor: the mailbox is already proven by the time it opens. */
+const EDITOR_STEPS: ApplicationStep[] = [
+  "profile",
+  "contact",
+  "owners",
+  "documents",
+  "review",
+];
 
 export interface ApplicationEditTarget {
   application: IApplication;
-  /** Tracking-link token; authorises the upload and resubmit calls. */
+  /** Tracking-link token; authorises every save, upload and submit call. */
   trackingToken: string;
 }
 
+export const applicationStatusPath = (id: string, token: string) =>
+  `/organizations/apply/status/${id}?token=${encodeURIComponent(token)}`;
+
+export const applicationEditPath = (id: string, token: string) =>
+  `/organizations/apply/edit/${id}?token=${encodeURIComponent(token)}`;
+
 interface ApplicationContextType {
   form: UseFormReturn<ApplicationFormValues>;
-  /** Steps this flow walks through; edit mode skips the email gate. */
+  /** Steps this flow walks through: the email gate, or the draft editor. */
   steps: readonly ApplicationStep[];
   isEditMode: boolean;
   step: ApplicationStep;
@@ -59,8 +77,11 @@ interface ApplicationContextType {
   next: () => Promise<void>;
   back: () => void;
 
-  /** Set once the emailed code has been accepted; unlocks every later step. */
-  submissionToken: string;
+  /** The draft as last saved on the server (editor only). */
+  application: IApplication | null;
+  /** The address that passed the OTP; it must stay on the owner list. */
+  submitterEmail: string;
+
   /** When the latest code stops working; `null` until one has been sent. */
   otpExpiresAt: Date | null;
   /** True when the form was reopened from the mailed link, so the address is fixed. */
@@ -75,15 +96,22 @@ interface ApplicationContextType {
   uploadDocument: (file: File, docType: ApplicationDocType) => Promise<void>;
   removeDocument: (documentId: string) => void;
   isUploadingDocument: boolean;
-  /** Edit mode only: what was attached before, and which of it the applicant dropped. */
+  /** Documents already attached to the draft, and which of them the applicant dropped. */
   existingDocuments: IApplicationDocument[];
   removedDocumentIds: string[];
   toggleExistingDocument: (documentId: string) => void;
   /** Opens a document in a new tab: from memory if picked this session, else from the API. */
   openDocumentPreview: (documentId: string) => void;
-  /** False when there is nothing to open (e.g. a new application's server-side copy). */
   canPreviewDocument: (documentId: string) => boolean;
 
+  /**
+   * Saves everything typed so far. Resolves to false when nothing could be saved.
+   * `silent` is for the automatic save on "Continue": no toast and no email. The "Save
+   * draft" button calls it without options, which also asks the server to mail the
+   * submitter a "draft updated" notice (at most once an hour).
+   */
+  saveDraft: (options?: { silent?: boolean }) => Promise<boolean>;
+  isSaving: boolean;
   submit: () => Promise<void>;
   isSubmitting: boolean;
 }
@@ -96,10 +124,18 @@ export const ApplicationContext = createContext<
 const STEP_FIELDS: Record<ApplicationStep, (keyof ApplicationFormValues)[]> = {
   email: ["email"],
   profile: ["orgType", "name", "address", "latitude", "longitude", "logo"],
-  contact: ["channels", "legalRepFullName", "legalRepIdNumber", "legalRepPhone"],
+  contact: ["contactEmail", "channels"],
+  owners: [
+    "owners",
+    "legalRepPhone",
+    "legalRepIdNumber",
+  ],
   documents: [],
   review: ["consent"],
 };
+
+const isFileSource = (source: ApplicationImageSource): source is File | Blob =>
+  typeof source !== "string";
 
 export const ApplicationProvider = ({
   children,
@@ -109,14 +145,17 @@ export const ApplicationProvider = ({
   edit?: ApplicationEditTarget;
 }) => {
   const isEditMode = Boolean(edit);
-  const steps = isEditMode ? EDIT_STEPS : APPLICATION_STEPS;
+  const steps = isEditMode ? EDITOR_STEPS : GATE_STEPS;
   const { t } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
   const linkToken = searchParams.get("t") ?? "";
+  const trackingToken = edit?.trackingToken ?? "";
 
+  const [application, setApplication] = React.useState<IApplication | null>(
+    edit?.application ?? null,
+  );
   const [stepIndex, setStepIndex] = React.useState(0);
-  const [submissionToken, setSubmissionToken] = React.useState("");
   const [otpExpiresAt, setOtpExpiresAt] = React.useState<Date | null>(null);
   const [isEmailLocked, setIsEmailLocked] = React.useState(false);
   const [isUploadingDocument, setIsUploadingDocument] = React.useState(false);
@@ -125,8 +164,8 @@ export const ApplicationProvider = ({
     [],
   );
   const existingDocuments = useMemo(
-    () => edit?.application.documents ?? [],
-    [edit],
+    () => application?.documents ?? [],
+    [application],
   );
   // Object URLs for files picked in this session, so they preview without a server round trip.
   const [localDocumentUrls, setLocalDocumentUrls] = React.useState<
@@ -144,7 +183,7 @@ export const ApplicationProvider = ({
   );
 
   const form = useForm<ApplicationFormValues>({
-    // The provider mounts once the application is loaded, so the defaults can carry it.
+    // The provider mounts once the draft is loaded, so the defaults can carry it.
     defaultValues: edit
       ? applicationToFormValues(edit.application)
       : DEFAULT_APPLICATION_FORM_VALUES,
@@ -152,22 +191,23 @@ export const ApplicationProvider = ({
   });
 
   const step = steps[stepIndex];
+  const submitterEmail = application?.submitter_email ?? "";
 
   const { mutateAsync: requestOtpAsync, isPending: isRequestingOtp } =
     useRequestApplicationOtp();
   const { mutateAsync: verifyOtpAsync, isPending: isVerifyingOtp } =
     useVerifyApplicationOtp();
-  const { mutateAsync: createApplicationAsync, isPending: isCreating } =
-    useCreateApplication();
-  const { mutateAsync: updateApplicationAsync, isPending: isUpdating } =
-    useUpdateApplication({ messageSuccess: undefined });
+  const { mutateAsync: saveApplicationAsync, isPending: isSavingDraft } =
+    useSaveApplication();
+  const { mutateAsync: submitApplicationAsync, isPending: isSubmittingDraft } =
+    useSubmitApplication();
 
   // The mailed link only tells us which address the code went to; the code still has to be
   // typed. It saves an applicant who closed the tab from burning another code.
   const { data: emailLink, isError: isEmailLinkInvalid } =
     useResolveApplicationEmailLink(
       { token: linkToken },
-      { enabled: Boolean(linkToken), staleTime: 0, gcTime: 0 },
+      { enabled: !isEditMode && Boolean(linkToken), staleTime: 0, gcTime: 0 },
     );
 
   React.useEffect(() => {
@@ -205,6 +245,11 @@ export const ApplicationProvider = ({
     form.clearErrors("otp");
   }, [form]);
 
+  /**
+   * The code opens this mailbox's draft (or hands back the open application it already has).
+   * The editor lives on its own URL with the tracking token, so the draft survives a closed
+   * tab — collecting every owner's details can take days.
+   */
   const verifyOtp = useCallback(async () => {
     const valid = await form.trigger(["email", "otp"]);
     if (!valid) return;
@@ -212,9 +257,16 @@ export const ApplicationProvider = ({
       email: form.getValues("email").trim(),
       otp: form.getValues("otp").trim(),
     });
-    setSubmissionToken(response.data.submission_token);
-    setStepIndex((current) => current + 1);
-  }, [form, verifyOtpAsync]);
+    const { application_id, tracking_token, resumed } = response.data;
+    if (resumed) {
+      showMessage({
+        type: MessageType.Toast,
+        level: MessageLevel.Info,
+        title: t("You already have an open application; we reopened it"),
+      });
+    }
+    router.push(applicationEditPath(application_id, tracking_token));
+  }, [form, router, t, verifyOtpAsync]);
 
   const goToStep = useCallback(
     (target: ApplicationStep) => {
@@ -223,35 +275,111 @@ export const ApplicationProvider = ({
     [steps],
   );
 
+  /** Uploads picked images so the draft only ever stores URLs. */
+  const uploadPendingImages = useCallback(async (): Promise<{
+    logoUrl: string;
+    backgroundUrl: string;
+  } | null> => {
+    const { logo, background } = form.getValues();
+    if (!isFileSource(logo) && !isFileSource(background)) {
+      return { logoUrl: logo, backgroundUrl: background as string };
+    }
+    setIsUploadingImages(true);
+    try {
+      // Logo and banner are public branding, so they keep using the public Cloudinary
+      // preset. Only the legal paperwork goes to private storage.
+      const logoUrl = isFileSource(logo) ? await uploadToCloudinary(logo) : logo;
+      const backgroundUrl = isFileSource(background)
+        ? await uploadToCloudinary(background)
+        : background;
+      form.setValue("logo", logoUrl);
+      form.setValue("background", backgroundUrl);
+      return { logoUrl, backgroundUrl };
+    } catch (error) {
+      console.error("Image upload failed:", error);
+      showMessage({
+        type: MessageType.Toast,
+        level: MessageLevel.Error,
+        title: t("Could not upload the images, please try again"),
+      });
+      return null;
+    } finally {
+      setIsUploadingImages(false);
+    }
+  }, [form, t]);
+
+  const saveDraft = useCallback(
+    async (options?: { silent?: boolean }): Promise<boolean> => {
+      if (!application) return false;
+      const images = await uploadPendingImages();
+      if (!images) return false;
+
+      try {
+        const response = await saveApplicationAsync({
+          ...toSaveApplicationRequest({
+            id: application.id,
+            token: trackingToken,
+            values: form.getValues(),
+            logoUrl: images.logoUrl,
+            backgroundUrl: images.backgroundUrl,
+            removeDocumentIds: removedDocumentIds,
+          }),
+          // Only a manual save mails the submitter; "Continue" saves silently.
+          notify_submitter: !options?.silent,
+        });
+        // Uploaded and dropped documents are now part of the saved draft.
+        setApplication(response.data.application);
+        setRemovedDocumentIds([]);
+        form.setValue("documents", []);
+        form.setValue("legalRepIdNumber", "");
+        if (!options?.silent) {
+          showMessage({
+            type: MessageType.Toast,
+            level: MessageLevel.Success,
+            title: response.data.notified
+              ? t("Draft saved. We emailed you a link to it")
+              : t("Draft saved"),
+          });
+        }
+        return true;
+      } catch {
+        // `usePost` already showed the error.
+        return false;
+      }
+    },
+    [
+      application,
+      form,
+      removedDocumentIds,
+      saveApplicationAsync,
+      t,
+      trackingToken,
+      uploadPendingImages,
+    ],
+  );
+
   const next = useCallback(async () => {
     const fields = STEP_FIELDS[steps[stepIndex]];
     const valid = fields.length ? await form.trigger(fields) : true;
     if (!valid) return;
+    if (isEditMode) {
+      const saved = await saveDraft({ silent: true });
+      if (!saved) return;
+    }
     setStepIndex((current) => Math.min(current + 1, steps.length - 1));
-  }, [form, stepIndex, steps]);
+  }, [form, isEditMode, saveDraft, stepIndex, steps]);
 
   const back = useCallback(() => {
-    // In the new-application flow step 0 is the OTP gate; once past it there is no going back
-    // to re-verify, because the submission token is bound to the address already confirmed.
-    const firstStep = isEditMode ? 0 : 1;
-    setStepIndex((current) => Math.max(current - 1, firstStep));
-  }, [isEditMode]);
+    setStepIndex((current) => Math.max(current - 1, 0));
+  }, []);
 
   const uploadDocument = useCallback(
     async (file: File, docType: ApplicationDocType) => {
-      const credential = edit
-        ? {
-            applicationId: edit.application.id,
-            trackingToken: edit.trackingToken,
-          }
-        : submissionToken
-          ? { submissionToken }
-          : null;
-      if (!credential) return;
+      if (!application) return;
       setIsUploadingDocument(true);
       try {
         const documentId = await uploadApplicationDocument(
-          credential,
+          { applicationId: application.id, trackingToken },
           file,
           docType,
         );
@@ -279,7 +407,7 @@ export const ApplicationProvider = ({
         setIsUploadingDocument(false);
       }
     },
-    [edit, form, submissionToken, t],
+    [application, form, t, trackingToken],
   );
 
   const toggleExistingDocument = useCallback((documentId: string) => {
@@ -293,16 +421,16 @@ export const ApplicationProvider = ({
   const documentPreviewUrl = useCallback(
     (documentId: string): string | null => {
       if (localDocumentUrls[documentId]) return localDocumentUrls[documentId];
-      if (edit) {
+      if (application) {
         return buildApplicantDocumentUrl(
-          edit.application.id,
+          application.id,
           documentId,
-          edit.trackingToken,
+          trackingToken,
         );
       }
       return null;
     },
-    [edit, localDocumentUrls],
+    [application, localDocumentUrls, trackingToken],
   );
 
   const canPreviewDocument = useCallback(
@@ -335,81 +463,44 @@ export const ApplicationProvider = ({
     [form],
   );
 
+  /**
+   * Saves, then submits. From here every other owner gets a confirmation email; the
+   * application only reaches the review queue once all of them have confirmed.
+   */
   const submit = useCallback(async () => {
+    if (!application) return;
     const valid = await form.trigger();
-    if (!valid || (!edit && !submissionToken)) return;
+    if (!valid) return;
 
-    const values = form.getValues();
-    setIsUploadingImages(true);
-    let logoUrl = "";
-    let backgroundUrl = "";
+    const saved = await saveDraft({ silent: true });
+    if (!saved) return;
+
     try {
-      // Logo and banner are public branding, so they keep using the public Cloudinary
-      // preset. Only the legal paperwork goes to private storage.
-      logoUrl = await uploadToCloudinary(values.logo || "");
-      backgroundUrl = values.background
-        ? await uploadToCloudinary(values.background)
-        : "";
-    } catch (error) {
-      console.error("Image upload failed:", error);
-      showMessage({
-        type: MessageType.Toast,
-        level: MessageLevel.Error,
-        title: t("Could not upload the images, please try again"),
+      await submitApplicationAsync({
+        id: application.id,
+        token: trackingToken,
+        consent: form.getValues("consent"),
       });
-      return;
-    } finally {
-      setIsUploadingImages(false);
-    }
-
-    const request = toCreateApplicationRequest({ values, logoUrl, backgroundUrl });
-
-    if (edit) {
-      const { id } = edit.application;
-      const token = edit.trackingToken;
-      // `consent` belongs to the first submission only; the resubmit endpoint ignores it.
-      const { consent: _consent, ...changes } = request;
-      await updateApplicationAsync({
-        id,
-        token,
-        ...changes,
-        remove_document_ids: removedDocumentIds,
-      });
-      showMessage({
-        type: MessageType.Toast,
-        level: MessageLevel.Success,
-        title: t("Application resubmitted"),
-      });
-      await queryClient.invalidateQueries({
-        queryKey: ["organization-application", id, token],
-      });
-      router.push(
-        `/organizations/apply/status/${id}?token=${encodeURIComponent(token)}`,
-      );
+    } catch {
       return;
     }
-
-    const response = await createApplicationAsync({
-      submissionToken,
-      data: request,
+    await queryClient.invalidateQueries({
+      queryKey: ["organization-application", application.id, trackingToken],
     });
+    router.push(applicationStatusPath(application.id, trackingToken));
+  }, [application, form, router, saveDraft, submitApplicationAsync, trackingToken]);
 
-    // The tracking link also goes out by email; this takes the applicant straight there.
-    const params = new URLSearchParams({
-      id: response.data.application.id,
-      token: response.data.tracking_token,
-    });
-    router.push(`/organizations/apply/submitted?${params.toString()}`);
-  }, [
-    createApplicationAsync,
-    edit,
-    form,
-    removedDocumentIds,
-    router,
-    submissionToken,
-    t,
-    updateApplicationAsync,
-  ]);
+  // A draft that is no longer editable (submitted in another tab, say) belongs on the
+  // tracking page.
+  React.useEffect(() => {
+    if (
+      application &&
+      !EDITABLE_APPLICATION_STATUSES.includes(application.status)
+    ) {
+      router.replace(applicationStatusPath(application.id, trackingToken));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [application?.status]);
 
   const contextValue = useMemo(
     () => ({
@@ -421,7 +512,8 @@ export const ApplicationProvider = ({
       goToStep,
       next,
       back,
-      submissionToken,
+      application,
+      submitterEmail,
       otpExpiresAt,
       isEmailLocked,
       changeEmail,
@@ -437,21 +529,24 @@ export const ApplicationProvider = ({
       toggleExistingDocument,
       openDocumentPreview,
       canPreviewDocument,
+      saveDraft,
+      isSaving: isSavingDraft || isUploadingImages,
       submit,
-      isSubmitting: isCreating || isUpdating || isUploadingImages,
+      isSubmitting: isSubmittingDraft || isSavingDraft || isUploadingImages,
     }),
     [
+      application,
       back,
       canPreviewDocument,
       changeEmail,
       existingDocuments,
       form,
       goToStep,
-      isCreating,
       isEditMode,
       isEmailLocked,
-      isUpdating,
       isRequestingOtp,
+      isSavingDraft,
+      isSubmittingDraft,
       isUploadingDocument,
       isUploadingImages,
       isVerifyingOtp,
@@ -461,11 +556,12 @@ export const ApplicationProvider = ({
       removeDocument,
       removedDocumentIds,
       requestOtp,
+      saveDraft,
       step,
       stepIndex,
       steps,
-      submissionToken,
       submit,
+      submitterEmail,
       toggleExistingDocument,
       uploadDocument,
       verifyOtp,

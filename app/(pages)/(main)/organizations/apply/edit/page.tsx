@@ -4,8 +4,14 @@ import { useGetApplication } from "@/apis/organization-application/getApplicatio
 import { BreadcrumbItemProps } from "@/components/client/shared/Breadcrumbs";
 import { Button } from "@/components/client/shared/Button";
 import { Link, useParams, useSearchParams } from "@/libs/router";
-import { ApplicationProvider } from "../_context/ApplicationContext";
+import { EDITABLE_APPLICATION_STATUSES } from "@/apis/organization-application/models/application";
+import {
+  ApplicationProvider,
+  applicationEditPath,
+  applicationStatusPath,
+} from "../_context/ApplicationContext";
 import ApplyForm from "../_components/ApplyForm";
+import DraftLinkNotice from "../_components/DraftLinkNotice";
 import {
   ApplicationDetailsSkeleton,
   ApplicationNotFound,
@@ -13,8 +19,9 @@ import {
 } from "../_components/ApplicationPageLayout";
 
 /**
- * Resubmission after a reviewer asked for more information. Reached from the tracking page;
- * the tracking token in the URL is the only credential, exactly as there.
+ * The draft editor. Opened right after the email code (the draft and its tracking link exist
+ * from then on) and again whenever the application comes back for changes. The tracking
+ * token in the URL is the only credential.
  */
 export default function ApplicationEditPage() {
   const { t } = useTranslation();
@@ -23,7 +30,7 @@ export default function ApplicationEditPage() {
 
   const id = String(params.id ?? "");
   const token = searchParams.get("token") ?? "";
-  const statusPath = `/organizations/apply/status/${id}?token=${encodeURIComponent(token)}`;
+  const statusPath = applicationStatusPath(id, token);
 
   const { data, isLoading, isError } = useGetApplication({ id, token });
   const application = data?.data?.application;
@@ -34,7 +41,7 @@ export default function ApplicationEditPage() {
     { label: "Application status", path: statusPath, type: "link" },
     {
       label: "Edit application",
-      path: `/organizations/apply/edit/${id}?token=${encodeURIComponent(token)}`,
+      path: applicationEditPath(id, token),
       type: "page",
     },
   ];
@@ -57,7 +64,7 @@ export default function ApplicationEditPage() {
     );
   }
 
-  if (application.status !== "NEEDS_MORE_INFO") {
+  if (!EDITABLE_APPLICATION_STATUSES.includes(application.status)) {
     return (
       <ApplicationPageLayout breadcrumbs={breadcrumbs}>
         <div className="flex flex-col items-start gap-4">
@@ -80,15 +87,17 @@ export default function ApplicationEditPage() {
       <ApplyForm
         breadcrumbs={breadcrumbs}
         notice={
-          application.review_note ? (
+          application.status === "NEEDS_REVISION" && application.review_note ? (
             <section className="rounded-md border border-orange-200 bg-orange-50 p-4">
               <h3 className="font-semibold text-orange-900">
-                {t("A reviewer asked for more information")}
+                {t("Changes needed")}
               </h3>
               <p className="mt-1 whitespace-pre-line text-sm text-orange-900">
                 {application.review_note}
               </p>
             </section>
+          ) : application.status === "DRAFT" ? (
+            <DraftLinkNotice email={application.submitter_email} />
           ) : null
         }
       />

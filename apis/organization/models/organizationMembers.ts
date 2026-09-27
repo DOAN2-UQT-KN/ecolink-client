@@ -1,9 +1,12 @@
 import { IUser } from "@/apis/auth/models/user";
+import type { OrgMemberRole } from "./organization";
 import { IBaseResponse } from "@/types/BaseResponse";
 
 export interface IMember {
   organization_id: string;
   user_id: string;
+  /** `OrgMemberRole` — owners are members too. */
+  role?: OrgMemberRole;
   user: Pick<IUser, "id" | "name" | "email" | "avatar">;
   created_at: string;
 }
@@ -11,6 +14,8 @@ export interface IMember {
 export interface IGetMembersRequest {
   organization_id: string;
   search?: string;
+  /** Comma-separated `OrgMemberRole`s, e.g. "ADMIN,CAMPAIGN_MANAGER,MEMBER". */
+  roles?: string;
   user_id?: string;
   page?: number;
   limit?: number;

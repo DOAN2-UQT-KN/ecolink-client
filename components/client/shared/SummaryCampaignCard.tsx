@@ -1,7 +1,6 @@
 import type { ICampaign } from '@/apis/campaign/models/campaign';
 import { Progress } from '@/components/ui/progress';
 import Image from '@/components/ui/AppImage';
-import { Tag } from './Tag';
 import { HiMapPin } from 'react-icons/hi2';
 import { TooltipTruncatedText } from '@/components/ui/TooltipTruncatedText';
 import { RichTextContent } from '@/components/ui/RichTextContent';
@@ -14,6 +13,7 @@ import { useRouter } from '@/libs/router';
 import useAuthStore from '@/stores/useAuthStore';
 import ChangeStatus from '@/components/ui/ChangeStatus';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Pill } from '@/components/ui/Pill';
 
 interface SummaryCampaignCardProps {
   campaign: ICampaign;
@@ -57,16 +57,13 @@ export default function SummaryCampaignCard({
       <div className="space-y-5 flex flex-col w-[calc(100%-300px)]">
         <div className="flex flex-row items-center justify-between w-full">
           <div className="flex flex-row items-center gap-2">
-            <Tag variant="green">
+            <Pill tone="green">
               {campaign.green_points ?? ''} {t('Reward (GP & SP)')}
-            </Tag>
+            </Pill>
             {showYourCampaignTag ? (
-              <span
-                className="shrink-0 inline-flex items-center rounded-sm border border-[rgba(136,122,71,0.45)] bg-button-accent/10 px-2.5 py-0.5 text-xs font-semibold text-button-accent"
-                aria-label={t('Your campaign')}
-              >
+              <Pill tone="brand" aria-label={t('Your campaign')}>
                 {t('Your Campaign')}
-              </span>
+              </Pill>
             ) : null}
           </div>
           <span className="font-display-1 text-muted-foreground">

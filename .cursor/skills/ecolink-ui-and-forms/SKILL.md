@@ -12,11 +12,12 @@ description: Quy ước UI, styling và form của ecolink-client — chọn gi�
 | Dialog / modal | **luôn** shadcn `@/components/ui/dialog` — không dùng antd Modal |
 | Input, Select, Tabs, Table, Checkbox, Tooltip... | `@/components/ui/*` |
 | Xem ảnh có zoom / preview group | `antd` `Image`, `Image.PreviewGroup` |
-| Tag nhỏ có sẵn màu | `antd` `Tag` (thường kèm override `!m-0`) hoặc `@/components/ui/StatusTag` / `TagStatus` |
+| **Mọi** tag / nhãn / badge trạng thái | `@/components/ui/Pill` (hoặc `StatusTag` / `TagStatus` nếu là `STATUS` số) — **không** dùng antd `Tag`, **không** tự viết `<span className="rounded-full …">`. Xem mục "Tag / Pill" |
+| Số đếm (unread, số join request) | shadcn `@/components/ui/badge` |
 | Bảng admin | `@/components/admin/shared/DataTable` |
 | Bảng client | `@/components/client/shared/DataTable` (API kiểu antd) |
 
-antd v6 **chỉ dùng hạn chế** ở những chỗ trên. Mặc định là shadcn/Radix.
+antd v6 **chỉ dùng hạn chế**: `Image` / `Image.PreviewGroup` và `Dropdown` (menu của `ChangeStatus` / `ChangePriority`). Mặc định là shadcn/Radix.
 
 ## `components/ui/` có 2 quy ước tên file
 
@@ -24,11 +25,56 @@ antd v6 **chỉ dùng hạn chế** ở những chỗ trên. Mặc định là s
 components/ui/
   button.tsx  dialog.tsx  field.tsx  input.tsx  select.tsx  table.tsx  tabs.tsx
   badge.tsx  skeleton.tsx  sonner.tsx  tooltip.tsx  empty.tsx  calendar.tsx ...   ← shadcn primitive, lowercase
-  AppImage.tsx  StatusTag.tsx  TagStatus.tsx  GiftCard.tsx  ClickSpark.tsx
+  AppImage.tsx  Pill.tsx  StatusTag.tsx  TagStatus.tsx  ChangeStatus.tsx  ChangePriority.tsx
+  RoleBadge.tsx  BlueTickBadge.tsx  FileTypeIcon.tsx  GiftCard.tsx  ClickSpark.tsx
   RichTextEditor.tsx  RichTextContent.tsx  TooltipTruncatedText.tsx ...            ← primitive riêng của app, PascalCase
 ```
 
 Primitive shadcn viết theo khuôn: file lowercase, `function Component({ className, ...props })`, gắn `data-slot="x"`, biến thể bằng `cva`, gộp class bằng `cn()`, hỗ trợ `asChild` qua `Slot.Root` của `radix-ui`.
+
+### Component có sẵn — dùng lại trước khi viết mới
+
+| Component | Dùng cho |
+|---|---|
+| `components/ui/FileTypeIcon` | Icon theo `mimeType` (fallback đuôi `fileName`): PDF đỏ, ảnh xanh |
+| `components/ui/RoleBadge` | Pill vai trong tổ chức (`role`), nhãn ở `ORG_ROLE_LABEL` |
+| `components/ui/BlueTickBadge` | Tick xanh tổ chức; điều kiện hiện ở `isBlueTickVisible()` |
+| `components/form/AutoCompleteUser` | Chọn user có sẵn hoặc nhập email mới; `isUserDisabled` quyết định ai bị chặn (mặc định chặn owner) |
+| `components/form/SelectListUser` | Chọn user có sẵn trong tổ chức (`organizationId`, `value`, `onChange`) |
+
+## Tag / Pill — một style duy nhất
+
+Mọi tag (trạng thái, vai trò, độ ưu tiên, nhãn ngữ cảnh, loại trên bản đồ, tag trang chủ) render bằng `Pill`:
+
+```tsx
+import { Pill } from "@/components/ui/Pill";
+import { StatusTag } from "@/components/ui/StatusTag";
+import { GIFT_REDEEM_TONE } from "@/constants/statusTone";
+
+<Pill tone="green">{t("Checked in")}</Pill>
+<StatusTag status={record.status} isDark={isDark} />          // STATUS số → màu + nhãn tự động
+<Pill tone={GIFT_REDEEM_TONE[s]}>{t(s)}</Pill>
+```
+
+Base class (đã nằm trong `Pill`, đừng chép ra ngoài): `inline-flex w-fit shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-full border px-2 py-0.5 text-xs font-medium`. Mỗi tone là `bg-{c}-50 text-{c}-700 border-{c}-200` (bảng đầy đủ ở `PILL_TONE`).
+
+| Tone | Nghĩa |
+|---|---|
+| `green` | xong / đồng ý / hoạt động |
+| `red` | từ chối / huỷ / lỗi / bị khoá |
+| `orange` | chờ xác nhận / chờ duyệt |
+| `amber` | cần xử lý / bị trả lại |
+| `cyan` | mới |
+| `blue` | đang làm / đã xác minh |
+| `neutral` | nháp / đang chờ |
+| `brand` | nhãn ngữ cảnh ("Your group", "You", "Active context") |
+| `lime` | obsolete |
+
+- **Bảng màu nằm ở `constants/statusTone.ts`**: `STATUS_TONE` + `STATUS_LABEL` (và helper `statusTone()`), `PRIORITY_TONE` / `PRIORITY_LABEL`, `GIFT_REDEEM_TONE`. Trạng thái mới → thêm vào đây, **không map màu tại chỗ**.
+- Enum dạng chuỗi (hồ sơ, owner, lời mời...) map sang `STATUS` qua bảng kiểu `constants/organizationApplicationStatus.ts` (`{ type: STATUS, label }` rồi đưa vào `TagStatus`), hoặc map thẳng sang `PillTone`.
+- Dark mode: truyền `isDark` (Pill tự đổi sang bản dark), không dùng `dark:`.
+- `ChangeStatus` / `ChangePriority` dùng `Pill` làm trigger của antd `Dropdown`; chấm màu trong menu lấy từ `PILL_DOT[tone]`, không viết mã hex.
+- Ngoại lệ: **số đếm** (chấm unread, số join request trên tab, số event) dùng shadcn `Badge`, không phải Pill.
 
 ## ⚠️ `cn()` nằm ở `@/libs/utils`
 
@@ -121,7 +167,7 @@ Quy ước cố định:
 ### Select — luôn shadcn `Select` + `Controller`
 
 Cả repo **không còn `<select>` HTML thô**, và antd `Select` **không dùng ở đâu cả** (antd chỉ
-dùng cho `Image`, `Tag`, `Dropdown`).
+dùng cho `Image`, `Dropdown`).
 
 ```tsx
 import { Controller } from "react-hook-form";
@@ -173,6 +219,24 @@ fetch data**, controlled (`{ value, onChange, disabled, className, placeholder }
 RHF-aware — bind bằng `Controller` ở call site. Không có wrapper "select bound to RHF" dùng
 chung; mọi chỗ đều `Controller` tại chỗ.
 
+### Rule validation dùng chung — bám đúng giá trị có sẵn
+
+| Trường | Rule đang dùng | Ví dụ file |
+|---|---|---|
+| Email (auth) | `/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/` | `SignInForm.tsx` |
+| Email (hồ sơ tổ chức) | `/^[^\s@]+@[^\s@]+\.[^\s@]+$/` | `apply/_components/StepEmail.tsx`, `StepContact.tsx` |
+| Mật khẩu | ≥ 6 (sign-in, sign-up, reset); **≥ 8 ở activate-account** (identity-service từ chối ngắn hơn) | `activate-account/page.tsx` |
+| Phone | `/^[0-9+\s\-().]{7,20}$/` | `ProfileGeneralInformation.tsx`, `SOSForm.tsx` |
+| URL | `/^https?:\/\/.+/i` | `StepContact.tsx` |
+| OTP | `/^\d{6}$/` | `StepEmail.tsx` |
+| Lý do ban / reject (admin) | bắt buộc (trim), `maxLength={5000}` | `BanUserConfirm.tsx`, `ApproveOrganizationConfirm.tsx` |
+
+Độ dài trường phải **khớp giới hạn server** (campaign title ≤ 200, `detail_address` ≤ 255, pickup location ≤ 1000...). Thêm trường mới thì kiểm validator server trước, đừng đoán.
+
+Giới hạn upload đang có: incident ≤ 10 ảnh `image/*` (`FileUpload`); evidence task ≤ 20 file, video ≤ 100 MB (`PopoverCreateUpdateTask`); tài liệu tổ chức PDF/JPG/PNG, ≤ 10 MB/file, tổng ≤ 5 (`StepDocuments`); chat ≤ 8 ảnh/tin (`AiChatWidget`); avatar `image/jpeg,png,webp`.
+
+⚠️ Chỗ **còn thiếu validation** ở client (đừng coi là mẫu): tạo campaign không bắt buộc và không so sánh start/end date; hồ sơ tổ chức không bắt buộc ≥ 1 tài liệu; upload Cloudinary lỗi ở tạo incident chỉ `console.error`. Form mới phải tự validate đủ.
+
 ### Form nhiều component
 
 `useForm` khởi tạo trong `_context/`, bọc `<FormProvider {...form}>`, field con dùng `useFormContext()`. Xem skill `ecolink-client-pages`.
@@ -216,7 +280,7 @@ const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || "example"
 export const uploadToCloudinary = async (file: File | Blob | string): Promise<string> => { ... }
 ```
 
-Đây là **ngoại lệ duy nhất được gọi `axios` trực tiếp** (vì đích không phải API của mình). Mọi lời gọi khác phải qua `requestApi`.
+Đây là một trong số ít **ngoại lệ được gọi `axios` trực tiếp** (vì đích không phải API của mình; danh sách đủ ở skill `ecolink-api-layer`). Mọi lời gọi khác phải qua `requestApi`.
 
 ### Chọn component upload nào
 
@@ -244,6 +308,8 @@ Hiển thị ảnh: `@/components/ui/AppImage` (shim của `next/image`, hỗ tr
 2. **Key chính là câu tiếng Anh**: `t("Gift created successfully")`.
 3. Thêm key mới phải sửa **cả hai** file — `i18n/locales/en/common.json` và `i18n/locales/vi/common.json`. Hai file phải luôn cùng bộ key.
 4. Namespace duy nhất: `common`. Ngôn ngữ: `en` (mặc định) và `vi`.
+
+Runtime: i18next khởi tạo cứng `lng: "en"`; `I18nProvider` đọc `localStorage["i18nextLng"]` **sau mount** rồi mới `changeLanguage` (nên render đầu luôn là tiếng Anh). Axios tự gửi `Accept-Language` và `lang` cho GET theo ngôn ngữ UI.
 
 ```tsx
 const { t } = useTranslation();
@@ -296,7 +362,7 @@ export function isSeverityLevel(value: number): value is SeverityLevelValue { re
 export function getSeverityLevel(value?: number | string | null) { ... }
 ```
 
-Có sẵn: `constants/severity.ts`, `difficulty.ts`, `priority.ts`, `gamification.ts`, `notificationPreferences.ts`.
+Có sẵn: `constants/severity.ts`, `difficulty.ts`, `priority.ts`, `gamification.ts`, `notificationPreferences.ts`, `organizationApplicationStatus.ts` (status hồ sơ / owner → `STATUS` + label), `apiErrorMessages.ts` (mã lỗi → câu i18n), `roles.ts` (`ADMIN_ROLE_ID`), `statusTone.ts` (màu tag). Kiểm tra ở đây trước khi khai báo hằng mới.
 
 ## Toast
 
@@ -305,7 +371,7 @@ import showMessage, { MessageLevel, MessageType } from "@/utils/showMessage";
 showMessage({ type: MessageType.Toast, level: MessageLevel.Success, title: t("Saved") });
 ```
 
-**Không gọi `toast()` của sonner trực tiếp.**
+**Không gọi `toast()` của sonner trực tiếp.** Lưu ý `showMessage` **bỏ qua tham số `duration`** (và chỉ có `MessageType.Toast`) — truyền vào cũng không có tác dụng.
 
 ## Icon
 
@@ -319,6 +385,7 @@ showMessage({ type: MessageType.Toast, level: MessageLevel.Success, title: t("Sa
 - [ ] Nút public dùng `components/client/shared/Button`; nút admin/dialog dùng `components/ui/button`.
 - [ ] Màu mới khai báo thành token trong `app/globals.css`, không hardcode hex.
 - [ ] Dark mode admin dùng prop `isDark` + `cn()`, không dùng `dark:`.
+- [ ] Tag / nhãn dùng `Pill` / `StatusTag`, màu lấy từ `constants/statusTone.ts` — không antd `Tag`, không pill tự viết.
 - [ ] Form validate inline bằng RHF, message bọc `t()`, không thêm zod/yup.
 - [ ] Mọi chuỗi mới có mặt trong **cả** `en/common.json` và `vi/common.json`.
 - [ ] Không reformat toàn file — Prettier không được enforce, bám style file đang sửa.

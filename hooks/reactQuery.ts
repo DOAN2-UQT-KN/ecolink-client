@@ -8,6 +8,7 @@ import showMessage, { MessageLevel, MessageType } from "@/utils/showMessage";
 import { IBaseResponse } from "@/types/BaseResponse";
 import { useTranslation } from "react-i18next";
 import useAuthStore from "@/stores/useAuthStore";
+import { apiErrorMessage } from "@/constants/apiErrorMessages";
 
 export const CACHE_TIME_DEFAULT = 5 * 60 * 1000;
 
@@ -19,6 +20,9 @@ interface Message {
 export interface QueryError {
   message: string;
   success: boolean;
+  /** Machine-readable code from the server envelope (e.g. `OWNER_QUOTA_EXCEEDED`). */
+  code?: string;
+  status?: number;
   errors?: {
     message: string;
     extensions?: {
@@ -85,6 +89,7 @@ export const usePost = <TResponse extends IBaseResponse, TRequest>(
 
       if (!silentError) {
         const rawTitle =
+          apiErrorMessage(error, t) ??
           error.errors?.[0]?.message ??
           messageError?.content ??
           error.message;

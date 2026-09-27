@@ -5,7 +5,7 @@ import type {
   OrganizationChannelType,
   OrgType,
 } from "@/apis/organization-application/models/application";
-import type { ICreateApplicationRequest } from "@/apis/organization-application/models/createApplication";
+import type { ISaveApplicationRequest } from "@/apis/organization-application/models/saveApplication";
 
 /** Empty string, a pasted URL, or a file picked in the form (uploaded on submit). */
 export type ApplicationImageSource = string | File | Blob;
@@ -14,6 +14,16 @@ export interface ApplicationChannelValue {
   type: OrganizationChannelType;
   url: string;
 }
+
+/** One row of the owner list. Every owner confirms by email before the application is reviewed. */
+export interface ApplicationOwnerValue {
+  email: string;
+  fullName: string;
+  isLegalRep: boolean;
+}
+
+/** Owners per application; matches the 5-document limit on the server. */
+export const MAX_OWNERS = 5;
 
 /** A document already uploaded to private storage; only its id travels with the submission. */
 export interface ApplicationDocumentValue {
@@ -25,11 +35,11 @@ export interface ApplicationDocumentValue {
 }
 
 export interface ApplicationFormValues {
-  /* Step 1 — mailbox ownership */
+  /* Email gate — mailbox ownership (new application only) */
   email: string;
   otp: string;
 
-  /* Step 2 — public profile */
+  /* Public profile */
   orgType: OrgType | "";
   name: string;
   description: string;
@@ -41,19 +51,23 @@ export interface ApplicationFormValues {
   logo: ApplicationImageSource;
   background: ApplicationImageSource;
 
-  /* Step 3 — channels + legal representative (review-only) */
+  /* Contact */
+  /** The organization's public contact address; defaults to the submitter's email. */
+  contactEmail: string;
   channels: ApplicationChannelValue[];
-  legalRepFullName: string;
+
+  /* Owners, and KYC of the one marked legal representative (review-only) */
+  owners: ApplicationOwnerValue[];
   legalRepIdType: LegalRepIdType;
+  /** Left empty, the number saved earlier is kept. */
   legalRepIdNumber: string;
   legalRepPhone: string;
   legalRepPosition: string;
-  legalRepEmail: string;
 
-  /* Step 4 — paperwork */
+  /* Paperwork uploaded in this session (already attached ones live on the application) */
   documents: ApplicationDocumentValue[];
 
-  /* Step 5 — review */
+  /* Review */
   consent: boolean;
 }
 
@@ -68,13 +82,13 @@ export const DEFAULT_APPLICATION_FORM_VALUES: ApplicationFormValues = {
   longitude: undefined,
   logo: "",
   background: "",
+  contactEmail: "",
   channels: [{ type: "FACEBOOK_PAGE", url: "" }],
-  legalRepFullName: "",
+  owners: [],
   legalRepIdType: "CCCD",
   legalRepIdNumber: "",
   legalRepPhone: "",
   legalRepPosition: "",
-  legalRepEmail: "",
   documents: [],
   consent: false,
 };
@@ -120,46 +134,90 @@ export const DOC_TYPE_OPTIONS: { value: ApplicationDocType; label: string }[] = 
  */
 export const DOMAIN_HINT_ORG_TYPES: OrgType[] = ["SCHOOL", "GOV"];
 
-/**
- * Prefills the form for a resubmission. The legal representative is review-only and never
- * returned by the public API, so it starts empty — left empty, the server keeps the old one.
- */
+/** Prefills the editor from the saved draft. The ID number is never returned, only its last 4. */
 export function applicationToFormValues(
   application: IApplication,
 ): ApplicationFormValues {
   const { profile } = application;
+  const rep = application.legal_representative;
   return {
     ...DEFAULT_APPLICATION_FORM_VALUES,
-    email: profile.contact_email,
-    orgType: application.org_type,
-    name: profile.name,
+    email: application.submitter_email,
+    orgType: application.org_type ?? "",
+    name: profile.name ?? "",
     description: profile.description ?? "",
     address: profile.address ?? "",
     latitude: profile.latitude ?? undefined,
     longitude: profile.longitude ?? undefined,
-    logo: profile.logo_url,
+    logo: profile.logo_url ?? "",
     background: profile.background_url ?? "",
+    contactEmail: profile.contact_email ?? application.submitter_email,
     channels: application.channels.length
       ? application.channels.map((channel) => ({
           type: channel.type,
           url: channel.url,
         }))
       : DEFAULT_APPLICATION_FORM_VALUES.channels,
+    owners: application.owners.map((owner) => ({
+      email: owner.email,
+      fullName: owner.full_name,
+      isLegalRep: owner.is_legal_rep,
+    })),
+    legalRepIdType: rep.id_type ?? "CCCD",
+    legalRepIdNumber: "",
+    legalRepPhone: rep.phone ?? "",
+    legalRepPosition: rep.position ?? "",
+    consent: Boolean(application.consented_at),
   };
 }
 
-export function toCreateApplicationRequest(params: {
+const normalizeEmail = (email: string) => email.trim().toLowerCase();
+
+/**
+ * Same rules the server applies on submit, checked in the form first so the applicant sees
+ * them next to the list instead of as a toast. Returns an i18n key, or true.
+ */
+export function validateOwnerList(
+  owners: ApplicationOwnerValue[],
+  submitterEmail: string,
+): true | string {
+  if (owners.length === 0) return "Add at least one owner";
+  if (owners.length > MAX_OWNERS) return "An application can have at most 5 owners";
+  const emails = owners.map((owner) => normalizeEmail(owner.email));
+  if (new Set(emails).size !== emails.length) {
+    return "The same email is listed twice in the owner list";
+  }
+  if (!emails.includes(normalizeEmail(submitterEmail))) {
+    return "You must be one of the owners";
+  }
+  if (owners.filter((owner) => owner.isLegalRep).length !== 1) {
+    return "Choose exactly one owner as the legal representative";
+  }
+  return true;
+}
+
+/**
+ * Everything the draft save sends. Images must already be URLs: the caller uploads picked
+ * files to Cloudinary first.
+ */
+export function toSaveApplicationRequest(params: {
+  id: string;
+  token: string;
   values: ApplicationFormValues;
   logoUrl: string;
   backgroundUrl: string;
-}): ICreateApplicationRequest {
+  removeDocumentIds: string[];
+}): ISaveApplicationRequest {
   const { values, logoUrl, backgroundUrl } = params;
+  const idNumber = values.legalRepIdNumber.trim();
 
   return {
-    org_type: values.orgType as OrgType,
+    id: params.id,
+    token: params.token,
+    org_type: values.orgType,
     profile: {
       name: values.name.trim(),
-      contact_email: values.email.trim().toLowerCase(),
+      contact_email: normalizeEmail(values.contactEmail) || null,
       logo_url: logoUrl.trim(),
       background_url: backgroundUrl.trim() || null,
       address: values.address.trim() || null,
@@ -174,17 +232,22 @@ export function toCreateApplicationRequest(params: {
         url: channel.url.trim(),
         is_primary: index === 0,
       })),
-    legal_representative: values.legalRepFullName.trim()
-      ? {
-          full_name: values.legalRepFullName.trim(),
-          id_type: values.legalRepIdType,
-          id_number: values.legalRepIdNumber.trim(),
-          phone: values.legalRepPhone.trim(),
-          position: values.legalRepPosition.trim() || null,
-          email: values.legalRepEmail.trim().toLowerCase() || null,
-        }
-      : undefined,
+    owners: values.owners
+      .filter((owner) => owner.email.trim())
+      .map((owner) => ({
+        email: normalizeEmail(owner.email),
+        full_name: owner.fullName.trim(),
+        is_legal_rep: owner.isLegalRep,
+      })),
+    legal_representative: {
+      id_type: values.legalRepIdType,
+      // Left empty, the server keeps the number saved earlier.
+      ...(idNumber ? { id_number: idNumber } : {}),
+      phone: values.legalRepPhone.trim() || null,
+      position: values.legalRepPosition.trim() || null,
+    },
     document_ids: values.documents.map((document) => document.documentId),
+    remove_document_ids: params.removeDocumentIds,
     consent: values.consent,
   };
 }

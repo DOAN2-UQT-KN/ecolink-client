@@ -8,19 +8,20 @@ export type StatusTagProps = {
   emptyLabel?: string;
   /** Override the default status label. */
   label?: string;
+  isDark?: boolean;
 };
 
 /**
- * Read-only status label for tables and summaries. Backed by `TagStatus` (labels + antd colors).
+ * Read-only status label for tables and summaries. Backed by `TagStatus` (a `Pill`).
  */
-export function StatusTag({ status, className, emptyLabel = "—", label }: StatusTagProps) {
+export function StatusTag({ status, className, emptyLabel = "—", label, isDark }: StatusTagProps) {
   if (status == null) {
     return (
       <span className={cn("inline-block text-sm text-muted-foreground", className)}>{emptyLabel}</span>
     );
   }
 
-  return <TagStatus type={status} className={className} label={label} />;
+  return <TagStatus type={status} className={className} label={label} isDark={isDark} />;
 }
 
 export default StatusTag;

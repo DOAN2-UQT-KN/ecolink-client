@@ -1,20 +1,21 @@
 import { PRIORITY } from '@/constants/priority';
-import { Dropdown, Tag, MenuProps } from 'antd';
+import { PRIORITY_LABEL, PRIORITY_TONE } from '@/constants/statusTone';
+import { cn } from '@/libs/utils';
+import { Dropdown, MenuProps } from 'antd';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { PILL_DOT, Pill } from './Pill';
 
 interface TagPriorityProps {
   type: number;
   onChangePriority?: (value: number) => void;
   enabledDropdown?: boolean;
-  size?: 'sm' | 'md' | 'lg';
 }
 
 const ChangePriority: React.FC<TagPriorityProps> = ({
   type,
   onChangePriority,
   enabledDropdown = true,
-  size = 'md',
 }) => {
   const { t } = useTranslation();
   const [currentPriority, setCurrentPriority] = useState<number>(type);
@@ -23,99 +24,34 @@ const ChangePriority: React.FC<TagPriorityProps> = ({
     setCurrentPriority(type);
   }, [type]);
 
-  const filterColorByType = useCallback((priority: number) => {
-    switch (priority) {
-      case PRIORITY.URGENT:
-        return 'red';
-      case PRIORITY.MEDIUM:
-        return 'blue';
-      case PRIORITY.LOW:
-        return 'yellow';
-      default:
-        return 'default';
-    }
-  }, []);
+  const tone = PRIORITY_TONE[currentPriority as PRIORITY] ?? 'neutral';
+  const label = PRIORITY_LABEL[currentPriority as PRIORITY];
 
-  const renderNamePriority = useCallback(() => {
-    switch (currentPriority) {
-      case PRIORITY.URGENT:
-        return t('Urgent');
-      case PRIORITY.MEDIUM:
-        return t('Medium');
-      case PRIORITY.LOW:
-        return t('Low');
-      default:
-        return '';
-    }
-  }, [currentPriority, t]);
-
-  const priorityOptions = useMemo(
-    () => [
-      { label: t('Urgent'), value: PRIORITY.URGENT, color: '#F5222D' },
-      { label: t('Medium'), value: PRIORITY.MEDIUM, color: '#1677FF' },
-      { label: t('Low'), value: PRIORITY.LOW, color: '#FADB14' },
-    ],
-    [t],
-  );
-
-  const handleChangePriority = useCallback(
-    (value: number) => {
+  const handleMenuClick: MenuProps['onClick'] = useCallback(
+    (e: { key: string }) => {
+      const value = Number(e.key);
       setCurrentPriority(value);
       onChangePriority?.(value);
     },
     [onChangePriority],
   );
 
-  const handleMenuClick: MenuProps['onClick'] = useCallback(
-    (e: any) => {
-      handleChangePriority(Number(e.key));
-    },
-    [handleChangePriority],
-  );
-
   const menuItems: MenuProps['items'] = useMemo(
     () =>
-      priorityOptions.map((item) => ({
-        key: String(item.value),
+      [PRIORITY.URGENT, PRIORITY.MEDIUM, PRIORITY.LOW].map((value) => ({
+        key: String(value),
         label: (
-          <div className="flex items-center justify-center">
-            <span
-              style={{
-                backgroundColor: item.color,
-                display: 'inline-block',
-                // alignItems: 'center',
-                textAlign: 'center',
-              }}
-            >
-              {item.label}
-            </span>
+          <div className="flex items-center gap-2">
+            <span className={cn('inline-block size-2.5 rounded-full', PILL_DOT[PRIORITY_TONE[value]])} />
+            <span>{t(PRIORITY_LABEL[value])}</span>
           </div>
         ),
       })),
-    [priorityOptions],
+    [t],
   );
 
-  const sizeClasses = useMemo(() => {
-    switch (size) {
-      case 'sm':
-        return 'min-w-16 py-0 text-xs';
-      case 'lg':
-        return 'min-w-32 py-1 text-base';
-      case 'md':
-      default:
-        return 'min-w-24 pb-0.5 text-sm';
-    }
-  }, [size]);
-
   if (!enabledDropdown) {
-    return (
-      <Tag
-        className={`text-center rounded-md mx-auto cursor-pointer ${sizeClasses}`}
-        color={filterColorByType(currentPriority)}
-      >
-        {renderNamePriority()}
-      </Tag>
-    );
+    return <Pill tone={tone}>{label ? t(label) : ''}</Pill>;
   }
 
   if (!currentPriority) return null;
@@ -126,12 +62,9 @@ const ChangePriority: React.FC<TagPriorityProps> = ({
       trigger={['hover', 'click']}
       getPopupContainer={(triggerNode) => triggerNode.parentNode as HTMLElement}
     >
-      <Tag
-        className={`text-center rounded-md mx-auto cursor-pointer ${sizeClasses}`}
-        color={filterColorByType(currentPriority)}
-      >
-        {renderNamePriority()}
-      </Tag>
+      <Pill tone={tone} className="cursor-pointer">
+        {label ? t(label) : ''}
+      </Pill>
     </Dropdown>
   );
 };

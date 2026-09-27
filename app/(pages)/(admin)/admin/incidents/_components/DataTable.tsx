@@ -228,7 +228,7 @@ export function DataTable() {
         render: (_, record) => (
           <StatusTag
             status={record.status}
-            className="!mx-0 min-w-0 justify-center"
+            isDark={isDark}
             label={record.status === STATUS.INACTIVE ? t('Banned') : undefined}
           />
         ),

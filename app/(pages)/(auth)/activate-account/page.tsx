@@ -3,13 +3,13 @@ import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { HiEye, HiEyeOff } from "react-icons/hi";
 
-import { useActivateOrgAccount } from "@/apis/auth/activateOrgAccount";
+import { useActivateAccount } from "@/apis/auth/activateAccount";
 import { Button } from "@/components/client/shared/Button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useRouter, useSearchParams } from "@/libs/router";
 
-interface IActivateOrganizationFormValues {
+interface IActivateAccountFormValues {
   newPassword: string;
   confirmPassword: string;
 }
@@ -18,11 +18,10 @@ interface IActivateOrganizationFormValues {
 const MIN_PASSWORD_LENGTH = 8;
 
 /**
- * Landing page of the activation email sent once an organization application is approved.
- * The account already exists (created by the approval saga); this only sets its first
- * password, after which the organization signs in with its contact email.
+ * Landing page of the activation email. An approved organization owner who had no Ecolink
+ * account gets a personal account created for their email; this sets its first password.
  */
-export default function ActivateOrganizationPage() {
+export default function ActivateAccountPage() {
   const { t } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -35,15 +34,15 @@ export default function ActivateOrganizationPage() {
     handleSubmit,
     getValues,
     formState: { errors },
-  } = useForm<IActivateOrganizationFormValues>();
+  } = useForm<IActivateAccountFormValues>();
 
-  const { mutate, isPending } = useActivateOrgAccount({
+  const { mutate, isPending } = useActivateAccount({
     onSuccess: () => {
       router.push("/sign-in");
     },
   });
 
-  const onSubmit = (data: IActivateOrganizationFormValues) => {
+  const onSubmit = (data: IActivateAccountFormValues) => {
     mutate({ token, newPassword: data.newPassword });
   };
 
@@ -88,11 +87,11 @@ export default function ActivateOrganizationPage() {
       >
         <div className="flex flex-col text-center lg:text-left gap-[10px]">
           <span className="font-display-7 lg:font-display-8 font-semibold text-background-quaternary">
-            {t("Activate your organization account")}
+            {t("Activate your account")}
           </span>
           <p className="text-background-tertiary">
             {t(
-              "Your application was approved. Set a password for the organization account — you will sign in with the organization's contact email.",
+              "You were approved as an organization owner. Set a password for your account — you will sign in with the email the invitation was sent to.",
             )}
           </p>
         </div>

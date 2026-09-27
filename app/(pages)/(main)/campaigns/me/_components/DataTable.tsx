@@ -134,7 +134,7 @@ export const DataTable = memo(function DataTable() {
         key: COLUMN_KEYS.STATUS,
         title: t('Status'),
         render: (_, record) => (
-          <StatusTag status={record.status} className="!mx-0 min-w-0 justify-center" />
+          <StatusTag status={record.status} />
         ),
         width: 120,
       },

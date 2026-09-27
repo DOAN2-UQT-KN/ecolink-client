@@ -14,6 +14,52 @@ export interface IOrganizationChannel {
   is_primary: boolean;
 }
 
+/** Mirrors `OrgMemberRole` on the server. */
+export type OrgMemberRole =
+  | "LEGAL_REPRESENTATIVE"
+  | "OWNER"
+  | "ADMIN"
+  | "CAMPAIGN_MANAGER"
+  | "MEMBER";
+
+export const OWNER_ROLES: OrgMemberRole[] = ["LEGAL_REPRESENTATIVE", "OWNER"];
+
+export const isOwnerRole = (role?: string | null): boolean =>
+  OWNER_ROLES.includes(role as OrgMemberRole);
+
+/** What the viewer may do in this organization, resolved server-side from their role. */
+export interface IOrgPermissions {
+  can_edit_org: boolean;
+  can_approve_members: boolean;
+  can_invite: boolean;
+  can_manage_members: boolean;
+  can_propose_owners: boolean;
+  can_create_campaign: boolean;
+  can_manage_all_campaigns: boolean;
+  assignable_roles: OrgMemberRole[];
+}
+
+/**
+ * Client mirror of the server's `canActOnMember`: owners are untouchable, an admin cannot
+ * act on another admin, and nobody acts on themselves. The server re-checks.
+ */
+export const canActOnMember = (params: {
+  permissions?: IOrgPermissions | null;
+  myRole?: string | null;
+  myUserId?: string | null;
+  targetRole?: string | null;
+  targetUserId: string;
+}): boolean => {
+  if (!params.permissions?.can_manage_members) return false;
+  if (!params.targetRole || isOwnerRole(params.targetRole)) return false;
+  if (params.myRole === "ADMIN" && params.targetRole === "ADMIN") return false;
+  return params.targetUserId !== params.myUserId;
+};
+
+export interface IOrganizationOwner extends Pick<IUser, "id" | "name" | "avatar"> {
+  role: OrgMemberRole;
+}
+
 export interface IOrganization {
   id: string;
   name: string;
@@ -45,19 +91,23 @@ export interface IOrganization {
   longitude?: number | null;
   channels?: IOrganizationChannel[];
   /**
-   * The dedicated ORG login. `null` in the short window between an approval and the account
-   * being provisioned, so consumers must tolerate it.
+   * People with an owner role. An organization never logs in: these are the users who act
+   * for it. Never empty for an active organization.
    */
-  owner_id: string | null;
-  /** True when the signed-in user is an active member of this org. */
+  owners: IOrganizationOwner[];
+  /** The signed-in user's role here (`OrgMemberRole`), or null when not a member. */
+  my_role?: OrgMemberRole | null;
+  /** True when the signed-in user holds an owner role. */
+  is_owner?: boolean;
+  /** Viewer's permissions here; absent on anonymous endpoints. */
+  permissions?: IOrgPermissions;
+  /** True when the signed-in user holds any active membership (owners included). */
   is_member?: boolean;
-  /** Active member count (owner is not included). */
+  /** Active member count, owners included. */
   members?: number;
   created_at: string;
   updated_at: string;
   request_status?: number;
   /** Present when the current user has a join request; required to cancel while pending. */
   join_request_id?: string;
-  /** `null` while `owner_id` is null. */
-  owner: Pick<IUser, "id" | "name" | "email" | "avatar"> | null;
 }

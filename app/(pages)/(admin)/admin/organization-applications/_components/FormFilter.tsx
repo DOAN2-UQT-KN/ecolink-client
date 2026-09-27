@@ -41,9 +41,8 @@ export function FormFilter() {
     const statusOptions = [
       { label: t("Needs a decision"), value: "open" },
       { label: t("All"), value: "all" },
-      { label: t("Waiting for review"), value: "SUBMITTED" },
-      { label: t("Under review"), value: "UNDER_REVIEW" },
-      { label: t("More information needed"), value: "NEEDS_MORE_INFO" },
+      { label: t("Waiting for review"), value: "PENDING_REVIEW" },
+      { label: t("Changes needed"), value: "NEEDS_REVISION" },
       { label: t("Approved"), value: "APPROVED" },
       { label: t("Not approved"), value: "REJECTED" },
       { label: t("Withdrawn"), value: "WITHDRAWN" },

@@ -173,7 +173,7 @@ const DataTableComponent = memo(function DataTableComponent() {
         render: (status) => (
           <StatusTag
             status={status}
-            className="!mx-0 min-w-0 justify-center"
+           
             label={status === STATUS.INACTIVE ? t("Banned") : undefined}
           />
         ),

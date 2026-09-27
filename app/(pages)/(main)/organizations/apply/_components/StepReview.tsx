@@ -9,7 +9,7 @@ import {
   ORG_TYPE_OPTIONS,
 } from "../_services/application.service";
 import { useApplication } from "../_hooks/useApplication";
-import { SummaryRow } from "./ApplicationDetails";
+import { SummaryList, SummaryRow, groupBy } from "./ApplicationDetails";
 import FileTypeIcon from "@/components/ui/FileTypeIcon";
 import { DocumentNameLink } from "./DocumentNameLink";
 
@@ -18,7 +18,6 @@ export const StepReview = memo(function StepReview() {
   const {
     form,
     goToStep,
-    isEditMode,
     existingDocuments,
     removedDocumentIds,
     openDocumentPreview,
@@ -48,8 +47,10 @@ export const StepReview = memo(function StepReview() {
       mimeType: document.mimeType,
     })),
   ];
-  // Left blank on a resubmission, the representative on file stays as it is.
-  const keepsRepresentative = isEditMode && !values.legalRepFullName.trim();
+  const legalRep = values.owners.find((owner) => owner.isLegalRep);
+  const otherOwners = values.owners.filter((owner) => !owner.isLegalRep);
+  const ownerLabel = (owner: { fullName: string; email: string }) =>
+    `${owner.fullName} <${owner.email}>`;
 
   return (
     <div className="flex flex-col gap-6">
@@ -76,13 +77,12 @@ export const StepReview = memo(function StepReview() {
           )}
         />
         <SummaryRow label={t("Name")} value={values.name} />
-        <SummaryRow label={t("Contact email")} value={values.email} />
         <SummaryRow label={t("Address")} value={values.address} />
       </section>
 
       <section className="flex flex-col gap-3 rounded-md border border-[rgba(136,122,71,0.35)] p-4">
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold">{t("Contact & representative")}</h3>
+          <h3 className="font-semibold">{t("Contact")}</h3>
           <button
             type="button"
             className="text-sm text-button-accent underline"
@@ -91,29 +91,62 @@ export const StepReview = memo(function StepReview() {
             {t("Edit")}
           </button>
         </div>
-        {values.channels
-          .filter((channel) => channel.url.trim())
-          .map((channel) => (
-            <SummaryRow
-              key={`${channel.type}-${channel.url}`}
-              label={t(
-                CHANNEL_TYPE_OPTIONS.find((o) => o.value === channel.type)
-                  ?.label ?? channel.type,
-              )}
-              value={channel.url}
-            />
-          ))}
+        <SummaryRow label={t("Contact email")} value={values.contactEmail} />
+        {groupBy(
+          values.channels.filter((channel) => channel.url.trim()),
+          (channel) => channel.type,
+        ).map(([type, group]) => (
+          <SummaryRow
+            key={type}
+            label={t(
+              CHANNEL_TYPE_OPTIONS.find((o) => o.value === type)?.label ?? type,
+            )}
+            value={
+              <SummaryList
+                items={group.map((channel) => ({
+                  key: channel.url,
+                  node: channel.url,
+                }))}
+              />
+            }
+          />
+        ))}
+      </section>
+
+      <section className="flex flex-col gap-3 rounded-md border border-[rgba(136,122,71,0.35)] p-4">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold">{t("Owners")}</h3>
+          <button
+            type="button"
+            className="text-sm text-button-accent underline"
+            onClick={() => goToStep("owners")}
+          >
+            {t("Edit")}
+          </button>
+        </div>
         <SummaryRow
           label={t("Legal representative")}
-          value={
-            keepsRepresentative
-              ? t("Unchanged from your previous submission")
-              : values.legalRepFullName
-          }
+          value={legalRep ? ownerLabel(legalRep) : ""}
         />
-        {!keepsRepresentative && (
-          <SummaryRow label={t("Phone")} value={values.legalRepPhone} />
+        {otherOwners.length > 0 && (
+          <SummaryRow
+            label={otherOwners.length > 1 ? t("Owners") : t("Owner")}
+            value={
+              <SummaryList
+                items={otherOwners.map((owner) => ({
+                  key: owner.email,
+                  node: ownerLabel(owner),
+                }))}
+              />
+            }
+          />
         )}
+        <SummaryRow label={t("Phone")} value={legalRep ? values.legalRepPhone : ""} />
+        <p className="text-sm text-foreground-tertiary">
+          {t(
+            "After you submit, every other owner receives an email and must confirm. Changing the name, type, legal representative or owner list later asks everyone to confirm again.",
+          )}
+        </p>
       </section>
 
       <section className="flex flex-col gap-3 rounded-md border border-[rgba(136,122,71,0.35)] p-4">
@@ -128,29 +161,35 @@ export const StepReview = memo(function StepReview() {
           </button>
         </div>
         {documentRows.length ? (
-          documentRows.map((document) => (
+          groupBy(documentRows, (document) => document.docType).map(([docType, group]) => (
             <SummaryRow
-              key={document.key}
+              key={docType}
               label={t(
-                DOC_TYPE_OPTIONS.find((o) => o.value === document.docType)
-                  ?.label ?? document.docType,
+                DOC_TYPE_OPTIONS.find((o) => o.value === docType)?.label ?? docType,
               )}
               value={
-                <span className="inline-flex max-w-full items-center gap-1.5">
-                  <FileTypeIcon
-                    mimeType={document.mimeType}
-                    fileName={document.fileName}
-                    className="size-4"
-                  />
-                  <DocumentNameLink
-                    name={document.fileName}
-                    onOpen={
-                      canPreviewDocument(document.key)
-                        ? () => openDocumentPreview(document.key)
-                        : undefined
-                    }
-                  />
-                </span>
+                <SummaryList
+                  items={group.map((document) => ({
+                    key: document.key,
+                    node: (
+                      <span className="inline-flex max-w-full items-center gap-1.5 align-middle">
+                        <FileTypeIcon
+                          mimeType={document.mimeType}
+                          fileName={document.fileName}
+                          className="size-4"
+                        />
+                        <DocumentNameLink
+                          name={document.fileName}
+                          onOpen={
+                            canPreviewDocument(document.key)
+                              ? () => openDocumentPreview(document.key)
+                              : undefined
+                          }
+                        />
+                      </span>
+                    ),
+                  }))}
+                />
               }
             />
           ))

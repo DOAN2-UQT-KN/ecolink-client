@@ -186,6 +186,7 @@ export const useGetMembersByOrg = (
       req.page ?? 1,
       req.limit ?? 20,
       req.search ?? "",
+      req.roles ?? "",
       req.name ?? "",
       req.sort_by ?? null,
       req.sort_order ?? null,

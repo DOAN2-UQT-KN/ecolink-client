@@ -13,7 +13,8 @@ import {
   DataTable as SharedDataTable,
   type DataTableColumn,
 } from '@/components/admin/shared/DataTable';
-import { Badge } from '@/components/ui/badge';
+import { Pill } from '@/components/ui/Pill';
+import { GIFT_REDEEM_TONE } from '@/constants/statusTone';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -22,26 +23,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { cn } from '@/libs/utils';
 import { formattedDate } from '@/utils/formattedDate';
 
 const PAGE_SIZE = 10;
 const STATUSES: GiftRedemptionStatus[] = ['PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
-
-function statusClassName(status: GiftRedemptionStatus) {
-  switch (status) {
-    case 'PROCESSING':
-      return 'border-amber-300 bg-amber-50 text-amber-700';
-    case 'SHIPPED':
-      return 'border-blue-300 bg-blue-50 text-blue-700';
-    case 'DELIVERED':
-      return 'border-emerald-300 bg-emerald-50 text-emerald-700';
-    case 'CANCELLED':
-      return 'border-red-300 bg-red-50 text-red-700';
-    default:
-      return '';
-  }
-}
 
 function nextStatuses(status: GiftRedemptionStatus): GiftRedemptionStatus[] {
   if (status === 'PROCESSING') return ['SHIPPED', 'CANCELLED'];
@@ -117,9 +102,9 @@ export function RedeemsTable() {
         title: t('Status'),
         className: 'w-[130px]',
         render: (_, row) => (
-          <Badge className={cn('border', statusClassName(row.status))} variant="outline">
+          <Pill tone={GIFT_REDEEM_TONE[row.status]}>
             {t(row.status)}
-          </Badge>
+          </Pill>
         ),
       },
       {

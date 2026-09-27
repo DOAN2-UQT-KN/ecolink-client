@@ -48,13 +48,15 @@ modules/ReportDetailCard/
   ReportDetailCard.tsx
   components/{ReportHeader,ReportContent,ReportFooter,ReportActions}.tsx
   hooks/useReportVotes.ts
-  _services/voting.service.ts                   # biến thể có gạch dưới cũng tồn tại
+  _services/voting.service.ts                   # ⚠️ mock chết, xem dưới
   utils/time.ts
 ```
 
 **Không có thư mục `api/` bên trong module.** Hook gọi API luôn ở `apis/<domain>/` (skill `ecolink-api-layer`).
 
 `services/` trong module = hàm thuần: build payload, invalidate cache, transform. Không phải HTTP.
+
+⚠️ `modules/ReportDetailCard/_services/voting.service.ts` là **mock chết** (vote ngẫu nhiên bằng `Math.random`, không nơi nào import). Vote thật đi qua `apis/vote` + `hooks/useReportVotes.ts`. Đừng chép theo, cũng đừng dùng thư mục `_services/` có gạch dưới cho module mới — dùng `services/`.
 
 ## Barrel
 

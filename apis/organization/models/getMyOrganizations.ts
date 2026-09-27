@@ -12,6 +12,8 @@ export interface IGetMyOrganizationsRequest {
   /** Single value or multiple (serialized as comma-separated query) */
   request_status?: number | number[];
   is_owner?: boolean;
+  /** Only memberships with these roles; serialized comma-separated. */
+  roles?: string[];
 }
 
 export type IGetMyOrganizationsResponse = IBaseResponse<{

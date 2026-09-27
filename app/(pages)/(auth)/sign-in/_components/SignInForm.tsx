@@ -13,6 +13,7 @@ import {
   handleSignInSuccess,
 } from "../_services/auth.service";
 import { getGoogleAuthorizationUrl } from "@/apis/auth/googleSignIn";
+import { useResendActivation } from "@/apis/auth/activateAccount";
 
 type SignInFormProps = {
   redirect: string;
@@ -23,9 +24,14 @@ export default function SignInForm({ redirect }: SignInFormProps) {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
 
+  // Set when the account exists but was never activated (created for an approved
+  // organization owner); the activation link may have expired, so offer a new one.
+  const [pendingActivation, setPendingActivation] = useState(false);
+
   const {
     register,
     handleSubmit,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<ISignInFormValues>();
 
@@ -33,7 +39,13 @@ export default function SignInForm({ redirect }: SignInFormProps) {
     onSuccess: (res) => {
       handleSignInSuccess(res, router, redirect);
     },
+    onError: (error) => {
+      setPendingActivation(error.code === "ACCOUNT_PENDING_ACTIVATION");
+    },
   });
+
+  const { mutate: resendActivation, isPending: isResending } =
+    useResendActivation();
 
   const onSubmit = async (data: ISignInFormValues) => {
     mutate(data);
@@ -131,6 +143,24 @@ export default function SignInForm({ redirect }: SignInFormProps) {
             </div>
           </Field>
         </div>
+
+        {pendingActivation && (
+          <div className="flex flex-col gap-2 rounded-md border border-orange-200 bg-orange-50 p-3 text-sm text-orange-900">
+            <span>
+              {t(
+                "This account has not been activated yet. Use the activation link sent to your email, or request a new one.",
+              )}
+            </span>
+            <button
+              type="button"
+              disabled={isResending}
+              onClick={() => resendActivation({ email: getValues("email").trim() })}
+              className="w-fit font-semibold underline disabled:opacity-60 cursor-pointer"
+            >
+              {t("Resend activation email")}
+            </button>
+          </div>
+        )}
 
         {/* ACTION */}
         <div className="flex flex-col items-center w-full lg:w-[373px] gap-[15px]">

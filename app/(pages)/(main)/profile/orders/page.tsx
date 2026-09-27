@@ -2,9 +2,9 @@ import { useMemo, useState } from 'react';
 import { Gift, Truck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-import type { GiftRedemptionStatus } from '@/apis/gift/models/gift';
 import { useGetGiftRedemptions } from '@/apis/gift/getGiftRedemptions';
-import { Badge } from '@/components/ui/badge';
+import { Pill } from '@/components/ui/Pill';
+import { GIFT_REDEEM_TONE } from '@/constants/statusTone';
 import { Button } from '@/components/ui/button';
 import {
   Empty,
@@ -14,25 +14,9 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/libs/utils';
 import { formattedDate } from '@/utils/formattedDate';
 
 const PAGE_SIZE = 10;
-
-function statusClassName(status: GiftRedemptionStatus) {
-  switch (status) {
-    case 'PROCESSING':
-      return 'border-amber-300 bg-amber-50 text-amber-700';
-    case 'SHIPPED':
-      return 'border-blue-300 bg-blue-50 text-blue-700';
-    case 'DELIVERED':
-      return 'border-emerald-300 bg-emerald-50 text-emerald-700';
-    case 'CANCELLED':
-      return 'border-red-300 bg-red-50 text-red-700';
-    default:
-      return '';
-  }
-}
 
 function OrderCardSkeleton() {
   return (
@@ -95,9 +79,9 @@ export default function ProfileOrdersPage() {
                       {formattedDate(order.createdAt, true)}
                     </p>
                   </div>
-                  <Badge className={cn('border', statusClassName(order.status))} variant="outline">
+                  <Pill tone={GIFT_REDEEM_TONE[order.status]}>
                     {t(order.status)}
-                  </Badge>
+                  </Pill>
                 </div>
 
                 <div className="mt-4 grid gap-2 text-sm text-foreground-secondary md:grid-cols-2">

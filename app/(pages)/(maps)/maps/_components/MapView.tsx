@@ -4,6 +4,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useTranslation } from 'react-i18next';
 import type { MapMarker } from './MapPage';
+import { Pill } from '@/components/ui/Pill';
 
 // Vietnam geographic center
 const DEFAULT_CENTER: [number, number] = [16.047, 108.206];
@@ -121,21 +122,13 @@ const MarkerList = memo(function MarkerList({ markers }: { markers: MapMarker[] 
           <Popup minWidth={200} maxWidth={280} className="map-popup">
             <div className="py-1 space-y-1.5">
               {/* Badge */}
-              <span
-                className={`inline-block text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full ${
-                  m.type === 'CAMPAIGN'
-                    ? 'bg-blue-100 text-blue-700'
-                    : m.type === 'SOS'
-                      ? 'bg-red-100 text-red-700 border border-red-300'
-                      : 'bg-yellow-100 text-yellow-800'
-                }`}
-              >
+              <Pill tone={m.type === 'CAMPAIGN' ? 'blue' : m.type === 'SOS' ? 'red' : 'amber'}>
                 {m.type === 'CAMPAIGN'
                   ? t('Campaign')
                   : m.type === 'SOS'
                     ? `🚨 ${t('SOS')}`
                     : t('Incident')}
-              </span>
+              </Pill>
 
               <p className="font-semibold text-gray-900 text-sm leading-snug">{m.title}</p>
 
