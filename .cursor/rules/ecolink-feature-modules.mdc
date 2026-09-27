@@ -55,6 +55,8 @@ Tiêu thụ: `import { SeverityCell } from '@/modules/ReportGeneralInformation';
 
 ⚠️ `ReportGeneralInformation/DuplicateReportModal.tsx` còn sót dòng `"use client"` — đó là rác từ thời Next.js, **đừng bắt chước**.
 
+⚠️ `ReportDetailCard/_services/voting.service.ts` là mock chết (vote ngẫu nhiên, không ai import) — vote thật ở `apis/vote`. Đừng chép.
+
 ---
 
 Chi tiết đầy đủ: @.claude/skills/ecolink-feature-modules/SKILL.md

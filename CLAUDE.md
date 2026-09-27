@@ -19,14 +19,14 @@ npm run lint     # eslint . --fix
 1. **Không `import ... from "next/..."`.** Navigation dùng `@/libs/router` (`<Link href>`, `useRouter()`, `usePathname()`, `useSearchParams()` trả về `URLSearchParams` trực tiếp). Ảnh dùng `@/components/ui/AppImage`. Lazy dùng `@/libs/dynamic`.
 2. **Không thêm `"use client"`.** Vô nghĩa ở đây.
 3. **Tạo `page.tsx` phải đăng ký route trong `src/routes/index.tsx`** bằng helper `lazyPage`. Quên = route không tồn tại.
-4. **Mọi lời gọi API đi qua `utils/requestApi` + `hooks/reactQuery` (`useGet`/`usePost`)**, khai báo trong `apis/<domain>/<verb><Noun>.ts`. Không gọi `axios` trực tiếp (ngoại lệ duy nhất: upload Cloudinary). Toast qua `utils/showMessage`, không gọi `toast()` của sonner.
+4. **Mọi lời gọi API đi qua `utils/requestApi` + `hooks/reactQuery` (`useGet`/`usePost`)**, khai báo trong `apis/<domain>/<verb><Noun>.ts`. Không gọi `axios` trực tiếp (ngoại lệ: upload Cloudinary, upload lên presigned `upload_url`, SSE chat, Nominatim — xem skill `ecolink-api-layer`). Toast qua `utils/showMessage`, không gọi `toast()` của sonner.
 5. **Mọi chuỗi hiển thị qua `t()`**, key chính là câu tiếng Anh, và phải thêm vào **cả** `i18n/locales/en/common.json` lẫn `vi/common.json`.
 
 Thêm 2 điểm hay sai: `cn()` nằm ở **`@/libs/utils`** (không phải `@/lib/utils` như `components.json` ghi), và Prettier **không được enforce** — bám style của file đang sửa, đừng reformat hàng loạt.
 
 ## Bảo mật cần biết
 
-`/admin` có guard ở `src/layouts/AdminLayout.tsx`: chờ `has_hydrated` rồi mới quyết, chưa đăng nhập → `/sign-in?redirect=`, `roleId !== ADMIN_ROLE_ID` → `/`. **Guard này chỉ để người dùng không phải nhìn màn hình đầy request lỗi — enforcement thật nằm ở server.** Đừng viết code dựa trên giả định "vào được `/admin` nghĩa là admin".
+`/admin` có guard ở `src/layouts/AdminLayout.tsx` nhưng **chỉ kiểm `has_hydrated` và `is_authenticated`**: chờ hydrate rồi mới quyết, chưa đăng nhập → `/sign-in?redirect=`. Đoạn check `roleId !== ADMIN_ROLE_ID` đang **bị comment out**, nên mọi user đã đăng nhập đều vào được giao diện admin; chỉ link Admin trên Header là ẩn theo `roleId`. **Guard này chỉ để người dùng không phải nhìn màn hình đầy request lỗi — enforcement thật nằm ở server.** Đừng viết code dựa trên giả định "vào được `/admin` nghĩa là admin".
 
 Các trang phía người dùng cuối (`create/`, `me/`, `/profile/*`) **vẫn không có guard**: chặn thật là interceptor 401 trong `libs/axiosClient.ts`.
 

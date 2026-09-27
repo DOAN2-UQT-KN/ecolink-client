@@ -1,5 +1,5 @@
 import CollapseCard from "@/components/client/shared/CollapseCard";
-import { Tag } from "@/components/client/shared/Tag";
+import { Pill } from "@/components/ui/Pill";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import Image from "@/components/ui/AppImage";
 import { useCallback } from "react";
@@ -56,7 +56,7 @@ const ForVolunteer = () => {
         transition={{ duration: 0.6 }}
         className="flex flex-col items-center gap-5 pb-5"
       >
-        <Tag variant="green">{t("Take Action")}</Tag>
+        <Pill tone="green">{t("Take Action")}</Pill>
 
         <h1 className="text-center">
           <Trans

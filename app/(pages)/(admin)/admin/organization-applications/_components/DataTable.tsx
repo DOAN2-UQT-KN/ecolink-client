@@ -105,7 +105,7 @@ export function DataTable() {
             <TagStatus
               type={APPLICATION_STATUS_TAG[record.status].type}
               label={t(APPLICATION_STATUS_TAG[record.status].label)}
-              className="!mx-0 min-w-0 justify-center"
+              isDark={isDark}
             />
           </div>
         ),

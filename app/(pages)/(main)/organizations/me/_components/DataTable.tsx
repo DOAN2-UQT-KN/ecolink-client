@@ -15,6 +15,7 @@ import { STATUS } from "@/constants/status";
 import { useLocalizedDisplay } from "@/hooks/useLocalizedDisplay";
 import { RoleBadge } from "@/components/ui/RoleBadge";
 import useOrgContextStore from "@/stores/useOrgContextStore";
+import { Pill } from "@/components/ui/Pill";
 
 const defaultPagination = { current: 1, pageSize: 10 };
 
@@ -77,9 +78,9 @@ const DataTableComponent = memo(function DataTableComponent() {
                 <span className="font-bold text-sm truncate">{record.name}</span>
                 <BlueTickBadge organization={record} className="shrink-0" />
                 {record.id === activeOrganizationId && (
-                  <span className="shrink-0 rounded-sm bg-button-accent/10 px-1.5 py-0.5 text-[10px] font-semibold text-button-accent">
+                  <Pill tone="brand">
                     {t("Active context")}
-                  </span>
+                  </Pill>
                 )}
               </div>
               <span className="text-xs text-muted-foreground truncate">
@@ -137,7 +138,7 @@ const DataTableComponent = memo(function DataTableComponent() {
         title: t("Status"),
         key: "status",
         render: (_, record) => {
-          return <StatusTag status={record.status} className="!mx-0 min-w-0 justify-center" label={record.status === STATUS.INACTIVE ? t("Banned") : undefined} />;
+          return <StatusTag status={record.status} label={record.status === STATUS.INACTIVE ? t("Banned") : undefined} />;
         },
         width: 140,
         align: "center",

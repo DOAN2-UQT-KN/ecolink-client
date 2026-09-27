@@ -1,6 +1,6 @@
 import { Button } from "@/components/client/shared/Button";
 import { Divider } from "@/components/client/shared/Divider";
-import { Tag } from "@/components/client/shared/Tag";
+import { Pill } from "@/components/ui/Pill";
 import Image from "@/components/ui/AppImage";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
@@ -43,7 +43,7 @@ const HeroSection = () => {
         variants={itemVariants}
         className="flex flex-col items-center lg:items-start justify-between lg:w-[617px] 3xl:!w-[800px] gap-[17px] lg:gap-6"
       >
-        <Tag variant="green">{t("EcoLink Platform")}</Tag>
+        <Pill tone="green">{t("EcoLink Platform")}</Pill>
 
         <div className="w-fit">
           <h1 className="w-fit text-center lg:text-left">

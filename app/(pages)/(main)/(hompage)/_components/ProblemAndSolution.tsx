@@ -1,4 +1,4 @@
-import { Tag } from "@/components/client/shared/Tag";
+import { Pill } from "@/components/ui/Pill";
 import { Trans, useTranslation } from "react-i18next";
 import ContentCard from "@/components/client/shared/ContentCard";
 import { useCallback } from "react";
@@ -76,7 +76,7 @@ const ProblemAndSolution = () => {
         transition={{ duration: 0.6, ease: "easeOut" }}
         className="flex flex-col items-center gap-5 "
       >
-        <Tag variant="green">{t("Smart Environmental System")}</Tag>
+        <Pill tone="green">{t("Smart Environmental System")}</Pill>
 
         <h1 className="text-center">
           <Trans

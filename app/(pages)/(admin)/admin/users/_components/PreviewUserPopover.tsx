@@ -153,7 +153,7 @@ export const PreviewUserPopover = memo(function PreviewUserPopover({
         value: (
           <StatusTag
             status={user.status}
-            className="!mx-0 min-w-0 justify-center"
+            isDark={isDark}
             label={user.status === STATUS.INACTIVE ? t("Banned") : undefined}
           />
         ),

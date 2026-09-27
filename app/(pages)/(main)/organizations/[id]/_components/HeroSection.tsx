@@ -15,6 +15,7 @@ import { UpdateOrganizationPopover } from "@/app/(pages)/(main)/organizations/me
 
 import { useOrganizationDetail } from "../_hooks/useOrganizationDetail";
 import { HiXMark } from "react-icons/hi2";
+import { Pill } from "@/components/ui/Pill";
 
 export const HeroSection = memo(function HeroSection() {
   const { t } = useTranslation();
@@ -161,12 +162,9 @@ export const HeroSection = memo(function HeroSection() {
                 />
               )}
               {showYourGroupTag ? (
-                <span
-                  className="shrink-0 inline-flex items-center rounded-sm border border-[rgba(136,122,71,0.45)] bg-button-accent/10 px-2.5 py-0.5 text-xs font-semibold text-button-accent"
-                  aria-label={t("Your group")}
-                >
+                <Pill tone="brand" aria-label={t("Your group")}>
                   {t("Your group")}
-                </span>
+                </Pill>
               ) : null}
               <RoleBadge role={myRole} />
             </div>

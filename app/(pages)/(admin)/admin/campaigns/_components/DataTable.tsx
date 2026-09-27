@@ -183,7 +183,7 @@ export const DataTable = memo(function DataTable() {
         title: t('Status'),
         className: 'min-w-[120px]',
         render: (_, record) => (
-          <StatusTag status={record.status} className="!mx-0 min-w-0 justify-center" />
+          <StatusTag status={record.status} isDark={isDark} />
         ),
       },
       {

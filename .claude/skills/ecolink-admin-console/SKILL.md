@@ -15,7 +15,11 @@ description: Khuôn chuẩn cho console quản trị /admin của ecolink-client
 
 Route hiện có: `/admin`, `/admin/campaigns`, `/admin/incidents`, `/admin/organizations`, `/admin/organization-applications`, `/admin/users`, `/admin/gifts`, `/admin/settings`.
 
-⚠️ **`/admin` có guard** ở `src/layouts/AdminLayout.tsx`, nhưng đó chỉ là điều hướng cho đỡ khó chịu — chặn thật vẫn ở server. Xem skill `ecolink-architecture`.
+⚠️ **Guard `/admin`** ở `src/layouts/AdminLayout.tsx` **chỉ kiểm `has_hydrated` và `is_authenticated`** — đoạn check `roleId` đang bị comment out, nên mọi user đã đăng nhập đều vào được giao diện admin. Chỉ link "Admin" trong menu `Header.tsx` là ẩn theo `roleId`. Chặn quyền thật ở server. Xem skill `ecolink-architecture`.
+
+`/admin` (dashboard) và `/admin/settings` hiện là **trang placeholder**. Theme sáng/tối lưu `localStorage["ecolink-admin-theme"]` (`AdminLayoutContext.tsx`).
+
+⚠️ Bẫy dữ liệu: trang admin campaigns/incidents gọi endpoint list **công khai** (`GET /api/v1/campaigns`, `GET /api/v1/reports/search`), không phải endpoint admin riêng. Thêm trang/filter mới thì kiểm server có trả đủ mọi status (INACTIVE, PENDING...) cho admin không, đừng giả định bảng đã thấy hết.
 
 ## Khuôn 5 phần của một trang CRUD
 
@@ -268,6 +272,26 @@ const columns: DataTableColumn<IIncident>[] = useMemo(() => [
 ```
 
 `DataTablePermission<T>` (`role: "admin" | "staff"`) đã có sẵn nhưng **hiện chưa call site nào truyền** — đừng giả định nó đang hoạt động.
+
+### Cột status
+
+```tsx
+render: (_v, record) => <StatusTag status={record.status} isDark={isDark} />
+// ghi đè nhãn khi cần: label={record.status === STATUS.INACTIVE ? t("Banned") : undefined}
+```
+
+`StatusTag` / `TagStatus` render `Pill` (màu từ `constants/statusTone.ts`) — **không cần** override `className="!mx-0 min-w-0 justify-center"` như thời antd `Tag`. Status dạng chuỗi (đổi quà, hồ sơ) dùng `<Pill tone={GIFT_REDEEM_TONE[s]} isDark={isDark}>`. Xem skill `ecolink-ui-and-forms`.
+
+### Nút hành động theo status
+
+Cột actions rẽ nhánh theo status của record, bám khuôn có sẵn:
+
+- Organizations: ACTIVE → Ban; khác INACTIVE → Approve/Ban; INACTIVE → không nút. Users: chỉ ACTIVE mới có Ban. Campaigns: ACTIVE → Ban, WAITING_CONFIRMED → Completion review.
+- Đổi quà: hàm thuần `nextStatuses(status)` trong `admin/gifts/_components/RedeemsTable.tsx` trả các trạng thái được chuyển tới (PROCESSING → SHIPPED/CANCELLED, SHIPPED → DELIVERED/CANCELLED). Luồng trạng thái mới thì viết hàm kiểu này, đừng rải điều kiện trong JSX.
+
+### Mở file cần đăng nhập
+
+File admin (giấy tờ hồ sơ tổ chức) phải fetch blob qua `requestApi` (`responseType: "blob"`, có Bearer) rồi mở object URL — xem `apis/organization-application/adminApplications.ts > fetchApplicationDocument()`. `<a href>` trần không mang header `Authorization` nên server từ chối.
 
 ## `ConfirmPopover` — dialog xác nhận
 

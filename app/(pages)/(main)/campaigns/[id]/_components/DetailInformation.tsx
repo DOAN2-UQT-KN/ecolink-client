@@ -9,7 +9,7 @@ import { cn } from '@/libs/utils';
 import { useCampaignDetail } from '../_hooks/useCampaignDetail';
 import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
 import Image from '@/components/ui/AppImage';
-import { Tag } from '@/components/client/shared/Tag';
+import { Pill } from '@/components/ui/Pill';
 import { formattedDate } from '@/utils/formattedDate';
 import { HiMapPin } from 'react-icons/hi2';
 import { TooltipTruncatedText } from '@/components/ui/TooltipTruncatedText';
@@ -62,9 +62,9 @@ export const DetailInformation = memo(function DetailInformation() {
         <div className="flex flex-row gap-10">
           <div className="flex min-w-0 flex-1 flex-col p-5 sm:p-6">
             <div className="flex flex-row items-center justify-between w-full">
-              <Tag variant="green">
+              <Pill tone="green">
                 {campaign.green_points ?? ''} {t('Reward (GP & SP)')}
-              </Tag>
+              </Pill>
               <span className="font-display-1 text-muted-foreground">
                 {formattedDate(campaign?.created_at)}
               </span>

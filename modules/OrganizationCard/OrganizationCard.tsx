@@ -25,6 +25,7 @@ import {
   joinListingShowsJoinButton,
 } from './utils/joinRequestListingUi';
 import { RichTextContent } from '@/components/ui/RichTextContent';
+import { Pill } from '@/components/ui/Pill';
 
 export { useOrganizationCardEdit } from './hooks/useOrganizationCardEdit';
 
@@ -302,12 +303,9 @@ export const OrganizationCard = memo(function OrganizationCard({
               </h2>
             )}
             {showYourGroupTag ? (
-              <span
-                className="shrink-0 inline-flex items-center rounded-sm border border-[rgba(136,122,71,0.45)] bg-button-accent/10 px-2.5 py-0.5 text-xs font-semibold text-button-accent"
-                aria-label={t('Your group')}
-              >
+              <Pill tone="brand" aria-label={t('Your group')}>
                 {t('Your group')}
-              </span>
+              </Pill>
             ) : null}
           </div>
 

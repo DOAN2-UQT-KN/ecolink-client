@@ -53,8 +53,11 @@ export const useCreateGift = (options?: UsePostOptions<ICreateGiftResponse, ICre
 - `queryKey` là tuple string: resource số nhiều trước, params sau — `["gifts", req]`, `["report-detail", id]`, `["gift-redemptions", "admin", req]`. Không có key factory.
 - Response dựng từ `IBaseResponse<T>` hoặc `IPaginationResponse<T, K>` (generic thứ 2 đặt tên key collection): `IPaginationResponse<IIncident[], "reports">`.
 - Đặt tên: `I<Verb><Entity>Request` / `Response`, để ở `apis/<domain>/models/`.
-- `usePost` đã lo toast + 401 logout + invalidate ⇒ `catch {}` để trống trong component là đúng.
-- Lỗi đã được bóc: consumer nhận body API (`QueryError`), không phải `AxiosError`.
+- `usePost` đã lo toast + 401 logout + invalidate ⇒ `catch {}` để trống trong component là đúng. Toast lỗi lấy theo thứ tự `apiErrorMessage()` → `errors[0].message` → `messageError.content` → `error.message`; mã lỗi mới map trong `constants/apiErrorMessages.ts` + key i18n en/vi.
+- `useGet` **không** toast — component tự render `isError`.
+- Lỗi thường đã được bóc: consumer nhận body API (`QueryError`); riêng **404 reject nguyên `AxiosError`**.
+- Endpoint công khai (`PUBLIC_AUTH_PATHS`): `/api/v1/organization-applications` (xác thực bằng query `?token=`, không phải header) và `/api/v1/organization-invitations`. Endpoint công khai mới phải thêm vào danh sách này.
+- Path luôn `/api/v1/...`; đừng chép các file path lỗi đã biết (`googleSignIn`, `signOut`, `getOwnedOrganizations`, `deleteReportMedia`).
 
 ---
 

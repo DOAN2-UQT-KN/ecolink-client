@@ -1,5 +1,5 @@
 import { Button } from "@/components/client/shared/Button";
-import { Tag } from "@/components/client/shared/Tag";
+import { Pill } from "@/components/ui/Pill";
 import FeatureCard from "@/components/client/shared/FeatureCard";
 import { Trans, useTranslation } from "react-i18next";
 import { useMemo } from "react";
@@ -69,7 +69,7 @@ const ForCitizens = () => {
         transition={{ duration: 0.6 }}
         className="flex flex-col items-center gap-5 pb-5 2xl:items-start"
       >
-        <Tag variant="green">{t("Raise Your Voice")}</Tag>
+        <Pill tone="green">{t("Raise Your Voice")}</Pill>
 
         <h1 className="text-center 2xl:text-left">
           <Trans

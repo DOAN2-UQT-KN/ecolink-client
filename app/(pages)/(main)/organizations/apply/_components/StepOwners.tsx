@@ -28,6 +28,7 @@ import {
   validateOwnerList,
 } from "../_services/application.service";
 import { useApplication } from "../_hooks/useApplication";
+import { Pill } from "@/components/ui/Pill";
 
 const inputClassName =
   "border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50";
@@ -104,9 +105,9 @@ export const StepOwners = memo(function StepOwners() {
                 <div className="flex items-center gap-2 text-sm font-semibold">
                   {t("Owner {{number}}", { number: index + 1 })}
                   {isSubmitter && (
-                    <span className="rounded-full bg-[rgba(136,122,71,0.12)] px-2 py-0.5 text-xs font-normal text-button-accent">
+                    <Pill tone="brand">
                       {t("You")}
-                    </span>
+                    </Pill>
                   )}
                   {savedStatus && application?.status === "NEEDS_REVISION" && (
                     <TagStatus

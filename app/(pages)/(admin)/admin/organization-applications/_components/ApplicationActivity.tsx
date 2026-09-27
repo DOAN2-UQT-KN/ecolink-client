@@ -28,6 +28,7 @@ import type {
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/libs/utils";
 import { formattedDate } from "@/utils/formattedDate";
+import { Pill } from "@/components/ui/Pill";
 
 type Tone = "cyan" | "blue" | "amber" | "emerald" | "red" | "zinc";
 
@@ -177,15 +178,9 @@ export const ApplicationActivity = memo(function ApplicationActivity({
   );
 
   const chip = (label: string, key: string) => (
-    <span
-      key={key}
-      className={cn(
-        "rounded-md px-2 py-0.5 text-xs",
-        isDark ? "bg-zinc-700 text-zinc-200" : "bg-zinc-100 text-zinc-700",
-      )}
-    >
+    <Pill key={key} isDark={isDark}>
       {label}
-    </span>
+    </Pill>
   );
 
   const detailsOf = (event: IApplicationEvent): ReactNode => {

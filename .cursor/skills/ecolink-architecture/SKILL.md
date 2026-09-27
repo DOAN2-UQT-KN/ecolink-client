@@ -28,7 +28,7 @@ Repo được migrate từ Next.js và **giữ lại quy ước thư mục** cho
 | UI | React 19.2.3, CSR | `src/main.tsx`, `src/App.tsx` |
 | Router | `react-router-dom` 7, `createBrowserRouter`, mọi page đều `lazy()` | `src/routes/index.tsx` |
 | Server state | TanStack Query v5, bọc trong `useGet`/`usePost` | `hooks/reactQuery.ts`, `libs/queryClient.ts` |
-| Client state | Zustand v5 + `persist` — **chỉ có 1 store** | `stores/useAuthStore.ts` |
+| Client state | Zustand v5 + `persist` — 2 store: phiên đăng nhập và ngữ cảnh tổ chức | `stores/useAuthStore.ts`, `stores/useOrgContextStore.ts` |
 | HTTP | Axios + interceptor refresh token | `libs/axiosClient.ts` → `utils/requestApi.ts` |
 | Form | react-hook-form — **không zod/yup** | — |
 | UI kit | shadcn/Radix (`components/ui/`), antd v6 dùng hạn chế | `components.json` |
@@ -63,7 +63,7 @@ i18n/                # index.ts + locales/{en,vi}/common.json
 libs/                # axiosClient, queryClient, router.tsx (shim Next), utils.ts (cn), localizedText, compressImage, dynamic.tsx
 modules/             # feature module dùng chung nhiều trang
 src/                 # App.tsx, main.tsx, routes/index.tsx, layouts/, pages/NotFound.tsx
-stores/              # useAuthStore.ts
+stores/              # useAuthStore.ts, useOrgContextStore.ts
 types/               # BaseResponse.ts, PaginationResponse.ts
 utils/               # requestApi, showMessage, logout, formattedDate, ...
 vite/                # reverseGeocode.ts — middleware dev-only /api/reverse-geocode
@@ -129,25 +129,38 @@ Chi tiết xem skill `ecolink-admin-console` và `ecolink-client-pages`.
 - `stores/useAuthStore.ts`: Zustand + `persist` (localStorage key `auth_store`), giữ `accessToken`, `refreshToken`, `user`, `permissions`.
   - Trong component: `useAuthStore((s) => s.user?.id)`.
   - Ngoài React: `useAuthStore.getState().accessToken`.
+  - `partialize` **không persist `is_authenticated`**: `onRehydrateStorage` bật lại `is_authenticated` khi còn cả `accessToken` lẫn `user`, rồi mới đặt `has_hydrated = true`. Code nào đọc `is_authenticated` lúc mount phải chờ `has_hydrated`.
+  - `handleSignInSuccess()` còn ghi cookie `refresh_token` bằng JS (không HttpOnly). Cookie này chỉ được ghi/xoá, **không nơi nào đọc lại** — interceptor lấy refresh token từ store.
+- `stores/useOrgContextStore.ts`: `activeOrganizationId | null` (key `org_context_store`), tự về `null` khi logout. **Chỉ để hiển thị**, không gửi lên server.
 - `libs/axiosClient.ts` gắn `Authorization: Bearer`, `X-Refresh-Token`, `Accept-Language`. Gặp 401 → thử refresh **1 lần** → thất bại thì `setLogoutSuccess()` + `window.location.href = "/sign-in?redirect=..."`.
+- Logout (`utils/logout.ts > clearAuthStorage()`) xoá `auth_store` và **mọi cookie của domain**, không chỉ cookie auth — đừng lưu gì cần giữ qua logout vào cookie.
 
-**Guard duy nhất của repo nằm ở `/admin`** — `src/layouts/AdminLayout.tsx`:
+**Guard duy nhất của repo nằm ở `/admin`** — `src/layouts/AdminLayout.tsx`, và nó **chỉ kiểm đăng nhập**:
 
 ```tsx
 if (!hasHydrated) return null;                      // chờ persist đọc xong, tránh đá nhầm admin khi F5
 if (!isAuthenticated) return <Navigate to={`/sign-in?redirect=${redirect}`} replace />;
-if (roleId !== ADMIN_ROLE_ID) return <Navigate to="/" replace />;
+// if (roleId !== ADMIN_ROLE_ID) return <Navigate to="/" replace />;   ← đang bị comment out
 ```
 
-`ADMIN_ROLE_ID` (`constants/roles.ts`) còn được dùng ở `components/client/layout/Header.tsx` để *ẩn* link menu:
+⚠️ Đoạn check `roleId` (và dòng lấy `roleId`) đang bị comment out → **mọi user đã đăng nhập đều vào được giao diện `/admin`**. Chặn quyền thật nằm ở server.
+
+Chỗ duy nhất client dùng `ADMIN_ROLE_ID` (`constants/roles.ts`) là `components/client/layout/Header.tsx`, để *ẩn* link menu:
 
 ```tsx
 {user.roleId === ADMIN_ROLE_ID && (<DropdownMenuItem asChild><Link href="/admin">{t('Admin')}</Link></DropdownMenuItem>)}
 ```
 
 **Các trang `(main)`, `(auth)`, `(maps)` KHÔNG có guard** — `create/`, `me/`, `/profile/*` render cho mọi người, chặn thật là interceptor 401 trong `libs/axiosClient.ts`.
+Hệ quả: trang nào gọi API cần đăng nhập ngay khi load (`/maps`, `/incidents`, `me/`...) sẽ đẩy khách ẩn danh về `/sign-in`. Trang muốn cho khách xem thì chỉ gọi endpoint công khai lúc load.
 
 ⇒ Guard client chỉ để người dùng không phải nhìn màn hình đầy request lỗi. **Enforcement thật nằm ở server (`ecolink-server`)** — đừng viết code dựa trên giả định "đã vào được `/admin` nghĩa là admin". `permissions: string[]` trong store **chưa từng được đọc ở đâu**.
+
+## Deploy & môi trường
+
+- Bản build là **SPA thuần** (nginx `try_files ... /index.html`, `vercel.json` rewrite về `/index.html`). Middleware `vite/reverseGeocode.ts` (`/api/reverse-geocode`) **chỉ chạy ở `vite dev`/`preview`** — trên prod path đó trả `index.html`. Đừng thêm tính năng dựa vào middleware Vite.
+- `VITE_*` được inline **lúc build** (build-arg trong `Dockerfile`), đổi env phải build lại.
+- Link chết đã biết (không có route → NotFound): `/about`, `/mission`, `/partnership`, `/support` trong menu Header; `/gifts/:id` trong `gifts/_context/GiftContext.tsx > onViewMore()`. Đừng link thêm vào các path này.
 
 ## Lệnh
 

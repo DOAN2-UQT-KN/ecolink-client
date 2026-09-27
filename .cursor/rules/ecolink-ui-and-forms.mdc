@@ -10,7 +10,9 @@ alwaysApply: false
 
 - Modal → **luôn** shadcn `@/components/ui/dialog`. Không dùng antd Modal.
 - Input/Select/Tabs/Table/Tooltip → `@/components/ui/*`.
-- antd v6 **chỉ dùng hạn chế**: `Image`, `Image.PreviewGroup`, `Tag`.
+- antd v6 **chỉ dùng hạn chế**: `Image`, `Image.PreviewGroup`, `Dropdown`.
+- **Mọi** tag / nhãn / badge trạng thái → `@/components/ui/Pill` (`<Pill tone="green" isDark?>`), hoặc `StatusTag` / `TagStatus` cho `STATUS` số. Không antd `Tag`, không tự viết `<span className="rounded-full …">`.
+- Màu tag ở `constants/statusTone.ts` (`STATUS_TONE`, `STATUS_LABEL`, `PRIORITY_TONE`, `GIFT_REDEEM_TONE`) — trạng thái mới thêm vào đây, không map màu tại chỗ. Số đếm (unread, join request) dùng shadcn `Badge`.
 - Bảng admin → `@/components/admin/shared/DataTable`. Bảng client → `@/components/client/shared/DataTable` (API kiểu antd, khác hẳn).
 
 ## ⚠️ `cn()` ở `@/libs/utils`
@@ -80,7 +82,7 @@ Không còn `<select>` thô trong repo; antd `Select` không dùng ở đâu c�
 
 ## Upload ảnh
 
-`compressImage` → Cloudinary (`uploadToCloudinary`) → gửi URL cho API. Đây là **ngoại lệ duy nhất** được gọi `axios` trực tiếp. Hiển thị bằng `@/components/ui/AppImage`.
+`compressImage` → Cloudinary (`uploadToCloudinary`) → gửi URL cho API. Đây là một trong số ít **ngoại lệ** được gọi `axios` trực tiếp (danh sách ở skill `ecolink-api-layer`). Hiển thị bằng `@/components/ui/AppImage`.
 
 | Nhu cầu | Dùng |
 |---|---|
@@ -106,7 +108,7 @@ Chỉ 5 enum thật: `STATUS`, `PRIORITY`, `SortOrder`, `MessageType`, `MessageL
 
 ## Toast
 
-`showMessage({ type: MessageType.Toast, level: MessageLevel.Success, title: t("...") })` từ `@/utils/showMessage` (default export). Không gọi `toast()` của sonner trực tiếp.
+`showMessage({ type: MessageType.Toast, level: MessageLevel.Success, title: t("...") })` từ `@/utils/showMessage` (default export). Không gọi `toast()` của sonner trực tiếp. `duration` bị bỏ qua.
 
 ---
 

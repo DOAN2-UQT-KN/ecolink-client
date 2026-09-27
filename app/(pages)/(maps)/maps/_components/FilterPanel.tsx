@@ -2,6 +2,7 @@ import { memo, type ReactNode } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { cn } from '@/libs/utils';
 import { useTranslation } from 'react-i18next';
+import { Pill } from '@/components/ui/Pill';
 
 type ToggleVariant = 'campaign' | 'incident' | 'sos';
 
@@ -122,9 +123,9 @@ const FilterPanel = memo(function FilterPanel({
           <p className="mt-1.5 flex items-center gap-1 text-[10px] text-gray-500">
             {/* <Activity className="size-3 shrink-0 text-red-500" aria-hidden /> */}
             {t('Map updated at {{time}}', { time: formattedTime })}
-            <span className="rounded-full bg-red-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-red-600 animate-pulse">
+            <Pill tone="red" className="animate-pulse">
               {t('LIVE')}
-            </span>
+            </Pill>
           </p>
         )}
       </div>

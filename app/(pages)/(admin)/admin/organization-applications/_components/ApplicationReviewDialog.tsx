@@ -483,7 +483,7 @@ export function ApplicationReviewDialog({
               <TagStatus
                 type={APPLICATION_STATUS_TAG[application.status].type}
                 label={t(APPLICATION_STATUS_TAG[application.status].label)}
-                className="!mx-0 min-w-0 justify-center"
+                isDark={isDark}
                 />
               <span className="text-xs text-muted-foreground">
                 {application.code}
