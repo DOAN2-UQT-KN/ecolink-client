@@ -320,11 +320,32 @@ export const OwnerChangeHistory = memo(function OwnerChangeHistory() {
 });
 
 /**
- * Open owner changes (each person's and each co-owner's answer) and "Propose new owners".
- * Decided inside the organization — people concerned confirm by email, the other owners
- * approve here.
+ * Open owner changes (each person's and each co-owner's answer). Decided inside the
+ * organization — people concerned confirm by email, the other owners approve here.
  */
 export const OwnerChangesPanel = memo(function OwnerChangesPanel() {
+  const { organizationId, permissions } = useOrganizationDetail();
+  const canPropose = Boolean(permissions?.can_propose_owners);
+
+  const { data } = useGetOwnerChanges(organizationId, {
+    enabled: canPropose && Boolean(organizationId),
+  });
+  const changes = data?.data?.changes ?? [];
+  const openChanges = changes.filter((c) => c.status === OPEN_STATUS);
+
+  if (!canPropose || openChanges.length === 0) return null;
+
+  return (
+    <div className="mt-4 flex flex-col gap-3 border-t border-[rgba(136,122,71,0.25)] pt-4">
+      {openChanges.map((change) => (
+        <OpenChangeCard key={change.id} change={change} />
+      ))}
+    </div>
+  );
+});
+
+/** "Propose new owners" button and its dialog. Hidden while an ADD_OWNER change is open. */
+export const ProposeOwnersDialog = memo(function ProposeOwnersDialog() {
   const { t } = useTranslation();
   const { organizationId, permissions } = useOrganizationDetail();
   const canPropose = Boolean(permissions?.can_propose_owners);
@@ -336,9 +357,9 @@ export const OwnerChangesPanel = memo(function OwnerChangesPanel() {
   const { data } = useGetOwnerChanges(organizationId, {
     enabled: canPropose && Boolean(organizationId),
   });
-  const changes = data?.data?.changes ?? [];
-  const openChanges = changes.filter((c) => c.status === OPEN_STATUS);
-  const addOpen = openChanges.some((c) => c.type === "ADD_OWNER");
+  const addOpen = (data?.data?.changes ?? []).some(
+    (c) => c.status === OPEN_STATUS && c.type === "ADD_OWNER",
+  );
 
   const invalidate = useInvalidateOwnership();
   const { mutate: create, isPending: isCreating } = useCreateOwnerChange({
@@ -351,7 +372,7 @@ export const OwnerChangesPanel = memo(function OwnerChangesPanel() {
     },
   });
 
-  if (!canPropose) return null;
+  if (!canPropose || addOpen) return null;
 
   const invalidRows = rows.map((row) => !row.person || !row.fullName.trim());
   const submit = () => {
@@ -371,22 +392,15 @@ export const OwnerChangesPanel = memo(function OwnerChangesPanel() {
   };
 
   return (
-    <div className="mt-4 flex flex-col gap-3 border-t border-[rgba(136,122,71,0.25)] pt-4">
-      {openChanges.map((change) => (
-        <OpenChangeCard key={change.id} change={change} />
-      ))}
-
-      {!addOpen && (
-        <Button
-          variant="outlined-brown"
-          size="medium"
-          iconLeft={<TbUserShield className="size-4" />}
-          onClick={() => setOpen(true)}
-          className="self-start"
-        >
-          {t("Propose new owners")}
-        </Button>
-      )}
+    <>
+      <Button
+        variant="outlined-brown"
+        size="medium"
+        iconLeft={<TbUserShield className="size-4" />}
+        onClick={() => setOpen(true)}
+      >
+        {t("Propose new owners")}
+      </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-xl">
@@ -481,7 +495,7 @@ export const OwnerChangesPanel = memo(function OwnerChangesPanel() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 });
 

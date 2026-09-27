@@ -32,7 +32,11 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { ConfirmPopoverModal } from "@/modules/OrganizationCard/components/ConfirmPopoverModal";
 import { InviteMemberDialog } from "./InviteMemberDialog";
 import { OwnerActions } from "./OwnerActions";
-import { OwnerChangeHistory, OwnerChangesPanel } from "./OwnerChanges";
+import {
+  OwnerChangeHistory,
+  OwnerChangesPanel,
+  ProposeOwnersDialog,
+} from "./OwnerChanges";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const FILTER_PANEL_CLASS =
@@ -248,20 +252,23 @@ export const OrganizationMembers = memo(function OrganizationMembers({
         {permissions?.can_propose_owners ? (
           // Owners see the owner changes too: open ones with the list, closed ones in History.
           <Tabs defaultValue="owners">
-            <TabsList className="border border-[rgba(136,122,71,0.5)] rounded-[8px] bg-background-primary/10">
-              <TabsTrigger
-                value="owners"
-                className="rounded-[8px] px-4 py-2 h-full data-active:bg-background data-active:shadow-sm transition-all"
-              >
-                {owners.length > 1 ? t("Owners") : t("Owner")}
-              </TabsTrigger>
-              <TabsTrigger
-                value="history"
-                className="rounded-[8px] px-4 py-2 h-full data-active:bg-background data-active:shadow-sm transition-all"
-              >
-                {t("History")}
-              </TabsTrigger>
-            </TabsList>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <TabsList className="border border-[rgba(136,122,71,0.5)] rounded-[8px] bg-background-primary/10">
+                <TabsTrigger
+                  value="owners"
+                  className="rounded-[8px] px-4 py-2 h-full data-active:bg-background data-active:shadow-sm transition-all"
+                >
+                  {owners.length > 1 ? t("Owners") : t("Owner")}
+                </TabsTrigger>
+                <TabsTrigger
+                  value="history"
+                  className="rounded-[8px] px-4 py-2 h-full data-active:bg-background data-active:shadow-sm transition-all"
+                >
+                  {t("History")}
+                </TabsTrigger>
+              </TabsList>
+              <ProposeOwnersDialog />
+            </div>
             <TabsContent value="owners" className="mt-2">
               {ownerList}
               <OwnerChangesPanel />
@@ -278,10 +285,6 @@ export const OrganizationMembers = memo(function OrganizationMembers({
             <div className="mt-3">{ownerList}</div>
           </>
         )}
-      </div>
-
-      <div className="flex justify-end">
-        <InviteMemberDialog />
       </div>
 
       <div className={FILTER_PANEL_CLASS}>
@@ -324,6 +327,12 @@ export const OrganizationMembers = memo(function OrganizationMembers({
       </div>
 
       <div className="rounded-xl border border-[rgba(136,122,71,0.35)] bg-white/60 p-4 sm:p-5 shadow-sm">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-xs font-medium text-foreground-tertiary uppercase tracking-wide">
+            {t("Members")}
+          </p>
+          <InviteMemberDialog />
+        </div>
         {isLoading ? (
           <div className="space-y-3">
             <Skeleton className="h-12 w-full rounded-lg" />

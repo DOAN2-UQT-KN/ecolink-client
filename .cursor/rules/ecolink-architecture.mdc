@@ -53,7 +53,7 @@ Mọi chuỗi hiển thị qua `t()`. **Key chính là câu tiếng Anh.** Thêm
 
 `/admin` có guard ở `src/layouts/AdminLayout.tsx` nhưng **chỉ kiểm `has_hydrated` + `is_authenticated`** (chưa đăng nhập đá `/sign-in?redirect=`); check `roleId` đang bị comment out → mọi user đã đăng nhập vào được `/admin`. Chỉ link Admin trên Header ẩn theo `roleId`. Các trang `(main)`/`(auth)`/`(maps)` **không có guard** — chặn thật là interceptor 401 trong `libs/axiosClient.ts`. Guard client chỉ để đỡ phải nhìn màn hình lỗi; **enforcement thật ở server**, đừng viết code dựa trên giả định "vào được /admin nghĩa là admin".
 
-Store: `stores/useAuthStore.ts` (`is_authenticated` không persist — chờ `has_hydrated`) và `stores/useOrgContextStore.ts` (chỉ để hiển thị). Build là SPA thuần: middleware Vite `/api/reverse-geocode` không chạy trên prod; `VITE_*` cố định lúc build.
+Store: `stores/useAuthStore.ts` (`is_authenticated` không persist — chờ `has_hydrated`) và `stores/useOrgContextStore.ts` (không cấp quyền; chỉ là mặc định UI: switcher, filter `/campaigns/me`, tổ chức chọn sẵn khi tạo campaign). Build là SPA thuần: middleware Vite `/api/reverse-geocode` không chạy trên prod; `VITE_*` cố định lúc build.
 
 ## Lệnh
 

@@ -267,7 +267,7 @@ const onSubmit = form.handleSubmit(async (data) => {
 ### Field component dùng lại
 
 - `components/client/shared/SingleImageFileField.tsx` — chọn 1 ảnh.
-- `components/form/SelectListCampaign.tsx`, `SelectListOrganization.tsx`, `SelectListPriority.tsx` — controlled, props `{ value, onChange, disabled, className, placeholder }`, `React.FC<Props>`, default export.
+- `components/form/SelectListCampaign.tsx`, `SelectListOrganization.tsx`, `SelectListPriority.tsx` — controlled, props `{ value, onChange, disabled, className, placeholder }`, `React.FC<Props>`, default export. `SelectListOrganization` (bọc `memo`) có thêm `allOptions` (thêm lựa chọn "All" = `ALL_ORGANIZATIONS_VALUE` `"-1"`) và `roles?: OrgMemberRole[]` (lọc theo vai; bỏ trống thì giữ `is_owner: true`).
 
 ## Upload ảnh
 
