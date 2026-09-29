@@ -1,5 +1,6 @@
 import type { IUser } from '@/apis/auth/models/user';
 import { IIncident } from '@/apis/incident/models/incident';
+import type { ICampaignRequirements, IMeetingPoint } from './lifecycle';
 
 export interface ICampaign {
   id: string;
@@ -47,8 +48,21 @@ export interface ICampaign {
 
   banner?: string;
   detail_address?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  radius_km?: number | null;
   start_date?: string;
   end_date?: string;
+
+  contact_name?: string | null;
+  /** Only returned to managers, admins and accepted volunteers. */
+  contact_phone?: string | null;
+  safety_notes?: string | null;
+  requirements?: ICampaignRequirements | null;
+  /** Resubmit before this while the campaign needs revision. */
+  revision_deadline?: string | null;
+  submitted_at?: string | null;
+  meeting_points?: IMeetingPoint[];
 
   current_members?: number;
   max_members?: number;

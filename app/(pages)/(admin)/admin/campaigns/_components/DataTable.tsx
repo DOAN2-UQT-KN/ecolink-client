@@ -5,7 +5,7 @@ import { TbExternalLink } from 'react-icons/tb';
 
 import type { ICampaign } from '@/apis/campaign/models/campaign';
 import { useAdminLayout } from '@/app/(pages)/(admin)/_context/AdminLayoutContext';
-import { StatusTag } from '@/components/ui/StatusTag';
+import { CampaignStatusTag } from '@/components/ui/CampaignStatusTag';
 import Image from '@/components/ui/AppImage';
 import {
   DataTable as SharedDataTable,
@@ -13,9 +13,9 @@ import {
 } from '@/components/admin/shared/DataTable';
 import { cn } from '@/libs/utils';
 import { useCampaignContext } from '../_context/CampaignContext';
-import { VerifyCampaignConfirm } from './VerifyCampaignConfirm';
+import { ReviewCampaignConfirm } from './ReviewCampaignConfirm';
 import { formattedDate } from '@/utils/formattedDate';
-import { STATUS } from '@/constants/status';
+import { CAMPAIGN_STATUS } from '@/constants/campaignLifecycle';
 import { getDifficultyLevel } from '@/constants/difficulty';
 import { CompletionReviewCampaignConfirm } from './CompletionReviewCampaignConfirm';
 import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
@@ -183,7 +183,7 @@ export const DataTable = memo(function DataTable() {
         title: t('Status'),
         className: 'min-w-[120px]',
         render: (_, record) => (
-          <StatusTag status={record.status} isDark={isDark} />
+          <CampaignStatusTag status={record.status} isDark={isDark} />
         ),
       },
       {
@@ -243,24 +243,22 @@ export const DataTable = memo(function DataTable() {
               <TbExternalLink className="size-5" />
             </a>
 
-            {record.status === STATUS.ACTIVE ? (
-              <VerifyCampaignConfirm
+            {record.status === CAMPAIGN_STATUS.ACTIVE ? (
+              <ReviewCampaignConfirm
                 mode="ban"
                 campaignId={record.id}
                 campaignTitle={localizedTitle(record)}
                 theme={isDark ? 'dark' : 'light'}
               />
-            ) : record.status !== STATUS.INACTIVE &&
-              record.status !== STATUS.COMPLETED &&
-              record.status !== STATUS.WAITING_CONFIRMED ? (
-              <VerifyCampaignConfirm
+            ) : record.status === CAMPAIGN_STATUS.PENDING_REVIEW ? (
+              <ReviewCampaignConfirm
                 campaignId={record.id}
                 campaignTitle={localizedTitle(record)}
                 theme={isDark ? 'dark' : 'light'}
               />
             ) : null}
 
-            {record.status === STATUS.WAITING_CONFIRMED ? (
+            {record.status === CAMPAIGN_STATUS.PENDING_COMPLETION ? (
               <CompletionReviewCampaignConfirm
                 campaignId={record.id}
                 campaignTitle={localizedTitle(record)}

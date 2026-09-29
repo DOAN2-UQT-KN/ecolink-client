@@ -34,6 +34,7 @@ export const router = createBrowserRouter([
           { path: "campaigns/create", element: lazyPage(() => import("@/app/(pages)/(main)/campaigns/create/page"), "campaigns-create") },
           { path: "campaigns/me", element: lazyPage(() => import("@/app/(pages)/(main)/campaigns/me/page"), "campaigns-me") },
           { path: "campaigns/:id", element: lazyPage(() => import("@/app/(pages)/(main)/campaigns/[id]/page"), "campaign-detail") },
+          { path: "campaigns/:id/edit", element: lazyPage(() => import("@/app/(pages)/(main)/campaigns/[id]/edit/page"), "campaign-edit") },
           { path: "incidents", element: lazyPage(() => import("@/app/(pages)/(main)/incidents/(search)/page"), "incidents") },
           { path: "incidents/create", element: lazyPage(() => import("@/app/(pages)/(main)/incidents/create/page"), "incidents-create") },
           { path: "incidents/me", element: lazyPage(() => import("@/app/(pages)/(main)/incidents/me/page"), "incidents-me") },

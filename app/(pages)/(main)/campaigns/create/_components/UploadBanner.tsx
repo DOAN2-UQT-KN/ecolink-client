@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/dialog";
 
 import { CampaignFormValues } from "../_services/campaign.service";
+import { CAMPAIGN_BANNER_MAX_BYTES } from "@/constants/campaignLifecycle";
+import showMessage, { MessageLevel, MessageType } from "@/utils/showMessage";
 
 const UploadBanner = memo(function UploadBanner() {
   const { t } = useTranslation();
@@ -112,7 +114,15 @@ const UploadBanner = memo(function UploadBanner() {
     try {
       const raw = await getCroppedImageBlob(cropSrc, croppedAreaPixels);
       const compressedImage = await compressImage(raw);
-      setValue("banner", compressedImage, { shouldDirty: true });
+      if (compressedImage.size > CAMPAIGN_BANNER_MAX_BYTES) {
+        showMessage({
+          type: MessageType.Toast,
+          level: MessageLevel.Error,
+          title: t("The cover image must be at most 5 MB"),
+        });
+        return;
+      }
+      setValue("banner", compressedImage, { shouldDirty: true, shouldValidate: true });
       onCropDialogOpenChange(false);
     } catch (error) {
       console.error("Error processing banner:", error);
@@ -143,7 +153,7 @@ const UploadBanner = memo(function UploadBanner() {
               {t("Upload campaign banner")}
             </span>
             <span className="font-display-2 text-button-accent-hover">
-              {t("JPEG, PNG, and WEBP formats, up to 50MB")}
+              {t("JPEG, PNG, and WEBP formats, up to 5MB")}
             </span>
           </div>
           <Button variant="outlined-brown" type="button" disabled={compressing}>

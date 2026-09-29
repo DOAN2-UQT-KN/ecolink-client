@@ -14,18 +14,20 @@ import {
 import SelectListOrganization, {
   ALL_ORGANIZATIONS_VALUE,
 } from '@/components/form/SelectListOrganization';
-import { STATUS } from '@/constants/status';
+import { CAMPAIGN_STATUS } from '@/constants/campaignLifecycle';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useCampaignContext } from '../_context/CampaignContext';
 
-/** Status options relevant to campaigns — derived from STATUS enum */
+/** Campaign statuses an admin can filter by (drafts are private to their managers). */
 const CAMPAIGN_STATUS_OPTIONS = [
   { labelKey: 'All', value: 'all' },
-  { labelKey: 'Active', value: String(STATUS.ACTIVE) },
-  { labelKey: 'Inactive', value: String(STATUS.INACTIVE) },
-  { labelKey: 'Pending', value: String(STATUS.PENDING) },
-  { labelKey: 'Waiting Confirmed', value: String(STATUS.WAITING_CONFIRMED) },
-  { labelKey: 'Completed', value: String(STATUS.COMPLETED) },
+  { labelKey: 'Pending review', value: String(CAMPAIGN_STATUS.PENDING_REVIEW) },
+  { labelKey: 'Needs revision', value: String(CAMPAIGN_STATUS.NEEDS_REVISION) },
+  { labelKey: 'Active', value: String(CAMPAIGN_STATUS.ACTIVE) },
+  { labelKey: 'Waiting Confirmed', value: String(CAMPAIGN_STATUS.PENDING_COMPLETION) },
+  { labelKey: 'Completed', value: String(CAMPAIGN_STATUS.COMPLETED) },
+  { labelKey: 'Blocked', value: String(CAMPAIGN_STATUS.BLOCKED) },
+  { labelKey: 'Expired', value: String(CAMPAIGN_STATUS.EXPIRED) },
 ] as const;
 
 export const FormFilter = memo(function FormFilter() {

@@ -1,8 +1,7 @@
-import { memo, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 import { Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
-import { type DateRange } from 'react-day-picker';
 import { CalendarIcon } from 'lucide-react';
 
 import { Calendar } from '@/components/ui/calendar';
@@ -16,6 +15,13 @@ import { CAMPAIGN_CREATOR_ROLES } from '@/hooks/useCampaignCreatorOrganizations'
 
 import { useCampaign } from '../_hooks/useCampaign';
 import { TITLE_MAX_LENGTH } from '../_services/campaign.service';
+import {
+  CAMPAIGN_DESCRIPTION_MIN_LENGTH,
+  CAMPAIGN_MAX_HOURS_PER_DAY,
+  CAMPAIGN_MIN_LEAD_HOURS,
+  CAMPAIGN_TITLE_MIN_LENGTH,
+  stripHtml,
+} from '@/constants/campaignLifecycle';
 import {
   DIFFICULTY_LEVEL,
   DIFFICULTY_MAX,
@@ -36,23 +42,49 @@ const formatDateToApi = (date?: Date): string | undefined => {
 
 const parseApiDate = (date?: string): Date | undefined => {
   if (!date) return undefined;
-  const parsed = new Date(date);
+  const parsed = new Date(`${date}T00:00:00`);
   return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+};
+
+const minutesOf = (time?: string): number | null => {
+  const m = time?.match(/^(\d{2}):(\d{2})$/);
+  return m ? Number(m[1]) * 60 + Number(m[2]) : null;
 };
 
 const GeneralInformation = memo(function GeneralInformation() {
   const { t } = useTranslation();
-  const { form } = useCampaign();
+  const { form, eligibility, campaign } = useCampaign();
   const {
     register,
     control,
     watch,
     formState: { errors },
   } = form;
-  const [isDateRangeOpen, setIsDateRangeOpen] = useState(false);
+  const [isDateOpen, setIsDateOpen] = useState(false);
 
-  const startDateValue = watch('start_date');
-  const endDateValue = watch('end_date');
+  const campaignDate = watch('campaign_date');
+  const maxDifficulty = eligibility?.max_difficulty ?? null;
+  const isUnverified = eligibility != null && !eligibility.is_verified;
+
+  // Rules checked on "Send for review"; a draft may be saved half-filled.
+  useEffect(() => {
+    register('banner', { validate: (v) => Boolean(v) || t('A cover image is required') });
+    register('description', {
+      validate: (v) =>
+        stripHtml(v).length >= CAMPAIGN_DESCRIPTION_MIN_LENGTH ||
+        t('Description must be at least {{min}} characters', {
+          min: CAMPAIGN_DESCRIPTION_MIN_LENGTH,
+        }),
+    });
+    register('campaign_date', { required: t('Pick the campaign day') });
+  }, [register, t]);
+
+  // An unverified organization only gets the lowest difficulty.
+  useEffect(() => {
+    if (maxDifficulty != null && form.getValues('difficulty') > maxDifficulty) {
+      form.setValue('difficulty', maxDifficulty);
+    }
+  }, [form, maxDifficulty]);
   const inputClassName = useMemo(
     () =>
       'border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50',
@@ -80,9 +112,15 @@ const GeneralInformation = memo(function GeneralInformation() {
                   value={field.value}
                   onChange={field.onChange}
                   roles={CAMPAIGN_CREATOR_ROLES}
+                  disabled={Boolean(campaign)}
                 />
               )}
             />
+            {isUnverified && (
+              <span className="text-xs font-medium text-amber-700">
+                {t('Unverified organization')}: {t('lowest difficulty only, at most 2 campaigns running at a time')}
+              </span>
+            )}
             <FieldError errors={[errors.organization_id]} />
           </Field>
 
@@ -93,6 +131,12 @@ const GeneralInformation = memo(function GeneralInformation() {
             <Input
               {...register('title', {
                 required: t('Title is required'),
+                minLength: {
+                  value: CAMPAIGN_TITLE_MIN_LENGTH,
+                  message: t('Title must be at least {{min}} characters', {
+                    min: CAMPAIGN_TITLE_MIN_LENGTH,
+                  }),
+                },
                 maxLength: {
                   value: TITLE_MAX_LENGTH,
                   message: t('Title must be at most {{max}} characters', {
@@ -109,55 +153,80 @@ const GeneralInformation = memo(function GeneralInformation() {
 
           <Field>
             <FieldLabel className="text-foreground-tertiary font-display-3">
-              {t('Campaign schedule')}
+              {t('Campaign schedule')} <span className="text-destructive">*</span>
             </FieldLabel>
-            <Controller
-              name="end_date"
-              control={control}
-              render={() => (
-                <div className="relative">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className={cn(
-                      'w-full justify-start text-left font-normal border-[rgba(136,122,71,0.5)] hover:bg-transparent !h-[50px]',
-                      !startDateValue && 'text-muted-foreground',
-                    )}
-                    onClick={() => setIsDateRangeOpen((prev) => !prev)}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {startDateValue && endDateValue ? (
-                      `${format(parseApiDate(startDateValue) as Date, 'PPP')} - ${format(parseApiDate(endDateValue) as Date, 'PPP')}`
-                    ) : (
-                      <span>{t('Pick a date range')}</span>
-                    )}
-                  </Button>
-                  {isDateRangeOpen && (
-                    <div className="absolute z-50 mt-2 rounded-md border border-[rgba(136,122,71,0.5)] bg-background shadow-md">
-                      <Calendar
-                        mode="range"
-                        numberOfMonths={2}
-                        defaultMonth={parseApiDate(startDateValue) ?? new Date()}
-                        selected={{
-                          from: parseApiDate(startDateValue),
-                          to: parseApiDate(endDateValue),
-                        }}
-                        onSelect={(range: DateRange | undefined) => {
-                          form.setValue('start_date', formatDateToApi(range?.from), {
-                            shouldDirty: true,
-                          });
-                          form.setValue('end_date', formatDateToApi(range?.to), {
-                            shouldDirty: true,
-                          });
-                        }}
-                      />
-                    </div>
-                  )}
+            <div className="relative">
+              <Button
+                type="button"
+                variant="outline"
+                className={cn(
+                  'w-full justify-start text-left font-normal border-[rgba(136,122,71,0.5)] hover:bg-transparent !h-[50px]',
+                  !campaignDate && 'text-muted-foreground',
+                )}
+                onClick={() => setIsDateOpen((prev) => !prev)}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {campaignDate ? (
+                  format(parseApiDate(campaignDate) as Date, 'PPP')
+                ) : (
+                  <span>{t('Pick the campaign day')}</span>
+                )}
+              </Button>
+              {isDateOpen && (
+                <div className="absolute z-50 mt-2 rounded-md border border-[rgba(136,122,71,0.5)] bg-background shadow-md">
+                  <Calendar
+                    mode="single"
+                    defaultMonth={parseApiDate(campaignDate) ?? new Date()}
+                    selected={parseApiDate(campaignDate)}
+                    disabled={{ before: new Date(Date.now() + CAMPAIGN_MIN_LEAD_HOURS * 3600_000) }}
+                    onSelect={(date: Date | undefined) => {
+                      form.setValue('campaign_date', formatDateToApi(date), {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      });
+                      setIsDateOpen(false);
+                    }}
+                  />
                 </div>
               )}
-            />
-            <FieldError errors={[errors.start_date]} />
-            <FieldError errors={[errors.end_date]} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Input
+                type="time"
+                aria-label={t('Start time')}
+                className={inputClassName}
+                {...register('start_time', { required: t('Start time is required') })}
+              />
+              <Input
+                type="time"
+                aria-label={t('End time')}
+                className={inputClassName}
+                {...register('end_time', {
+                  required: t('End time is required'),
+                  validate: (end, values) => {
+                    const a = minutesOf(values.start_time);
+                    const b = minutesOf(end);
+                    if (a == null || b == null) return true;
+                    if (b <= a) return t('End time must be after the start time');
+                    if (b - a > CAMPAIGN_MAX_HOURS_PER_DAY * 60) {
+                      return t('A campaign day lasts at most {{max}} hours', {
+                        max: CAMPAIGN_MAX_HOURS_PER_DAY,
+                      });
+                    }
+                    return true;
+                  },
+                })}
+              />
+            </div>
+            <span className="text-xs text-foreground-tertiary">
+              {t('Starts at least {{hours}} hours from now, lasts at most {{max}} hours on one day', {
+                hours: CAMPAIGN_MIN_LEAD_HOURS,
+                max: CAMPAIGN_MAX_HOURS_PER_DAY,
+              })}
+            </span>
+            <FieldError errors={[errors.campaign_date]} />
+            <FieldError errors={[errors.start_time]} />
+            <FieldError errors={[errors.end_time]} />
           </Field>
 
           <Field>
@@ -180,7 +249,8 @@ const GeneralInformation = memo(function GeneralInformation() {
                     </div>
                     <Slider
                       min={DIFFICULTY_MIN}
-                      max={DIFFICULTY_MAX}
+                      max={maxDifficulty ?? DIFFICULTY_MAX}
+                      disabled={maxDifficulty === DIFFICULTY_MIN}
                       step={1}
                       value={[level]}
                       onValueChange={(value) => field.onChange(value[0] ?? DIFFICULTY_MIN)}
@@ -191,16 +261,19 @@ const GeneralInformation = memo(function GeneralInformation() {
                       {DIFFICULTY_VALUES.map((value) => {
                         const item = DIFFICULTY_LEVEL[value];
                         const selected = value === level;
+                        const allowed = maxDifficulty == null || value <= maxDifficulty;
                         return (
                           <button
                             key={value}
                             type="button"
+                            disabled={!allowed}
                             onClick={() => field.onChange(value)}
                             className={cn(
                               'flex flex-col items-center gap-0.5 text-[10px] transition-colors',
                               selected
                                 ? cn('font-semibold', item.textClass)
                                 : 'text-foreground-tertiary',
+                              !allowed && 'opacity-40 cursor-not-allowed',
                             )}
                           >
                             <span className="hidden sm:block">{t(item.label)}</span>
@@ -217,7 +290,7 @@ const GeneralInformation = memo(function GeneralInformation() {
 
           <Field>
             <FieldLabel className="text-foreground-tertiary font-display-3">
-              {t('Description')}
+              {t('Description')} <span className="text-destructive">*</span>
             </FieldLabel>
             {/* <Textarea
               {...register('description')}
@@ -227,18 +300,19 @@ const GeneralInformation = memo(function GeneralInformation() {
             /> */}
             <RichTextEditor
               value={watch('description')}
-              onChange={(value) => form.setValue('description', value)}
+              onChange={(value) => form.setValue('description', value, { shouldDirty: true })}
               placeholder={t('Describe this campaign...')}
               className={cn(inputClassName, 'min-h-[220px]')}
             />
-            {/* <FieldError errors={[errors.description]} /> */}
+            <FieldError errors={[errors.description]} />
           </Field>
 
           <Field>
             <FieldLabel className="text-foreground-tertiary font-display-3">
-              {t('Banner')}
+              {t('Banner')} <span className="text-destructive">*</span>
             </FieldLabel>
             <UploadBanner />
+            <FieldError errors={[errors.banner]} />
           </Field>
 
         </div>

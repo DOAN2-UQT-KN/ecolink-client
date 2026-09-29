@@ -32,6 +32,15 @@ const API_ERROR_MESSAGES: Record<string, string> = {
   CAMPAIGN_MANAGER_NOT_MEMBER:
     "Campaign managers must be active members of the campaign's organization",
   CANNOT_REMOVE_CAMPAIGN_CREATOR: "The campaign creator cannot be removed as a manager",
+  CAMPAIGN_INVALID: "The campaign is missing information or breaks a rule",
+  CAMPAIGN_REPORTS_TAKEN:
+    "Some waste points were just taken by another campaign; remove them and try again",
+  CAMPAIGN_CREATE_NOT_ALLOWED: "This organization cannot create or submit a campaign right now",
+  CAMPAIGN_INVALID_TRANSITION: "The campaign changed meanwhile; reload and try again",
+  CAMPAIGN_REVIEW_CONFLICT_OF_INTEREST:
+    "Admins cannot review campaigns of an organization they belong to",
+  CAMPAIGN_NOT_EDITABLE: "These fields cannot be changed once the campaign is approved",
+  CAMPAIGN_NOT_DELETABLE: "This campaign can no longer be deleted",
   ROLE_NOT_ASSIGNABLE: "You cannot assign this role",
   CANNOT_ACT_ON_MEMBER: "You cannot change or remove this member",
   MEMBER_NOT_FOUND: "This person is not a member of the organization",

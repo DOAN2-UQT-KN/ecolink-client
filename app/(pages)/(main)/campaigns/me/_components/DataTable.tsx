@@ -4,7 +4,17 @@ import { useTranslation } from 'react-i18next';
 import { Building2 } from 'lucide-react';
 
 import type { ICampaign } from '@/apis/campaign/models/campaign';
-import { StatusTag } from '@/components/ui/StatusTag';
+import { CampaignStatusTag } from '@/components/ui/CampaignStatusTag';
+import { Button } from '@/components/client/shared/Button';
+import { ConfirmPopover } from '@/components/admin/shared/ConfirmPopover';
+import { useSubmitCampaign } from '@/apis/campaign/submitCampaign';
+import { useDeleteCampaign } from '@/apis/campaign/deleteCampaign';
+import {
+  CAMPAIGN_DELETABLE_STATUSES,
+  CAMPAIGN_EDITABLE_STATUSES,
+  CAMPAIGN_STATUS,
+  CAMPAIGN_SUBMITTABLE_STATUSES,
+} from '@/constants/campaignLifecycle';
 import Image from '@/components/ui/AppImage';
 import { formattedDate } from '@/utils/formattedDate';
 import { getDifficultyLevel } from '@/constants/difficulty';
@@ -29,7 +39,65 @@ const COLUMN_KEYS = {
   BAN_REASON: 'ban_reason',
   MEMBERS: 'members',
   GREEN_POINTS: 'green_points',
+  ACTIONS: 'actions',
 } as const;
+
+/** Edit / send for review / delete, depending on the campaign's status and the viewer's rights. */
+const CampaignRowActions = memo(function CampaignRowActions({ campaign }: { campaign: ICampaign }) {
+  const { t } = useTranslation();
+  const router = useRouter();
+  const { mutate: submit, isPending: isSubmitting } = useSubmitCampaign();
+  const { mutate: remove, isPending: isDeleting } = useDeleteCampaign();
+  const status = campaign.status ?? -1;
+  const canManage = Boolean(campaign.can_manage_campaign);
+  const canEdit = canManage && CAMPAIGN_EDITABLE_STATUSES.includes(status);
+  const canSubmit = canManage && CAMPAIGN_SUBMITTABLE_STATUSES.includes(status);
+  const canDelete = Boolean(campaign.can_delete_campaign) && CAMPAIGN_DELETABLE_STATUSES.includes(status);
+
+  if (!canEdit && !canSubmit && !canDelete) {
+    return <span className="text-xs text-zinc-400">—</span>;
+  }
+
+  return (
+    <div className="flex flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
+      {canEdit && (
+        <Button
+          size="small"
+          variant="outlined-brown"
+          onClick={() => router.push(`/campaigns/${campaign.id}/edit`)}
+        >
+          {t('Edit')}
+        </Button>
+      )}
+      {canSubmit && (
+        <Button
+          size="small"
+          variant="brown"
+          disabled={isSubmitting}
+          onClick={() => submit(campaign.id, { onError: () => router.push(`/campaigns/${campaign.id}/edit`) })}
+        >
+          {status === CAMPAIGN_STATUS.NEEDS_REVISION ? t('Resubmit for review') : t('Send for review')}
+        </Button>
+      )}
+      {canDelete && (
+        <ConfirmPopover
+          title={t('Delete campaign')}
+          description={t('The campaign is removed and its waste points become available again.')}
+          confirmLabel={t('Yes')}
+          cancelLabel={t('No')}
+          theme="light"
+          confirmPending={isDeleting}
+          onConfirm={() => remove(campaign.id)}
+          trigger={
+            <Button size="small" variant="outlined-brown" className="text-red-600">
+              {t('Delete')}
+            </Button>
+          }
+        />
+      )}
+    </div>
+  );
+});
 
 const GeneralInformationCell = memo(function GeneralInformationCell({
   campaign,
@@ -134,15 +202,18 @@ export const DataTable = memo(function DataTable() {
         key: COLUMN_KEYS.STATUS,
         title: t('Status'),
         render: (_, record) => (
-          <StatusTag status={record.status} />
+          <CampaignStatusTag status={record.status} />
         ),
         width: 120,
       },
       {
         key: COLUMN_KEYS.BAN_REASON,
-        title: t('Reject Reason'),
+        title: t('Admin reason'),
         render: (_, record) =>
-          record.reject_reason ? (
+          record.reject_reason &&
+          (record.status === CAMPAIGN_STATUS.NEEDS_REVISION ||
+            record.status === CAMPAIGN_STATUS.BLOCKED ||
+            record.status === CAMPAIGN_STATUS.ACTIVE) ? (
             <span
               className="line-clamp-2 text-xs"
               title={record.reject_reason}
@@ -165,6 +236,12 @@ export const DataTable = memo(function DataTable() {
           </span>
         ),
         width: 120,
+      },
+      {
+        key: COLUMN_KEYS.ACTIONS,
+        title: t('Actions'),
+        render: (_, record) => <CampaignRowActions campaign={record} />,
+        width: 220,
       },
       // {
       //   key: COLUMN_KEYS.GREEN_POINTS,

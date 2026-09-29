@@ -16,6 +16,8 @@ export interface IGetCampaignsRequest {
   end_date?: string;
 
   is_owner?: boolean;
+  /** Admin review queue: leave out organizations the admin belongs to. */
+  excludeMemberOrgs?: boolean;
 }
 
 export type IGetCampaignsResponse = IPaginationResponse<ICampaign[], 'campaigns'>;

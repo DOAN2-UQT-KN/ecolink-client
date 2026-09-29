@@ -1,9 +1,9 @@
 import React, { memo, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, Inbox } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { HiOutlinePlusCircle } from 'react-icons/hi';
 
 import { useGetCampaigns } from '@/apis/campaign/getCampaigns';
+import { CreateCampaignButton } from '@/components/client/shared/CreateCampaignButton';
 import {
   Empty,
   EmptyDescription,
@@ -14,7 +14,6 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/libs/utils';
 import { useRouter } from '@/libs/router';
-import { Button } from '@/components/client/shared/Button';
 
 import { useOrganizationDetail } from '../_hooks/useOrganizationDetail';
 import SummaryCampaignCard from '@/components/client/shared/SummaryCampaignCard';
@@ -63,16 +62,13 @@ export const CampaignList = memo(function CampaignList({ enabled }: { enabled: b
       {/* <div className="text-sm font-medium text-foreground">{t("Campaign")}</div> */}
       {canCreateCampaign ? (
         <div className="flex justify-end">
-          <Button
-            variant="brown"
-            size="medium"
-            iconLeft={<HiOutlinePlusCircle className="size-5" />}
+          <CreateCampaignButton
+            organizationId={organizationId}
+            label={t('Create campaign')}
             onClick={() =>
               router.push(`/campaigns/create?organizationId=${encodeURIComponent(organizationId)}`)
             }
-          >
-            {t('Create campaign')}
-          </Button>
+          />
         </div>
       ) : null}
       {isLoading ? (
