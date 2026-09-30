@@ -1450,5 +1450,8 @@
   "The reward service is not reachable right now; try again shortly": "Hiện không kết nối được dịch vụ điểm thưởng; vui lòng thử lại sau ít phút",
   "This difficulty level does not exist": "Mức độ khó này không tồn tại",
   "Leave empty for no age limit": "Để trống nếu không giới hạn độ tuổi",
-  "More information": "Thêm thông tin"
+  "More information": "Thêm thông tin",
+  "Cards": "Thẻ",
+  "List": "Danh sách",
+  "View mode": "Chế độ xem"
 }

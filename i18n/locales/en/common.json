@@ -1450,5 +1450,8 @@
   "The reward service is not reachable right now; try again shortly": "The reward service is not reachable right now; try again shortly",
   "This difficulty level does not exist": "This difficulty level does not exist",
   "Leave empty for no age limit": "Leave empty for no age limit",
-  "More information": "More information"
+  "More information": "More information",
+  "Cards": "Cards",
+  "List": "List",
+  "View mode": "View mode"
 }

@@ -1,5 +1,5 @@
 import React, { memo, useMemo, useState } from 'react';
-import { ChevronLeft, ChevronRight, Inbox } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Inbox, LayoutGrid, List } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { useGetCampaigns } from '@/apis/campaign/getCampaigns';
@@ -12,17 +12,42 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/libs/utils';
 import { useRouter } from '@/libs/router';
 
 import { useOrganizationDetail } from '../_hooks/useOrganizationDetail';
 import SummaryCampaignCard from '@/components/client/shared/SummaryCampaignCard';
+import { CampaignTable } from './CampaignTable';
+
+type CampaignViewMode = 'cards' | 'list';
+
+const VIEW_MODE_STORAGE_KEY = 'org-campaigns-view-mode';
+const VIEW_MODE_TRIGGER_CLASS =
+  'gap-1.5 rounded-[8px] px-3 py-1.5 h-full data-active:bg-background data-active:shadow-sm transition-all !font-display-1';
+
+function readViewMode(): CampaignViewMode {
+  try {
+    return localStorage.getItem(VIEW_MODE_STORAGE_KEY) === 'list' ? 'list' : 'cards';
+  } catch {
+    return 'cards';
+  }
+}
 
 export const CampaignList = memo(function CampaignList({ enabled }: { enabled: boolean }) {
   const { t } = useTranslation();
   const router = useRouter();
   const { organizationId, organization, permissions } = useOrganizationDetail();
   const [page, setPage] = useState(1);
+  const [viewMode, setViewModeState] = useState<CampaignViewMode>(readViewMode);
+  const setViewMode = (mode: CampaignViewMode) => {
+    setViewModeState(mode);
+    try {
+      localStorage.setItem(VIEW_MODE_STORAGE_KEY, mode);
+    } catch {
+      // Remembering the choice is a convenience only.
+    }
+  };
   const canCreateCampaign = Boolean(permissions?.can_create_campaign);
 
   const request = useMemo(
@@ -60,8 +85,26 @@ export const CampaignList = memo(function CampaignList({ enabled }: { enabled: b
   return (
     <div className="w-full min-h-[220px] rounded-xl border border-[rgba(136,122,71,0.35)] bg-white/60 p-6 shadow-sm">
       {/* <div className="text-sm font-medium text-foreground">{t("Campaign")}</div> */}
-      {canCreateCampaign ? (
-        <div className="flex justify-end">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Tabs
+          value={viewMode}
+          onValueChange={(v) => setViewMode(v === 'list' ? 'list' : 'cards')}
+        >
+          <TabsList
+            aria-label={t('View mode')}
+            className="border border-[rgba(136,122,71,0.5)] rounded-[8px] bg-background-primary/10"
+          >
+            <TabsTrigger value="cards" className={VIEW_MODE_TRIGGER_CLASS}>
+              <LayoutGrid className="h-4 w-4" />
+              {t('Cards')}
+            </TabsTrigger>
+            <TabsTrigger value="list" className={VIEW_MODE_TRIGGER_CLASS}>
+              <List className="h-4 w-4" />
+              {t('List')}
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+        {canCreateCampaign ? (
           <CreateCampaignButton
             organizationId={organizationId}
             label={t('Create campaign')}
@@ -69,16 +112,25 @@ export const CampaignList = memo(function CampaignList({ enabled }: { enabled: b
               router.push(`/campaigns/create?organizationId=${encodeURIComponent(organizationId)}`)
             }
           />
+        ) : null}
+      </div>
+      {isError ? (
+        <p className="mt-2 text-sm text-destructive">{t('Could not load campaigns.')}</p>
+      ) : viewMode === 'list' ? (
+        <div className="mt-4">
+          <CampaignTable
+            campaigns={campaigns}
+            loading={isLoading}
+            pagination={pagination}
+            onPageChange={handlePageChange}
+          />
         </div>
-      ) : null}
-      {isLoading ? (
+      ) : isLoading ? (
         <div className="mt-4 space-y-3">
           <Skeleton className="h-12 w-full rounded-lg" />
           <Skeleton className="h-12 w-full rounded-lg" />
           <Skeleton className="h-12 w-full rounded-lg" />
         </div>
-      ) : isError ? (
-        <p className="mt-2 text-sm text-destructive">{t('Could not load campaigns.')}</p>
       ) : campaigns.length === 0 ? (
         <div className="mt-2 flex justify-center py-8">
           <Empty>

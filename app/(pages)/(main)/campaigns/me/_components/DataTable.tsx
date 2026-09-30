@@ -17,18 +17,16 @@ import {
 } from '@/constants/campaignLifecycle';
 import Image from '@/components/ui/AppImage';
 import { formattedDate } from '@/utils/formattedDate';
-import { getDifficultyLevel } from '@/constants/difficulty';
-import { cn } from '@/libs/utils';
 import {
   DataTable as SharedDataTable,
   type ColumnType,
 } from '@/components/client/shared/DataTable';
+import { CampaignGeneralInfoCell } from '@/components/client/shared/CampaignGeneralInfoCell';
 import useCampaignMeContext from '../_hooks/useCampaignMeContext';
 import FormFilter from './FormFilter';
 import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
 
 const defaultPagination = { current: 1, pageSize: 10 };
-const DEFAULT_BANNER = '/banner-default.jpg';
 
 const COLUMN_KEYS = {
   NO: 'no',
@@ -99,43 +97,6 @@ const CampaignRowActions = memo(function CampaignRowActions({ campaign }: { camp
   );
 });
 
-const GeneralInformationCell = memo(function GeneralInformationCell({
-  campaign,
-  title,
-}: {
-  campaign: ICampaign;
-  title: string;
-}) {
-  const { t } = useTranslation();
-  const bannerUrl = campaign.banner?.trim() ? campaign.banner : DEFAULT_BANNER;
-  const difficulty = getDifficultyLevel(campaign.difficulty);
-  const duration = `${formattedDate(campaign.start_date ?? undefined)} - ${formattedDate(campaign.end_date ?? undefined)}`;
-
-  return (
-    <div className="flex items-start gap-3 min-w-[280px] max-w-[420px]">
-      <Image
-        src={bannerUrl}
-        alt={title}
-        width={72}
-        height={48}
-        className="h-12 w-[72px] shrink-0 rounded-md object-cover ring-1 ring-zinc-200"
-      />
-      <div className="flex min-w-0 flex-col gap-0.5">
-        <span className="font-medium line-clamp-2 text-zinc-900">{title}</span>
-        <span className="text-xs text-zinc-600 tabular-nums">{duration}</span>
-        <span
-          className={cn(
-            'font-display-1 text-xs font-medium',
-            difficulty?.textClass ?? 'text-zinc-500',
-          )}
-        >
-          {difficulty ? t(difficulty.label) : '—'}
-        </span>
-      </div>
-    </div>
-  );
-});
-
 export const DataTable = memo(function DataTable() {
   const router = useRouter();
   const { t } = useTranslation();
@@ -158,7 +119,7 @@ export const DataTable = memo(function DataTable() {
         key: COLUMN_KEYS.GENERAL_INFORMATION,
         title: t('General information'),
         render: (_, record) => (
-          <GeneralInformationCell campaign={record} title={localizedTitle(record)} />
+          <CampaignGeneralInfoCell campaign={record} title={localizedTitle(record)} />
         ),
         width: 360,
       },
