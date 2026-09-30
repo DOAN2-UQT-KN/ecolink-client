@@ -36,6 +36,14 @@ export const CAMPAIGN_DELETABLE_STATUSES: number[] = [
   CAMPAIGN_STATUS.EXPIRED,
 ];
 
+/** Shown to everyone (server `CAMPAIGN_PUBLIC_STATUSES`). */
+export const CAMPAIGN_PUBLIC_STATUSES: number[] = [
+  CAMPAIGN_STATUS.ACTIVE,
+  CAMPAIGN_STATUS.PENDING_COMPLETION,
+  CAMPAIGN_STATUS.LEGACY_IN_REVIEW,
+  CAMPAIGN_STATUS.COMPLETED,
+];
+
 /** Labels for campaign statuses; the shared STATUS_LABEL is generic across domains. */
 export const CAMPAIGN_STATUS_LABEL: Record<number, string> = {
   [CAMPAIGN_STATUS.DRAFT]: "Draft",

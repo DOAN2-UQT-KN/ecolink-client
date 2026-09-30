@@ -1,7 +1,6 @@
-import { ReactNode, useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  TbChevronDown,
   TbCircleCheck,
   TbCircleX,
   TbExternalLink,
@@ -31,11 +30,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import FileTypeIcon from "@/components/ui/FileTypeIcon";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import { RichTextContent } from "@/components/ui/RichTextContent";
 import { Skeleton } from "@/components/ui/skeleton";
 import TagStatus from "@/components/ui/TagStatus";
@@ -51,6 +45,7 @@ import {
   APPLICATION_STATUS_TAG,
   OWNER_CANDIDATE_STATUS_TAG,
 } from "@/constants/organizationApplicationStatus";
+import { ReviewRow, ReviewSectionCard } from "@/components/admin/shared/ReviewSection";
 import { ApplicationActivity } from "./ApplicationActivity";
 import { queryClient } from "@/libs/queryClient";
 import { cn } from "@/libs/utils";
@@ -103,17 +98,6 @@ const adminCheckboxClassName = (isDark: boolean) =>
     ? "border-zinc-600 data-checked:border-zinc-100 data-checked:bg-zinc-100 data-checked:text-zinc-900 dark:data-checked:bg-zinc-100"
     : "border-zinc-400 data-checked:border-zinc-900 data-checked:bg-zinc-900 data-checked:text-white";
 
-function Row({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div className="flex flex-col gap-0.5 sm:flex-row sm:gap-4">
-      <span className="w-[180px] shrink-0 text-sm text-muted-foreground">
-        {label}
-      </span>
-      <div className="min-w-0 flex-1 break-words text-sm">{value || "—"}</div>
-    </div>
-  );
-}
-
 /** identity-service `users.status`. */
 const ACCOUNT_STATUS_LABEL: Record<number, string> = {
   1: "Active",
@@ -144,7 +128,7 @@ function OwnerRow({ owner }: { owner: IAdminOwnerCandidate }) {
         </div>
         <TagStatus type={tag.type} label={t(tag.label)} className="!m-0" />
       </div>
-      <Row
+      <ReviewRow
         label={t("Confirmed at")}
         value={
           owner.responded_at
@@ -152,7 +136,7 @@ function OwnerRow({ owner }: { owner: IAdminOwnerCandidate }) {
             : ""
         }
       />
-      <Row
+      <ReviewRow
         label={t("Ecolink account")}
         value={
           owner.account
@@ -160,7 +144,7 @@ function OwnerRow({ owner }: { owner: IAdminOwnerCandidate }) {
             : t("No account yet")
         }
       />
-      <Row
+      <ReviewRow
         label={t("Organizations owned")}
         value={
           <span
@@ -182,48 +166,6 @@ function OwnerRow({ owner }: { owner: IAdminOwnerCandidate }) {
         </p>
       )}
     </div>
-  );
-}
-
-function SectionCard({
-  title,
-  hint,
-  defaultOpen = false,
-  isDark,
-  children,
-}: {
-  title: string;
-  hint?: string;
-  defaultOpen?: boolean;
-  isDark: boolean;
-  children: ReactNode;
-}) {
-  return (
-    <Collapsible
-      defaultOpen={defaultOpen}
-      className={cn(
-        "group/section rounded-lg border",
-        isDark ? "border-zinc-700 bg-zinc-800/50" : "border-zinc-200 bg-white",
-      )}
-    >
-      <CollapsibleTrigger
-        className={cn(
-          "flex w-full cursor-pointer items-center justify-between gap-3 rounded-lg px-4 py-3 text-left",
-          isDark ? "hover:bg-zinc-800" : "hover:bg-zinc-50",
-        )}
-      >
-        <div className="flex min-w-0 flex-col">
-          <span className="font-semibold">{title}</span>
-          {hint && (
-            <span className="truncate text-xs text-muted-foreground">{hint}</span>
-          )}
-        </div>
-        <TbChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform group-data-[state=open]/section:rotate-180" />
-      </CollapsibleTrigger>
-      <CollapsibleContent className="flex flex-col gap-2 px-4 pb-4">
-        {children}
-      </CollapsibleContent>
-    </Collapsible>
   );
 }
 
@@ -508,7 +450,7 @@ export function ApplicationReviewDialog({
 
               <TabsContent value="information" className="flex flex-col gap-3">
                 {/* The contact domain decides lane A, so it leads. */}
-                <SectionCard
+                <ReviewSectionCard
                   title={t("Contact email")}
                   defaultOpen
                   isDark={isDark}
@@ -521,20 +463,20 @@ export function ApplicationReviewDialog({
                       {contactEmailParts.domain}
                     </span>
                   </p>
-                </SectionCard>
+                </ReviewSectionCard>
 
-                <SectionCard
+                <ReviewSectionCard
                   title={t("Organization profile")}
                   defaultOpen
                   isDark={isDark}
                 >
-                  <Row label={t("Name")} value={application.profile?.name} />
-                  <Row
+                  <ReviewRow label={t("Name")} value={application.profile?.name} />
+                  <ReviewRow
                     label={t("Type")}
                     value={application.org_type ? t(application.org_type) : ""}
                   />
-                  <Row label={t("Address")} value={application.profile?.address} />
-                  <Row
+                  <ReviewRow label={t("Address")} value={application.profile?.address} />
+                  <ReviewRow
                     label={t("Description")}
                     value={
                       <RichTextContent
@@ -547,8 +489,8 @@ export function ApplicationReviewDialog({
                       />
                     }
                   />
-                  <Row label={t("Tracking code")} value={application.code} />
-                  <Row
+                  <ReviewRow label={t("Tracking code")} value={application.code} />
+                  <ReviewRow
                     label={t("Submitted")}
                     value={
                       application.submitted_at
@@ -556,9 +498,9 @@ export function ApplicationReviewDialog({
                         : ""
                     }
                   />
-                </SectionCard>
+                </ReviewSectionCard>
 
-                <SectionCard
+                <ReviewSectionCard
                   title={t("Official channels")}
                   hint={t("{{count}} provided", {
                     count: application.channels?.length ?? 0,
@@ -567,7 +509,7 @@ export function ApplicationReviewDialog({
                 >
                   {application.channels?.length ? (
                     application.channels.map((channel) => (
-                      <Row
+                      <ReviewRow
                         key={`${channel.type}-${channel.url}`}
                         label={t(channel.type)}
                         value={
@@ -591,9 +533,9 @@ export function ApplicationReviewDialog({
                       {t("No channels provided.")}
                     </p>
                   )}
-                </SectionCard>
+                </ReviewSectionCard>
 
-                <SectionCard
+                <ReviewSectionCard
                   title={t("Owners")}
                   hint={t(
                     "Every owner confirmed by email before this application reached the queue.",
@@ -604,24 +546,24 @@ export function ApplicationReviewDialog({
                   {application.owners?.map((owner) => (
                     <OwnerRow key={owner.id} owner={owner} />
                   ))}
-                </SectionCard>
+                </ReviewSectionCard>
 
-                <SectionCard
+                <ReviewSectionCard
                   title={t("Legal representative")}
                   hint={t(
                     "Review-only. Never shown publicly, and only the last 4 characters of the ID number are stored.",
                   )}
                   isDark={isDark}
                 >
-                  <Row
+                  <ReviewRow
                     label={t("Full name")}
                     value={application.legal_representative?.full_name}
                   />
-                  <Row
+                  <ReviewRow
                     label={t("Email")}
                     value={application.legal_representative?.email}
                   />
-                  <Row
+                  <ReviewRow
                     label={t("ID number")}
                     value={
                       application.legal_representative?.id_last4
@@ -629,17 +571,17 @@ export function ApplicationReviewDialog({
                         : ""
                     }
                   />
-                  <Row
+                  <ReviewRow
                     label={t("Phone")}
                     value={application.legal_representative?.phone}
                   />
-                  <Row
+                  <ReviewRow
                     label={t("Position")}
                     value={application.legal_representative?.position}
                   />
-                </SectionCard>
+                </ReviewSectionCard>
 
-                <SectionCard
+                <ReviewSectionCard
                   title={t("Legal documents")}
                   hint={t("{{count}} attached", {
                     count: application.documents?.length ?? 0,
@@ -675,7 +617,7 @@ export function ApplicationReviewDialog({
                     </p>
                   )}
                 
-                </SectionCard>
+                </ReviewSectionCard>
 
                 {isClosed || isWithApplicant ? (
                   <section

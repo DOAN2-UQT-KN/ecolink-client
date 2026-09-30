@@ -1,7 +1,6 @@
-import { memo, useMemo } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Building2 } from 'lucide-react';
-import { TbExternalLink } from 'react-icons/tb';
+import { TbEye } from 'react-icons/tb';
 
 import type { ICampaign } from '@/apis/campaign/models/campaign';
 import { useAdminLayout } from '@/app/(pages)/(admin)/_context/AdminLayoutContext';
@@ -14,6 +13,8 @@ import {
 import { cn } from '@/libs/utils';
 import { useCampaignContext } from '../_context/CampaignContext';
 import { ReviewCampaignConfirm } from './ReviewCampaignConfirm';
+import { CampaignPreviewDialog } from './CampaignPreviewDialog';
+import { OrganizationIdentity } from '@/components/admin/shared/OrganizationIdentity';
 import { formattedDate } from '@/utils/formattedDate';
 import { CAMPAIGN_STATUS } from '@/constants/campaignLifecycle';
 import { getDifficultyLevel } from '@/constants/difficulty';
@@ -89,46 +90,12 @@ const GeneralInformationCell = memo(function GeneralInformationCell({
   );
 });
 
-const OrgCell = memo(function OrgCell({
-  org,
-  isDark,
-}: {
-  org?: ICampaign['organization'];
-  isDark: boolean;
-}) {
-  return (
-    <div className="flex items-center gap-2 min-w-[160px]">
-      <div
-        className={cn(
-          'flex h-8 w-8 shrink-0 items-center justify-center rounded-full overflow-hidden ring-1 text-xs font-semibold',
-          isDark
-            ? 'ring-zinc-600 bg-zinc-800 text-zinc-300'
-            : 'ring-zinc-300 bg-zinc-200 text-zinc-600',
-        )}
-      >
-        {org?.logo_url ? (
-          <Image src={org.logo_url} alt={org.name} className="h-full w-full object-cover" />
-        ) : (
-          <Building2 className="h-4 w-4" />
-        )}
-      </div>
-      <div className="flex flex-col leading-tight">
-        <span className={cn('text-sm font-medium', isDark ? 'text-zinc-100' : 'text-zinc-900')}>
-          {org?.name || '—'}
-        </span>
-        <span className={cn('text-xs', isDark ? 'text-zinc-500' : 'text-zinc-500')}>
-          {org?.contact_email || '—'}
-        </span>
-      </div>
-    </div>
-  );
-});
-
 export const DataTable = memo(function DataTable() {
   const { t } = useTranslation();
   const { title: localizedTitle, locale } = useLocalizedDisplay();
   const { campaigns, loading, pagination, total, onPageChange, onPageSizeChange } =
     useCampaignContext();
+  const [previewId, setPreviewId] = useState<string | null>(null);
   const { theme } = useAdminLayout();
   const isDark = theme === 'dark';
 
@@ -176,7 +143,7 @@ export const DataTable = memo(function DataTable() {
         key: COLUMN_KEYS.ORGANIZATION,
         title: t('Organization'),
         className: 'min-w-[180px]',
-        render: (_, record) => <OrgCell org={record.organization} isDark={isDark} />,
+        render: (_, record) => <OrganizationIdentity org={record.organization} isDark={isDark} />,
       },
       {
         key: COLUMN_KEYS.STATUS,
@@ -228,20 +195,19 @@ export const DataTable = memo(function DataTable() {
         sticky: 'right',
         render: (_, record) => (
           <div className="flex items-center gap-2">
-            <a
-              href={`/campaigns/${record.id}`}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
+              onClick={() => setPreviewId(record.id)}
               className={cn(
-                'rounded-md border px-1.5 py-1.5 text-xs font-medium transition-colors duration-200',
+                'cursor-pointer rounded-md border px-1.5 py-1.5 text-xs font-medium transition-colors duration-200',
                 isDark
                   ? 'border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-blue-300'
                   : 'border-zinc-300 text-zinc-700 hover:bg-zinc-100 hover:text-blue-700',
               )}
               title={t('Preview campaign')}
             >
-              <TbExternalLink className="size-5" />
-            </a>
+              <TbEye className="size-5" />
+            </button>
 
             {record.status === CAMPAIGN_STATUS.ACTIVE ? (
               <ReviewCampaignConfirm
@@ -273,21 +239,26 @@ export const DataTable = memo(function DataTable() {
   );
 
   return (
-    <SharedDataTable
-      columns={columns}
-      data={campaigns}
-      loading={loading}
-      rowKey="id"
-      emptyTitle={t('No campaigns found')}
-      emptyDescription={t('No campaigns available for the current filters.')}
-      pagination={{
-        page: pagination.current,
-        pageSize: pagination.pageSize,
-        total,
-        onPageChange,
-        onPageSizeChange,
-      }}
-    />
+    <>
+      <SharedDataTable
+        columns={columns}
+        data={campaigns}
+        loading={loading}
+        rowKey="id"
+        emptyTitle={t('No campaigns found')}
+        emptyDescription={t('No campaigns available for the current filters.')}
+        pagination={{
+          page: pagination.current,
+          pageSize: pagination.pageSize,
+          total,
+          onPageChange,
+          onPageSizeChange,
+        }}
+      />
+      {previewId && (
+        <CampaignPreviewDialog campaignId={previewId} onClose={() => setPreviewId(null)} />
+      )}
+    </>
   );
 });
 
