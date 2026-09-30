@@ -11,6 +11,8 @@ import {
   CampaignFormValues,
   DEFAULT_CAMPAIGN_FORM_VALUES,
   campaignToFormValues,
+  emptyShift,
+  fitSchedule,
   issueFieldToFormName,
   transformToApiData,
 } from '../_services/campaign.service';
@@ -25,16 +27,18 @@ import type {
 } from '@/apis/campaign/models/lifecycle';
 import { CAMPAIGN_ISSUE_MESSAGES } from '@/constants/campaignLifecycle';
 import { uploadToCloudinary } from '@/app/(pages)/(main)/incidents/create/_services/upload.service';
+import useAuthStore from '@/stores/useAuthStore';
 
 /** Wizard steps, in order. The first Continue creates the draft, so step 1 holds its essentials. */
-export const CAMPAIGN_STEPS = ['general', 'schedule', 'meeting_points', 'review'] as const;
+export const CAMPAIGN_STEPS = ['general', 'schedule', 'meeting_points', 'shifts', 'review'] as const;
 export type CampaignStep = (typeof CAMPAIGN_STEPS)[number];
 
 /** Fields validated when leaving each step. */
 const STEP_FIELDS: Record<CampaignStep, Path<CampaignFormValues>[]> = {
   general: ['title', 'difficulty', 'description', 'banner'],
-  schedule: ['campaign_date', 'start_time', 'end_time', 'contact_name', 'contact_phone', 'min_age'],
+  schedule: ['days', 'contact_name', 'contact_phone', 'min_age'],
   meeting_points: ['meeting_points'],
+  shifts: ['schedule'],
   review: [],
 };
 
@@ -92,6 +96,16 @@ interface CampaignContextType {
   next: () => Promise<void>;
   back: () => void;
   goToStep: (index: number) => void;
+  /** Volunteers allowed per day by the difficulty, once the draft is saved; null = unknown. */
+  maxPerDay: number | null;
+  /**
+   * Keep the day × meeting point grid in step with the days and meeting points lists: call
+   * after adding or removing one of them.
+   */
+  addScheduleRow: () => void;
+  removeScheduleRow: (dayIndex: number) => void;
+  addScheduleColumn: () => void;
+  removeScheduleColumn: (pointIndex: number) => void;
 }
 
 export const CampaignContext = createContext<CampaignContextType | undefined>(undefined);
@@ -113,6 +127,8 @@ export const CampaignProvider = memo(function CampaignProvider({
 
   const [isUploading, setIsUploading] = useState(false);
   const [campaignId, setCampaignId] = useState<string | undefined>(campaign?.id);
+  const [saved, setSaved] = useState<ICampaign | undefined>(campaign);
+  const currentUserId = useAuthStore((s) => s.user?.id) ?? '';
   const [issues, setIssues] = useState<ICampaignValidationIssue[]>([]);
   const [takenReportIds, setTakenReportIds] = useState<string[]>([]);
   const [stepIndex, setStepIndex] = useState(0);
@@ -131,8 +147,60 @@ export const CampaignProvider = memo(function CampaignProvider({
   const form = useForm<CampaignFormValues>({
     defaultValues: campaign
       ? campaignToFormValues(campaign)
-      : { ...DEFAULT_CAMPAIGN_FORM_VALUES, organization_id: organizationId ?? '' },
+      : {
+          ...DEFAULT_CAMPAIGN_FORM_VALUES,
+          organization_id: organizationId ?? '',
+          // The creator leads the first shift unless someone else is picked.
+          schedule: [[emptyShift(currentUserId)]],
+        },
   });
+
+  const setSchedule = useCallback(
+    (update: (grid: CampaignFormValues['schedule']) => CampaignFormValues['schedule']) => {
+      const values = form.getValues();
+      const grid = fitSchedule(
+        values.schedule,
+        values.days.length,
+        values.meeting_points.length,
+        currentUserId,
+      );
+      form.setValue('schedule', update(grid), { shouldDirty: true });
+    },
+    [currentUserId, form],
+  );
+  // Each runs after the days / meeting points list already changed.
+  // Adding a day or a point: fitting the grid pads the new row / column with empty shifts.
+  const addScheduleRow = useCallback(() => setSchedule((grid) => grid), [setSchedule]);
+  const removeScheduleRow = useCallback(
+    (dayIndex: number) => {
+      const values = form.getValues();
+      const grid = [...(values.schedule ?? [])];
+      grid.splice(dayIndex, 1);
+      form.setValue(
+        'schedule',
+        fitSchedule(grid, values.days.length, values.meeting_points.length, currentUserId),
+        { shouldDirty: true },
+      );
+    },
+    [currentUserId, form],
+  );
+  const addScheduleColumn = useCallback(() => setSchedule((grid) => grid), [setSchedule]);
+  const removeScheduleColumn = useCallback(
+    (pointIndex: number) => {
+      const values = form.getValues();
+      const grid = (values.schedule ?? []).map((row) => {
+        const next = [...row];
+        next.splice(pointIndex, 1);
+        return next;
+      });
+      form.setValue(
+        'schedule',
+        fitSchedule(grid, values.days.length, values.meeting_points.length, currentUserId),
+        { shouldDirty: true },
+      );
+    },
+    [currentUserId, form],
+  );
 
   const selectedOrganizationId = form.watch('organization_id');
   const { data: eligibilityData } = useGetCreateEligibility(selectedOrganizationId || undefined);
@@ -199,17 +267,28 @@ export const CampaignProvider = memo(function CampaignProvider({
     if (bannerUrl && typeof data.banner !== 'string') {
       form.setValue('banner', bannerUrl);
     }
-    const payload = transformToApiData({ ...data, banner: bannerUrl });
+    const payload = transformToApiData({
+      ...data,
+      banner: bannerUrl,
+      schedule: fitSchedule(
+        data.schedule,
+        data.days.length,
+        data.meeting_points.length,
+        currentUserId,
+      ),
+    });
 
     try {
       if (campaignId) {
         const { organization_id: _org, ...rest } = payload;
         void _org;
-        await updateAsync({ id: campaignId, data: rest });
+        const res = await updateAsync({ id: campaignId, data: rest });
+        if (res.data?.campaign) setSaved(res.data.campaign);
         return campaignId;
       }
       const res = await createAsync(payload);
       const id = res.data?.campaign?.id;
+      if (res.data?.campaign) setSaved(res.data.campaign);
       // Later saves update this draft instead of creating another one.
       if (id) setCampaignId(id);
       return id;
@@ -217,7 +296,7 @@ export const CampaignProvider = memo(function CampaignProvider({
       applyServerErrors(error as CampaignApiError);
       return undefined;
     }
-  }, [applyServerErrors, campaignId, createAsync, form, showStep, updateAsync]);
+  }, [applyServerErrors, campaignId, createAsync, currentUserId, form, showStep, updateAsync]);
 
   const saveDraft = useCallback(async () => {
     const id = await persist();
@@ -311,8 +390,18 @@ export const CampaignProvider = memo(function CampaignProvider({
       next,
       back,
       goToStep,
+      maxPerDay: saved?.max_members ?? null,
+      addScheduleRow,
+      removeScheduleRow,
+      addScheduleColumn,
+      removeScheduleColumn,
     }),
     [
+      saved,
+      addScheduleRow,
+      removeScheduleRow,
+      addScheduleColumn,
+      removeScheduleColumn,
       organization,
       back,
       errorStepIds,

@@ -1,20 +1,29 @@
 import { memo, useEffect, useMemo, useState } from 'react';
+import { useFieldArray } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { format } from 'date-fns';
+import { addDays, format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
+import { BiTrash } from 'react-icons/bi';
 
 import { Calendar } from '@/components/ui/calendar';
-import { Button } from '@/components/ui/button';
+import { Button as UiButton } from '@/components/ui/button';
+import { Button } from '@/components/client/shared/Button';
 import { Input } from '@/components/ui/input';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { InfoTooltip } from '@/components/ui/InfoTooltip';
 import { cn } from '@/libs/utils';
 import {
+  CAMPAIGN_DAY_MAX,
+  CAMPAIGN_DAY_SPAN_DAYS,
   CAMPAIGN_MAX_HOURS_PER_DAY,
   CAMPAIGN_MIN_LEAD_HOURS,
 } from '@/constants/campaignLifecycle';
 
 import { useCampaign } from '../_hooks/useCampaign';
+import { emptyDay, type CampaignDayFormValues } from '../_services/campaign.service';
+
+const inputClassName =
+  'border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50';
 
 const formatDateToApi = (date?: Date): string | undefined => {
   if (!date) return undefined;
@@ -24,7 +33,7 @@ const formatDateToApi = (date?: Date): string | undefined => {
   return `${year}-${month}-${day}`;
 };
 
-const parseApiDate = (date?: string): Date | undefined => {
+export const parseApiDate = (date?: string): Date | undefined => {
   if (!date) return undefined;
   const parsed = new Date(`${date}T00:00:00`);
   return Number.isNaN(parsed.getTime()) ? undefined : parsed;
@@ -35,111 +44,201 @@ const minutesOf = (time?: string): number | null => {
   return m ? Number(m[1]) * 60 + Number(m[2]) : null;
 };
 
-/** Campaign day and start/end time (one day, at most 12 hours). */
+/** Earliest picked date of the campaign, or undefined while none is picked. */
+const firstDate = (days: CampaignDayFormValues[]): Date | undefined =>
+  days
+    .map((d) => parseApiDate(d.date))
+    .filter((d): d is Date => Boolean(d))
+    .sort((a, b) => a.getTime() - b.getTime())[0];
+
+/**
+ * The campaign days (1–7, within 14 days of the first, not necessarily consecutive), each
+ * with its own start and end time.
+ */
 const ScheduleFields = memo(function ScheduleFields() {
   const { t } = useTranslation();
-  const { form } = useCampaign();
+  const { form, addScheduleRow, removeScheduleRow } = useCampaign();
   const {
+    control,
     register,
     watch,
     formState: { errors },
   } = form;
-  const [isDateOpen, setIsDateOpen] = useState(false);
-  const campaignDate = watch('campaign_date');
+  const { fields, append, remove } = useFieldArray({ control, name: 'days' });
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const days = watch('days');
+  const first = firstDate(days);
 
   useEffect(() => {
-    register('campaign_date', { required: t('Pick the campaign day') });
-  }, [register, t]);
+    fields.forEach((_, index) =>
+      register(`days.${index}.date`, {
+        validate: (value, values) => {
+          if (!value) return t('Pick the campaign day');
+          const others = values.days.filter((_, i) => i !== index).map((d) => d.date);
+          if (others.includes(value)) return t('Each day can be added only once');
+          const earliest = firstDate(values.days);
+          const date = parseApiDate(value);
+          if (earliest && date && date.getTime() - earliest.getTime() > (CAMPAIGN_DAY_SPAN_DAYS - 1) * 86_400_000) {
+            return t('Every day must fall within {{n}} days of the first one', {
+              n: CAMPAIGN_DAY_SPAN_DAYS,
+            });
+          }
+          if (earliest && date && date.getTime() === earliest.getTime()) {
+            const start = new Date(`${value}T${values.days[index].start_time || '00:00'}:00`);
+            if (start.getTime() < Date.now() + CAMPAIGN_MIN_LEAD_HOURS * 3_600_000) {
+              return t('The first day must start at least {{hours}} hours from now', {
+                hours: CAMPAIGN_MIN_LEAD_HOURS,
+              });
+            }
+          }
+          return true;
+        },
+      }),
+    );
+  }, [fields, register, t]);
 
-  const inputClassName = useMemo(
-    () =>
-      'border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50',
-    [],
-  );
+  const minDay = useMemo(() => new Date(Date.now() + CAMPAIGN_MIN_LEAD_HOURS * 3_600_000), []);
+  const dayErrors = errors.days;
 
   return (
     <div className="w-full flex flex-col gap-6 px-[30px] py-[35px] border-1 border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5">
-      <span className="font-display-5 font-semibold !text-button-accent ">
-        {t('Time')}
-      </span>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-[30px]">
-          <Field>
-          <FieldLabel className="text-foreground-tertiary font-display-3">
-            {t('Campaign schedule')} <span className="text-destructive">*</span>
-            <InfoTooltip
-              content={t('Starts at least {{hours}} hours from now, lasts at most {{max}} hours on one day', {
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <span className="font-display-5 font-semibold !text-button-accent ">
+            {t('Campaign schedule')}
+          </span>
+          <InfoTooltip
+            content={t(
+              '1–{{max}} days within {{span}} days of the first, not necessarily in a row. The first day starts at least {{hours}} hours from now; each day lasts at most {{perDay}} hours.',
+              {
+                max: CAMPAIGN_DAY_MAX,
+                span: CAMPAIGN_DAY_SPAN_DAYS,
                 hours: CAMPAIGN_MIN_LEAD_HOURS,
-                max: CAMPAIGN_MAX_HOURS_PER_DAY,
-              })}
-            />
-          </FieldLabel>
-          <div className="relative">
-            <Button
-              type="button"
-              variant="outline"
-              className={cn(
-                'w-full justify-start text-left font-normal border-[rgba(136,122,71,0.5)] hover:bg-transparent !h-[50px]',
-                !campaignDate && 'text-muted-foreground',
-              )}
-              onClick={() => setIsDateOpen((prev) => !prev)}
-            >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {campaignDate ? (
-                format(parseApiDate(campaignDate) as Date, 'PPP')
-              ) : (
-                <span>{t('Pick the campaign day')}</span>
-              )}
-            </Button>
-            {isDateOpen && (
-              <div className="absolute z-50 mt-2 rounded-md border border-[rgba(136,122,71,0.5)] bg-background shadow-md">
-                <Calendar
-                  mode="single"
-                  defaultMonth={parseApiDate(campaignDate) ?? new Date()}
-                  selected={parseApiDate(campaignDate)}
-                  disabled={{ before: new Date(Date.now() + CAMPAIGN_MIN_LEAD_HOURS * 3600_000) }}
-                  onSelect={(date: Date | undefined) => {
-                    form.setValue('campaign_date', formatDateToApi(date), {
-                      shouldDirty: true,
-                      shouldValidate: true,
-                    });
-                    setIsDateOpen(false);
-                  }}
-                />
-              </div>
+                perDay: CAMPAIGN_MAX_HOURS_PER_DAY,
+              },
             )}
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <Input
-              type="time"
-              aria-label={t('Start time')}
-              className={inputClassName}
-              {...register('start_time', { required: t('Start time is required') })}
-            />
-            <Input
-              type="time"
-              aria-label={t('End time')}
-              className={inputClassName}
-              {...register('end_time', {
-                required: t('End time is required'),
-                validate: (end, values) => {
-                  const a = minutesOf(values.start_time);
-                  const b = minutesOf(end);
-                  if (a == null || b == null) return true;
-                  if (b <= a) return t('End time must be after the start time');
-                  if (b - a > CAMPAIGN_MAX_HOURS_PER_DAY * 60) {
-                    return t('A campaign day lasts at most {{max}} hours', {
-                      max: CAMPAIGN_MAX_HOURS_PER_DAY,
-                    });
-                  }
-                  return true;
-                },
-              })}
-            />
-          </div>
-          <FieldError errors={[errors.campaign_date]} />
-          <FieldError errors={[errors.start_time]} />
-          <FieldError errors={[errors.end_time]} />
-        </Field>
+          />
+        </div>
+        {fields.length < CAMPAIGN_DAY_MAX && (
+          <Button
+            type="button"
+            variant="outlined-brown"
+            onClick={() => {
+              const last = days[days.length - 1];
+              append({ ...emptyDay(), start_time: last?.start_time ?? '07:00', end_time: last?.end_time ?? '11:00' });
+              addScheduleRow();
+            }}
+          >
+            {t('Add day')}
+          </Button>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-4">
+        {fields.map((field, index) => {
+          const value = days[index];
+          const errs = dayErrors?.[index];
+          return (
+            <Field key={field.id}>
+              <FieldLabel className="text-foreground-tertiary font-display-3">
+                {t('Day {{n}}', { n: index + 1 })} <span className="text-destructive">*</span>
+              </FieldLabel>
+              <div className="grid grid-cols-1 md:grid-cols-[1fr_140px_140px_auto] gap-3 items-start">
+                <div className="relative">
+                  <UiButton
+                    type="button"
+                    variant="outline"
+                    className={cn(
+                      'w-full justify-start text-left font-normal border-[rgba(136,122,71,0.5)] hover:bg-transparent !h-[50px]',
+                      !value?.date && 'text-muted-foreground',
+                    )}
+                    onClick={() => setOpenIndex((prev) => (prev === index ? null : index))}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {value?.date ? (
+                      format(parseApiDate(value.date) as Date, 'PPP')
+                    ) : (
+                      <span>{t('Pick the campaign day')}</span>
+                    )}
+                  </UiButton>
+                  {openIndex === index && (
+                    <div className="absolute z-50 mt-2 rounded-md border border-[rgba(136,122,71,0.5)] bg-background shadow-md">
+                      <Calendar
+                        mode="single"
+                        defaultMonth={parseApiDate(value?.date) ?? first ?? new Date()}
+                        selected={parseApiDate(value?.date)}
+                        disabled={[
+                          { before: minDay },
+                          // Other days must stay within the span of the first one.
+                          ...(first && fields.length > 1
+                            ? [{ after: addDays(first, CAMPAIGN_DAY_SPAN_DAYS - 1) }]
+                            : []),
+                        ]}
+                        onSelect={(date: Date | undefined) => {
+                          form.setValue(`days.${index}.date`, formatDateToApi(date), {
+                            shouldDirty: true,
+                          });
+                          setOpenIndex(null);
+                          void form.trigger('days');
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+                <Input
+                  type="time"
+                  aria-label={t('Start time')}
+                  className={inputClassName}
+                  {...register(`days.${index}.start_time`, {
+                    required: t('Start time is required'),
+                  })}
+                />
+                <Input
+                  type="time"
+                  aria-label={t('End time')}
+                  className={inputClassName}
+                  {...register(`days.${index}.end_time`, {
+                    required: t('End time is required'),
+                    validate: (end, values) => {
+                      const a = minutesOf(values.days[index]?.start_time);
+                      const b = minutesOf(end);
+                      if (a == null || b == null) return true;
+                      if (b <= a) return t('End time must be after the start time');
+                      if (b - a > CAMPAIGN_MAX_HOURS_PER_DAY * 60) {
+                        return t('A campaign day lasts at most {{max}} hours', {
+                          max: CAMPAIGN_MAX_HOURS_PER_DAY,
+                        });
+                      }
+                      return true;
+                    },
+                  })}
+                />
+                {fields.length > 1 ? (
+                  <button
+                    type="button"
+                    aria-label={t('Remove day')}
+                    className="h-[50px] px-2 text-destructive"
+                    onClick={() => {
+                      remove(index);
+                      removeScheduleRow(index);
+                    }}
+                  >
+                    <BiTrash size={18} />
+                  </button>
+                ) : (
+                  <span />
+                )}
+              </div>
+              <FieldError errors={[errs?.date]} />
+              <FieldError errors={[errs?.start_time]} />
+              <FieldError errors={[errs?.end_time]} />
+            </Field>
+          );
+        })}
+        {/* "days" itself: e.g. the server says the campaign needs at least one day. */}
+        <FieldError
+          errors={[dayErrors?.root, { message: (dayErrors as { message?: string } | undefined)?.message }]}
+        />
       </div>
     </div>
   );

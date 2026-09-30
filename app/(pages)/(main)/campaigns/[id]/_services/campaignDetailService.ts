@@ -1,6 +1,7 @@
 import { differenceInCalendarDays, parseISO, isValid } from 'date-fns';
 
 import type { ICampaign } from '@/apis/campaign/models/campaign';
+import { campaignDateRange } from '@/constants/campaignLifecycle';
 
 /** Mock until tasks API is wired to campaign detail. */
 export const MOCK_ARCHIVED_TASKS = 8;
@@ -32,7 +33,7 @@ export function parseCampaignDetailData(campaign: ICampaign) {
   return {
     currentMembers: campaign.current_members ?? 0,
     maxMembers: campaign.max_members ?? 0,
-    daysSinceStart: getDaysSinceStart(campaign.start_date),
+    daysSinceStart: getDaysSinceStart(campaignDateRange(campaign).start),
     memberProgress: getMemberProgressPercent(campaign.current_members, campaign.max_members),
     archivedTasksDisplay: MOCK_ARCHIVED_TASKS,
   };

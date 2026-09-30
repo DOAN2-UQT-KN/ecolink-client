@@ -1,6 +1,11 @@
 import type { IUser } from '@/apis/auth/models/user';
 import { IIncident } from '@/apis/incident/models/incident';
-import type { ICampaignRequirements, IMeetingPoint } from './lifecycle';
+import type {
+  ICampaignDay,
+  ICampaignRequirements,
+  ICampaignShift,
+  IMeetingPoint,
+} from './lifecycle';
 
 export interface ICampaign {
   id: string;
@@ -51,8 +56,6 @@ export interface ICampaign {
   latitude?: number | null;
   longitude?: number | null;
   radius_km?: number | null;
-  start_date?: string;
-  end_date?: string;
 
   contact_name?: string | null;
   /** Only returned to managers, admins and accepted volunteers. */
@@ -62,9 +65,14 @@ export interface ICampaign {
   /** Resubmit before this while the campaign needs revision. */
   revision_deadline?: string | null;
   submitted_at?: string | null;
+  /** In time order; the campaign runs from the first start to the last end. */
+  days?: ICampaignDay[];
   meeting_points?: IMeetingPoint[];
+  /** Every day × meeting point. */
+  shifts?: ICampaignShift[];
 
   current_members?: number;
+  /** Volunteers allowed per day by the difficulty tier. */
   max_members?: number;
 
   /** Campaign owner; may be omitted in some responses; see also `created_by` */

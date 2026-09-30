@@ -1,6 +1,5 @@
 import { memo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { format } from 'date-fns';
 
 import Image from '@/components/ui/AppImage';
 import { RichTextContent } from '@/components/ui/RichTextContent';
@@ -11,6 +10,8 @@ import { SummaryRow } from '@/app/(pages)/(main)/organizations/apply/_components
 
 import { useCampaign } from '../_hooks/useCampaign';
 import { useMeetingPointWarnings } from '../_hooks/useMeetingPointWarnings';
+import { ShiftSlotsTable } from '@/components/client/shared/ShiftSlotsTable';
+import { useDayLabel } from './StepShifts';
 import { CAMPAIGN_STEPS, type CampaignStep } from '../_context/CampaignContext';
 import { impliedMinAge } from '../_services/campaign.service';
 
@@ -42,10 +43,11 @@ const Section = memo(function Section({
   );
 });
 
-/** Step 4: everything the admin will see, with a way back to each step. */
+/** Last step: everything the admin will see, with a way back to each step. */
 const StepReview = memo(function StepReview() {
   const { t } = useTranslation();
-  const { form, organization } = useCampaign();
+  const { form, organization, maxPerDay } = useCampaign();
+  const dayLabel = useDayLabel();
   const values = form.watch();
   const warnings = useMeetingPointWarnings();
   const bannerSrc = useImagePreviewSrc(values.banner);
@@ -59,7 +61,8 @@ const StepReview = memo(function StepReview() {
   };
 
   const difficulty = getDifficultyLevel(values.difficulty);
-  const day = values.campaign_date ? new Date(`${values.campaign_date}T00:00:00`) : null;
+  const pointName = (index: number) =>
+    values.meeting_points[index]?.name?.trim() || t('Meeting point {{n}}', { n: index + 1 });
   const minAge = values.min_age ?? impliedMinAge(values.difficulty);
   const conditions = [
     minAge != null ? t('From {{age}} years old', { age: minAge }) : null,
@@ -101,7 +104,13 @@ const StepReview = memo(function StepReview() {
         <SummaryRow
           label={t('Campaign schedule')}
           value={
-            day ? `${format(day, 'PPP')} · ${values.start_time} – ${values.end_time}` : null
+            <ul className="flex flex-col gap-0.5">
+              {values.days.map((day, index) => (
+                <li key={index}>
+                  {dayLabel(day, index)} · {day.start_time} – {day.end_time}
+                </li>
+              ))}
+            </ul>
           }
         />
         <SummaryRow
@@ -125,9 +134,6 @@ const StepReview = memo(function StepReview() {
               </span>
             )}
             <SummaryRow label={t('Location')} value={point.detail_address} />
-            <SummaryRow label={t('Person in charge')} value={point.leader_user_id ? memberName(point.leader_user_id) : null} />
-            <SummaryRow label={t('Gathering time')} value={point.gather_time} />
-            <SummaryRow label={t('Slots')} value={point.slots ?? t('No limit')} />
             <SummaryRow
               label={t('Waste points')}
               value={`${point.reports.length} · ${t('within {{km}} km', { km: point.radius_km })}`}
@@ -139,6 +145,28 @@ const StepReview = memo(function StepReview() {
             {w}
           </p>
         ))}
+      </Section>
+
+      <Section title={t('Shifts')} step="shifts">
+        <ShiftSlotsTable
+          days={values.days.map((day, index) => dayLabel(day, index))}
+          points={values.meeting_points.map((_, index) => pointName(index))}
+          slots={values.schedule.map((row) => row.map((cell) => cell.slots))}
+          maxPerDay={maxPerDay}
+        />
+        {values.days.map((day, d) =>
+          values.meeting_points.map((_, p) => {
+            const cell = values.schedule[d]?.[p];
+            if (!cell || !(Number(cell.slots) > 0)) return null;
+            return (
+              <SummaryRow
+                key={`${d}-${p}`}
+                label={`${dayLabel(day, d)} · ${pointName(p)}`}
+                value={`${cell.gather_time || '—'} · ${cell.leader_user_id ? memberName(cell.leader_user_id) : '—'}`}
+              />
+            );
+          }),
+        )}
       </Section>
     </div>
   );

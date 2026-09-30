@@ -65,6 +65,9 @@ export const CAMPAIGN_TITLE_MIN_LENGTH = 10;
 export const CAMPAIGN_TITLE_MAX_LENGTH = 120;
 export const CAMPAIGN_DESCRIPTION_MIN_LENGTH = 100;
 export const CAMPAIGN_BANNER_MAX_BYTES = 5 * 1024 * 1024;
+export const CAMPAIGN_DAY_MAX = 7;
+/** Every day falls within this many days of the first one. */
+export const CAMPAIGN_DAY_SPAN_DAYS = 14;
 export const CAMPAIGN_MEETING_POINT_MAX = 5;
 export const CAMPAIGN_MEETING_POINT_MAX_DISTANCE_KM = 5;
 export const CAMPAIGN_HIGH_DIFFICULTY_LEVEL = 3;
@@ -106,12 +109,13 @@ export const CAMPAIGN_ISSUE_MESSAGES: Record<string, string> = {
   TITLE_LENGTH: "Title must be 10–120 characters",
   DESCRIPTION_TOO_SHORT: "Description must be at least 100 characters",
   BANNER_REQUIRED: "A cover image is required",
-  START_REQUIRED: "Start time is required",
-  END_REQUIRED: "End time is required",
-  START_TOO_SOON: "Start time must be at least 48 hours from now",
+  DAY_COUNT: "A campaign runs on 1–7 days",
+  DAY_DUPLICATED: "Each day can be added only once",
+  DAY_SPAN_TOO_WIDE: "Every day must fall within 14 days of the first one",
+  START_TOO_SOON: "The first day must start at least 48 hours from now",
   END_BEFORE_START: "End time must be after the start time",
   TOO_LONG: "A campaign day lasts at most 12 hours",
-  MULTI_DAY_UNSUPPORTED: "The campaign must start and end on the same day",
+  MULTI_DAY_UNSUPPORTED: "A day must start and end on the same date",
   CONTACT_NAME_REQUIRED: "Contact name is required",
   CONTACT_PHONE_INVALID: "Enter a valid phone number",
   DIFFICULTY_NOT_ALLOWED: "Unverified organizations can only create the lowest difficulty",
@@ -120,13 +124,29 @@ export const CAMPAIGN_ISSUE_MESSAGES: Record<string, string> = {
   MEETING_POINT_COUNT: "A campaign needs 1–5 meeting points",
   MEETING_POINT_NAME_REQUIRED: "Name each meeting point",
   RADIUS_INVALID: "Radius must be greater than 0",
-  SLOTS_INVALID: "Slots must be a positive whole number",
+  SLOTS_INVALID: "Slots must be a whole number, 0 to turn the shift off",
   LEADER_INVALID: "The person in charge must be an active member of the organization",
-  GATHER_TIME_INVALID: "Gathering time must be on the campaign day, before it ends",
+  GATHER_TIME_INVALID: "Gathering time must be on that day, before it ends",
   REPORT_DUPLICATED: "A waste point can belong to only one meeting point",
   REPORT_UNAVAILABLE: "A waste point is no longer available (not approved or taken by another campaign)",
   REPORT_OUTSIDE_RADIUS: "A waste point is outside its meeting point's radius",
   REPORTS_REQUIRED: "Add at least one waste point",
   MEETING_POINTS_TOO_FAR: "Meeting points must be within 5 km of each other",
-  SLOTS_OVER_LIMIT: "Total slots exceed the volunteers allowed for this difficulty",
+  DAY_NO_ACTIVE_SHIFT: "Each day needs at least one shift with slots",
+  DAY_SLOTS_OVER_LIMIT: "Slots on this day exceed the volunteers allowed per day for this difficulty",
 };
+
+/** First start and last end of a campaign's days, and how many days it runs. */
+export function campaignDateRange(campaign: {
+  days?: { start_at: string; end_at: string }[] | null;
+}): { start?: string; end?: string; dayCount: number } {
+  const days = campaign.days ?? [];
+  if (days.length === 0) return { dayCount: 0 };
+  let start = days[0].start_at;
+  let end = days[0].end_at;
+  for (const d of days) {
+    if (new Date(d.start_at) < new Date(start)) start = d.start_at;
+    if (new Date(d.end_at) > new Date(end)) end = d.end_at;
+  }
+  return { start, end, dayCount: days.length };
+}

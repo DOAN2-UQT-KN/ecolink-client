@@ -5,6 +5,7 @@ import { HiMapPin } from 'react-icons/hi2';
 import { TooltipTruncatedText } from '@/components/ui/TooltipTruncatedText';
 import { RichTextContent } from '@/components/ui/RichTextContent';
 import { formattedDate } from '@/utils/formattedDate';
+import { CampaignDateRange } from '@/components/client/shared/CampaignDateRange';
 import { TbCalendarClock, TbArrowRight } from 'react-icons/tb';
 import { useTranslation } from 'react-i18next';
 import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
@@ -149,7 +150,7 @@ export default function SummaryCampaignCard({
           <div className="flex flex-row items-center gap-2 text-muted-foreground">
             <TbCalendarClock size={14} />
             <span className="font-display-1">
-              {formattedDate(campaign?.start_date)} - {formattedDate(campaign?.end_date)}
+              <CampaignDateRange campaign={campaign} />
             </span>
           </div>
 

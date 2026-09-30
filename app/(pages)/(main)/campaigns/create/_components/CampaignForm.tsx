@@ -19,13 +19,15 @@ import GeneralInformation from "./GeneralInformation";
 import StepSchedule from "./StepSchedule";
 import MeetingPointsEditor from "./MeetingPointsEditor";
 import StepReview from "./StepReview";
+import StepShifts from "./StepShifts";
 import { useCampaign } from "../_hooks/useCampaign";
 import { CAMPAIGN_STEPS, type CampaignStep } from "../_context/CampaignContext";
 
 const STEP_LABELS: Record<CampaignStep, string> = {
   general: "General information",
-  schedule: "Time and contact",
+  schedule: "Schedule and contact",
   meeting_points: "Meeting points",
+  shifts: "Shifts",
   review: "Review & submit",
 };
 
@@ -157,6 +159,7 @@ const CampaignForm = memo(function CampaignForm() {
         {step === "general" && <GeneralInformation />}
         {step === "schedule" && <StepSchedule />}
         {step === "meeting_points" && <MeetingPointsEditor />}
+        {step === "shifts" && <StepShifts />}
         {step === "review" && (
           <div className="rounded-[10px] border border-[rgba(136,122,71,0.5)] bg-white/80 px-[24px] py-[28px] shadow-sm lg:px-[30px] lg:py-[35px]">
             <StepReview />

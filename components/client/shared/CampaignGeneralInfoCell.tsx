@@ -5,7 +5,7 @@ import type { ICampaign } from '@/apis/campaign/models/campaign';
 import Image from '@/components/ui/AppImage';
 import { getDifficultyLevel } from '@/constants/difficulty';
 import { cn } from '@/libs/utils';
-import { formattedDate } from '@/utils/formattedDate';
+import { CampaignDateRange } from '@/components/client/shared/CampaignDateRange';
 
 const DEFAULT_BANNER = '/banner-default.jpg';
 
@@ -21,7 +21,6 @@ export const CampaignGeneralInfoCell = memo(function CampaignGeneralInfoCell({
   const { t } = useTranslation();
   const bannerUrl = campaign.banner?.trim() ? campaign.banner : DEFAULT_BANNER;
   const difficulty = getDifficultyLevel(campaign.difficulty);
-  const duration = `${formattedDate(campaign.start_date ?? undefined)} - ${formattedDate(campaign.end_date ?? undefined)}`;
 
   return (
     <div className="flex items-start gap-3 min-w-[280px] max-w-[420px]">
@@ -34,7 +33,9 @@ export const CampaignGeneralInfoCell = memo(function CampaignGeneralInfoCell({
       />
       <div className="flex min-w-0 flex-col gap-0.5">
         <span className="font-medium line-clamp-2 text-zinc-900">{title}</span>
-        <span className="text-xs text-zinc-600 tabular-nums">{duration}</span>
+        <span className="text-xs text-zinc-600 tabular-nums">
+          <CampaignDateRange campaign={campaign} />
+        </span>
         <span
           className={cn(
             'font-display-1 text-xs font-medium',

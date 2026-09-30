@@ -7,10 +7,10 @@ import {
 } from '@/constants/campaignLifecycle';
 import { useCampaign } from './useCampaign';
 
-/** Client-side hints for meeting points: too far apart, or more slots than the difficulty allows. */
+/** Client-side hint for meeting points too far apart to share a campaign. */
 export function useMeetingPointWarnings(): string[] {
   const { t } = useTranslation();
-  const { form, campaign } = useCampaign();
+  const { form } = useCampaign();
   const points = form.watch('meeting_points');
 
   return useMemo(() => {
@@ -36,16 +36,6 @@ export function useMeetingPointWarnings(): string[] {
         }
       }
     }
-    const totalSlots = points.reduce((sum, p) => sum + (Number(p.slots) || 0), 0);
-    const cap = campaign?.max_members;
-    if (cap != null && totalSlots > cap) {
-      out.push(
-        t('Total slots ({{total}}) exceed the {{max}} volunteers allowed for this difficulty', {
-          total: totalSlots,
-          max: cap,
-        }),
-      );
-    }
     return out;
-  }, [campaign?.max_members, points, t]);
+  }, [points, t]);
 }

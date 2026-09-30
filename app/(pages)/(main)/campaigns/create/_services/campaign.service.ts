@@ -20,11 +20,24 @@ export interface MeetingPointFormValues {
   longitude?: number;
   detail_address: string;
   radius_km: number;
-  /** "HH:mm" on the campaign day. */
-  gather_time: string;
-  slots?: number | null;
-  leader_user_id: string;
   reports: IIncident[];
+}
+
+export interface CampaignDayFormValues {
+  /** "YYYY-MM-DD" (local). */
+  date?: string;
+  /** "HH:mm" */
+  start_time: string;
+  end_time: string;
+}
+
+/** One cell of the day × meeting point grid. */
+export interface ShiftFormValues {
+  /** null = not filled in yet; 0 = the shift is off. */
+  slots: number | null;
+  /** "HH:mm" on that day. */
+  gather_time: string;
+  leader_user_id: string;
 }
 
 export interface CampaignFormValues {
@@ -33,11 +46,7 @@ export interface CampaignFormValues {
   description: string;
   banner?: string | File | Blob;
   difficulty: number;
-  /** "YYYY-MM-DD" (local); campaigns last one day for now. */
-  campaign_date?: string;
-  /** "HH:mm" */
-  start_time: string;
-  end_time: string;
+  days: CampaignDayFormValues[];
   contact_name: string;
   contact_phone: string;
   safety_notes: string;
@@ -46,19 +55,44 @@ export interface CampaignFormValues {
   skills: string;
   bring_own_tools: boolean;
   meeting_points: MeetingPointFormValues[];
+  /** `schedule[day][meetingPoint]`, always days.length × meeting_points.length. */
+  schedule: ShiftFormValues[][];
 }
 
-export const emptyMeetingPoint = (leaderUserId = ""): MeetingPointFormValues => ({
+export const emptyMeetingPoint = (): MeetingPointFormValues => ({
   name: "",
   latitude: undefined,
   longitude: undefined,
   detail_address: "",
   radius_km: DEFAULT_MEETING_POINT_RADIUS_KM,
-  gather_time: "",
-  slots: null,
-  leader_user_id: leaderUserId,
   reports: [],
 });
+
+export const emptyDay = (): CampaignDayFormValues => ({
+  date: undefined,
+  start_time: "07:00",
+  end_time: "11:00",
+});
+
+export const emptyShift = (leaderUserId = ""): ShiftFormValues => ({
+  slots: null,
+  gather_time: "",
+  leader_user_id: leaderUserId,
+});
+
+/** Pads or trims the grid to `dayCount` × `pointCount`, keeping the cells that exist. */
+export const fitSchedule = (
+  schedule: ShiftFormValues[][] | undefined,
+  dayCount: number,
+  pointCount: number,
+  leaderUserId: string,
+): ShiftFormValues[][] =>
+  Array.from({ length: dayCount }, (_, d) =>
+    Array.from(
+      { length: pointCount },
+      (_, p) => schedule?.[d]?.[p] ?? emptyShift(leaderUserId),
+    ),
+  );
 
 export const DEFAULT_CAMPAIGN_FORM_VALUES: CampaignFormValues = {
   organization_id: "",
@@ -66,9 +100,7 @@ export const DEFAULT_CAMPAIGN_FORM_VALUES: CampaignFormValues = {
   description: "",
   banner: undefined,
   difficulty: DIFFICULTY_MIN,
-  campaign_date: undefined,
-  start_time: "07:00",
-  end_time: "11:00",
+  days: [emptyDay()],
   contact_name: "",
   contact_phone: "",
   safety_notes: "",
@@ -76,6 +108,7 @@ export const DEFAULT_CAMPAIGN_FORM_VALUES: CampaignFormValues = {
   skills: "",
   bring_own_tools: false,
   meeting_points: [emptyMeetingPoint()],
+  schedule: [[emptyShift()]],
 };
 
 export const truncateDetailAddress = (value?: string | null): string => {
@@ -99,6 +132,53 @@ const toLocalTime = (d: Date) => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 
 const optionalText = (value: string) => value.trim() || null;
 
+/**
+ * Days, meeting points and shifts for the API. Half-filled days (no date) and meeting points
+ * (no location) are left out of the draft, and the grid follows: shifts are sent by the position
+ * of what is kept. A cell without slots yet is not sent; the server saves it as off.
+ */
+const scheduleToApi = (
+  data: CampaignFormValues,
+): Pick<ICreateCampaignRequest, "days" | "meeting_points" | "shifts"> => {
+  const days = data.days
+    .map((day, index) => ({ day, index }))
+    .filter(({ day }) => combineDateTime(day.date, day.start_time) && combineDateTime(day.date, day.end_time));
+  const points = data.meeting_points
+    .map((point, index) => ({ point, index }))
+    .filter(({ point }) => point.latitude != null && point.longitude != null);
+
+  const shifts: NonNullable<ICreateCampaignRequest["shifts"]> = [];
+  days.forEach(({ day, index: d }, dayIndex) =>
+    points.forEach(({ index: p }, meetingPointIndex) => {
+      const cell = data.schedule[d]?.[p];
+      if (!cell || cell.slots == null || Number.isNaN(Number(cell.slots))) return;
+      shifts.push({
+        day_index: dayIndex,
+        meeting_point_index: meetingPointIndex,
+        gather_at: combineDateTime(day.date, cell.gather_time) ?? null,
+        slots: Number(cell.slots),
+        leader_user_id: cell.leader_user_id || null,
+      });
+    }),
+  );
+
+  return {
+    days: days.map(({ day }) => ({
+      start_at: combineDateTime(day.date, day.start_time) as string,
+      end_at: combineDateTime(day.date, day.end_time) as string,
+    })),
+    meeting_points: points.map(({ point }) => ({
+      name: optionalText(point.name),
+      latitude: point.latitude as number,
+      longitude: point.longitude as number,
+      detail_address: truncateDetailAddress(point.detail_address) || null,
+      radius_km: Number(point.radius_km) || DEFAULT_MEETING_POINT_RADIUS_KM,
+      report_ids: point.reports.map((r) => r.id),
+    })),
+    shifts,
+  };
+};
+
 export const transformToApiData = (data: CampaignFormValues): ICreateCampaignRequest => {
   const skills = data.skills
     .split(",")
@@ -113,8 +193,7 @@ export const transformToApiData = (data: CampaignFormValues): ICreateCampaignReq
     description: data.description.trim() || undefined,
     banner: typeof data.banner === "string" ? data.banner : undefined,
     difficulty: clampDifficulty(data.difficulty),
-    start_date: combineDateTime(data.campaign_date, data.start_time),
-    end_date: combineDateTime(data.campaign_date, data.end_time),
+    ...scheduleToApi(data),
     contact_name: optionalText(data.contact_name),
     contact_phone: optionalText(data.contact_phone),
     safety_notes: optionalText(data.safety_notes),
@@ -125,29 +204,17 @@ export const transformToApiData = (data: CampaignFormValues): ICreateCampaignReq
           bring_own_tools: data.bring_own_tools,
         }
       : null,
-    // A meeting point needs a location; half-filled ones are dropped from the draft.
-    meeting_points: data.meeting_points
-      .filter((p) => p.latitude != null && p.longitude != null)
-      .map((p) => ({
-        name: optionalText(p.name),
-        latitude: p.latitude as number,
-        longitude: p.longitude as number,
-        detail_address: truncateDetailAddress(p.detail_address) || null,
-        radius_km: Number(p.radius_km) || DEFAULT_MEETING_POINT_RADIUS_KM,
-        gather_at: combineDateTime(data.campaign_date, p.gather_time) ?? null,
-        slots: p.slots ? Number(p.slots) : null,
-        leader_user_id: p.leader_user_id || null,
-        report_ids: p.reports.map((r) => r.id),
-      })),
   };
 };
 
 /** An existing campaign (draft, under review, needs revision) → form values for editing. */
 export const campaignToFormValues = (campaign: ICampaign): CampaignFormValues => {
-  const start = campaign.start_date ? new Date(campaign.start_date) : undefined;
-  const end = campaign.end_date ? new Date(campaign.end_date) : undefined;
   const reportsById = new Map((campaign.reports ?? []).map((r) => [r.id, r]));
   const points = campaign.meeting_points ?? [];
+  const days = [...(campaign.days ?? [])].sort(
+    (a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime(),
+  );
+  const shifts = campaign.shifts ?? [];
   const requirements = campaign.requirements ?? null;
 
   return {
@@ -156,9 +223,14 @@ export const campaignToFormValues = (campaign: ICampaign): CampaignFormValues =>
     description: campaign.description ?? "",
     banner: campaign.banner ?? undefined,
     difficulty: clampDifficulty(campaign.difficulty),
-    campaign_date: start ? toLocalDate(start) : undefined,
-    start_time: start ? toLocalTime(start) : DEFAULT_CAMPAIGN_FORM_VALUES.start_time,
-    end_time: end ? toLocalTime(end) : DEFAULT_CAMPAIGN_FORM_VALUES.end_time,
+    days:
+      days.length > 0
+        ? days.map((d) => ({
+            date: toLocalDate(new Date(d.start_at)),
+            start_time: toLocalTime(new Date(d.start_at)),
+            end_time: toLocalTime(new Date(d.end_at)),
+          }))
+        : [emptyDay()],
     contact_name: campaign.contact_name ?? "",
     contact_phone: campaign.contact_phone ?? "",
     safety_notes: campaign.safety_notes ?? "",
@@ -173,14 +245,31 @@ export const campaignToFormValues = (campaign: ICampaign): CampaignFormValues =>
             longitude: p.longitude,
             detail_address: p.detail_address ?? "",
             radius_km: p.radius_km,
-            gather_time: p.gather_at ? toLocalTime(new Date(p.gather_at)) : "",
-            slots: p.slots ?? null,
-            leader_user_id: p.leader_user_id ?? "",
             reports: p.report_ids
               .map((id) => reportsById.get(id))
               .filter((r): r is IIncident => Boolean(r)),
           }))
-        : [emptyMeetingPoint(campaign.created_by ?? "")],
+        : [emptyMeetingPoint()],
+    schedule: fitSchedule(
+      (days.length > 0 ? days : [null]).map((day) =>
+        (points.length > 0 ? points : [null]).map((point) => {
+          const shift =
+            day && point
+              ? shifts.find((sh) => sh.day_id === day.id && sh.meeting_point_id === point.id)
+              : undefined;
+          return shift
+            ? {
+                slots: shift.slots,
+                gather_time: shift.gather_at ? toLocalTime(new Date(shift.gather_at)) : "",
+                leader_user_id: shift.leader_user_id ?? "",
+              }
+            : emptyShift(campaign.created_by ?? "");
+        }),
+      ),
+      Math.max(days.length, 1),
+      Math.max(points.length, 1),
+      campaign.created_by ?? "",
+    ),
   };
 };
 
@@ -188,29 +277,44 @@ export const campaignToFormValues = (campaign: ICampaign): CampaignFormValues =>
 export const impliedMinAge = (difficulty: number): number | null =>
   difficulty >= CAMPAIGN_HIGH_DIFFICULTY_LEVEL ? CAMPAIGN_HIGH_DIFFICULTY_MIN_AGE : null;
 
+/** Day-level codes that belong on the date picker rather than the time inputs. */
+const DAY_DATE_CODES = ["START_TOO_SOON", "DAY_DUPLICATED", "DAY_SPAN_TOO_WIDE"];
+/** Day-level codes about its shifts, shown on the grid row. */
+const DAY_SHIFT_CODES = ["DAY_NO_ACTIVE_SHIFT", "DAY_SLOTS_OVER_LIMIT"];
+
 /**
- * Server field path (camelCase, e.g. `meetingPoints[1].slots`) → form field name.
+ * Server field path (camelCase, e.g. `schedule[1][0].slots`) → form field name.
  * Unknown paths return null and are shown in the summary only.
  */
 export const issueFieldToFormName = (field: string, code?: string): string | null => {
   if (field === "meetingPoints") return "meeting_points";
-  // Problems with the day itself belong on the date picker, not the time inputs.
-  if (
-    (field === "startDate" || field === "endDate") &&
-    code &&
-    ["START_REQUIRED", "START_TOO_SOON", "MULTI_DAY_UNSUPPORTED"].includes(code)
-  ) {
-    return "campaign_date";
+  if (field === "days") return "days";
+
+  const day = field.match(/^days\[(\d+)\]\.?(\w+)?$/);
+  if (day) {
+    const [, index, key] = day;
+    if (code && DAY_SHIFT_CODES.includes(code)) return `schedule.${index}`;
+    if (!key || (code && DAY_DATE_CODES.includes(code))) return `days.${index}.date`;
+    return `days.${index}.${key === "endAt" ? "end_time" : "start_time"}`;
   }
+
+  const shift = field.match(/^schedule\[(\d+)\]\[(\d+)\]\.(\w+)$/);
+  if (shift) {
+    const [, d, p, key] = shift;
+    const map: Record<string, string> = {
+      slots: "slots",
+      leaderUserId: "leader_user_id",
+      gatherAt: "gather_time",
+    };
+    return `schedule.${d}.${p}.${map[key] ?? "slots"}`;
+  }
+
   const point = field.match(/^meetingPoints\[(\d+)\]\.?(\w+)?$/);
   if (point) {
     const [, index, key] = point;
     const map: Record<string, string> = {
       name: "name",
       radiusKm: "radius_km",
-      slots: "slots",
-      leaderUserId: "leader_user_id",
-      gatherAt: "gather_time",
       reportIds: "reports",
     };
     return `meeting_points.${index}.${key ? (map[key] ?? "latitude") : "latitude"}`;
@@ -219,8 +323,6 @@ export const issueFieldToFormName = (field: string, code?: string): string | nul
     title: "title",
     description: "description",
     banner: "banner",
-    startDate: "start_time",
-    endDate: "end_time",
     contactName: "contact_name",
     contactPhone: "contact_phone",
     difficulty: "difficulty",

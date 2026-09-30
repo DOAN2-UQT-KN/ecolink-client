@@ -14,6 +14,7 @@ import { cn } from '@/libs/utils';
 import { useCampaignContext } from '../_context/CampaignContext';
 import { ReviewCampaignConfirm } from './ReviewCampaignConfirm';
 import { CampaignPreviewDialog } from './CampaignPreviewDialog';
+import { CampaignDateRange } from '@/components/client/shared/CampaignDateRange';
 import { OrganizationIdentity } from '@/components/admin/shared/OrganizationIdentity';
 import { formattedDate } from '@/utils/formattedDate';
 import { CAMPAIGN_STATUS } from '@/constants/campaignLifecycle';
@@ -46,7 +47,6 @@ const GeneralInformationCell = memo(function GeneralInformationCell({
   const { t } = useTranslation();
   const bannerUrl = campaign.banner?.trim() ? campaign.banner : DEFAULT_BANNER;
   const difficulty = getDifficultyLevel(campaign.difficulty);
-  const duration = `${formattedDate(campaign.start_date ?? undefined)} - ${formattedDate(campaign.end_date ?? undefined)}`;
 
   return (
     <div className="flex items-start gap-3 min-w-[280px] max-w-[420px]">
@@ -75,7 +75,7 @@ const GeneralInformationCell = memo(function GeneralInformationCell({
             isDark ? 'text-zinc-400' : 'text-zinc-600',
           )}
         >
-          {duration}
+          <CampaignDateRange campaign={campaign} />
         </span>
         <span
           className={cn(

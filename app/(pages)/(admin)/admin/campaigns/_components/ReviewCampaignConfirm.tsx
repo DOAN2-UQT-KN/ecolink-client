@@ -17,7 +17,7 @@ import showMessage, { MessageLevel, MessageType } from "@/utils/showMessage";
 /** Spec, phase 2: what the admin checks before approving. */
 const CHECKLIST = [
   "The organization is valid and its verification matches the limits",
-  "Time, place and meeting points are feasible and safe",
+  "Each day's schedule, the place, the meeting points and every shift's slots are feasible and safe",
   "Waste points match the location and the meeting point radius",
   "The difficulty is reasonable",
   "The content breaks no rules",
@@ -29,14 +29,14 @@ const FIELD_LABEL: Record<string, string> = {
   title: "Title",
   description: "Description",
   banner: "Banner",
-  start_date: "Start time",
-  end_date: "End time",
   difficulty: "Difficulty",
   contact_name: "Contact person",
   contact_phone: "Contact phone",
   safety_notes: "Safety notes",
   requirements: "Participation conditions",
+  days: "Schedule",
   meeting_points: "Meeting points",
+  shifts: "Shifts",
 };
 
 type Mode = "review" | "ban";

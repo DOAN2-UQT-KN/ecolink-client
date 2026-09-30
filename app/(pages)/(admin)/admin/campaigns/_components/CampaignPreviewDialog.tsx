@@ -26,6 +26,9 @@ import { getDifficultyLevel } from "@/constants/difficulty";
 import { useLocalizedDisplay } from "@/hooks/useLocalizedDisplay";
 import { cn } from "@/libs/utils";
 import { formattedDate } from "@/utils/formattedDate";
+import { format } from "date-fns";
+import { CampaignDateRange } from "@/components/client/shared/CampaignDateRange";
+import { ShiftSlotsTable } from "@/components/client/shared/ShiftSlotsTable";
 
 const MeetingPoints = memo(function MeetingPoints({
   campaign,
@@ -37,15 +40,6 @@ const MeetingPoints = memo(function MeetingPoints({
   const { t } = useTranslation();
   const { title: localizedTitle } = useLocalizedDisplay();
   const points = campaign.meeting_points ?? [];
-  const { data: membersData } = useGetMembersByOrg(
-    { organization_id: campaign.organization_id ?? "", page: 1, limit: 100 },
-    { enabled: Boolean(campaign.organization_id) && points.length > 0 },
-  );
-  const memberName = (userId?: string | null) => {
-    if (!userId) return null;
-    const member = membersData?.data?.members?.find((m) => m.user_id === userId);
-    return member?.user?.name || member?.user?.email || null;
-  };
   const reportsById = useMemo(
     () => new Map((campaign.reports ?? []).map((r) => [r.id, r])),
     [campaign.reports],
@@ -86,12 +80,6 @@ const MeetingPoints = memo(function MeetingPoints({
               </a>
             }
           />
-          <ReviewRow label={t("Person in charge")} value={memberName(point.leader_user_id)} />
-          <ReviewRow
-            label={t("Gathering time")}
-            value={point.gather_at ? formattedDate(point.gather_at, true) : null}
-          />
-          <ReviewRow label={t("Slots")} value={point.slots ?? t("No limit")} />
           <ReviewRow
             label={t("Waste points")}
             value={
@@ -129,6 +117,77 @@ const MeetingPoints = memo(function MeetingPoints({
   );
 });
 
+/** The days, the slots of every day × meeting point, and who leads each shift that runs. */
+const CampaignShifts = memo(function CampaignShifts({
+  campaign,
+  isDark,
+}: {
+  campaign: ICampaign;
+  isDark: boolean;
+}) {
+  const { t } = useTranslation();
+  const days = useMemo(
+    () =>
+      [...(campaign.days ?? [])].sort(
+        (a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime(),
+      ),
+    [campaign.days],
+  );
+  const points = campaign.meeting_points ?? [];
+  const shifts = campaign.shifts ?? [];
+  const { data: membersData } = useGetMembersByOrg(
+    { organization_id: campaign.organization_id ?? "", page: 1, limit: 100 },
+    { enabled: Boolean(campaign.organization_id) && shifts.length > 0 },
+  );
+  const memberName = (userId?: string | null) => {
+    if (!userId) return "—";
+    const member = membersData?.data?.members?.find((m) => m.user_id === userId);
+    return member?.user?.name || member?.user?.email || "—";
+  };
+  const shiftOf = (dayId: string, pointId?: string) =>
+    shifts.find((sh) => sh.day_id === dayId && sh.meeting_point_id === pointId);
+  const dayLabel = (index: number) => {
+    const day = days[index];
+    return `${t("Day {{n}}", { n: index + 1 })} · ${formattedDate(day.start_at)} · ${format(
+      new Date(day.start_at),
+      "HH:mm",
+    )}–${format(new Date(day.end_at), "HH:mm")}`;
+  };
+  const pointName = (index: number) =>
+    points[index]?.name || t("Meeting point {{n}}", { n: index + 1 });
+
+  if (days.length === 0) {
+    return <p className="text-sm text-muted-foreground">—</p>;
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      <ShiftSlotsTable
+        days={days.map((_, d) => dayLabel(d))}
+        points={points.map((_, p) => pointName(p))}
+        slots={days.map((day) => points.map((point) => shiftOf(day.id, point.id)?.slots ?? 0))}
+        maxPerDay={campaign.max_members ?? null}
+        isDark={isDark}
+      />
+      {days.map((day, d) =>
+        points.map((point, p) => {
+          const shift = shiftOf(day.id, point.id);
+          if (!shift || shift.slots <= 0) return null;
+          return (
+            <ReviewRow
+              key={shift.id}
+              label={`${t("Day {{n}}", { n: d + 1 })} · ${pointName(p)}`}
+              value={`${t("Gathering time")}: ${
+                shift.gather_at ? format(new Date(shift.gather_at), "HH:mm") : "—"
+              } · ${t("Person in charge")}: ${memberName(shift.leader_user_id)}`}
+            />
+          );
+        }),
+      )}
+    </div>
+  );
+});
+
 /**
  * Everything about a campaign on one screen, as its organization saw it before sending it
  * for review. Read-only; the decisions stay in the table's actions.
@@ -158,7 +217,6 @@ export function CampaignPreviewDialog({
     requirements?.bring_own_tools ? t("Volunteers bring their own tools") : null,
   ].filter(Boolean);
   const points = campaign?.meeting_points ?? [];
-  const totalSlots = points.reduce((sum, p) => sum + (p.slots ?? 0), 0);
   const isPublic = campaign?.status != null && CAMPAIGN_PUBLIC_STATUSES.includes(campaign.status);
 
   return (
@@ -280,13 +338,7 @@ export function CampaignPreviewDialog({
                 <ReviewSectionCard title={t("Time and contact")} defaultOpen isDark={isDark}>
                   <ReviewRow
                     label={t("Campaign schedule")}
-                    value={
-                      campaign.start_date
-                        ? `${formattedDate(campaign.start_date, true)} – ${
-                            campaign.end_date ? formattedDate(campaign.end_date, true) : "—"
-                          }`
-                        : null
-                    }
+                    value={<CampaignDateRange campaign={campaign} />}
                   />
                   <ReviewRow label={t("Contact person")} value={campaign.contact_name} />
                   <ReviewRow label={t("Contact phone")} value={campaign.contact_phone} />
@@ -298,8 +350,20 @@ export function CampaignPreviewDialog({
                 </ReviewSectionCard>
 
                 <ReviewSectionCard
+                  title={t("Schedule and shifts")}
+                  hint={t("{{days}} days · {{points}} meeting points", {
+                    days: campaign.days?.length ?? 0,
+                    points: points.length,
+                  })}
+                  defaultOpen
+                  isDark={isDark}
+                >
+                  <CampaignShifts campaign={campaign} isDark={isDark} />
+                </ReviewSectionCard>
+
+                <ReviewSectionCard
                   title={t("Meeting points")}
-                  hint={`${points.length} · ${t("Slots")}: ${totalSlots || t("No limit")}`}
+                  hint={`${points.length}`}
                   defaultOpen
                   isDark={isDark}
                 >

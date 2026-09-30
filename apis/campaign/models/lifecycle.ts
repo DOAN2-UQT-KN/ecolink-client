@@ -16,11 +16,40 @@ export interface IMeetingPoint {
   longitude: number;
   detail_address?: string | null;
   radius_km: number;
-  gather_at?: string | null;
-  slots?: number | null;
-  leader_user_id?: string | null;
   sort_order?: number;
   report_ids: string[];
+}
+
+/** One day of a campaign (1–7, within 14 days of the first). */
+export interface ICampaignDay {
+  id: string;
+  start_at: string;
+  end_at: string;
+  sort_order: number;
+}
+
+/** One day × meeting point. `slots` 0 = the shift is off. */
+export interface ICampaignShift {
+  id: string;
+  day_id: string;
+  meeting_point_id: string;
+  gather_at: string | null;
+  slots: number;
+  leader_user_id: string | null;
+}
+
+/** Request body forms: days and shifts by position. */
+export interface ICampaignDayInput {
+  start_at: string;
+  end_at: string;
+}
+
+export interface ICampaignShiftInput {
+  day_index: number;
+  meeting_point_index: number;
+  gather_at?: string | null;
+  slots: number;
+  leader_user_id?: string | null;
 }
 
 export type CampaignCreateBlockReason =

@@ -1,21 +1,12 @@
 import { memo } from 'react';
-import { Controller, useFieldArray } from 'react-hook-form';
+import { useFieldArray } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { BiTrash } from 'react-icons/bi';
 
 import { Input } from '@/components/ui/input';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { InfoTooltip } from '@/components/ui/InfoTooltip';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Button } from '@/components/client/shared/Button';
-import { useGetMembersByOrg } from '@/apis/organization/organizationById';
-import useAuthStore from '@/stores/useAuthStore';
 import {
   CAMPAIGN_MEETING_POINT_MAX,
   CAMPAIGN_MEETING_POINT_MAX_DISTANCE_KM,
@@ -31,24 +22,16 @@ const inputClassName =
   'border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50';
 
 /**
- * 1–5 meeting points, each with its location, gathering time, slots, the manager in charge
- * and its own waste points. With a single point the multi-point options stay hidden and the
- * campaign reads like a normal one-location campaign.
+ * 1–5 meeting points, each with its location and its own waste points. Slots, gathering time
+ * and the person in charge are set per day on the Shifts step. With a single point the
+ * multi-point options stay hidden and the campaign reads like a normal one-location campaign.
  */
 const MeetingPointsEditor = memo(function MeetingPointsEditor() {
   const { t } = useTranslation();
-  const { form } = useCampaign();
-  const { control, register, watch, formState } = form;
+  const { form, addScheduleColumn, removeScheduleColumn } = useCampaign();
+  const { control, register, formState } = form;
   const { fields, append, remove } = useFieldArray({ control, name: 'meeting_points' });
-  const currentUserId = useAuthStore((s) => s.user?.id) ?? '';
-  const organizationId = watch('organization_id');
   const isMulti = fields.length > 1;
-
-  const { data: membersData } = useGetMembersByOrg(
-    { organization_id: organizationId, page: 1, limit: 100 },
-    { enabled: Boolean(organizationId) },
-  );
-  const members = membersData?.data?.members ?? [];
 
   const warnings = useMeetingPointWarnings();
 
@@ -62,7 +45,7 @@ const MeetingPointsEditor = memo(function MeetingPointsEditor() {
             {isMulti ? t('Meeting points') : t('Location')}
           </span>
           <InfoTooltip
-            content={t('Up to {{max}} meeting points on the same day, within {{km}} km of each other', {
+            content={t('Up to {{max}} meeting points, within {{km}} km of each other', {
               max: CAMPAIGN_MEETING_POINT_MAX,
               km: CAMPAIGN_MEETING_POINT_MAX_DISTANCE_KM,
             })}
@@ -72,7 +55,10 @@ const MeetingPointsEditor = memo(function MeetingPointsEditor() {
           <Button
             type="button"
             variant="outlined-brown"
-            onClick={() => append(emptyMeetingPoint(currentUserId))}
+            onClick={() => {
+              append(emptyMeetingPoint());
+              addScheduleColumn();
+            }}
           >
             {t('Add meeting point')}
           </Button>
@@ -101,14 +87,17 @@ const MeetingPointsEditor = memo(function MeetingPointsEditor() {
                   type="button"
                   aria-label={t('Remove meeting point')}
                   className="text-destructive"
-                  onClick={() => remove(index)}
+                  onClick={() => {
+                    remove(index);
+                    removeScheduleColumn(index);
+                  }}
                 >
                   <BiTrash size={18} />
                 </button>
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {isMulti && (
                 <Field>
                   <FieldLabel className="text-foreground-tertiary font-display-3">
@@ -128,63 +117,6 @@ const MeetingPointsEditor = memo(function MeetingPointsEditor() {
                   <FieldError errors={[errors?.name]} />
                 </Field>
               )}
-
-              <Field>
-                <FieldLabel className="text-foreground-tertiary font-display-3">
-                  {t('Person in charge')} <span className="text-destructive">*</span>
-                </FieldLabel>
-                <Controller
-                  name={`meeting_points.${index}.leader_user_id`}
-                  control={control}
-                  rules={{ required: t('Choose who is in charge of this point') }}
-                  render={({ field: f }) => (
-                    <Select value={f.value || undefined} onValueChange={f.onChange} >
-                      <SelectTrigger className={`${inputClassName} !h-[50px] w-full`}>
-                        <SelectValue placeholder={t('Choose a member')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {members.map((m) => (
-                          <SelectItem key={m.user_id} value={m.user_id}>
-                            {m.user?.name || m.user?.email || m.user_id}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                <FieldError errors={[errors?.leader_user_id]} />
-              </Field>
-
-              <Field>
-                <FieldLabel className="text-foreground-tertiary font-display-3">
-                  {t('Gathering time')}
-                </FieldLabel>
-                <Input
-                  type="time"
-                  {...register(`meeting_points.${index}.gather_time`)}
-                  className={inputClassName}
-                />
-                <FieldError errors={[errors?.gather_time]} />
-              </Field>
-
-              <Field>
-                <FieldLabel className="text-foreground-tertiary font-display-3">
-                  {t('Slots')}
-                </FieldLabel>
-                <Input
-                  type="number"
-                  min={1}
-                  {...register(`meeting_points.${index}.slots`, {
-                    setValueAs: (v) => (v === '' || v == null ? null : Number(v)),
-                    validate: (v) =>
-                      v == null || (Number.isInteger(v) && v >= 1) ||
-                      t('Slots must be a positive whole number'),
-                  })}
-                  placeholder={t('No limit')}
-                  className={inputClassName}
-                />
-                <FieldError errors={[errors?.slots]} />
-              </Field>
 
               <Field>
                 <FieldLabel className="text-foreground-tertiary font-display-3">
