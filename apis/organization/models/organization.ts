@@ -85,6 +85,8 @@ export interface IOrganization {
   verified_at?: string | null;
   /** Lane B ticks expire and must be re-assessed; `null` for lane A. */
   verification_expires_at?: string | null;
+  /** Blue Tick in effect, computed by the server (tier, suspension, KYC, expiry). */
+  is_verified?: boolean;
   address?: string | null;
   /** Inherited from the approved application; null when the applicant skipped the map. */
   latitude?: number | null;

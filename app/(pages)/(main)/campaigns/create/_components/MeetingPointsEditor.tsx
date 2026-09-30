@@ -1,10 +1,11 @@
-import { memo, useMemo } from 'react';
+import { memo } from 'react';
 import { Controller, useFieldArray } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { BiTrash } from 'react-icons/bi';
 
 import { Input } from '@/components/ui/input';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
+import { InfoTooltip } from '@/components/ui/InfoTooltip';
 import {
   Select,
   SelectContent,
@@ -18,10 +19,10 @@ import useAuthStore from '@/stores/useAuthStore';
 import {
   CAMPAIGN_MEETING_POINT_MAX,
   CAMPAIGN_MEETING_POINT_MAX_DISTANCE_KM,
-  haversineKm,
 } from '@/constants/campaignLifecycle';
 
 import { useCampaign } from '../_hooks/useCampaign';
+import { useMeetingPointWarnings } from '../_hooks/useMeetingPointWarnings';
 import { emptyMeetingPoint } from '../_services/campaign.service';
 import LeafletAddress from './LeafletAddress';
 import IncidentList from './IncidentList';
@@ -36,12 +37,11 @@ const inputClassName =
  */
 const MeetingPointsEditor = memo(function MeetingPointsEditor() {
   const { t } = useTranslation();
-  const { form, campaign } = useCampaign();
+  const { form } = useCampaign();
   const { control, register, watch, formState } = form;
   const { fields, append, remove } = useFieldArray({ control, name: 'meeting_points' });
   const currentUserId = useAuthStore((s) => s.user?.id) ?? '';
   const organizationId = watch('organization_id');
-  const points = watch('meeting_points');
   const isMulti = fields.length > 1;
 
   const { data: membersData } = useGetMembersByOrg(
@@ -50,57 +50,23 @@ const MeetingPointsEditor = memo(function MeetingPointsEditor() {
   );
   const members = membersData?.data?.members ?? [];
 
-  const warnings = useMemo(() => {
-    const out: string[] = [];
-    const located = points
-      .map((p, i) => ({ p, i }))
-      .filter(({ p }) => p.latitude != null && p.longitude != null);
-    for (let a = 0; a < located.length; a++) {
-      for (let b = a + 1; b < located.length; b++) {
-        const km = haversineKm(
-          { latitude: located[a].p.latitude!, longitude: located[a].p.longitude! },
-          { latitude: located[b].p.latitude!, longitude: located[b].p.longitude! },
-        );
-        if (km > CAMPAIGN_MEETING_POINT_MAX_DISTANCE_KM) {
-          out.push(
-            t('Points {{a}} and {{b}} are {{km}} km apart (max {{max}} km). Split them into separate campaigns.', {
-              a: located[a].i + 1,
-              b: located[b].i + 1,
-              km: km.toFixed(1),
-              max: CAMPAIGN_MEETING_POINT_MAX_DISTANCE_KM,
-            }),
-          );
-        }
-      }
-    }
-    const totalSlots = points.reduce((sum, p) => sum + (Number(p.slots) || 0), 0);
-    const cap = campaign?.max_members;
-    if (cap != null && totalSlots > cap) {
-      out.push(
-        t('Total slots ({{total}}) exceed the {{max}} volunteers allowed for this difficulty', {
-          total: totalSlots,
-          max: cap,
-        }),
-      );
-    }
-    return out;
-  }, [campaign?.max_members, points, t]);
+  const warnings = useMeetingPointWarnings();
 
   const pointErrors = formState.errors.meeting_points;
 
   return (
     <div className="w-full flex flex-col gap-6 px-[30px] py-[35px] border-1 border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-col gap-1">
+        <div className="flex items-center gap-2">
           <span className="font-display-5 font-semibold !text-button-accent ">
             {isMulti ? t('Meeting points') : t('Location')}
           </span>
-          <span className="text-xs text-foreground-tertiary">
-            {t('Up to {{max}} meeting points on the same day, within {{km}} km of each other', {
+          <InfoTooltip
+            content={t('Up to {{max}} meeting points on the same day, within {{km}} km of each other', {
               max: CAMPAIGN_MEETING_POINT_MAX,
               km: CAMPAIGN_MEETING_POINT_MAX_DISTANCE_KM,
             })}
-          </span>
+          />
         </div>
         {fields.length < CAMPAIGN_MEETING_POINT_MAX && (
           <Button
@@ -172,8 +138,8 @@ const MeetingPointsEditor = memo(function MeetingPointsEditor() {
                   control={control}
                   rules={{ required: t('Choose who is in charge of this point') }}
                   render={({ field: f }) => (
-                    <Select value={f.value || undefined} onValueChange={f.onChange}>
-                      <SelectTrigger className={`${inputClassName} !h-[40px] w-full`}>
+                    <Select value={f.value || undefined} onValueChange={f.onChange} >
+                      <SelectTrigger className={`${inputClassName} !h-[50px] w-full`}>
                         <SelectValue placeholder={t('Choose a member')} />
                       </SelectTrigger>
                       <SelectContent>

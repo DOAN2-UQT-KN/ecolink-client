@@ -14,6 +14,8 @@ export const CAMPAIGN_STATUS = {
   COMPLETED: STATUS.COMPLETED,
   BLOCKED: STATUS.INACTIVE,
   EXPIRED: STATUS.OBSOLETE,
+  /** Stopped before approval because the organization was locked. */
+  CANCELLED: STATUS.CANCELED,
 } as const;
 
 /** Every field may still change (draft, under review, needs revision). */
@@ -45,6 +47,7 @@ export const CAMPAIGN_STATUS_LABEL: Record<number, string> = {
   [CAMPAIGN_STATUS.COMPLETED]: "Completed",
   [CAMPAIGN_STATUS.BLOCKED]: "Blocked",
   [CAMPAIGN_STATUS.EXPIRED]: "Expired",
+  [CAMPAIGN_STATUS.CANCELLED]: "Cancelled",
 };
 
 /** Same starting values as the server; the server is the one that enforces them. */
@@ -104,6 +107,7 @@ export const CAMPAIGN_ISSUE_MESSAGES: Record<string, string> = {
   CONTACT_NAME_REQUIRED: "Contact name is required",
   CONTACT_PHONE_INVALID: "Enter a valid phone number",
   DIFFICULTY_NOT_ALLOWED: "Unverified organizations can only create the lowest difficulty",
+  DIFFICULTY_UNKNOWN: "This difficulty level does not exist",
   MIN_AGE_INVALID: "Minimum age must be 0–100",
   MEETING_POINT_COUNT: "A campaign needs 1–5 meeting points",
   MEETING_POINT_NAME_REQUIRED: "Name each meeting point",

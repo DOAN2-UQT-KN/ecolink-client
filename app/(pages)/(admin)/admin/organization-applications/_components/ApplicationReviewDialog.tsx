@@ -5,7 +5,6 @@ import {
   TbCircleCheck,
   TbCircleX,
   TbExternalLink,
-  TbHelpCircle,
   TbInfoCircle,
   TbMessageQuestion,
   TbAlertTriangle,
@@ -47,11 +46,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import {
   APPLICATION_STATUS_TAG,
   OWNER_CANDIDATE_STATUS_TAG,
@@ -797,22 +792,12 @@ export function ApplicationReviewDialog({
                               )}
                             >
                               {label}
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <span
-                                    aria-label={explanation}
-                                    className="inline-flex opacity-50 transition-opacity hover:opacity-100"
-                                  >
-                                    <TbHelpCircle className="size-3.5" />
-                                  </span>
-                                </TooltipTrigger>
-                                <TooltipContent
-                                  side="top"
-                                  className="max-w-xs font-normal leading-relaxed"
-                                >
-                                  {explanation}
-                                </TooltipContent>
-                              </Tooltip>
+                              <InfoTooltip
+                                content={explanation}
+                                side="top"
+                                iconClassName="size-3.5"
+                                contentClassName="font-normal"
+                              />
                             </button>
                           ))}
                         </div>

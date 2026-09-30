@@ -1,24 +1,17 @@
-import { memo, useEffect, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo } from 'react';
 import { Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { format } from 'date-fns';
-import { CalendarIcon } from 'lucide-react';
 
-import { Calendar } from '@/components/ui/calendar';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { cn } from '@/libs/utils';
-import SelectListOrganization from '@/components/form/SelectListOrganization';
-import { CAMPAIGN_CREATOR_ROLES } from '@/hooks/useCampaignCreatorOrganizations';
+import Image from '@/components/ui/AppImage';
 
 import { useCampaign } from '../_hooks/useCampaign';
 import { TITLE_MAX_LENGTH } from '../_services/campaign.service';
 import {
   CAMPAIGN_DESCRIPTION_MIN_LENGTH,
-  CAMPAIGN_MAX_HOURS_PER_DAY,
-  CAMPAIGN_MIN_LEAD_HOURS,
   CAMPAIGN_TITLE_MIN_LENGTH,
   stripHtml,
 } from '@/constants/campaignLifecycle';
@@ -32,37 +25,15 @@ import {
 import UploadBanner from './UploadBanner';
 import RichTextEditor from '@/components/ui/RichTextEditor';
 
-const formatDateToApi = (date?: Date): string | undefined => {
-  if (!date) return undefined;
-  const year = date.getFullYear();
-  const month = `${date.getMonth() + 1}`.padStart(2, '0');
-  const day = `${date.getDate()}`.padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
-
-const parseApiDate = (date?: string): Date | undefined => {
-  if (!date) return undefined;
-  const parsed = new Date(`${date}T00:00:00`);
-  return Number.isNaN(parsed.getTime()) ? undefined : parsed;
-};
-
-const minutesOf = (time?: string): number | null => {
-  const m = time?.match(/^(\d{2}):(\d{2})$/);
-  return m ? Number(m[1]) * 60 + Number(m[2]) : null;
-};
-
 const GeneralInformation = memo(function GeneralInformation() {
   const { t } = useTranslation();
-  const { form, eligibility, campaign } = useCampaign();
+  const { form, eligibility, organization } = useCampaign();
   const {
     register,
     control,
     watch,
     formState: { errors },
   } = form;
-  const [isDateOpen, setIsDateOpen] = useState(false);
-
-  const campaignDate = watch('campaign_date');
   const maxDifficulty = eligibility?.max_difficulty ?? null;
   const isUnverified = eligibility != null && !eligibility.is_verified;
 
@@ -76,7 +47,6 @@ const GeneralInformation = memo(function GeneralInformation() {
           min: CAMPAIGN_DESCRIPTION_MIN_LENGTH,
         }),
     });
-    register('campaign_date', { required: t('Pick the campaign day') });
   }, [register, t]);
 
   // An unverified organization only gets the lowest difficulty.
@@ -98,30 +68,29 @@ const GeneralInformation = memo(function GeneralInformation() {
           {t('General Information')}
         </span>
 
-        <div className="grid grid-cols-2 gap-[30px]">
+        <div className="grid grid-cols-2 items-start gap-[30px]">
           <Field>
             <FieldLabel className="text-foreground-tertiary font-display-3">
-              {t('Organization')} <span className="text-destructive">*</span>
+              {t('Organization')}
             </FieldLabel>
-            <Controller
-              name="organization_id"
-              control={control}
-              rules={{ required: t('Organization is required') }}
-              render={({ field }) => (
-                <SelectListOrganization
-                  value={field.value}
-                  onChange={field.onChange}
-                  roles={CAMPAIGN_CREATOR_ROLES}
-                  disabled={Boolean(campaign)}
+            {/* Fixed: the campaign is created from this organization's page. */}
+            <div className="flex h-[50px] items-center gap-3 rounded-md border border-[rgba(136,122,71,0.5)] bg-muted/40 px-3">
+              {organization?.logo_url && (
+                <Image
+                  src={organization.logo_url}
+                  alt={organization.name}
+                  width={28}
+                  height={28}
+                  className="h-7 w-7 shrink-0 rounded-full object-cover"
                 />
               )}
-            />
+              <span className="truncate text-sm font-medium">{organization?.name ?? '—'}</span>
+            </div>
             {isUnverified && (
               <span className="text-xs font-medium text-amber-700">
                 {t('Unverified organization')}: {t('lowest difficulty only, at most 2 campaigns running at a time')}
               </span>
             )}
-            <FieldError errors={[errors.organization_id]} />
           </Field>
 
           <Field>
@@ -151,85 +120,7 @@ const GeneralInformation = memo(function GeneralInformation() {
             <FieldError errors={[errors.title]} />
           </Field>
 
-          <Field>
-            <FieldLabel className="text-foreground-tertiary font-display-3">
-              {t('Campaign schedule')} <span className="text-destructive">*</span>
-            </FieldLabel>
-            <div className="relative">
-              <Button
-                type="button"
-                variant="outline"
-                className={cn(
-                  'w-full justify-start text-left font-normal border-[rgba(136,122,71,0.5)] hover:bg-transparent !h-[50px]',
-                  !campaignDate && 'text-muted-foreground',
-                )}
-                onClick={() => setIsDateOpen((prev) => !prev)}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {campaignDate ? (
-                  format(parseApiDate(campaignDate) as Date, 'PPP')
-                ) : (
-                  <span>{t('Pick the campaign day')}</span>
-                )}
-              </Button>
-              {isDateOpen && (
-                <div className="absolute z-50 mt-2 rounded-md border border-[rgba(136,122,71,0.5)] bg-background shadow-md">
-                  <Calendar
-                    mode="single"
-                    defaultMonth={parseApiDate(campaignDate) ?? new Date()}
-                    selected={parseApiDate(campaignDate)}
-                    disabled={{ before: new Date(Date.now() + CAMPAIGN_MIN_LEAD_HOURS * 3600_000) }}
-                    onSelect={(date: Date | undefined) => {
-                      form.setValue('campaign_date', formatDateToApi(date), {
-                        shouldDirty: true,
-                        shouldValidate: true,
-                      });
-                      setIsDateOpen(false);
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <Input
-                type="time"
-                aria-label={t('Start time')}
-                className={inputClassName}
-                {...register('start_time', { required: t('Start time is required') })}
-              />
-              <Input
-                type="time"
-                aria-label={t('End time')}
-                className={inputClassName}
-                {...register('end_time', {
-                  required: t('End time is required'),
-                  validate: (end, values) => {
-                    const a = minutesOf(values.start_time);
-                    const b = minutesOf(end);
-                    if (a == null || b == null) return true;
-                    if (b <= a) return t('End time must be after the start time');
-                    if (b - a > CAMPAIGN_MAX_HOURS_PER_DAY * 60) {
-                      return t('A campaign day lasts at most {{max}} hours', {
-                        max: CAMPAIGN_MAX_HOURS_PER_DAY,
-                      });
-                    }
-                    return true;
-                  },
-                })}
-              />
-            </div>
-            <span className="text-xs text-foreground-tertiary">
-              {t('Starts at least {{hours}} hours from now, lasts at most {{max}} hours on one day', {
-                hours: CAMPAIGN_MIN_LEAD_HOURS,
-                max: CAMPAIGN_MAX_HOURS_PER_DAY,
-              })}
-            </span>
-            <FieldError errors={[errors.campaign_date]} />
-            <FieldError errors={[errors.start_time]} />
-            <FieldError errors={[errors.end_time]} />
-          </Field>
-
-          <Field>
+          <Field className="col-span-2">
             <FieldLabel className="text-foreground-tertiary font-display-3">
               {t('Difficulty')}
             </FieldLabel>
@@ -290,6 +181,14 @@ const GeneralInformation = memo(function GeneralInformation() {
 
           <Field>
             <FieldLabel className="text-foreground-tertiary font-display-3">
+              {t('Banner')} <span className="text-destructive">*</span>
+            </FieldLabel>
+            <UploadBanner />
+            <FieldError errors={[errors.banner]} />
+          </Field>
+
+          <Field>
+            <FieldLabel className="text-foreground-tertiary font-display-3">
               {t('Description')} <span className="text-destructive">*</span>
             </FieldLabel>
             {/* <Textarea
@@ -305,14 +204,6 @@ const GeneralInformation = memo(function GeneralInformation() {
               className={cn(inputClassName, 'min-h-[220px]')}
             />
             <FieldError errors={[errors.description]} />
-          </Field>
-
-          <Field>
-            <FieldLabel className="text-foreground-tertiary font-display-3">
-              {t('Banner')} <span className="text-destructive">*</span>
-            </FieldLabel>
-            <UploadBanner />
-            <FieldError errors={[errors.banner]} />
           </Field>
 
         </div>

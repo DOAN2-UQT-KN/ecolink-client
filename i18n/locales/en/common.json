@@ -1441,5 +1441,14 @@
   "Your role in this organization does not allow creating campaigns": "Your role in this organization does not allow creating campaigns",
   "e.g. Gate A": "e.g. Gate A",
   "e.g. Swimming, First aid": "e.g. Swimming, First aid",
-  "lowest difficulty only, at most 2 campaigns running at a time": "lowest difficulty only, at most 2 campaigns running at a time"
+  "lowest difficulty only, at most 2 campaigns running at a time": "lowest difficulty only, at most 2 campaigns running at a time",
+  "From {{age}} years old": "From {{age}} years old",
+  "Time": "Time",
+  "Time and contact": "Time and contact",
+  "within {{km}} km": "within {{km}} km",
+  "Open an organization to create a campaign": "Open an organization to create a campaign",
+  "The reward service is not reachable right now; try again shortly": "The reward service is not reachable right now; try again shortly",
+  "This difficulty level does not exist": "This difficulty level does not exist",
+  "Leave empty for no age limit": "Leave empty for no age limit",
+  "More information": "More information"
 }

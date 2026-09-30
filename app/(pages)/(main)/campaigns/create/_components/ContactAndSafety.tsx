@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
+import { InfoTooltip } from '@/components/ui/InfoTooltip';
 
 import { useCampaign } from '../_hooks/useCampaign';
 import { impliedMinAge } from '../_services/campaign.service';
@@ -54,6 +55,7 @@ const ContactAndSafety = memo(function ContactAndSafety() {
         <Field>
           <FieldLabel className="text-foreground-tertiary font-display-3">
             {t('Contact phone')} <span className="text-destructive">*</span>
+            <InfoTooltip content={t('Only shown to accepted volunteers')} />
           </FieldLabel>
           <Input
             {...register('contact_phone', {
@@ -66,9 +68,6 @@ const ContactAndSafety = memo(function ContactAndSafety() {
             placeholder="0901 234 567"
             className={inputClassName}
           />
-          <span className="text-xs text-foreground-tertiary">
-            {t('Only shown to accepted volunteers')}
-          </span>
           <FieldError errors={[errors.contact_phone]} />
         </Field>
 
@@ -87,6 +86,15 @@ const ContactAndSafety = memo(function ContactAndSafety() {
         <Field>
           <FieldLabel className="text-foreground-tertiary font-display-3">
             {t('Minimum age')}
+            <InfoTooltip
+              content={
+                defaultMinAge != null
+                  ? t('Hard campaigns require volunteers aged {{age}}+ by default', {
+                      age: defaultMinAge,
+                    })
+                  : t('Leave empty for no age limit')
+              }
+            />
           </FieldLabel>
           <Input
             type="number"
@@ -101,13 +109,6 @@ const ContactAndSafety = memo(function ContactAndSafety() {
             placeholder={defaultMinAge ? String(defaultMinAge) : t('No limit')}
             className={inputClassName}
           />
-          {defaultMinAge != null && (
-            <span className="text-xs text-foreground-tertiary">
-              {t('Hard campaigns require volunteers aged {{age}}+ by default', {
-                age: defaultMinAge,
-              })}
-            </span>
-          )}
           <FieldError errors={[errors.min_age]} />
         </Field>
 

@@ -13,6 +13,7 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { InfoTooltip } from '@/components/ui/InfoTooltip';
 import ReportSummaryCard from '@/modules/ReportSummaryCard/index';
 import { STATUS } from '@/constants/status';
 import { Inbox } from 'lucide-react';
@@ -133,14 +134,24 @@ const IncidentList = memo(function IncidentList({ index }: { index: number }) {
   return (
     <div className="w-full h-full flex flex-col gap-[20px] px-[24px] py-[24px] border-1 border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5">
       <div className="flex flex-col gap-1">
-        <span className="font-display-5 font-semibold !text-button-accent ">
-          {t('Waste points')} ({selectedReports.length})
-        </span>
-        <span className="text-xs text-foreground-tertiary">
-          {hasLocation
-            ? t('Approved waste points within {{km}} km of this meeting point', { km: radiusKm })
-            : t('Pick the meeting point location first to see waste points nearby')}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="font-display-5 font-semibold !text-button-accent ">
+            {t('Waste points')} ({selectedReports.length})
+          </span>
+          {hasLocation && (
+            <InfoTooltip
+              content={t('Approved waste points within {{km}} km of this meeting point', {
+                km: radiusKm,
+              })}
+            />
+          )}
+        </div>
+        {/* State hint, not a static note: stays visible until a location is picked. */}
+        {!hasLocation && (
+          <span className="text-xs text-foreground-tertiary">
+            {t('Pick the meeting point location first to see waste points nearby')}
+          </span>
+        )}
         {selectedReports.some((r) => takenReportIds.includes(r.id)) && (
           <span className="text-xs font-medium text-destructive">
             {t('Some waste points were just taken by another campaign. Remove the ones marked in red.')}

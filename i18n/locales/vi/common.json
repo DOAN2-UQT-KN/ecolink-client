@@ -1441,5 +1441,14 @@
   "Your role in this organization does not allow creating campaigns": "Vai trò của bạn trong tổ chức không được tạo chiến dịch",
   "e.g. Gate A": "VD: Cổng A",
   "e.g. Swimming, First aid": "VD: Biết bơi, Sơ cứu",
-  "lowest difficulty only, at most 2 campaigns running at a time": "chỉ mức độ khó thấp nhất, tối đa 2 chiến dịch đang mở cùng lúc"
+  "lowest difficulty only, at most 2 campaigns running at a time": "chỉ mức độ khó thấp nhất, tối đa 2 chiến dịch đang mở cùng lúc",
+  "From {{age}} years old": "Từ {{age}} tuổi",
+  "Time": "Thời gian",
+  "Time and contact": "Thời gian và liên hệ",
+  "within {{km}} km": "trong bán kính {{km}} km",
+  "Open an organization to create a campaign": "Hãy mở trang tổ chức để tạo chiến dịch",
+  "The reward service is not reachable right now; try again shortly": "Hiện không kết nối được dịch vụ điểm thưởng; vui lòng thử lại sau ít phút",
+  "This difficulty level does not exist": "Mức độ khó này không tồn tại",
+  "Leave empty for no age limit": "Để trống nếu không giới hạn độ tuổi",
+  "More information": "Thêm thông tin"
 }

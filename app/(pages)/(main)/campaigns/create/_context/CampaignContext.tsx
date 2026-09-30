@@ -1,4 +1,4 @@
-import { createContext, memo, ReactNode, useEffect, useCallback, useMemo, useState } from 'react';
+import { createContext, memo, ReactNode, useCallback, useMemo, useState } from 'react';
 import { FormProvider, Path, useForm, UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from '@/libs/router';
@@ -26,13 +26,51 @@ import type {
 import { CAMPAIGN_ISSUE_MESSAGES } from '@/constants/campaignLifecycle';
 import { uploadToCloudinary } from '@/app/(pages)/(main)/incidents/create/_services/upload.service';
 
+/** Wizard steps, in order. The first Continue creates the draft, so step 1 holds its essentials. */
+export const CAMPAIGN_STEPS = ['general', 'schedule', 'meeting_points', 'review'] as const;
+export type CampaignStep = (typeof CAMPAIGN_STEPS)[number];
+
+/** Fields validated when leaving each step. */
+const STEP_FIELDS: Record<CampaignStep, Path<CampaignFormValues>[]> = {
+  general: ['title', 'difficulty', 'description', 'banner'],
+  schedule: ['campaign_date', 'start_time', 'end_time', 'contact_name', 'contact_phone', 'min_age'],
+  meeting_points: ['meeting_points'],
+  review: [],
+};
+
+/** Which step a form field belongs to; anything unknown lives with the meeting points. */
+export function stepOfField(name: string): number {
+  const index = CAMPAIGN_STEPS.findIndex((step) =>
+    STEP_FIELDS[step].some((field) => name === field || name.startsWith(`${field}.`)),
+  );
+  return index === -1 ? CAMPAIGN_STEPS.indexOf('meeting_points') : index;
+}
+
+/** Dotted paths of every field that currently has an error. */
+function errorPaths(errors: unknown, prefix = ''): string[] {
+  if (!errors || typeof errors !== 'object') return [];
+  const record = errors as Record<string, unknown>;
+  if ('message' in record || 'type' in record) return prefix ? [prefix] : [];
+  return Object.entries(record).flatMap(([key, value]) =>
+    errorPaths(value, prefix ? `${prefix}.${key}` : key),
+  );
+}
+
 type CampaignApiError = QueryError & {
   details?: ICampaignValidationIssue[];
   report_ids?: string[];
 };
 
+/** The organization the campaign belongs to; fixed, never picked in the form. */
+export interface CampaignOrganization {
+  id: string;
+  name: string;
+  logo_url?: string | null;
+}
+
 interface CampaignContextType {
   form: UseFormReturn<CampaignFormValues>;
+  organization?: CampaignOrganization;
   /** Present when editing an existing campaign. */
   campaign?: ICampaign;
   saveDraft: () => Promise<void>;
@@ -45,6 +83,15 @@ interface CampaignContextType {
   issues: ICampaignValidationIssue[];
   /** Waste points another campaign took first; the creator must remove them. */
   takenReportIds: string[];
+  step: CampaignStep;
+  stepIndex: number;
+  /** Steps up to this index can be opened from the stepper. */
+  maxVisitedIndex: number;
+  /** Steps holding a problem from the last submit. */
+  errorStepIds: Set<string>;
+  next: () => Promise<void>;
+  back: () => void;
+  goToStep: (index: number) => void;
 }
 
 export const CampaignContext = createContext<CampaignContextType | undefined>(undefined);
@@ -52,11 +99,13 @@ export const CampaignContext = createContext<CampaignContextType | undefined>(un
 export const CampaignProvider = memo(function CampaignProvider({
   children,
   organizationId,
+  organization: organizationProp,
   campaign,
 }: {
   children: ReactNode;
-  /** Pre-selected organization; applied once it resolves unless the user already picked one. */
+  /** Organization of a new campaign (from the organization page). */
   organizationId?: string;
+  organization?: CampaignOrganization;
   campaign?: ICampaign;
 }) {
   const { t } = useTranslation();
@@ -66,18 +115,24 @@ export const CampaignProvider = memo(function CampaignProvider({
   const [campaignId, setCampaignId] = useState<string | undefined>(campaign?.id);
   const [issues, setIssues] = useState<ICampaignValidationIssue[]>([]);
   const [takenReportIds, setTakenReportIds] = useState<string[]>([]);
+  const [stepIndex, setStepIndex] = useState(0);
+  // An existing campaign is complete enough to open any step.
+  const [maxVisitedIndex, setMaxVisitedIndex] = useState(
+    campaign ? CAMPAIGN_STEPS.length - 1 : 0,
+  );
+  const step = CAMPAIGN_STEPS[stepIndex];
+
+  const showStep = useCallback((index: number) => {
+    setStepIndex(index);
+    setMaxVisitedIndex((prev) => Math.max(prev, index));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
 
   const form = useForm<CampaignFormValues>({
     defaultValues: campaign
       ? campaignToFormValues(campaign)
       : { ...DEFAULT_CAMPAIGN_FORM_VALUES, organization_id: organizationId ?? '' },
   });
-
-  useEffect(() => {
-    if (!organizationId || campaign) return;
-    if (form.getValues('organization_id')) return;
-    form.setValue('organization_id', organizationId, { shouldDirty: false });
-  }, [campaign, form, organizationId]);
 
   const selectedOrganizationId = form.watch('organization_id');
   const { data: eligibilityData } = useGetCreateEligibility(selectedOrganizationId || undefined);
@@ -100,30 +155,33 @@ export const CampaignProvider = memo(function CampaignProvider({
       }));
       setIssues(details);
       setTakenReportIds(error.report_ids ?? []);
+      let firstStep: number | null = error.report_ids?.length
+        ? CAMPAIGN_STEPS.indexOf('meeting_points')
+        : null;
       for (const issue of details) {
-        const name = issueFieldToFormName(issue.field);
+        const name = issueFieldToFormName(issue.field, issue.code);
         if (name) {
           form.setError(name as Path<CampaignFormValues>, {
             type: 'server',
             message: t(issue.message),
           });
         }
+        const at = stepOfField(name ?? issue.field);
+        firstStep = firstStep == null ? at : Math.min(firstStep, at);
       }
+      if (firstStep != null) showStep(firstStep);
     },
-    [form, t],
+    [form, showStep, t],
   );
 
   /** Uploads a new banner, then creates or updates the campaign. Returns its id. */
   const persist = useCallback(async (): Promise<string | undefined> => {
+    // A draft needs at least a title (step 1).
+    if (!(await form.trigger(['title']))) {
+      showStep(0);
+      return undefined;
+    }
     const data = form.getValues();
-    if (!data.organization_id) {
-      form.setError('organization_id', { message: t('Organization is required') });
-      return undefined;
-    }
-    if (!data.title.trim()) {
-      form.setError('title', { message: t('Title is required') });
-      return undefined;
-    }
     form.clearErrors();
     setIssues([]);
     setTakenReportIds([]);
@@ -159,7 +217,7 @@ export const CampaignProvider = memo(function CampaignProvider({
       applyServerErrors(error as CampaignApiError);
       return undefined;
     }
-  }, [applyServerErrors, campaignId, createAsync, form, t, updateAsync]);
+  }, [applyServerErrors, campaignId, createAsync, form, showStep, updateAsync]);
 
   const saveDraft = useCallback(async () => {
     const id = await persist();
@@ -175,7 +233,11 @@ export const CampaignProvider = memo(function CampaignProvider({
 
   const submitForReview = useCallback(async () => {
     // Same rules as the server, checked here first for quick feedback.
-    if (!(await form.trigger())) return;
+    if (!(await form.trigger())) {
+      const failing = errorPaths(form.formState.errors).map(stepOfField);
+      if (failing.length > 0) showStep(Math.min(...failing));
+      return;
+    }
     const id = await persist();
     if (!id) return;
     try {
@@ -185,11 +247,54 @@ export const CampaignProvider = memo(function CampaignProvider({
     } catch (error) {
       applyServerErrors(error as CampaignApiError);
     }
-  }, [applyServerErrors, form, persist, router, submitAsync]);
+  }, [applyServerErrors, form, persist, router, showStep, submitAsync]);
+
+  /** Validates this step, saves the draft quietly, then moves on. */
+  const next = useCallback(async () => {
+    if (!(await form.trigger(STEP_FIELDS[step]))) return;
+    const id = await persist();
+    if (!id) return;
+    queryClient.invalidateQueries({ queryKey: ['my-campaigns'] });
+    showStep(Math.min(stepIndex + 1, CAMPAIGN_STEPS.length - 1));
+  }, [form, persist, showStep, step, stepIndex]);
+
+  const back = useCallback(() => {
+    if (stepIndex > 0) showStep(stepIndex - 1);
+  }, [showStep, stepIndex]);
+
+  const goToStep = useCallback(
+    (index: number) => {
+      if (index >= 0 && index <= maxVisitedIndex) showStep(index);
+    },
+    [maxVisitedIndex, showStep],
+  );
+
+  const errorStepIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const issue of issues) {
+      ids.add(CAMPAIGN_STEPS[stepOfField(issueFieldToFormName(issue.field, issue.code) ?? issue.field)]);
+    }
+    if (takenReportIds.length > 0) ids.add('meeting_points');
+    return ids;
+  }, [issues, takenReportIds]);
+
+  const organization = useMemo<CampaignOrganization | undefined>(
+    () =>
+      organizationProp ??
+      (campaign?.organization
+        ? {
+            id: campaign.organization_id ?? campaign.organization.id,
+            name: campaign.organization.name,
+            logo_url: campaign.organization.logo_url,
+          }
+        : undefined),
+    [campaign, organizationProp],
+  );
 
   const contextValue = useMemo(
     () => ({
       form,
+      organization,
       campaign,
       saveDraft,
       submitForReview,
@@ -199,8 +304,23 @@ export const CampaignProvider = memo(function CampaignProvider({
       eligibility,
       issues,
       takenReportIds,
+      step,
+      stepIndex,
+      maxVisitedIndex,
+      errorStepIds,
+      next,
+      back,
+      goToStep,
     }),
     [
+      organization,
+      back,
+      errorStepIds,
+      goToStep,
+      maxVisitedIndex,
+      next,
+      step,
+      stepIndex,
       campaign,
       eligibility,
       form,

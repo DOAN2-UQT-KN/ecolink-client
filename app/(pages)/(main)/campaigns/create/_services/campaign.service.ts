@@ -192,7 +192,16 @@ export const impliedMinAge = (difficulty: number): number | null =>
  * Server field path (camelCase, e.g. `meetingPoints[1].slots`) → form field name.
  * Unknown paths return null and are shown in the summary only.
  */
-export const issueFieldToFormName = (field: string): string | null => {
+export const issueFieldToFormName = (field: string, code?: string): string | null => {
+  if (field === "meetingPoints") return "meeting_points";
+  // Problems with the day itself belong on the date picker, not the time inputs.
+  if (
+    (field === "startDate" || field === "endDate") &&
+    code &&
+    ["START_REQUIRED", "START_TOO_SOON", "MULTI_DAY_UNSUPPORTED"].includes(code)
+  ) {
+    return "campaign_date";
+  }
   const point = field.match(/^meetingPoints\[(\d+)\]\.?(\w+)?$/);
   if (point) {
     const [, index, key] = point;

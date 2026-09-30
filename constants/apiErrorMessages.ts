@@ -41,6 +41,7 @@ const API_ERROR_MESSAGES: Record<string, string> = {
     "Admins cannot review campaigns of an organization they belong to",
   CAMPAIGN_NOT_EDITABLE: "These fields cannot be changed once the campaign is approved",
   CAMPAIGN_NOT_DELETABLE: "This campaign can no longer be deleted",
+  REWARD_SERVICE_UNAVAILABLE: "The reward service is not reachable right now; try again shortly",
   ROLE_NOT_ASSIGNABLE: "You cannot assign this role",
   CANNOT_ACT_ON_MEMBER: "You cannot change or remove this member",
   MEMBER_NOT_FOUND: "This person is not a member of the organization",

@@ -213,6 +213,7 @@ export const DataTable = memo(function DataTable() {
           record.reject_reason &&
           (record.status === CAMPAIGN_STATUS.NEEDS_REVISION ||
             record.status === CAMPAIGN_STATUS.BLOCKED ||
+            record.status === CAMPAIGN_STATUS.CANCELLED ||
             record.status === CAMPAIGN_STATUS.ACTIVE) ? (
             <span
               className="line-clamp-2 text-xs"
