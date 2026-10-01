@@ -22,7 +22,7 @@ const CAMPAIGN_STATUS_OPTIONS = [
   { labelKey: 'Active', value: String(CAMPAIGN_STATUS.ACTIVE) },
   { labelKey: 'Waiting Confirmed', value: String(CAMPAIGN_STATUS.PENDING_COMPLETION) },
   { labelKey: 'Completed', value: String(CAMPAIGN_STATUS.COMPLETED) },
-  { labelKey: 'Blocked', value: String(CAMPAIGN_STATUS.BLOCKED) },
+  { labelKey: 'Rejected', value: String(CAMPAIGN_STATUS.BLOCKED) },
   { labelKey: 'Expired', value: String(CAMPAIGN_STATUS.EXPIRED) },
   { labelKey: 'Cancelled', value: String(CAMPAIGN_STATUS.CANCELLED) },
 ] as const;

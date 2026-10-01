@@ -53,7 +53,7 @@ export const CAMPAIGN_STATUS_LABEL: Record<number, string> = {
   [CAMPAIGN_STATUS.LEGACY_IN_REVIEW]: "Waiting Confirmed",
   [CAMPAIGN_STATUS.PENDING_COMPLETION]: "Waiting Confirmed",
   [CAMPAIGN_STATUS.COMPLETED]: "Completed",
-  [CAMPAIGN_STATUS.BLOCKED]: "Blocked",
+  [CAMPAIGN_STATUS.BLOCKED]: "Rejected",
   [CAMPAIGN_STATUS.EXPIRED]: "Expired",
   [CAMPAIGN_STATUS.CANCELLED]: "Cancelled",
 };
