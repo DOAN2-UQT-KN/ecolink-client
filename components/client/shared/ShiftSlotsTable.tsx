@@ -1,81 +1,111 @@
-import { memo } from 'react';
+import { Fragment, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { cn } from '@/libs/utils';
 
+export interface ShiftSlotsCell {
+  /** 0 or null = the shift is off. */
+  slots: number | null;
+  /** "HH:mm" */
+  gatherTime?: string | null;
+  /** Display name of the person in charge. */
+  leader?: string | null;
+}
+
 export interface ShiftSlotsTableProps {
-  /** One label per day, e.g. "Day 1 · Oct 5 · 07:00–11:00". */
-  days: string[];
+  /** One entry per day, e.g. { label: "Day 1 · Oct 5, 2026", hours: "07:00 – 11:00" }. */
+  days: { label: string; hours: string }[];
   points: string[];
-  /** `slots[day][point]`; 0 or null = off. */
-  slots: (number | null)[][];
+  /** `cells[day][point]` */
+  cells: ShiftSlotsCell[][];
   /** Volunteers allowed per day; totals above it are highlighted. */
   maxPerDay?: number | null;
   isDark?: boolean;
 }
 
-/** Read-only day × meeting point grid of volunteer slots, with a total per day. */
+/**
+ * Read-only list of a campaign's shifts: one row per day × meeting point with its slots,
+ * gathering time and person in charge; the day and its volunteer total span its rows.
+ */
 export const ShiftSlotsTable = memo(function ShiftSlotsTable({
   days,
   points,
-  slots,
+  cells,
   maxPerDay,
   isDark = false,
 }: ShiftSlotsTableProps) {
   const { t } = useTranslation();
   const border = isDark ? 'border-zinc-700' : 'border-[rgba(136,122,71,0.3)]';
+  const cell = cn('border px-3 py-2 align-top', border);
+  const headers = [
+    t('Day'),
+    t('Meeting point'),
+    t('Volunteers'),
+    t('Gathering time'),
+    t('Person in charge'),
+    t('Total volunteers'),
+  ];
 
   return (
     <div className="overflow-x-auto">
-      <table className={cn('w-full border-collapse text-sm', border)}>
+      <table className="w-full border-collapse text-sm">
         <thead>
           <tr className={isDark ? 'bg-zinc-800' : 'bg-[#887A47]/10'}>
-            <th className={cn('border px-3 py-2 text-left font-semibold', border)}>{t('Day')}</th>
-            {points.map((name, p) => (
-              <th key={p} className={cn('border px-3 py-2 text-left font-semibold', border)}>
-                {name}
+            {headers.map((header) => (
+              <th key={header} className={cn(cell, 'text-left font-semibold whitespace-nowrap')}>
+                {header}
               </th>
             ))}
-            <th className={cn('border px-3 py-2 text-left font-semibold', border)}>
-              {t('Total per day')}
-            </th>
           </tr>
         </thead>
         <tbody>
-          {days.map((label, d) => {
-            const row = slots[d] ?? [];
-            const total = row.reduce<number>((sum, v) => sum + (Number(v) || 0), 0);
+          {days.map((day, d) => {
+            const row = cells[d] ?? [];
+            const total = row.reduce<number>((sum, c) => sum + (Number(c?.slots) || 0), 0);
             const over = maxPerDay != null && total > maxPerDay;
+            const span = Math.max(points.length, 1);
             return (
-              <tr key={d}>
-                <td className={cn('border px-3 py-2', border)}>{label}</td>
-                {points.map((_, p) => {
-                  const value = row[p];
-                  const off = !value;
+              <Fragment key={d}>
+                {points.map((point, p) => {
+                  const shift = row[p];
+                  const off = !shift?.slots;
                   return (
-                    <td
-                      key={p}
-                      className={cn(
-                        'border px-3 py-2 tabular-nums',
-                        border,
-                        off && 'text-muted-foreground',
+                    <tr key={p}>
+                      {p === 0 && (
+                        <td rowSpan={span} className={cn(cell, 'whitespace-nowrap')}>
+                          <div className="font-medium">{day.label}</div>
+                          <div className="text-xs text-muted-foreground tabular-nums">
+                            {day.hours}
+                          </div>
+                        </td>
                       )}
-                    >
-                      {off ? `0 (${t('Off')})` : value}
-                    </td>
+                      <td className={cn(cell, off && 'text-muted-foreground')}>{point}</td>
+                      <td className={cn(cell, 'tabular-nums', off && 'text-muted-foreground')}>
+                        {off ? `0 (${t('Off')})` : shift?.slots}
+                      </td>
+                      <td className={cn(cell, 'tabular-nums', off && 'text-muted-foreground')}>
+                        {off ? '—' : shift?.gatherTime || '—'}
+                      </td>
+                      <td className={cn(cell, off && 'text-muted-foreground')}>
+                        {off ? '—' : shift?.leader || '—'}
+                      </td>
+                      {p === 0 && (
+                        <td
+                          rowSpan={span}
+                          className={cn(
+                            cell,
+                            'font-semibold tabular-nums whitespace-nowrap',
+                            over && 'text-destructive',
+                          )}
+                        >
+                          {total}
+                          {maxPerDay != null && ` / ${maxPerDay}`}
+                        </td>
+                      )}
+                    </tr>
                   );
                 })}
-                <td
-                  className={cn(
-                    'border px-3 py-2 font-semibold tabular-nums',
-                    border,
-                    over && 'text-destructive',
-                  )}
-                >
-                  {total}
-                  {maxPerDay != null && ` / ${maxPerDay}`}
-                </td>
-              </tr>
+              </Fragment>
             );
           })}
         </tbody>

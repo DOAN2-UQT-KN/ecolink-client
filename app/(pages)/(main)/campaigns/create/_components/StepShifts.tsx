@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo } from 'react';
+import { Fragment, memo, useCallback, useEffect, useMemo } from 'react';
 import { Controller, type FieldError as RHFFieldError } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
@@ -24,6 +24,7 @@ import { parseApiDate } from './ScheduleFields';
 
 const inputClassName =
   'border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50';
+const cellClass = 'border border-[rgba(136,122,71,0.3)] px-3 py-2 align-top';
 
 const minutesOf = (time?: string): number | null => {
   const m = time?.match(/^(\d{2}):(\d{2})$/);
@@ -172,7 +173,7 @@ const StepShifts = memo(function StepShifts() {
     [days, points, scheduleErrors],
   );
 
-  const leaderSelect = (d: number, p: number) => (
+  const leaderSelect = (d: number, p: number, disabled = false) => (
     <Controller
       name={`schedule.${d}.${p}.leader_user_id`}
       control={control}
@@ -183,8 +184,8 @@ const StepShifts = memo(function StepShifts() {
           t('Choose who is in charge of this shift'),
       }}
       render={({ field }) => (
-        <Select value={field.value || undefined} onValueChange={field.onChange}>
-          <SelectTrigger className={`${inputClassName} !h-[50px] w-full`}>
+        <Select value={field.value || undefined} onValueChange={field.onChange} disabled={disabled}>
+          <SelectTrigger className={`${inputClassName} !h-[50px] w-full min-w-[180px]`}>
             <SelectValue placeholder={t('Choose a member')} />
           </SelectTrigger>
           <SelectContent>
@@ -198,6 +199,9 @@ const StepShifts = memo(function StepShifts() {
       )}
     />
   );
+
+  /** "07:00 – 11:00" for day `d`. */
+  const dayHours = (d: number) => `${days[d]?.start_time || '—'} – ${days[d]?.end_time || '—'}`;
 
   const cellErrors = (d: number, p: number) =>
     (scheduleErrors?.[d] as Record<number, Record<string, RHFFieldError>> | undefined)?.[p];
@@ -235,9 +239,13 @@ const StepShifts = memo(function StepShifts() {
             </FieldLabel>
             <Input
               type="time"
+              max={days[0]?.end_time || undefined}
               {...register('schedule.0.0.gather_time', gatherRules(0, 0))}
               className={inputClassName}
             />
+            <span className="text-xs text-foreground-tertiary">
+              {dayLabel(days[0], 0)} · {dayHours(0)}
+            </span>
             <FieldError errors={[errors?.gather_time]} />
           </Field>
           <Field>
@@ -264,11 +272,11 @@ const StepShifts = memo(function StepShifts() {
             content={
               maxPerDay != null
                 ? t(
-                    'Each cell is a shift: one meeting point on one day. Enter 0 to turn a shift off. Each day needs one shift on, and at most {{max}} volunteers in total.',
+                    'Each row is a shift: one meeting point on one day. Enter 0 volunteers to turn a shift off. Each day needs one shift on, and at most {{max}} volunteers in total.',
                     { max: maxPerDay },
                   )
                 : t(
-                    'Each cell is a shift: one meeting point on one day. Enter 0 to turn a shift off. Each day needs one shift on.',
+                    'Each row is a shift: one meeting point on one day. Enter 0 volunteers to turn a shift off. Each day needs one shift on.',
                   )
             }
           />
@@ -284,15 +292,18 @@ const StepShifts = memo(function StepShifts() {
         <table className="w-full border-collapse text-sm">
           <thead>
             <tr className="bg-[#887A47]/10">
-              <th className="border border-[rgba(136,122,71,0.3)] px-3 py-2 text-left">{t('Day')}</th>
-              {points.map((_, p) => (
-                <th key={p} className="border border-[rgba(136,122,71,0.3)] px-3 py-2 text-left">
-                  {pointName(p)}
+              {[
+                t('Day'),
+                t('Meeting point'),
+                t('Volunteers'),
+                t('Gathering time'),
+                t('Person in charge'),
+                t('Total volunteers'),
+              ].map((header) => (
+                <th key={header} className={cn(cellClass, 'text-left font-semibold whitespace-nowrap')}>
+                  {header}
                 </th>
               ))}
-              <th className="border border-[rgba(136,122,71,0.3)] px-3 py-2 text-left">
-                {t('Total per day')}
-              </th>
             </tr>
           </thead>
           <tbody>
@@ -300,40 +311,71 @@ const StepShifts = memo(function StepShifts() {
               const row = schedule[d] ?? [];
               const total = row.reduce((sum, c) => sum + (Number(c?.slots) || 0), 0);
               const over = maxPerDay != null && total > maxPerDay;
+              const span = Math.max(points.length, 1);
               return (
-                <tr key={d}>
-                  <td className="border border-[rgba(136,122,71,0.3)] px-3 py-2 whitespace-nowrap">
-                    {dayLabel(day, d)}
-                  </td>
+                <Fragment key={d}>
                   {points.map((_, p) => {
                     const off = row[p]?.slots === 0;
+                    const errors = cellErrors(d, p);
                     return (
-                      <td key={p} className="border border-[rgba(136,122,71,0.3)] px-2 py-2">
-                        <Input
-                          type="number"
-                          min={0}
-                          aria-label={`${dayLabel(day, d)} · ${pointName(p)}`}
-                          {...register(`schedule.${d}.${p}.slots`, slotsRules(d, p))}
-                          className={cn(
-                            inputClassName,
-                            'min-w-[80px] tabular-nums',
-                            off && 'bg-zinc-100 text-muted-foreground',
-                            cellErrors(d, p)?.slots && 'border-destructive',
-                          )}
-                        />
-                      </td>
+                      <tr key={p} className={cn(off && 'bg-zinc-50')}>
+                        {p === 0 && (
+                          <td rowSpan={span} className={cn(cellClass, 'whitespace-nowrap')}>
+                            <div className="font-medium">{dayLabel(day, d)}</div>
+                            <div className="text-xs text-muted-foreground tabular-nums">
+                              {dayHours(d)}
+                            </div>
+                          </td>
+                        )}
+                        <td className={cn(cellClass, off && 'text-muted-foreground')}>
+                          {pointName(p)}
+                        </td>
+                        <td className={cellClass}>
+                          <Input
+                            type="number"
+                            min={0}
+                            aria-label={`${dayLabel(day, d)} · ${pointName(p)} · ${t('Volunteers')}`}
+                            {...register(`schedule.${d}.${p}.slots`, slotsRules(d, p))}
+                            className={cn(
+                              inputClassName,
+                              'min-w-[90px] tabular-nums',
+                              off && 'bg-zinc-100 text-muted-foreground',
+                              errors?.slots && 'border-destructive',
+                            )}
+                          />
+                        </td>
+                        <td className={cellClass}>
+                          <Input
+                            type="time"
+                            aria-label={`${dayLabel(day, d)} · ${pointName(p)} · ${t('Gathering time')}`}
+                            max={day.end_time || undefined}
+                            disabled={off}
+                            {...register(`schedule.${d}.${p}.gather_time`, gatherRules(d, p))}
+                            className={cn(inputClassName, 'min-w-[120px]', off && 'opacity-50')}
+                          />
+                          <FieldError errors={[errors?.gather_time]} />
+                        </td>
+                        <td className={cellClass}>
+                          {leaderSelect(d, p, off)}
+                          <FieldError errors={[errors?.leader_user_id]} />
+                        </td>
+                        {p === 0 && (
+                          <td
+                            rowSpan={span}
+                            className={cn(
+                              cellClass,
+                              'font-semibold tabular-nums whitespace-nowrap',
+                              over && 'text-destructive',
+                            )}
+                          >
+                            {total}
+                            {maxPerDay != null && ` / ${maxPerDay}`}
+                          </td>
+                        )}
+                      </tr>
                     );
                   })}
-                  <td
-                    className={cn(
-                      'border border-[rgba(136,122,71,0.3)] px-3 py-2 font-semibold tabular-nums',
-                      over && 'text-destructive',
-                    )}
-                  >
-                    {total}
-                    {maxPerDay != null && ` / ${maxPerDay}`}
-                  </td>
-                </tr>
+                </Fragment>
               );
             })}
           </tbody>
@@ -346,47 +388,6 @@ const StepShifts = memo(function StepShifts() {
           </p>
         ) : null,
       )}
-
-      <div className="flex flex-col gap-4">
-        <span className="font-display-4 font-semibold">{t('Shift details')}</span>
-        {days.map((day, d) => {
-          const active = points
-            .map((_, p) => p)
-            .filter((p) => Number(schedule[d]?.[p]?.slots) > 0);
-          if (active.length === 0) return null;
-          return (
-            <div
-              key={d}
-              className="flex flex-col gap-3 rounded-[10px] border border-[rgba(136,122,71,0.3)] p-4"
-            >
-              <span className="font-semibold">{dayLabel(day, d)}</span>
-              {active.map((p) => {
-                const errors = cellErrors(d, p);
-                return (
-                  <div key={p} className="grid grid-cols-1 md:grid-cols-[1fr_160px_1fr] gap-3 items-start">
-                    <span className="pt-3 text-sm">
-                      {pointName(p)} · {schedule[d]?.[p]?.slots} {t('volunteers')}
-                    </span>
-                    <Field>
-                      <Input
-                        type="time"
-                        aria-label={t('Gathering time')}
-                        {...register(`schedule.${d}.${p}.gather_time`, gatherRules(d, p))}
-                        className={inputClassName}
-                      />
-                      <FieldError errors={[errors?.gather_time]} />
-                    </Field>
-                    <Field>
-                      {leaderSelect(d, p)}
-                      <FieldError errors={[errors?.leader_user_id]} />
-                    </Field>
-                  </div>
-                );
-              })}
-            </div>
-          );
-        })}
-      </div>
     </div>
   );
 });

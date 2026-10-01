@@ -128,11 +128,9 @@ const StepReview = memo(function StepReview() {
       <Section title={t('Meeting points')} step="meeting_points">
         {values.meeting_points.map((point, index) => (
           <div key={index} className="flex flex-col gap-1">
-            {values.meeting_points.length > 1 && (
-              <span className="text-sm font-semibold">
-                {point.name || t('Meeting point {{n}}', { n: index + 1 })}
-              </span>
-            )}
+            <span className="text-sm font-semibold">
+              {point.name || t('Meeting point {{n}}', { n: index + 1 })}
+            </span>
             <SummaryRow label={t('Location')} value={point.detail_address} />
             <SummaryRow
               label={t('Waste points')}
@@ -149,24 +147,20 @@ const StepReview = memo(function StepReview() {
 
       <Section title={t('Shifts')} step="shifts">
         <ShiftSlotsTable
-          days={values.days.map((day, index) => dayLabel(day, index))}
+          days={values.days.map((day, index) => ({
+            label: dayLabel(day, index),
+            hours: `${day.start_time || '—'} – ${day.end_time || '—'}`,
+          }))}
           points={values.meeting_points.map((_, index) => pointName(index))}
-          slots={values.schedule.map((row) => row.map((cell) => cell.slots))}
+          cells={values.schedule.map((row) =>
+            row.map((cell) => ({
+              slots: cell.slots,
+              gatherTime: cell.gather_time,
+              leader: cell.leader_user_id ? memberName(cell.leader_user_id) : null,
+            })),
+          )}
           maxPerDay={maxPerDay}
         />
-        {values.days.map((day, d) =>
-          values.meeting_points.map((_, p) => {
-            const cell = values.schedule[d]?.[p];
-            if (!cell || !(Number(cell.slots) > 0)) return null;
-            return (
-              <SummaryRow
-                key={`${d}-${p}`}
-                label={`${dayLabel(day, d)} · ${pointName(p)}`}
-                value={`${cell.gather_time || '—'} · ${cell.leader_user_id ? memberName(cell.leader_user_id) : '—'}`}
-              />
-            );
-          }),
-        )}
       </Section>
     </div>
   );

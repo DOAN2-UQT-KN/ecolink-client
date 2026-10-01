@@ -23,8 +23,8 @@ const inputClassName =
 
 /**
  * 1–5 meeting points, each with its location and its own waste points. Slots, gathering time
- * and the person in charge are set per day on the Shifts step. With a single point the
- * multi-point options stay hidden and the campaign reads like a normal one-location campaign.
+ * and the person in charge are set per day on the Shifts step. There is always at least one
+ * point; a name is required once there are several.
  */
 const MeetingPointsEditor = memo(function MeetingPointsEditor() {
   const { t } = useTranslation();
@@ -42,7 +42,7 @@ const MeetingPointsEditor = memo(function MeetingPointsEditor() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <span className="font-display-5 font-semibold !text-button-accent ">
-            {isMulti ? t('Meeting points') : t('Location')}
+            {t('Meeting points')}
           </span>
           <InfoTooltip
             content={t('Up to {{max}} meeting points, within {{km}} km of each other', {
@@ -51,18 +51,6 @@ const MeetingPointsEditor = memo(function MeetingPointsEditor() {
             })}
           />
         </div>
-        {fields.length < CAMPAIGN_MEETING_POINT_MAX && (
-          <Button
-            type="button"
-            variant="outlined-brown"
-            onClick={() => {
-              append(emptyMeetingPoint());
-              addScheduleColumn();
-            }}
-          >
-            {t('Add meeting point')}
-          </Button>
-        )}
       </div>
 
       {warnings.map((w) => (
@@ -78,11 +66,11 @@ const MeetingPointsEditor = memo(function MeetingPointsEditor() {
             key={field.id}
             className="flex flex-col gap-5 rounded-[10px] border border-[rgba(136,122,71,0.3)] p-5"
           >
-            {isMulti && (
-              <div className="flex items-center justify-between gap-3">
-                <span className="font-display-4 font-semibold">
-                  {t('Meeting point {{n}}', { n: index + 1 })}
-                </span>
+            <div className="flex items-center justify-between gap-3">
+              <span className="font-display-4 font-semibold">
+                {t('Meeting point {{n}}', { n: index + 1 })}
+              </span>
+              {isMulti && (
                 <button
                   type="button"
                   aria-label={t('Remove meeting point')}
@@ -94,29 +82,27 @@ const MeetingPointsEditor = memo(function MeetingPointsEditor() {
                 >
                   <BiTrash size={18} />
                 </button>
-              </div>
-            )}
+              )}
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {isMulti && (
-                <Field>
-                  <FieldLabel className="text-foreground-tertiary font-display-3">
-                    {t('Name')} <span className="text-destructive">*</span>
-                  </FieldLabel>
-                  <Input
-                    {...register(`meeting_points.${index}.name`, {
-                      validate: (v) =>
-                        form.getValues('meeting_points').length < 2 ||
-                        Boolean(v.trim()) ||
-                        t('Name each meeting point'),
-                    })}
-                    maxLength={120}
-                    placeholder={t('e.g. Gate A')}
-                    className={inputClassName}
-                  />
-                  <FieldError errors={[errors?.name]} />
-                </Field>
-              )}
+              <Field>
+                <FieldLabel className="text-foreground-tertiary font-display-3">
+                  {t('Name')} {isMulti && <span className="text-destructive">*</span>}
+                </FieldLabel>
+                <Input
+                  {...register(`meeting_points.${index}.name`, {
+                    validate: (v) =>
+                      form.getValues('meeting_points').length < 2 ||
+                      Boolean(v.trim()) ||
+                      t('Name each meeting point'),
+                  })}
+                  maxLength={120}
+                  placeholder={t('e.g. Gate A')}
+                  className={inputClassName}
+                />
+                <FieldError errors={[errors?.name]} />
+              </Field>
 
               <Field>
                 <FieldLabel className="text-foreground-tertiary font-display-3">
@@ -148,6 +134,21 @@ const MeetingPointsEditor = memo(function MeetingPointsEditor() {
           </div>
         );
       })}
+
+      {fields.length < CAMPAIGN_MEETING_POINT_MAX && (
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            variant="outlined-brown"
+            onClick={() => {
+              append(emptyMeetingPoint());
+              addScheduleColumn();
+            }}
+          >
+            {t('Add meeting point')}
+          </Button>
+        </div>
+      )}
     </div>
   );
 });

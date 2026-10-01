@@ -146,13 +146,7 @@ const CampaignShifts = memo(function CampaignShifts({
   };
   const shiftOf = (dayId: string, pointId?: string) =>
     shifts.find((sh) => sh.day_id === dayId && sh.meeting_point_id === pointId);
-  const dayLabel = (index: number) => {
-    const day = days[index];
-    return `${t("Day {{n}}", { n: index + 1 })} · ${formattedDate(day.start_at)} · ${format(
-      new Date(day.start_at),
-      "HH:mm",
-    )}–${format(new Date(day.end_at), "HH:mm")}`;
-  };
+  const hhmm = (iso: string) => format(new Date(iso), "HH:mm");
   const pointName = (index: number) =>
     points[index]?.name || t("Meeting point {{n}}", { n: index + 1 });
 
@@ -163,27 +157,24 @@ const CampaignShifts = memo(function CampaignShifts({
   return (
     <div className="flex flex-col gap-3">
       <ShiftSlotsTable
-        days={days.map((_, d) => dayLabel(d))}
+        days={days.map((day, d) => ({
+          label: `${t("Day {{n}}", { n: d + 1 })} · ${formattedDate(day.start_at)}`,
+          hours: `${hhmm(day.start_at)} – ${hhmm(day.end_at)}`,
+        }))}
         points={points.map((_, p) => pointName(p))}
-        slots={days.map((day) => points.map((point) => shiftOf(day.id, point.id)?.slots ?? 0))}
+        cells={days.map((day) =>
+          points.map((point) => {
+            const shift = shiftOf(day.id, point.id);
+            return {
+              slots: shift?.slots ?? 0,
+              gatherTime: shift?.gather_at ? hhmm(shift.gather_at) : null,
+              leader: shift?.leader_user_id ? memberName(shift.leader_user_id) : null,
+            };
+          }),
+        )}
         maxPerDay={campaign.max_members ?? null}
         isDark={isDark}
       />
-      {days.map((day, d) =>
-        points.map((point, p) => {
-          const shift = shiftOf(day.id, point.id);
-          if (!shift || shift.slots <= 0) return null;
-          return (
-            <ReviewRow
-              key={shift.id}
-              label={`${t("Day {{n}}", { n: d + 1 })} · ${pointName(p)}`}
-              value={`${t("Gathering time")}: ${
-                shift.gather_at ? format(new Date(shift.gather_at), "HH:mm") : "—"
-              } · ${t("Person in charge")}: ${memberName(shift.leader_user_id)}`}
-            />
-          );
-        }),
-      )}
     </div>
   );
 });
