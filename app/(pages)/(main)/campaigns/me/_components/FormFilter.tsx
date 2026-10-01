@@ -19,6 +19,7 @@ const CAMPAIGN_STATUS_OPTIONS = [
   { labelKey: 'Draft', value: String(CAMPAIGN_STATUS.DRAFT) },
   { labelKey: 'Pending review', value: String(CAMPAIGN_STATUS.PENDING_REVIEW) },
   { labelKey: 'Needs revision', value: String(CAMPAIGN_STATUS.NEEDS_REVISION) },
+  { labelKey: 'Upcoming', value: String(CAMPAIGN_STATUS.UPCOMING) },
   { labelKey: 'Active', value: String(CAMPAIGN_STATUS.ACTIVE) },
   { labelKey: 'Waiting Confirmed', value: String(CAMPAIGN_STATUS.PENDING_COMPLETION) },
   { labelKey: 'Completed', value: String(CAMPAIGN_STATUS.COMPLETED) },

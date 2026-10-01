@@ -2,12 +2,14 @@ import { STATUS } from "@/constants/status";
 
 /**
  * Campaign lifecycle on top of the shared numeric STATUS (server:
- * `@da2/constants/campaign-lifecycle`). Approval still goes straight to ACTIVE.
+ * `@da2/constants/campaign-lifecycle`). Approval opens a campaign as UPCOMING; it turns ACTIVE
+ * when its first day starts.
  */
 export const CAMPAIGN_STATUS = {
   DRAFT: STATUS.DRAFT,
   PENDING_REVIEW: STATUS.PENDING,
   NEEDS_REVISION: STATUS.RETURNED,
+  UPCOMING: STATUS.UPCOMING,
   ACTIVE: STATUS.ACTIVE,
   LEGACY_IN_REVIEW: STATUS.INREVIEW,
   PENDING_COMPLETION: STATUS.WAITING_CONFIRMED,
@@ -38,6 +40,7 @@ export const CAMPAIGN_DELETABLE_STATUSES: number[] = [
 
 /** Shown to everyone (server `CAMPAIGN_PUBLIC_STATUSES`). */
 export const CAMPAIGN_PUBLIC_STATUSES: number[] = [
+  CAMPAIGN_STATUS.UPCOMING,
   CAMPAIGN_STATUS.ACTIVE,
   CAMPAIGN_STATUS.PENDING_COMPLETION,
   CAMPAIGN_STATUS.LEGACY_IN_REVIEW,
@@ -49,6 +52,7 @@ export const CAMPAIGN_STATUS_LABEL: Record<number, string> = {
   [CAMPAIGN_STATUS.DRAFT]: "Draft",
   [CAMPAIGN_STATUS.PENDING_REVIEW]: "Pending review",
   [CAMPAIGN_STATUS.NEEDS_REVISION]: "Needs revision",
+  [CAMPAIGN_STATUS.UPCOMING]: "Upcoming",
   [CAMPAIGN_STATUS.ACTIVE]: "Active",
   [CAMPAIGN_STATUS.LEGACY_IN_REVIEW]: "Waiting Confirmed",
   [CAMPAIGN_STATUS.PENDING_COMPLETION]: "Waiting Confirmed",
@@ -57,6 +61,12 @@ export const CAMPAIGN_STATUS_LABEL: Record<number, string> = {
   [CAMPAIGN_STATUS.EXPIRED]: "Expired",
   [CAMPAIGN_STATUS.CANCELLED]: "Cancelled",
 };
+
+/** Statuses volunteers may register for shifts in (server `CAMPAIGN_REGISTRABLE_STATUSES`). */
+export const CAMPAIGN_REGISTRABLE_STATUSES: number[] = [
+  CAMPAIGN_STATUS.UPCOMING,
+  CAMPAIGN_STATUS.ACTIVE,
+];
 
 /** Same starting values as the server; the server is the one that enforces them. */
 export const CAMPAIGN_MIN_LEAD_HOURS = 48;

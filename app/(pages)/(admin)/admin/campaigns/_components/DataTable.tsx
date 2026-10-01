@@ -209,7 +209,8 @@ export const DataTable = memo(function DataTable() {
               <TbEye className="size-5" />
             </button>
 
-            {record.status === CAMPAIGN_STATUS.ACTIVE ? (
+            {record.status === CAMPAIGN_STATUS.UPCOMING ||
+            record.status === CAMPAIGN_STATUS.ACTIVE ? (
               <ReviewCampaignConfirm
                 mode="ban"
                 campaignId={record.id}

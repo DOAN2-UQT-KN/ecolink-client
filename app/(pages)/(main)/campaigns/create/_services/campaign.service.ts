@@ -37,6 +37,9 @@ export interface ShiftFormValues {
   min_volunteers: number | null;
   /** Expected maximum; optional. */
   max_volunteers: number | null;
+  /** "HH:mm" on that day; "" = the day's start / end. */
+  start_time: string;
+  end_time: string;
   /** "HH:mm" on that day. */
   gather_time: string;
   leader_user_id: string;
@@ -81,6 +84,8 @@ export const emptyDay = (): CampaignDayFormValues => ({
 export const emptyShift = (leaderUserId = ""): ShiftFormValues => ({
   min_volunteers: null,
   max_volunteers: null,
+  start_time: "",
+  end_time: "",
   gather_time: "",
   leader_user_id: leaderUserId,
 });
@@ -161,6 +166,8 @@ const scheduleToApi = (
       shifts.push({
         day_index: dayIndex,
         meeting_point_index: meetingPointIndex,
+        start_at: combineDateTime(day.date, cell.start_time || day.start_time) ?? null,
+        end_at: combineDateTime(day.date, cell.end_time || day.end_time) ?? null,
         gather_at: combineDateTime(day.date, cell.gather_time) ?? null,
         min_volunteers: Number(cell.min_volunteers),
         max_volunteers:
@@ -269,10 +276,17 @@ export const campaignToFormValues = (campaign: ICampaign): CampaignFormValues =>
             day && point
               ? shifts.find((sh) => sh.day_id === day.id && sh.meeting_point_id === point.id)
               : undefined;
+          const sameAs = (at: string | undefined, dayAt: string | undefined) =>
+            !at || !dayAt || new Date(at).getTime() === new Date(dayAt).getTime();
           return shift
             ? {
                 min_volunteers: shift.min_volunteers,
                 max_volunteers: shift.max_volunteers ?? null,
+                // The day's own hours stay "" so the shift follows when the day moves.
+                start_time: sameAs(shift.start_at, day?.start_at)
+                  ? ""
+                  : toLocalTime(new Date(shift.start_at)),
+                end_time: sameAs(shift.end_at, day?.end_at) ? "" : toLocalTime(new Date(shift.end_at)),
                 gather_time: shift.gather_at ? toLocalTime(new Date(shift.gather_at)) : "",
                 leader_user_id: shift.leader_user_id ?? "",
               }
@@ -318,6 +332,8 @@ export const issueFieldToFormName = (field: string, code?: string): string | nul
       minVolunteers: "min_volunteers",
       maxVolunteers: "max_volunteers",
       leaderUserId: "leader_user_id",
+      startAt: "start_time",
+      endAt: "end_time",
       gatherAt: "gather_time",
     };
     return `schedule.${d}.${p}.${map[key] ?? "min_volunteers"}`;

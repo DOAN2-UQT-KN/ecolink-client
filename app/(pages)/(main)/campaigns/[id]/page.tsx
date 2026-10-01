@@ -1,4 +1,4 @@
-import { Suspense, useMemo } from 'react';
+import { Suspense, useMemo, useState } from 'react';
 import { useParams } from '@/libs/router';
 import { useTranslation } from 'react-i18next';
 import { Inbox } from 'lucide-react';
@@ -17,9 +17,10 @@ import { CampaignTabs } from './_components/CampaignTabs';
 import StatsCards from './_components/StatsCards';
 import { CampaignDetailProvider } from './_context/CampaignDetailContext';
 import { useCampaignDetail } from './_hooks/useCampaignDetail';
-import { TbArrowRight } from 'react-icons/tb';
+import { TbArrowRight, TbPencil } from 'react-icons/tb';
 import { Button } from '@/components/client/shared/Button';
 import { STATUS } from '@/constants/status';
+import { CAMPAIGN_REGISTRABLE_STATUSES } from '@/constants/campaignLifecycle';
 import { ConfirmPopoverModal } from '@/modules/OrganizationCard/components/ConfirmPopoverModal';
 import { useMarkDoneCampaign } from '@/apis/campaign/campaignById';
 import { useQueryClient } from '@tanstack/react-query';
@@ -28,6 +29,10 @@ import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
 import { CampaignAttendanceCheckInHandler } from './_components/CampaignAttendanceCheckInHandler';
 import { CampaignAttendanceQrButton } from './_components/CampaignAttendanceQrButton';
 import { CampaignCompletionVerifyButton } from './_components/CampaignCompletionVerifyButton';
+import { JoinShiftsDialog } from './_components/JoinShiftsDialog';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import useAuthStore from '@/stores/useAuthStore';
+import { useRouter } from '@/libs/router';
 
 function CampaignDetailBody() {
   const { t } = useTranslation('common');
@@ -38,16 +43,22 @@ function CampaignDetailBody() {
     isLoading,
     isError,
     canManageCampaign,
-    handleJoinCampaign,
-    isJoining,
-    handleCancelJoinRequest,
-    isCancelling,
+    isRegistered,
+    hasOpenShift,
   } = useCampaignDetail();
+  const [joinOpen, setJoinOpen] = useState(false);
+  const isAuthenticated = useAuthStore((s) => s.is_authenticated);
+  const router = useRouter();
 
-  const requestStatus = campaign?.request_status;
-  const isApproved = requestStatus === STATUS.APPROVED;
-  const isPending = requestStatus === STATUS.PENDING;
-  const showJoinCta = !isApproved && !isPending;
+  // Registration (spec 3.1): anyone, managers included, while a shift is still to come.
+  const showJoinCta = isRegistered || hasOpenShift;
+  const openJoin = () => {
+    if (!isAuthenticated) {
+      router.push(`/sign-in?redirect=${encodeURIComponent(`/campaigns/${campaignId}`)}`);
+      return;
+    }
+    setJoinOpen(true);
+  };
 
   const canOwnerSubmitCompletion =
     canManageCampaign &&
@@ -155,8 +166,7 @@ function CampaignDetailBody() {
       <Breadcrumbs breadcrumbs={breadcrumbs} />
 
       <div className="pt-5 space-y-6">
-        {(showCompletionVerification ||
-          (!isApproved && !canManageCampaign)) && (
+        {(showCompletionVerification || showJoinCta) && (
           <div className="flex flex-wrap items-center justify-end gap-2">
             {showCompletionVerification ? (
               <CampaignCompletionVerifyButton
@@ -166,32 +176,44 @@ function CampaignDetailBody() {
                 myVerification={completionVerification?.my_verification ?? null}
               />
             ) : null}
-            {!isApproved && !canManageCampaign ? (
-              isPending ? (
-                <Button
-                  type="button"
-                  variant="outlined-brown"
-                  size="medium"
-                  isLoading={isCancelling}
-                  onClick={handleCancelJoinRequest}
-                >
-                  {t('Cancel')}
-                </Button>
-              ) : showJoinCta ? (
-                <Button
-                  type="button"
-                  variant="brown"
-                  size="medium"
-                  iconRight={<TbArrowRight className="size-4" aria-hidden />}
-                  isLoading={isJoining}
-                  onClick={handleJoinCampaign}
-                >
-                  {t('Join')}
-                </Button>
-              ) : null
+            {isRegistered ? (
+              <Button
+                type="button"
+                variant="outlined-brown"
+                size="medium"
+                iconLeft={<TbPencil className="size-4" aria-hidden />}
+                onClick={openJoin}
+              >
+                {t('Edit my shifts')}
+              </Button>
+            ) : hasOpenShift ? (
+              <Button
+                type="button"
+                variant="brown"
+                size="medium"
+                iconRight={<TbArrowRight className="size-4" aria-hidden />}
+                onClick={openJoin}
+              >
+                {t('Join')}
+              </Button>
             ) : null}
           </div>
         )}
+        {!showJoinCta && CAMPAIGN_REGISTRABLE_STATUSES.includes(campaign.status ?? -1) ? (
+          <div className="flex justify-end">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span tabIndex={0}>
+                  <Button type="button" variant="brown" size="medium" isDisabled>
+                    {t('Join')}
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>{t('The campaign has no more upcoming shifts')}</TooltipContent>
+            </Tooltip>
+          </div>
+        ) : null}
+        <JoinShiftsDialog campaignId={campaignId} open={joinOpen} onOpenChange={setJoinOpen} />
 
         {showAwaitingAdminCompletion ? (
           <div

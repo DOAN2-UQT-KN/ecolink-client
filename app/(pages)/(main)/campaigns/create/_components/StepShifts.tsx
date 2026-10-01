@@ -51,8 +51,9 @@ export function useDayLabel() {
 }
 
 /**
- * Step 4 (spec 1.4): volunteers per shift, one shift per day × meeting point. Each shift has a
- * minimum (0 turns it off) and an optional expected maximum; neither caps sign-ups. Each day
+ * Step 4 (spec 1.4): volunteers per shift, one shift per day × meeting point. Each shift has its
+ * hours (the day's by default), a minimum (0 turns it off) and an optional expected maximum;
+ * neither caps sign-ups. Each day
  * needs one shift on; a day below the difficulty's suggested minimum needs a reason. A one-day,
  * one-point campaign shows a single set of fields.
  */
@@ -88,7 +89,7 @@ const StepShifts = memo(function StepShifts() {
     [points, t],
   );
 
-  /** Day 1's volunteer numbers, leaders and gathering offsets, copied to the other days. */
+  /** Day 1's volunteer numbers, leaders and time offsets, copied to the other days. */
   const applyFirstDayToAll = useCallback(() => {
     const values = getValues();
     const first = values.schedule[0] ?? [];
@@ -96,18 +97,23 @@ const StepShifts = memo(function StepShifts() {
     const next = values.schedule.map((row, d) => {
       if (d === 0) return row;
       const start = minutesOf(values.days[d]?.start_time);
+      // Same distance from the day's start; "" (the day's hours) stays "".
+      const shifted = (time: string) => {
+        const m = minutesOf(time);
+        return m != null && firstStart != null && start != null
+          ? timeOf(start + (m - firstStart))
+          : time;
+      };
       return row.map((_, p) => {
         const source = first[p];
         if (!source) return row[p];
-        const gather = minutesOf(source.gather_time);
         return {
           min_volunteers: source.min_volunteers,
           max_volunteers: source.max_volunteers,
           leader_user_id: source.leader_user_id,
-          gather_time:
-            gather != null && firstStart != null && start != null
-              ? timeOf(start + (gather - firstStart))
-              : source.gather_time,
+          start_time: shifted(source.start_time),
+          end_time: shifted(source.end_time),
+          gather_time: shifted(source.gather_time),
         };
       });
     });
@@ -206,14 +212,71 @@ const StepShifts = memo(function StepShifts() {
     (d: number, p: number) => ({
       validate: (v: string, values: CampaignFormValues) => {
         if (!v || !(Number(values.schedule[d]?.[p]?.min_volunteers) > 0)) return true;
-        const end = minutesOf(values.days[d]?.end_time);
+        const cell = values.schedule[d]?.[p];
+        const start = minutesOf(cell?.start_time || values.days[d]?.start_time);
         const gather = minutesOf(v);
-        return end == null || gather == null || gather <= end
+        return start == null || gather == null || gather <= start
           ? true
-          : t('Gathering time must be on that day, before it ends');
+          : t('Gathering time must be no later than the shift starts');
       },
     }),
     [t],
+  );
+
+  /** A shift's window sits inside its day; checked on the start field. */
+  const windowRules = useCallback(
+    (d: number, p: number) => ({
+      validate: (_: string, values: CampaignFormValues) => {
+        const cell = values.schedule[d]?.[p];
+        if (!(Number(cell?.min_volunteers) > 0)) return true;
+        const day = values.days[d];
+        const dayStart = minutesOf(day?.start_time);
+        const dayEnd = minutesOf(day?.end_time);
+        const start = minutesOf(cell?.start_time || day?.start_time);
+        const end = minutesOf(cell?.end_time || day?.end_time);
+        if (dayStart == null || dayEnd == null || start == null || end == null) return true;
+        return start < end && start >= dayStart && end <= dayEnd
+          ? true
+          : t("A shift must start before it ends, within the day's hours");
+      },
+    }),
+    [t],
+  );
+
+  /** Start or end of a shift; empty means the day's hour, which is what the input shows. */
+  const shiftTimeInput = (d: number, p: number, which: 'start_time' | 'end_time', disabled: boolean) => {
+    const dayTime = days[d]?.[which] ?? '';
+    return (
+      <Controller
+        name={`schedule.${d}.${p}.${which}`}
+        control={control}
+        rules={which === 'start_time' ? windowRules(d, p) : undefined}
+        render={({ field }) => (
+          <Input
+            type="time"
+            aria-label={`${dayLabel(days[d], d)} · ${pointName(p)} · ${t(which === 'start_time' ? 'Shift start' : 'Shift end')}`}
+            min={days[d]?.start_time || undefined}
+            max={days[d]?.end_time || undefined}
+            disabled={disabled}
+            value={field.value || dayTime}
+            onChange={(e) => {
+              field.onChange(e.target.value === dayTime ? '' : e.target.value);
+              void trigger(`schedule.${d}.${p}.start_time`);
+            }}
+            onBlur={field.onBlur}
+            className={cn(inputClassName, 'w-[110px] tabular-nums', disabled && 'opacity-50')}
+          />
+        )}
+      />
+    );
+  };
+
+  const shiftWindow = (d: number, p: number, disabled = false) => (
+    <div className="flex items-center gap-2">
+      {shiftTimeInput(d, p, 'start_time', disabled)}
+      <span className="text-muted-foreground">–</span>
+      {shiftTimeInput(d, p, 'end_time', disabled)}
+    </div>
   );
 
   const scheduleErrors = formState.errors.schedule;
@@ -271,6 +334,7 @@ const StepShifts = memo(function StepShifts() {
   const shiftsHint = t(
     'Each row is a shift: one meeting point on one day. Enter the minimum volunteers it needs (0 turns it off) and, optionally, the most you expect. Neither number blocks sign-ups; they only raise warnings.',
   );
+  const windowHint = t("A shift runs during the day's hours unless you narrow it.");
 
   const cellErrors = (d: number, p: number) =>
     (scheduleErrors?.[d] as Record<number, Record<string, RHFFieldError>> | undefined)?.[p];
@@ -319,17 +383,25 @@ const StepShifts = memo(function StepShifts() {
           </Field>
           <Field>
             <FieldLabel className="text-foreground-tertiary font-display-3">
+              {t('Shift time')}
+              <InfoTooltip content={windowHint} />
+            </FieldLabel>
+            {shiftWindow(0, 0)}
+            <span className="text-xs text-foreground-tertiary">
+              {dayLabel(days[0], 0)} · {dayHours(0)}
+            </span>
+            <FieldError errors={[errors?.start_time]} />
+          </Field>
+          <Field>
+            <FieldLabel className="text-foreground-tertiary font-display-3">
               {t('Gathering time')}
             </FieldLabel>
             <Input
               type="time"
-              max={days[0]?.end_time || undefined}
+              max={schedule[0]?.[0]?.start_time || days[0]?.start_time || undefined}
               {...register('schedule.0.0.gather_time', gatherRules(0, 0))}
               className={inputClassName}
             />
-            <span className="text-xs text-foreground-tertiary">
-              {dayLabel(days[0], 0)} · {dayHours(0)}
-            </span>
             <FieldError errors={[errors?.gather_time]} />
           </Field>
           <Field>
@@ -369,6 +441,7 @@ const StepShifts = memo(function StepShifts() {
               {[
                 t('Day'),
                 t('Meeting point'),
+                t('Shift time'),
                 t('Volunteers needed'),
                 t('Gathering time'),
                 t('Person in charge'),
@@ -403,6 +476,10 @@ const StepShifts = memo(function StepShifts() {
                         )}
                         <td className={cn(cellClass, off && 'text-muted-foreground')}>
                           {pointName(p)}
+                        </td>
+                        <td className={cellClass}>
+                          {shiftWindow(d, p, off)}
+                          <FieldError errors={[errors?.start_time]} />
                         </td>
                         <td className={cellClass}>
                           <div className="flex items-center gap-2">
@@ -441,7 +518,7 @@ const StepShifts = memo(function StepShifts() {
                           <Input
                             type="time"
                             aria-label={`${dayLabel(day, d)} · ${pointName(p)} · ${t('Gathering time')}`}
-                            max={day.end_time || undefined}
+                            max={row[p]?.start_time || day.start_time || undefined}
                             disabled={off}
                             {...register(`schedule.${d}.${p}.gather_time`, gatherRules(d, p))}
                             className={cn(inputClassName, 'min-w-[120px]', off && 'opacity-50')}

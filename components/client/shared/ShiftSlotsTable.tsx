@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { cn } from '@/libs/utils';
 
 export interface ShiftSlotsCell {
+  /** "07:00 – 11:00" */
+  hours?: string | null;
   /** Volunteers needed; 0 or null = the shift is off. */
   minVolunteers: number | null;
   /** Expected maximum; optional. */
@@ -48,8 +50,8 @@ const STYLES = {
 } as const;
 
 /**
- * Read-only list of a campaign's shifts: one row per day × meeting point with its minimum and
- * expected maximum volunteers, gathering time and person in charge; the day and its total
+ * Read-only list of a campaign's shifts: one row per day × meeting point with its hours, minimum
+ * and expected maximum volunteers, gathering time and person in charge; the day and its total
  * minimum span its rows.
  */
 export const ShiftSlotsTable = memo(function ShiftSlotsTable({
@@ -65,6 +67,7 @@ export const ShiftSlotsTable = memo(function ShiftSlotsTable({
   const headers = [
     t('Day'),
     t('Meeting point'),
+    t('Shift time'),
     t('Volunteers needed'),
     t('Gathering time'),
     t('Person in charge'),
@@ -108,6 +111,9 @@ export const ShiftSlotsTable = memo(function ShiftSlotsTable({
                         </td>
                       )}
                       <td className={cn(cell, off && 'text-muted-foreground')}>{point}</td>
+                      <td className={cn(cell, 'tabular-nums whitespace-nowrap', off && 'text-muted-foreground')}>
+                        {off ? '—' : shift?.hours || day.hours}
+                      </td>
                       <td className={cn(cell, 'tabular-nums', off && 'text-muted-foreground')}>
                         {off
                           ? t('Off')

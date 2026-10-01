@@ -161,8 +161,9 @@ export const CampaignSummary = memo(function CampaignSummary({
             hours: `${day.start_time || '—'} – ${day.end_time || '—'}`,
           }))}
           points={values.meeting_points.map((_, index) => pointName(index))}
-          cells={values.schedule.map((row) =>
+          cells={values.schedule.map((row, d) =>
             row.map((cell) => ({
+              hours: `${cell.start_time || values.days[d]?.start_time || '—'} – ${cell.end_time || values.days[d]?.end_time || '—'}`,
               minVolunteers: cell.min_volunteers,
               maxVolunteers: cell.max_volunteers,
               gatherTime: cell.gather_time,

@@ -160,6 +160,7 @@ const CampaignShifts = memo(function CampaignShifts({ campaign }: { campaign: IC
           points.map((point) => {
             const shift = shiftOf(day.id, point.id);
             return {
+              hours: shift ? `${hhmm(shift.start_at)} – ${hhmm(shift.end_at)}` : null,
               minVolunteers: shift?.min_volunteers ?? 0,
               maxVolunteers: shift?.max_volunteers ?? null,
               gatherTime: shift?.gather_at ? hhmm(shift.gather_at) : null,

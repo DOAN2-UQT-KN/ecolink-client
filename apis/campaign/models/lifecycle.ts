@@ -36,11 +36,15 @@ export interface ICampaignShift {
   id: string;
   day_id: string;
   meeting_point_id: string;
+  start_at: string;
+  end_at: string;
   gather_at: string | null;
   min_volunteers: number;
   /** Expected maximum; optional. */
   max_volunteers: number | null;
   leader_user_id: string | null;
+  /** Live registrations; on the campaign detail only. */
+  registered_count?: number;
 }
 
 /** Request body forms: days and shifts by position. */
@@ -52,6 +56,9 @@ export interface ICampaignDayInput {
 export interface ICampaignShiftInput {
   day_index: number;
   meeting_point_index: number;
+  /** Omitted or null = the day's hours. */
+  start_at?: string | null;
+  end_at?: string | null;
   gather_at?: string | null;
   min_volunteers: number;
   max_volunteers?: number | null;

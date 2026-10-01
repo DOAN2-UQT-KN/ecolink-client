@@ -47,9 +47,10 @@ export interface ICampaign {
   };
 
   saved?: boolean;
+  /** APPROVED when the viewer holds at least one shift (kept for older screens). */
   request_status?: number;
-  /** Present when the current user has a join request; used to cancel while pending. */
-  join_request_id?: string;
+  /** Detail only: the shifts the viewer is registered for. */
+  my_shift_ids?: string[];
 
   banner?: string;
   detail_address?: string;

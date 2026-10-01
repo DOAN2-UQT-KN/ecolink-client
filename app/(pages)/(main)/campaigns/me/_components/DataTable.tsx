@@ -175,6 +175,7 @@ export const DataTable = memo(function DataTable() {
           (record.status === CAMPAIGN_STATUS.NEEDS_REVISION ||
             record.status === CAMPAIGN_STATUS.BLOCKED ||
             record.status === CAMPAIGN_STATUS.CANCELLED ||
+            record.status === CAMPAIGN_STATUS.UPCOMING ||
             record.status === CAMPAIGN_STATUS.ACTIVE) ? (
             <span
               className="line-clamp-2 text-xs"
