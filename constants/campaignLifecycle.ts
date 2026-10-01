@@ -124,7 +124,9 @@ export const CAMPAIGN_ISSUE_MESSAGES: Record<string, string> = {
   MEETING_POINT_COUNT: "A campaign needs 1–5 meeting points",
   MEETING_POINT_NAME_REQUIRED: "Name each meeting point",
   RADIUS_INVALID: "Radius must be greater than 0",
-  SLOTS_INVALID: "Slots must be a whole number, 0 to turn the shift off",
+  MIN_VOLUNTEERS_INVALID: "Minimum volunteers must be a whole number, 0 to turn the shift off",
+  MAX_BELOW_MIN: "The expected maximum must be a whole number no lower than the minimum",
+  MIN_VOLUNTEERS_REASON_REQUIRED: "Explain why a day needs fewer volunteers than suggested for this difficulty",
   LEADER_INVALID: "The person in charge must be an active member of the organization",
   GATHER_TIME_INVALID: "Gathering time must be on that day, before it ends",
   REPORT_DUPLICATED: "A waste point can belong to only one meeting point",
@@ -132,8 +134,7 @@ export const CAMPAIGN_ISSUE_MESSAGES: Record<string, string> = {
   REPORT_OUTSIDE_RADIUS: "A waste point is outside its meeting point's radius",
   REPORTS_REQUIRED: "Add at least one waste point",
   MEETING_POINTS_TOO_FAR: "Meeting points must be within 5 km of each other",
-  DAY_NO_ACTIVE_SHIFT: "Each day needs at least one shift with slots",
-  DAY_SLOTS_OVER_LIMIT: "Slots on this day exceed the volunteers allowed per day for this difficulty",
+  DAY_NO_ACTIVE_SHIFT: "Each day needs at least one shift that runs",
 };
 
 /** First start and last end of a campaign's days, and how many days it runs. */

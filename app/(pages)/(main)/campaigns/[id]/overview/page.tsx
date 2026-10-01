@@ -89,7 +89,7 @@ export default function CampaignOverviewPage() {
       <CampaignSummary
         values={values}
         organizationName={campaign.organization?.name}
-        maxPerDay={campaign.max_members ?? null}
+        suggestedMinPerDay={campaign.suggested_min_volunteers ?? null}
         onEdit={canEdit ? (step) => router.push(`${editPath}?step=${step}`) : undefined}
       />
 

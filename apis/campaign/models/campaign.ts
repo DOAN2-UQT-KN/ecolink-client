@@ -65,6 +65,10 @@ export interface ICampaign {
   /** Resubmit before this while the campaign needs revision. */
   revision_deadline?: string | null;
   submitted_at?: string | null;
+  /** Why a day's minimum volunteers is below the difficulty's suggestion. */
+  min_volunteers_reason?: string | null;
+  /** Minimum volunteers per day the difficulty suggests (detail responses). */
+  suggested_min_volunteers?: number | null;
   /** In time order; the campaign runs from the first start to the last end. */
   days?: ICampaignDay[];
   meeting_points?: IMeetingPoint[];

@@ -28,13 +28,18 @@ export interface ICampaignDay {
   sort_order: number;
 }
 
-/** One day × meeting point. `slots` 0 = the shift is off. */
+/**
+ * One day × meeting point. `min_volunteers` 0 = the shift is off. Both numbers only drive
+ * warnings; they never cap sign-ups.
+ */
 export interface ICampaignShift {
   id: string;
   day_id: string;
   meeting_point_id: string;
   gather_at: string | null;
-  slots: number;
+  min_volunteers: number;
+  /** Expected maximum; optional. */
+  max_volunteers: number | null;
   leader_user_id: string | null;
 }
 
@@ -48,7 +53,8 @@ export interface ICampaignShiftInput {
   day_index: number;
   meeting_point_index: number;
   gather_at?: string | null;
-  slots: number;
+  min_volunteers: number;
+  max_volunteers?: number | null;
   leader_user_id?: string | null;
 }
 

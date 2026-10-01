@@ -33,8 +33,10 @@ export interface CampaignDayFormValues {
 
 /** One cell of the day × meeting point grid. */
 export interface ShiftFormValues {
-  /** null = not filled in yet; 0 = the shift is off. */
-  slots: number | null;
+  /** Volunteers needed; null = not filled in yet, 0 = the shift is off. */
+  min_volunteers: number | null;
+  /** Expected maximum; optional. */
+  max_volunteers: number | null;
   /** "HH:mm" on that day. */
   gather_time: string;
   leader_user_id: string;
@@ -57,6 +59,8 @@ export interface CampaignFormValues {
   meeting_points: MeetingPointFormValues[];
   /** `schedule[day][meetingPoint]`, always days.length × meeting_points.length. */
   schedule: ShiftFormValues[][];
+  /** Required when a day's minimum is below the difficulty's suggestion. */
+  min_volunteers_reason: string;
 }
 
 export const emptyMeetingPoint = (): MeetingPointFormValues => ({
@@ -75,7 +79,8 @@ export const emptyDay = (): CampaignDayFormValues => ({
 });
 
 export const emptyShift = (leaderUserId = ""): ShiftFormValues => ({
-  slots: null,
+  min_volunteers: null,
+  max_volunteers: null,
   gather_time: "",
   leader_user_id: leaderUserId,
 });
@@ -109,6 +114,7 @@ export const DEFAULT_CAMPAIGN_FORM_VALUES: CampaignFormValues = {
   bring_own_tools: false,
   meeting_points: [emptyMeetingPoint()],
   schedule: [[emptyShift()]],
+  min_volunteers_reason: "",
 };
 
 export const truncateDetailAddress = (value?: string | null): string => {
@@ -135,7 +141,7 @@ const optionalText = (value: string) => value.trim() || null;
 /**
  * Days, meeting points and shifts for the API. Half-filled days (no date) and meeting points
  * (no location) are left out of the draft, and the grid follows: shifts are sent by the position
- * of what is kept. A cell without slots yet is not sent; the server saves it as off.
+ * of what is kept. A cell without a minimum yet is not sent; the server saves it as off.
  */
 const scheduleToApi = (
   data: CampaignFormValues,
@@ -151,12 +157,16 @@ const scheduleToApi = (
   days.forEach(({ day, index: d }, dayIndex) =>
     points.forEach(({ index: p }, meetingPointIndex) => {
       const cell = data.schedule[d]?.[p];
-      if (!cell || cell.slots == null || Number.isNaN(Number(cell.slots))) return;
+      if (!cell || cell.min_volunteers == null || Number.isNaN(Number(cell.min_volunteers))) return;
       shifts.push({
         day_index: dayIndex,
         meeting_point_index: meetingPointIndex,
         gather_at: combineDateTime(day.date, cell.gather_time) ?? null,
-        slots: Number(cell.slots),
+        min_volunteers: Number(cell.min_volunteers),
+        max_volunteers:
+          cell.max_volunteers == null || Number.isNaN(Number(cell.max_volunteers))
+            ? null
+            : Number(cell.max_volunteers),
         leader_user_id: cell.leader_user_id || null,
       });
     }),
@@ -197,6 +207,7 @@ export const transformToApiData = (data: CampaignFormValues): ICreateCampaignReq
     contact_name: optionalText(data.contact_name),
     contact_phone: optionalText(data.contact_phone),
     safety_notes: optionalText(data.safety_notes),
+    min_volunteers_reason: optionalText(data.min_volunteers_reason),
     requirements: hasRequirements
       ? {
           min_age: data.min_age ?? null,
@@ -234,6 +245,7 @@ export const campaignToFormValues = (campaign: ICampaign): CampaignFormValues =>
     contact_name: campaign.contact_name ?? "",
     contact_phone: campaign.contact_phone ?? "",
     safety_notes: campaign.safety_notes ?? "",
+    min_volunteers_reason: campaign.min_volunteers_reason ?? "",
     min_age: requirements?.min_age ?? null,
     skills: (requirements?.skills ?? []).join(", "),
     bring_own_tools: Boolean(requirements?.bring_own_tools),
@@ -259,7 +271,8 @@ export const campaignToFormValues = (campaign: ICampaign): CampaignFormValues =>
               : undefined;
           return shift
             ? {
-                slots: shift.slots,
+                min_volunteers: shift.min_volunteers,
+                max_volunteers: shift.max_volunteers ?? null,
                 gather_time: shift.gather_at ? toLocalTime(new Date(shift.gather_at)) : "",
                 leader_user_id: shift.leader_user_id ?? "",
               }
@@ -283,7 +296,7 @@ const DAY_DATE_CODES = ["START_TOO_SOON", "DAY_DUPLICATED", "DAY_SPAN_TOO_WIDE"]
 const DAY_SHIFT_CODES = ["DAY_NO_ACTIVE_SHIFT", "DAY_SLOTS_OVER_LIMIT"];
 
 /**
- * Server field path (camelCase, e.g. `schedule[1][0].slots`) → form field name.
+ * Server field path (camelCase, e.g. `schedule[1][0].minVolunteers`) → form field name.
  * Unknown paths return null and are shown in the summary only.
  */
 export const issueFieldToFormName = (field: string, code?: string): string | null => {
@@ -302,11 +315,12 @@ export const issueFieldToFormName = (field: string, code?: string): string | nul
   if (shift) {
     const [, d, p, key] = shift;
     const map: Record<string, string> = {
-      slots: "slots",
+      minVolunteers: "min_volunteers",
+      maxVolunteers: "max_volunteers",
       leaderUserId: "leader_user_id",
       gatherAt: "gather_time",
     };
-    return `schedule.${d}.${p}.${map[key] ?? "slots"}`;
+    return `schedule.${d}.${p}.${map[key] ?? "min_volunteers"}`;
   }
 
   const point = field.match(/^meetingPoints\[(\d+)\]\.?(\w+)?$/);
@@ -327,6 +341,7 @@ export const issueFieldToFormName = (field: string, code?: string): string | nul
     contactPhone: "contact_phone",
     difficulty: "difficulty",
     "requirements.minAge": "min_age",
+    minVolunteersReason: "min_volunteers_reason",
   };
   return top[field] ?? null;
 };

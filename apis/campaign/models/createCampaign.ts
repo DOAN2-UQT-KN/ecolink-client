@@ -17,6 +17,7 @@ export interface ICreateCampaignRequest {
   contact_phone?: string | null;
   safety_notes?: string | null;
   requirements?: ICampaignRequirements | null;
+  min_volunteers_reason?: string | null;
   days?: ICampaignDayInput[];
   meeting_points?: IMeetingPoint[];
   shifts?: ICampaignShiftInput[];

@@ -117,7 +117,7 @@ const MeetingPoints = memo(function MeetingPoints({
   );
 });
 
-/** The days, the slots of every day × meeting point, and who leads each shift that runs. */
+/** The days, the volunteers needed on every day × meeting point, and who leads each shift. */
 const CampaignShifts = memo(function CampaignShifts({ campaign }: { campaign: ICampaign }) {
   const { t } = useTranslation();
   const days = useMemo(
@@ -160,15 +160,22 @@ const CampaignShifts = memo(function CampaignShifts({ campaign }: { campaign: IC
           points.map((point) => {
             const shift = shiftOf(day.id, point.id);
             return {
-              slots: shift?.slots ?? 0,
+              minVolunteers: shift?.min_volunteers ?? 0,
+              maxVolunteers: shift?.max_volunteers ?? null,
               gatherTime: shift?.gather_at ? hhmm(shift.gather_at) : null,
               leader: shift?.leader_user_id ? memberName(shift.leader_user_id) : null,
             };
           }),
         )}
-        maxPerDay={campaign.max_members ?? null}
+        suggestedMinPerDay={campaign.suggested_min_volunteers ?? null}
         variant="admin"
       />
+      {campaign.min_volunteers_reason && (
+        <p className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
+          <span className="font-semibold">{t("Why fewer volunteers than suggested")}:</span>{" "}
+          {campaign.min_volunteers_reason}
+        </p>
+      )}
     </div>
   );
 });

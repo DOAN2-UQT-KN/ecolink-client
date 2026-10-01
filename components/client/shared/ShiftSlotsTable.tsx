@@ -4,8 +4,10 @@ import { useTranslation } from 'react-i18next';
 import { cn } from '@/libs/utils';
 
 export interface ShiftSlotsCell {
-  /** 0 or null = the shift is off. */
-  slots: number | null;
+  /** Volunteers needed; 0 or null = the shift is off. */
+  minVolunteers: number | null;
+  /** Expected maximum; optional. */
+  maxVolunteers?: number | null;
   /** "HH:mm" */
   gatherTime?: string | null;
   /** Display name of the person in charge. */
@@ -18,8 +20,8 @@ export interface ShiftSlotsTableProps {
   points: string[];
   /** `cells[day][point]` */
   cells: ShiftSlotsCell[][];
-  /** Volunteers allowed per day; totals above it are highlighted. */
-  maxPerDay?: number | null;
+  /** Minimum per day the difficulty suggests; day totals below it are highlighted. */
+  suggestedMinPerDay?: number | null;
   /** `admin` follows the admin console tables (theme tokens, no grid lines). */
   variant?: 'client' | 'admin';
 }
@@ -46,14 +48,15 @@ const STYLES = {
 } as const;
 
 /**
- * Read-only list of a campaign's shifts: one row per day × meeting point with its slots,
- * gathering time and person in charge; the day and its volunteer total span its rows.
+ * Read-only list of a campaign's shifts: one row per day × meeting point with its minimum and
+ * expected maximum volunteers, gathering time and person in charge; the day and its total
+ * minimum span its rows.
  */
 export const ShiftSlotsTable = memo(function ShiftSlotsTable({
   days,
   points,
   cells,
-  maxPerDay,
+  suggestedMinPerDay,
   variant = 'client',
 }: ShiftSlotsTableProps) {
   const { t } = useTranslation();
@@ -62,10 +65,10 @@ export const ShiftSlotsTable = memo(function ShiftSlotsTable({
   const headers = [
     t('Day'),
     t('Meeting point'),
-    t('Volunteers'),
+    t('Volunteers needed'),
     t('Gathering time'),
     t('Person in charge'),
-    t('Total volunteers'),
+    t('Total min'),
   ];
 
   return (
@@ -83,14 +86,17 @@ export const ShiftSlotsTable = memo(function ShiftSlotsTable({
         <tbody>
           {days.map((day, d) => {
             const row = cells[d] ?? [];
-            const total = row.reduce<number>((sum, c) => sum + (Number(c?.slots) || 0), 0);
-            const over = maxPerDay != null && total > maxPerDay;
+            const total = row.reduce<number>(
+              (sum, c) => sum + (Number(c?.minVolunteers) || 0),
+              0,
+            );
+            const below = suggestedMinPerDay != null && total < suggestedMinPerDay;
             const span = Math.max(points.length, 1);
             return (
               <Fragment key={d}>
                 {points.map((point, p) => {
                   const shift = row[p];
-                  const off = !shift?.slots;
+                  const off = !shift?.minVolunteers;
                   return (
                     <tr key={p} className={style.row}>
                       {p === 0 && (
@@ -103,7 +109,11 @@ export const ShiftSlotsTable = memo(function ShiftSlotsTable({
                       )}
                       <td className={cn(cell, off && 'text-muted-foreground')}>{point}</td>
                       <td className={cn(cell, 'tabular-nums', off && 'text-muted-foreground')}>
-                        {off ? `0 (${t('Off')})` : shift?.slots}
+                        {off
+                          ? t('Off')
+                          : shift?.maxVolunteers != null
+                            ? `${shift.minVolunteers} – ${shift.maxVolunteers}`
+                            : `${shift?.minVolunteers}+`}
                       </td>
                       <td className={cn(cell, 'tabular-nums', off && 'text-muted-foreground')}>
                         {off ? '—' : shift?.gatherTime || '—'}
@@ -118,11 +128,15 @@ export const ShiftSlotsTable = memo(function ShiftSlotsTable({
                             cell,
                             style.groupEnd,
                             'font-semibold tabular-nums whitespace-nowrap',
-                            over && 'text-destructive',
+                            below && 'text-amber-600',
                           )}
                         >
                           {total}
-                          {maxPerDay != null && ` / ${maxPerDay}`}
+                          {below && (
+                            <div className="text-xs font-normal">
+                              {t('Suggested ≥ {{n}}', { n: suggestedMinPerDay })}
+                            </div>
+                          )}
                         </td>
                       )}
                     </tr>

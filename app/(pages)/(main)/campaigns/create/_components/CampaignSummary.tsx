@@ -52,12 +52,12 @@ const Section = memo(function Section({
 export const CampaignSummary = memo(function CampaignSummary({
   values,
   organizationName,
-  maxPerDay,
+  suggestedMinPerDay,
   onEdit,
 }: {
   values: CampaignFormValues;
   organizationName?: string | null;
-  maxPerDay?: number | null;
+  suggestedMinPerDay?: number | null;
   onEdit?: (step: CampaignStep) => void;
 }) {
   const { t } = useTranslation();
@@ -163,13 +163,20 @@ export const CampaignSummary = memo(function CampaignSummary({
           points={values.meeting_points.map((_, index) => pointName(index))}
           cells={values.schedule.map((row) =>
             row.map((cell) => ({
-              slots: cell.slots,
+              minVolunteers: cell.min_volunteers,
+              maxVolunteers: cell.max_volunteers,
               gatherTime: cell.gather_time,
               leader: cell.leader_user_id ? memberName(cell.leader_user_id) : null,
             })),
           )}
-          maxPerDay={maxPerDay}
+          suggestedMinPerDay={suggestedMinPerDay}
         />
+        {values.min_volunteers_reason?.trim() && (
+          <SummaryRow
+            label={t('Why fewer volunteers than suggested')}
+            value={values.min_volunteers_reason}
+          />
+        )}
       </Section>
     </div>
   );

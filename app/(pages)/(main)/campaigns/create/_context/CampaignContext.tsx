@@ -38,7 +38,7 @@ const STEP_FIELDS: Record<CampaignStep, Path<CampaignFormValues>[]> = {
   general: ['title', 'difficulty', 'description', 'banner'],
   schedule: ['days', 'contact_name', 'contact_phone', 'min_age'],
   meeting_points: ['meeting_points'],
-  shifts: ['schedule'],
+  shifts: ['schedule', 'min_volunteers_reason'],
   review: [],
 };
 
@@ -96,8 +96,8 @@ interface CampaignContextType {
   next: () => Promise<void>;
   back: () => void;
   goToStep: (index: number) => void;
-  /** Volunteers allowed per day by the difficulty, once the draft is saved; null = unknown. */
-  maxPerDay: number | null;
+  /** Minimum volunteers per day the difficulty suggests, once the draft is saved; null = none. */
+  suggestedMinPerDay: number | null;
   /**
    * Keep the day × meeting point grid in step with the days and meeting points lists: call
    * after adding or removing one of them.
@@ -395,7 +395,7 @@ export const CampaignProvider = memo(function CampaignProvider({
       next,
       back,
       goToStep,
-      maxPerDay: saved?.max_members ?? null,
+      suggestedMinPerDay: saved?.suggested_min_volunteers ?? null,
       addScheduleRow,
       removeScheduleRow,
       addScheduleColumn,

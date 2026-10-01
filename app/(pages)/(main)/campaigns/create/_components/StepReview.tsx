@@ -8,7 +8,7 @@ import { CampaignSummary } from './CampaignSummary';
 /** Last step: everything the admin will see, with a way back to each step. */
 const StepReview = memo(function StepReview() {
   const { t } = useTranslation();
-  const { form, organization, maxPerDay, goToStep } = useCampaign();
+  const { form, organization, suggestedMinPerDay, goToStep } = useCampaign();
   const values = form.watch();
 
   return (
@@ -19,7 +19,7 @@ const StepReview = memo(function StepReview() {
       <CampaignSummary
         values={values}
         organizationName={organization?.name}
-        maxPerDay={maxPerDay}
+        suggestedMinPerDay={suggestedMinPerDay}
         onEdit={(step) => goToStep(CAMPAIGN_STEPS.indexOf(step))}
       />
     </div>
