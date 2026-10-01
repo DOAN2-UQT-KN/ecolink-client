@@ -230,7 +230,7 @@ const RemoveManagerAction = memo(function RemoveManagerAction({
 
 export const CurrentMember = memo(function CurrentMember() {
   const { t } = useTranslation('common');
-  const { campaignId, campaign, currentMembers, canManageCampaign } = useCampaignDetail();
+  const { campaignId, campaign, canManageCampaign } = useCampaignDetail();
   const isPlatformAdmin = useAuthStore((s) => s.user?.roleId === ADMIN_ROLE_ID);
 
   // Server returns 403 for anyone else (CAMPAIGN_PERMISSION_DENIED), so don't even ask.
@@ -309,10 +309,6 @@ export const CurrentMember = memo(function CurrentMember() {
 
       {/* Members card */}
       <div className="rounded-xl border border-[rgba(136,122,71,0.4)] bg-white/60 p-5 sm:p-6 shadow-sm">
-        <p className="font-display-1 text-muted-foreground mb-4">
-          {t('Members')}:{' '}
-          <span className="font-medium text-foreground tabular-nums">{currentMembers}</span>
-        </p>
         {canViewVolunteers ? (
           <AvatarList isLoading={isVolunteerLoading} items={volunteers} showAttendance />
         ) : (

@@ -32,7 +32,7 @@ const cardClass = cn(
 );
 export const DetailInformation = memo(function DetailInformation() {
   const { t } = useTranslation('common');
-  const { campaign, currentMembers } = useCampaignDetail();
+  const { campaign } = useCampaignDetail();
   const { title: localizedTitle, description: localizedDescription } =
     useLocalizedDisplay();
 
@@ -242,12 +242,7 @@ export const DetailInformation = memo(function DetailInformation() {
       )}
 
       <div className={cardClass}>
-        <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="font-display-6 font-semibold text-button-accent">{t('Shifts')}</h2>
-          <span className="font-display-1 text-button-accent">
-            {t('{{n}} volunteers registered', { n: currentMembers })}
-          </span>
-        </div>
+        <h2 className="font-display-6 font-semibold text-button-accent mb-4">{t('Shifts')}</h2>
         <div className="flex flex-col gap-5">
           {(campaign.days ?? []).map((day, d) => {
             const shifts = (campaign.shifts ?? [])

@@ -4,8 +4,6 @@ import { useGetCampaignById } from '@/apis/campaign/campaignById';
 import type { ICampaign } from '@/apis/campaign/models/campaign';
 import { CAMPAIGN_REGISTRABLE_STATUSES } from '@/constants/campaignLifecycle';
 
-import { parseCampaignDetailData } from '../_services/campaignDetailService';
-
 export interface CampaignDetailContextType {
   campaignId: string;
   campaign: ICampaign | undefined;
@@ -17,10 +15,6 @@ export interface CampaignDetailContextType {
   isLoading: boolean;
   isError: boolean;
   isFetching: boolean;
-  /** Derived presentation fields */
-  currentMembers: number;
-  daysSinceStart: number | null;
-  archivedTasksCount: number;
   /** The viewer holds at least one shift. */
   isRegistered: boolean;
   /** Some shift is on and not started, in an upcoming or running campaign. */
@@ -49,19 +43,12 @@ export function CampaignDetailProvider({
   const derived = useMemo(() => {
     if (!campaign) {
       return {
-        currentMembers: 0,
-        daysSinceStart: null as number | null,
-        archivedTasksCount: 0,
         isRegistered: false,
         hasOpenShift: false,
       };
     }
-    const p = parseCampaignDetailData(campaign);
     const now = Date.now();
     return {
-      currentMembers: p.currentMembers,
-      daysSinceStart: p.daysSinceStart,
-      archivedTasksCount: p.archivedTasksDisplay,
       isRegistered: (campaign.my_shift_ids?.length ?? 0) > 0,
       hasOpenShift:
         CAMPAIGN_REGISTRABLE_STATUSES.includes(campaign.status ?? -1) &&

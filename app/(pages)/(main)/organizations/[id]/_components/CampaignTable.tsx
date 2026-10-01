@@ -60,18 +60,6 @@ export const CampaignTable = memo(function CampaignTable({
         width: 140,
       },
       {
-        key: 'members',
-        title: t('Members'),
-        render: (_, record) => (
-          <span className="tabular-nums font-display-1">
-            <span className="font-semibold text-emerald-500">{record.current_members ?? 0}</span>
-            <span className="text-zinc-400"> / </span>
-            <span>{record.max_members ?? '∞'}</span>
-          </span>
-        ),
-        width: 120,
-      },
-      {
         key: 'green_points',
         title: t('Reward'),
         render: (_, record) => (

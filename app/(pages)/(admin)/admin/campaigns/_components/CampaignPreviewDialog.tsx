@@ -237,13 +237,13 @@ export function CampaignPreviewDialog({
             <p className="text-sm text-muted-foreground">{t("Campaign not found")}</p>
           )
         ) : (
-          <div className="flex flex-col gap-3">
+          <div className="flex min-w-0 flex-col gap-3">
             <div className="flex flex-wrap items-center gap-3">
               <span className="text-lg font-semibold">{localizedTitle(campaign)}</span>
               <CampaignStatusTag status={campaign.status} isDark={isDark} />
             </div>
 
-            <div className="flex flex-col gap-3">
+            <div className="flex min-w-0 flex-col gap-3">
                 {campaign.reject_reason && (
                   <section
                     className={cn(
@@ -284,10 +284,6 @@ export function CampaignPreviewDialog({
                     }
                   />
                   <ReviewRow label={t("Reward (GP & SP)")} value={campaign.green_points} />
-                  <ReviewRow
-                    label={t("Max volunteers")}
-                    value={campaign.max_members ?? t("No limit")}
-                  />
                   <ReviewRow label={t("Created at")} value={formattedDate(campaign.created_at, true)} />
                   <ReviewRow
                     label={t("Submitted")}
@@ -328,7 +324,11 @@ export function CampaignPreviewDialog({
                   />
                 </ReviewSectionCard>
 
-                <ReviewSectionCard title={t("Time and contact")} defaultOpen isDark={isDark}>
+                <ReviewSectionCard
+                  title={t("Time and contact")}
+                  hint={campaign.contact_name ?? undefined}
+                  isDark={isDark}
+                >
                   <ReviewRow
                     label={t("Campaign schedule")}
                     value={<CampaignDateRange campaign={campaign} />}
@@ -348,7 +348,6 @@ export function CampaignPreviewDialog({
                     days: campaign.days?.length ?? 0,
                     points: points.length,
                   })}
-                  defaultOpen
                   isDark={isDark}
                 >
                   <CampaignShifts campaign={campaign} />
@@ -356,8 +355,9 @@ export function CampaignPreviewDialog({
 
                 <ReviewSectionCard
                   title={t("Meeting points")}
-                  hint={`${points.length}`}
-                  defaultOpen
+                  hint={points
+                    .map((p, i) => p.name || t("Meeting point {{n}}", { n: i + 1 }))
+                    .join(" · ")}
                   isDark={isDark}
                 >
                   <MeetingPoints campaign={campaign} isDark={isDark} />

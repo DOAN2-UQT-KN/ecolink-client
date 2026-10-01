@@ -76,10 +76,6 @@ export interface ICampaign {
   /** Every day × meeting point. */
   shifts?: ICampaignShift[];
 
-  current_members?: number;
-  /** Volunteers allowed per day by the difficulty tier. */
-  max_members?: number;
-
   /** Campaign owner; may be omitted in some responses; see also `created_by` */
   owner?: Pick<IUser, 'id' | 'name' | 'email' | 'avatar'> | null;
 

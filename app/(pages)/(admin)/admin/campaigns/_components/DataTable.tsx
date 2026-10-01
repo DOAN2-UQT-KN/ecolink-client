@@ -31,7 +31,6 @@ const COLUMN_KEYS = {
   ORGANIZATION: 'organization',
   STATUS: 'status',
   REJECT_REASON: 'reject_reason',
-  MEMBERS: 'members',
   ACTION: 'action',
 } as const;
 
@@ -171,23 +170,6 @@ export const DataTable = memo(function DataTable() {
           ) : (
             <span className={cn('text-xs', isDark ? 'text-zinc-600' : 'text-zinc-400')}>—</span>
           ),
-      },
-      {
-        key: COLUMN_KEYS.MEMBERS,
-        title: t('Members'),
-        className: 'min-w-[110px]',
-        render: (_, record) => (
-          <span
-            className={cn(
-              'tabular-nums font-display-1',
-              isDark ? 'text-zinc-300' : 'text-zinc-700',
-            )}
-          >
-            <span className="font-semibold text-emerald-400">{record.current_members ?? 0}</span>
-            <span className={isDark ? 'text-zinc-500' : 'text-zinc-400'}> / </span>
-            <span>{record.max_members ?? '∞'}</span>
-          </span>
-        ),
       },
       {
         key: COLUMN_KEYS.ACTION,

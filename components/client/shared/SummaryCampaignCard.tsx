@@ -1,5 +1,4 @@
 import type { ICampaign } from '@/apis/campaign/models/campaign';
-import { Progress } from '@/components/ui/progress';
 import Image from '@/components/ui/AppImage';
 import { HiMapPin } from 'react-icons/hi2';
 import { TooltipTruncatedText } from '@/components/ui/TooltipTruncatedText';
@@ -30,12 +29,6 @@ export default function SummaryCampaignCard({
     useLocalizedDisplay();
   const displayTitle = localizedTitle(campaign);
   const displayDescription = localizedDescription(campaign);
-  const currentMembers = campaign.current_members ?? 0;
-  const maxMembers = campaign.max_members ?? null;
-  const memberProgress =
-    maxMembers != null && maxMembers > 0
-      ? Math.min(100, Math.round((currentMembers / maxMembers) * 100))
-      : 0;
   const router = useRouter();
   const currentUserId = useAuthStore((s) => s.user?.id);
   const showYourCampaignTag =
@@ -132,19 +125,6 @@ export default function SummaryCampaignCard({
             </span>
           }
         />
-
-        <div className="space-y-2">
-          <div className="flex items-center justify-between font-display-1 text-button-accent">
-            <span>{t('Member enrollment')}</span>
-            <span className="font-display-1">
-              {currentMembers} / {maxMembers != null && maxMembers > 0 ? maxMembers : '∞'}
-            </span>
-          </div>
-          <Progress
-            value={memberProgress}
-            className="h-2 bg-button-accent/10 [&>[data-slot=progress-indicator]]:bg-button-accent"
-          />
-        </div>
 
         <div className="flex flex-row items-center justify-between">
           <div className="flex flex-row items-center gap-2 text-muted-foreground">

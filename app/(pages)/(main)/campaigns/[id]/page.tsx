@@ -14,7 +14,6 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 
 import { CampaignTabs } from './_components/CampaignTabs';
-import StatsCards from './_components/StatsCards';
 import { CampaignDetailProvider } from './_context/CampaignDetailContext';
 import { useCampaignDetail } from './_hooks/useCampaignDetail';
 import { TbArrowRight, TbPencil } from 'react-icons/tb';
@@ -256,7 +255,6 @@ function CampaignDetailBody() {
             ) : null}
           </div>
         ) : null}
-        <StatsCards />
         <div className="w-full min-w-0">
           <CampaignTabs />
         </div>

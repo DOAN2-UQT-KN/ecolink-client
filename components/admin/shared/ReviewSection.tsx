@@ -38,7 +38,7 @@ export function ReviewSectionCard({
     <Collapsible
       defaultOpen={defaultOpen}
       className={cn(
-        "group/section rounded-lg border",
+        "group/section min-w-0 rounded-lg border",
         isDark ? "border-zinc-700 bg-zinc-800/50" : "border-zinc-200 bg-white",
       )}
     >
