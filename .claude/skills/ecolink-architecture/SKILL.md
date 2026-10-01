@@ -165,7 +165,7 @@ Hệ quả: trang nào gọi API cần đăng nhập ngay khi load (`/maps`, `/i
 ## Lệnh
 
 ```bash
-npm run dev      # Vite dev server, port 5173 (README ghi 3000 là sai)
+npm run dev      # Vite dev server, port 5174 (README ghi 3000 là sai)
 npm run build    # tsc -b && vite build  ← cổng kiểm tra duy nhất
 npm run lint     # eslint . --fix
 npm run preview  # serve bản build

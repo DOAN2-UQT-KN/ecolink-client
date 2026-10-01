@@ -17,6 +17,13 @@ import { TooltipTruncatedText } from '@/components/ui/TooltipTruncatedText';
 import ReportSummaryCard from '@/modules/ReportSummaryCard';
 
 import { STATUS } from '@/constants/status';
+import { getDifficultyLevel } from '@/constants/difficulty';
+import { useGetMembersByOrg } from '@/apis/organization/organizationById';
+import { SummaryRow } from '@/app/(pages)/(main)/organizations/apply/_components/ApplicationDetails';
+import { impliedMinAge } from '@/app/(pages)/(main)/campaigns/create/_services/campaign.service';
+import { Link } from '@/libs/router';
+
+import { ShiftFillBar } from './ShiftFillBar';
 
 const DEFAULT_BANNER = '/banner-default.jpg';
 
@@ -47,6 +54,17 @@ export const DetailInformation = memo(function DetailInformation() {
     [campaign, localizedDescription],
   );
 
+  const organizationId = campaign?.organization_id ?? '';
+  const { data: membersData } = useGetMembersByOrg(
+    { organization_id: organizationId, page: 1, limit: 100 },
+    { enabled: Boolean(organizationId) },
+  );
+  const memberName = (userId?: string | null) => {
+    if (!userId) return null;
+    const member = membersData?.data?.members?.find((m) => m.user_id === userId);
+    return member?.user?.name || member?.user?.email || null;
+  };
+
   if (!campaign) {
     return null;
   }
@@ -55,6 +73,25 @@ export const DetailInformation = memo(function DetailInformation() {
     campaign.status === STATUS.WAITING_CONFIRMED ||
     campaign.status === STATUS.COMPLETED;
   const verification = campaign.completion_verification;
+  const difficulty = getDifficultyLevel(campaign.difficulty ?? 0);
+  const organization = campaign.organization;
+  const points = campaign.meeting_points ?? [];
+  const pointName = (index: number) =>
+    points[index]?.name?.trim() || t('Meeting point {{n}}', { n: index + 1 });
+
+  const requirements = campaign.requirements;
+  const minAge = requirements?.min_age ?? impliedMinAge(campaign.difficulty ?? 0);
+  const conditions = [
+    minAge != null ? t('From {{age}} years old', { age: minAge }) : null,
+    requirements?.skills?.length
+      ? `${t('Required skills')}: ${requirements.skills.join(', ')}`
+      : null,
+    requirements?.bring_own_tools ? t('Volunteers bring their own tools') : null,
+  ].filter((c): c is string => Boolean(c));
+  const contact = campaign.contact_name
+    ? `${campaign.contact_name}${campaign.contact_phone ? ` · ${campaign.contact_phone}` : ''}`
+    : campaign.contact_phone || null;
+  const hhmm = (iso: string) => format(new Date(iso), 'HH:mm');
 
   return (
     <div className="flex flex-col gap-4 sm:gap-5">
@@ -111,6 +148,28 @@ export const DetailInformation = memo(function DetailInformation() {
               </span>
             </div>
 
+            {(organization || difficulty) && (
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 pt-3 text-sm">
+                {organization && (
+                  <span>
+                    <span className="text-foreground-tertiary">{t('Organization')}: </span>
+                    <Link
+                      href={`/organizations/${organization.slug ?? organization.id}`}
+                      className="font-medium text-button-accent hover:underline"
+                    >
+                      {organization.name}
+                    </Link>
+                  </span>
+                )}
+                {difficulty && (
+                  <span>
+                    <span className="text-foreground-tertiary">{t('Difficulty')}: </span>
+                    <span className="font-medium">{t(difficulty.label)}</span>
+                  </span>
+                )}
+              </div>
+            )}
+
           </div>
 
           <div className="w-[300px] h-[100px] flex items-center justify-center">
@@ -125,6 +184,63 @@ export const DetailInformation = memo(function DetailInformation() {
         </div>
       </div>
 
+      {(contact || campaign.safety_notes || conditions.length > 0) && (
+        <div className={cardClass}>
+          <h2 className="font-display-6 font-semibold text-button-accent mb-4">
+            {t('Participation info')}
+          </h2>
+          <div className="flex flex-col gap-3">
+            {contact && <SummaryRow label={t('Contact person')} value={contact} />}
+            {campaign.safety_notes && (
+              <SummaryRow
+                label={t('Safety notes')}
+                value={<span className="whitespace-pre-line">{campaign.safety_notes}</span>}
+              />
+            )}
+            {conditions.length > 0 && (
+              <SummaryRow
+                label={t('Participation conditions')}
+                value={
+                  <ul className="ml-5 list-disc">
+                    {conditions.map((c) => (
+                      <li key={c}>{c}</li>
+                    ))}
+                  </ul>
+                }
+              />
+            )}
+          </div>
+        </div>
+      )}
+
+      {points.length > 0 && (
+        <div className={cardClass}>
+          <h2 className="font-display-6 font-semibold text-button-accent mb-4">
+            {t('Meeting points')}
+          </h2>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {points.map((point, index) => (
+              <div
+                key={point.id ?? index}
+                className="flex flex-col gap-1 rounded-lg border border-[rgba(136,122,71,0.3)] bg-white/70 p-4"
+              >
+                <span className="font-semibold">{pointName(index)}</span>
+                {point.detail_address && (
+                  <span className="flex items-start gap-1 text-sm text-foreground-secondary">
+                    <HiMapPin size={14} className="mt-0.5 shrink-0" />
+                    {point.detail_address}
+                  </span>
+                )}
+                <span className="text-xs text-foreground-tertiary">
+                  {t('{{n}} waste points', { n: point.report_ids?.length ?? 0 })} ·{' '}
+                  {t('within {{km}} km', { km: point.radius_km })}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className={cardClass}>
         <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="font-display-6 font-semibold text-button-accent">{t('Shifts')}</h2>
@@ -132,59 +248,74 @@ export const DetailInformation = memo(function DetailInformation() {
             {t('{{n}} volunteers registered', { n: currentMembers })}
           </span>
         </div>
-        <div className="flex flex-col gap-4">
-          {(campaign?.days ?? []).map((day, d) => {
-            const shifts = (campaign?.shifts ?? [])
+        <div className="flex flex-col gap-5">
+          {(campaign.days ?? []).map((day, d) => {
+            const shifts = (campaign.shifts ?? [])
               .filter((sh) => sh.day_id === day.id && sh.min_volunteers > 0)
-              .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime());
+              .sort(
+                (a, b) =>
+                  new Date(a.start_at).getTime() - new Date(b.start_at).getTime() ||
+                  points.findIndex((p) => p.id === a.meeting_point_id) -
+                    points.findIndex((p) => p.id === b.meeting_point_id),
+              );
             if (shifts.length === 0) return null;
             return (
               <div key={day.id} className="flex flex-col gap-2">
-                <div className="text-sm font-semibold">
-                  {t('Day {{n}}', { n: d + 1 })} · {format(new Date(day.start_at), 'EEEE, PP')}
+                <div className="flex flex-wrap items-baseline gap-2">
+                  <span className="text-sm font-semibold">
+                    {t('Day {{n}}', { n: d + 1 })} · {format(new Date(day.start_at), 'EEEE, PP')}
+                  </span>
+                  <span className="text-xs text-foreground-tertiary tabular-nums">
+                    {hhmm(day.start_at)} – {hhmm(day.end_at)}
+                  </span>
                 </div>
-                <ul className="flex flex-col gap-1">
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {shifts.map((sh) => {
-                    const pointIndex = (campaign?.meeting_points ?? []).findIndex(
-                      (p) => p.id === sh.meeting_point_id,
-                    );
-                    const point = campaign?.meeting_points?.[pointIndex];
+                    const pointIndex = points.findIndex((p) => p.id === sh.meeting_point_id);
                     const registered = sh.registered_count ?? 0;
-                    const short = Math.max(0, sh.min_volunteers - registered);
-                    const mine = campaign?.my_shift_ids?.includes(sh.id);
+                    const mine = campaign.my_shift_ids?.includes(sh.id);
+                    const leader = memberName(sh.leader_user_id);
                     return (
-                      <li
+                      <div
                         key={sh.id}
                         className={cn(
-                          'flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md px-3 py-2 text-sm',
-                          mine ? 'bg-[#887A47]/10' : 'bg-white/60',
+                          'flex flex-col gap-1.5 rounded-lg border p-4 text-sm',
+                          mine
+                            ? 'border-[#887A47] bg-[#887A47]/10'
+                            : 'border-[rgba(136,122,71,0.3)] bg-white/70',
                         )}
                       >
-                        <span className="font-medium">
-                          {point?.name || t('Meeting point {{n}}', { n: pointIndex + 1 })}
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="font-semibold">{pointName(pointIndex)}</span>
+                          {mine && (
+                            <span className="shrink-0 rounded-full bg-[#887A47] px-2 py-0.5 text-xs text-white">
+                              {t('Your shift')}
+                            </span>
+                          )}
+                        </div>
+                        <span className="tabular-nums">
+                          {hhmm(sh.start_at)} – {hhmm(sh.end_at)}
                         </span>
-                        <span className="text-xs text-foreground-tertiary tabular-nums">
-                          {format(new Date(sh.start_at), 'HH:mm')} –{' '}
-                          {format(new Date(sh.end_at), 'HH:mm')}
-                        </span>
-                        {mine && (
-                          <span className="rounded-full bg-[#887A47] px-2 py-0.5 text-xs text-white">
-                            {t('Your shift')}
+                        {sh.gather_at && (
+                          <span className="text-xs text-foreground-tertiary">
+                            {t('Gathers at {{time}}', { time: hhmm(sh.gather_at) })}
                           </span>
                         )}
-                        <span className="ml-auto tabular-nums">
-                          {registered} / {sh.min_volunteers}
-                          {sh.max_volunteers != null ? ` – ${sh.max_volunteers}` : '+'}
-                        </span>
-                        {short > 0 && (
-                          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
-                            {t('{{n}} more needed', { n: short })}
+                        {leader && (
+                          <span className="text-xs text-foreground-tertiary">
+                            {t('In charge: {{name}}', { name: leader })}
                           </span>
                         )}
-                      </li>
+                        <ShiftFillBar
+                          className="mt-2"
+                          registered={registered}
+                          min={sh.min_volunteers}
+                          max={sh.max_volunteers}
+                        />
+                      </div>
                     );
                   })}
-                </ul>
+                </div>
               </div>
             );
           })}

@@ -17,6 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/libs/utils';
 
 import { useCampaignDetail } from '../_hooks/useCampaignDetail';
+import { ShiftFillBar } from './ShiftFillBar';
 
 import defaultAvatar from '@/public/default-avatar.png';
 
@@ -103,9 +104,6 @@ export const CampaignRegistrations = memo(function CampaignRegistrations({
                 {t('Day {{n}}', { n: index + 1 })} · {format(new Date(day.start_at), 'EEEE, PP')}
               </h3>
               {shifts.map((shift) => {
-                const short = Math.max(0, shift.min_volunteers - shift.registered_count);
-                const over =
-                  shift.max_volunteers != null && shift.registered_count > shift.max_volunteers;
                 return (
                   <div
                     key={shift.shift_id}
@@ -116,21 +114,13 @@ export const CampaignRegistrations = memo(function CampaignRegistrations({
                       <span className="text-xs text-foreground-tertiary tabular-nums">
                         {hhmm(shift.start_at)} – {hhmm(shift.end_at)}
                       </span>
-                      <span className="ml-auto text-sm tabular-nums">
-                        {shift.registered_count} / {shift.min_volunteers}
-                        {shift.max_volunteers != null ? ` – ${shift.max_volunteers}` : '+'}
-                      </span>
-                      {short > 0 && (
-                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
-                          {t('{{n}} more needed', { n: short })}
-                        </span>
-                      )}
-                      {over && (
-                        <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
-                          {t('Over the expected number')}
-                        </span>
-                      )}
                     </div>
+                    <ShiftFillBar
+                      className="mt-2 max-w-sm"
+                      registered={shift.registered_count}
+                      min={shift.min_volunteers}
+                      max={shift.max_volunteers}
+                    />
                     {shift.volunteers.length > 0 && (
                       <ul className="mt-3 divide-y divide-border/60">
                         {shift.volunteers.map((v) => (

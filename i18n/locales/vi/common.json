@@ -1513,7 +1513,7 @@
   "You missed {{n}} shifts you had registered for in the last 90 days. Please only register for shifts you can attend.": "Bạn đã vắng {{n}} ca đã đăng ký trong 90 ngày qua. Hãy chỉ đăng ký những ca bạn chắc chắn tham gia được.",
   "The campaign has no more upcoming shifts": "Chiến dịch không còn ca nào sắp diễn ra",
   "Another shift you picked in this campaign": "Một ca khác bạn đã chọn trong chiến dịch này",
-  "{{n}} more needed": "Còn thiếu {{n}} người",
+  "{{n}} more needed": "Còn thiếu {{n}}",
   "Over the expected number": "Đã vượt dự kiến",
   "Time overlap": "Trùng giờ",
   "Registered": "Đã đăng ký",
@@ -1533,5 +1533,10 @@
   "Absences and late leaves count the last 90 days.": "Số lần vắng và rời sát giờ tính trong 90 ngày gần nhất.",
   "{{n}} volunteers registered": "{{n}} tình nguyện viên đã đăng ký",
   "Your shift": "Ca của bạn",
-  "Unnamed volunteer": "Tình nguyện viên"
+  "Unnamed volunteer": "Tình nguyện viên",
+  "Participation info": "Thông tin tham gia",
+  "Gathers at {{time}}": "Tập trung {{time}}",
+  "In charge: {{name}}": "Phụ trách: {{name}}",
+  "{{n}} waste points": "{{n}} điểm rác",
+  "Enough volunteers": "Đủ người"
 }

@@ -1533,5 +1533,10 @@
   "Absences and late leaves count the last 90 days.": "Absences and late leaves count the last 90 days.",
   "{{n}} volunteers registered": "{{n}} volunteers registered",
   "Your shift": "Your shift",
-  "Unnamed volunteer": "Unnamed volunteer"
+  "Unnamed volunteer": "Unnamed volunteer",
+  "Participation info": "Participation info",
+  "Gathers at {{time}}": "Gathers at {{time}}",
+  "In charge: {{name}}": "In charge: {{name}}",
+  "{{n}} waste points": "{{n}} waste points",
+  "Enough volunteers": "Enough volunteers"
 }

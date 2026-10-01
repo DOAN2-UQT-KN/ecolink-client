@@ -11,10 +11,10 @@ import {
 import type { IRegistrationOptionShift } from '@/apis/campaign/models/registration';
 import { Button } from '@/components/client/shared/Button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { InfoTooltip } from '@/components/ui/InfoTooltip';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -23,6 +23,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/libs/utils';
 import showMessage, { MessageLevel, MessageType } from '@/utils/showMessage';
+
+import { ShiftFillBar } from './ShiftFillBar';
 
 /** Same window as the server's `CAMPAIGN_FREE_LEAVE_HOURS`. */
 const FREE_LEAVE_HOURS = 24;
@@ -34,13 +36,11 @@ const overlaps = (a: IRegistrationOptionShift, b: IRegistrationOptionShift) =>
 const hasStarted = (shift: IRegistrationOptionShift) =>
   new Date(shift.start_at).getTime() <= Date.now();
 
-function Label({ tone, children, title }: { tone: 'amber' | 'red' | 'orange'; children: string; title?: string }) {
+function Label({ tone, children, title }: { tone: 'orange'; children: string; title?: string }) {
   const label = (
     <span
       className={cn(
         'rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap',
-        tone === 'amber' && 'bg-amber-100 text-amber-800',
-        tone === 'red' && 'bg-red-100 text-red-700',
         tone === 'orange' && 'bg-orange-100 text-orange-800',
       )}
     >
@@ -129,28 +129,24 @@ export const JoinShiftsDialog = memo(function JoinShiftsDialog({
     return shift && new Date(shift.start_at).getTime() - Date.now() < FREE_LEAVE_HOURS * 3600 * 1000;
   });
 
-  const requirements = options?.requirements;
-  const conditionLines = [
-    requirements?.min_age ? t('Aged {{n}} or older', { n: requirements.min_age }) : null,
-    requirements?.skills?.length ? `${t('Skills')}: ${requirements.skills.join(', ')}` : null,
-    requirements?.bring_own_tools ? t('Bring your own tools') : null,
-  ].filter((line): line is string => Boolean(line));
-
   const toggle = (id: string, on: boolean) =>
     setTicked((current) => (on ? [...current, id] : current.filter((x) => x !== id)));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl border border-[rgba(136,122,71,0.35)] bg-white">
+      <DialogContent
+        aria-describedby={undefined}
+        className="max-w-3xl border border-[rgba(136,122,71,0.35)] bg-white sm:max-w-3xl"
+      >
         <DialogHeader>
-          <DialogTitle className="font-display-5 !text-button-accent">
+          <DialogTitle className="flex items-center gap-2 font-display-5 !text-button-accent">
             {isEditing ? t('Edit my shifts') : t('Choose your shifts')}
+            <InfoTooltip
+              content={t(
+                'Registration takes effect at once. It keeps you informed and helps the organizers plan; attendance is taken on the day.',
+              )}
+            />
           </DialogTitle>
-          <DialogDescription>
-            {t(
-              'Registration takes effect at once. It keeps you informed and helps the organizers plan; attendance is taken on the day.',
-            )}
-          </DialogDescription>
         </DialogHeader>
 
         {isLoading || !options ? (
@@ -181,7 +177,7 @@ export const JoinShiftsDialog = memo(function JoinShiftsDialog({
                 <h3 className="text-sm font-semibold text-foreground">
                   {t('Day {{n}}', { n: index + 1 })} · {format(new Date(day.start_at), 'EEEE, PP')}
                 </h3>
-                <ul className="flex flex-col gap-2">
+                <ul className="grid gap-3 sm:grid-cols-2">
                   {dayShifts.map((shift) => {
                     const checked = ticked.includes(shift.id);
                     const locked = hasStarted(shift);
@@ -198,63 +194,56 @@ export const JoinShiftsDialog = memo(function JoinShiftsDialog({
                       ...(mineOverlap ? [t('Another shift you picked in this campaign')] : []),
                     ].join('\n');
                     return (
-                      <li key={shift.id}>
+                      <li key={shift.id} className="flex">
                         <label
                           className={cn(
-                            'flex cursor-pointer items-start gap-3 rounded-lg border border-[rgba(136,122,71,0.3)] p-3 transition-colors',
-                            checked && 'border-[#887A47] bg-[#887A47]/5',
+                            'flex w-full cursor-pointer flex-col gap-1.5 rounded-lg border border-[rgba(136,122,71,0.3)] bg-white p-4 text-sm transition-colors',
+                            checked && 'border-[#887A47] bg-[#887A47]/10',
                             locked && 'cursor-not-allowed opacity-70',
                           )}
                         >
-                          <Checkbox
-                            className="mt-1"
-                            checked={checked}
-                            disabled={locked}
-                            onCheckedChange={(value) => toggle(shift.id, value === true)}
-                            aria-label={shift.meeting_point_name ?? t('Meeting point')}
-                          />
-                          <div className="flex min-w-0 flex-1 flex-col gap-1">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <span className="font-medium">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex min-w-0 flex-wrap items-center gap-2">
+                              <span className="font-semibold">
                                 {shift.meeting_point_name || t('Meeting point')}
                               </span>
-                              {shift.short_by > 0 && (
-                                <Label tone="amber">
-                                  {t('{{n}} more needed', { n: shift.short_by })}
-                                </Label>
-                              )}
-                              {shift.over_max && <Label tone="red">{t('Over the expected number')}</Label>}
                               {(shift.conflicts.length > 0 || (checked && mineOverlap)) && (
                                 <Label tone="orange" title={overlapTitle}>
                                   {t('Time overlap')}
                                 </Label>
                               )}
                             </div>
+                            <Checkbox
+                              checked={checked}
+                              disabled={locked}
+                              onCheckedChange={(value) => toggle(shift.id, value === true)}
+                              aria-label={shift.meeting_point_name ?? t('Meeting point')}
+                            />
+                          </div>
                             {shift.meeting_point_address && (
                               <span className="text-xs text-muted-foreground">
                                 {shift.meeting_point_address}
                               </span>
                             )}
-                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-foreground-tertiary tabular-nums">
-                              <span>
-                                {t('Shift time')}: {hhmm(shift.start_at)} – {hhmm(shift.end_at)}
+                            <span className="tabular-nums">
+                              {hhmm(shift.start_at)} – {hhmm(shift.end_at)}
+                            </span>
+                            {shift.gather_at && (
+                              <span className="text-xs text-foreground-tertiary">
+                                {t('Gathers at {{time}}', { time: hhmm(shift.gather_at) })}
                               </span>
-                              {shift.gather_at && (
-                                <span>
-                                  {t('Gathering time')}: {hhmm(shift.gather_at)}
-                                </span>
-                              )}
-                              <span>
-                                {t('Registered')}: {shift.registered_count} / {shift.min_volunteers}
-                                {shift.max_volunteers != null ? ` – ${shift.max_volunteers}` : '+'}
-                              </span>
-                            </div>
+                            )}
+                            <ShiftFillBar
+                              className="mt-2"
+                              registered={shift.registered_count}
+                              min={shift.min_volunteers}
+                              max={shift.max_volunteers}
+                            />
                             {locked && (
                               <span className="text-xs text-muted-foreground">
                                 {t('This shift has started')}
                               </span>
                             )}
-                          </div>
                         </label>
                       </li>
                     );
@@ -262,26 +251,6 @@ export const JoinShiftsDialog = memo(function JoinShiftsDialog({
                 </ul>
               </section>
             ))}
-
-            {(conditionLines.length > 0 || options.safety_notes) && (
-              <div className="rounded-md border border-[rgba(136,122,71,0.3)] bg-[#887A47]/5 p-3 text-sm">
-                {conditionLines.length > 0 && (
-                  <>
-                    <div className="font-semibold">{t('Participation conditions')}</div>
-                    <ul className="ml-5 list-disc">
-                      {conditionLines.map((line) => (
-                        <li key={line}>{line}</li>
-                      ))}
-                    </ul>
-                  </>
-                )}
-                {options.safety_notes && (
-                  <p className="mt-2 whitespace-pre-line">
-                    <span className="font-semibold">{t('Safety notes')}:</span> {options.safety_notes}
-                  </p>
-                )}
-              </div>
-            )}
 
             {added.length > 0 && (
               <label className="flex cursor-pointer items-start gap-2 text-sm">
