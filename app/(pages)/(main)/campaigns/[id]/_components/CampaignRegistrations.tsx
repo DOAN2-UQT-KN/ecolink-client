@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/empty';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/libs/utils';
+import { Link } from '@/libs/router';
 
 import { useCampaignDetail } from '../_hooks/useCampaignDetail';
 import { ShiftFillBar } from './ShiftFillBar';
@@ -26,8 +27,8 @@ const RECORD_WARN_COUNT = 3;
 
 const hhmm = (iso: string) => format(new Date(iso), 'HH:mm');
 
-function RecordBadge({ count, label }: { count: number; label: string }) {
-  if (count <= 0) return null;
+export function RecordBadge({ count, label }: { count: number | null; label: string }) {
+  if (count == null || count <= 0) return null;
   return (
     <span
       className={cn(
@@ -110,7 +111,12 @@ export const CampaignRegistrations = memo(function CampaignRegistrations({
                     className="rounded-lg border border-[rgba(136,122,71,0.3)] bg-white p-3"
                   >
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-medium">{pointName(shift)}</span>
+                      <Link
+                        href={`/campaigns/${campaignId}/shifts/${shift.shift_id}`}
+                        className="font-medium hover:underline"
+                      >
+                        {pointName(shift)}
+                      </Link>
                       <span className="text-xs text-foreground-tertiary tabular-nums">
                         {hhmm(shift.start_at)} – {hhmm(shift.end_at)}
                       </span>

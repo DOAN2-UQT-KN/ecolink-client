@@ -63,8 +63,10 @@ export interface IRegisteredVolunteer {
   user_id: string;
   volunteer: IOrganizationOwner;
   registered_at: string;
-  absence_count: number;
-  late_leave_count: number;
+  /** Managers and admins only; null for other viewers. */
+  absence_count: number | null;
+  late_leave_count: number | null;
+  checked_in_at: string | null;
 }
 
 export interface IShiftRegistrations {

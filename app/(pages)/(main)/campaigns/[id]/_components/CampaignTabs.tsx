@@ -7,12 +7,12 @@ import { useCampaignDetail } from '../_hooks/useCampaignDetail';
 
 import { CampaignRegistrations } from './CampaignRegistrations';
 import { CampaignTask } from './CampaignTask';
-import { CurrentMember } from './CurrentMember';
+import { CampaignManagers } from './CampaignManagers';
 import { DetailInformation } from './DetailInformation';
 
 const ALL_CAMPAIGN_TAB_ITEMS = [
   { value: 'detail', labelKey: 'Detail information' },
-  { value: 'members', labelKey: 'Member list' },
+  { value: 'managers', labelKey: 'Managers' },
   { value: 'tasks', labelKey: 'Tasks' },
   { value: 'registrations', labelKey: 'Registrations' },
 ] as const;
@@ -48,8 +48,8 @@ export const CampaignTabs = memo(function CampaignTabs() {
       <TabsContent value="detail" className="mt-0">
         <DetailInformation />
       </TabsContent>
-      <TabsContent value="members" className="mt-0">
-        <CurrentMember />
+      <TabsContent value="managers" className="mt-0">
+        <CampaignManagers />
       </TabsContent>
       <TabsContent value="tasks" className="mt-0">
         <CampaignTask />

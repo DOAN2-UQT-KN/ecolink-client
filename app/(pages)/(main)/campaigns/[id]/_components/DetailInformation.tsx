@@ -19,10 +19,9 @@ import ReportSummaryCard from '@/modules/ReportSummaryCard';
 import { STATUS } from '@/constants/status';
 import { getDifficultyLevel } from '@/constants/difficulty';
 import { useGetMembersByOrg } from '@/apis/organization/organizationById';
-import { SummaryRow } from '@/app/(pages)/(main)/organizations/apply/_components/ApplicationDetails';
-import { impliedMinAge } from '@/app/(pages)/(main)/campaigns/create/_services/campaign.service';
 import { Link } from '@/libs/router';
 
+import { ParticipationInfoCard } from './ParticipationInfoCard';
 import { ShiftFillBar } from './ShiftFillBar';
 
 const DEFAULT_BANNER = '/banner-default.jpg';
@@ -79,18 +78,6 @@ export const DetailInformation = memo(function DetailInformation() {
   const pointName = (index: number) =>
     points[index]?.name?.trim() || t('Meeting point {{n}}', { n: index + 1 });
 
-  const requirements = campaign.requirements;
-  const minAge = requirements?.min_age ?? impliedMinAge(campaign.difficulty ?? 0);
-  const conditions = [
-    minAge != null ? t('From {{age}} years old', { age: minAge }) : null,
-    requirements?.skills?.length
-      ? `${t('Required skills')}: ${requirements.skills.join(', ')}`
-      : null,
-    requirements?.bring_own_tools ? t('Volunteers bring their own tools') : null,
-  ].filter((c): c is string => Boolean(c));
-  const contact = campaign.contact_name
-    ? `${campaign.contact_name}${campaign.contact_phone ? ` · ${campaign.contact_phone}` : ''}`
-    : campaign.contact_phone || null;
   const hhmm = (iso: string) => format(new Date(iso), 'HH:mm');
 
   return (
@@ -184,34 +171,7 @@ export const DetailInformation = memo(function DetailInformation() {
         </div>
       </div>
 
-      {(contact || campaign.safety_notes || conditions.length > 0) && (
-        <div className={cardClass}>
-          <h2 className="font-display-6 font-semibold text-button-accent mb-4">
-            {t('Participation info')}
-          </h2>
-          <div className="flex flex-col gap-3">
-            {contact && <SummaryRow label={t('Contact person')} value={contact} />}
-            {campaign.safety_notes && (
-              <SummaryRow
-                label={t('Safety notes')}
-                value={<span className="whitespace-pre-line">{campaign.safety_notes}</span>}
-              />
-            )}
-            {conditions.length > 0 && (
-              <SummaryRow
-                label={t('Participation conditions')}
-                value={
-                  <ul className="ml-5 list-disc">
-                    {conditions.map((c) => (
-                      <li key={c}>{c}</li>
-                    ))}
-                  </ul>
-                }
-              />
-            )}
-          </div>
-        </div>
-      )}
+      <ParticipationInfoCard campaign={campaign} />
 
       {points.length > 0 && (
         <div className={cardClass}>
@@ -271,10 +231,11 @@ export const DetailInformation = memo(function DetailInformation() {
                     const mine = campaign.my_shift_ids?.includes(sh.id);
                     const leader = memberName(sh.leader_user_id);
                     return (
-                      <div
+                      <Link
                         key={sh.id}
+                        href={`/campaigns/${campaign.id}/shifts/${sh.id}`}
                         className={cn(
-                          'flex flex-col gap-1.5 rounded-lg border p-4 text-sm',
+                          'flex flex-col gap-1.5 rounded-lg border p-4 text-sm transition-colors hover:border-[#887A47] hover:shadow-sm',
                           mine
                             ? 'border-[#887A47] bg-[#887A47]/10'
                             : 'border-[rgba(136,122,71,0.3)] bg-white/70',
@@ -307,7 +268,7 @@ export const DetailInformation = memo(function DetailInformation() {
                           min={sh.min_volunteers}
                           max={sh.max_volunteers}
                         />
-                      </div>
+                      </Link>
                     );
                   })}
                 </div>

@@ -1,5 +1,5 @@
-import Image from '@/components/ui/AppImage';
-import { memo, ReactNode, useMemo, useState } from 'react';
+import { memo, useMemo, useState } from 'react';
+import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import { TbUserMinus, TbUserPlus } from 'react-icons/tb';
 
@@ -8,7 +8,6 @@ import {
   useGetCampaignManager,
   useRemoveCampaignManager,
 } from '@/apis/campaign/campaignManager';
-import { useGetCampaignVolunteer } from '@/apis/campaign/campaignVolunteer';
 import { Button } from '@/components/client/shared/Button';
 import {
   AutoCompleteUser,
@@ -23,77 +22,11 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Pill } from '@/components/ui/Pill';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { ADMIN_ROLE_ID } from '@/constants/roles';
-import { STATUS } from '@/constants/status';
-import defaultAvatar from '@/public/default-avatar.png';
-import useAuthStore from '@/stores/useAuthStore';
+import { Link } from '@/libs/router';
 
 import { useCampaignDetail } from '../_hooks/useCampaignDetail';
-
-interface AvatarListItem {
-  id: string;
-  avatar?: string | null;
-  name?: string | null;
-  checkedIn?: boolean;
-}
-
-function AvatarList({
-  isLoading,
-  items,
-  showAttendance,
-  renderBadge,
-  renderAction,
-}: {
-  isLoading: boolean;
-  items: AvatarListItem[];
-  showAttendance?: boolean;
-  renderBadge?: (item: AvatarListItem) => ReactNode;
-  renderAction?: (item: AvatarListItem) => ReactNode;
-}) {
-  const { t } = useTranslation('common');
-  if (isLoading) {
-    return (
-      <ul className="divide-y divide-[rgba(136,122,71,0.2)]">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <li key={i} className="flex items-center gap-3 py-3">
-            <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
-            <Skeleton className="h-4 w-32 max-w-full" />
-          </li>
-        ))}
-      </ul>
-    );
-  }
-
-  return (
-    <ul className="divide-y divide-[rgba(136,122,71,0.2)]">
-      {items.map((item) => (
-        <li key={item.id} className="flex min-w-0 items-center gap-3 py-3 font-display-1">
-          <Image
-            src={item.avatar || defaultAvatar}
-            alt={item.name || 'Default Avatar'}
-            width={40}
-            height={40}
-            className="shrink-0 rounded-full object-cover"
-          />
-          <div className="min-w-0 flex-1 flex flex-col gap-1">
-            <span className="min-w-0 break-words font-medium text-foreground">
-              {item.name || '—'}
-            </span>
-            {showAttendance ? (
-              <Pill tone={item.checkedIn ? 'green' : 'amber'}>
-                {item.checkedIn ? t('Attendance checked in') : t('Attendance not checked in')}
-              </Pill>
-            ) : null}
-            {renderBadge?.(item)}
-          </div>
-          {renderAction?.(item)}
-        </li>
-      ))}
-    </ul>
-  );
-}
+import { AvatarList, type AvatarListItem } from './AvatarList';
 
 /** Manager picker: only active members of the campaign's organization who aren't managers yet. */
 const AddManagerDialog = memo(function AddManagerDialog({
@@ -228,31 +161,15 @@ const RemoveManagerAction = memo(function RemoveManagerAction({
   );
 });
 
-export const CurrentMember = memo(function CurrentMember() {
+/** "Managers" tab: the campaign's managers, each with the shifts they are in charge of. */
+export const CampaignManagers = memo(function CampaignManagers() {
   const { t } = useTranslation('common');
   const { campaignId, campaign, canManageCampaign } = useCampaignDetail();
-  const isPlatformAdmin = useAuthStore((s) => s.user?.roleId === ADMIN_ROLE_ID);
-
-  // Server returns 403 for anyone else (CAMPAIGN_PERMISSION_DENIED), so don't even ask.
-  const canViewVolunteers =
-    canManageCampaign || campaign?.request_status === STATUS.APPROVED || isPlatformAdmin;
-
-  const { data: volunteerData, isLoading: isVolunteerLoading } = useGetCampaignVolunteer(
-    { campaignId, limit: 100, sortBy: 'createdAt', sortOrder: 'asc' },
-    { enabled: Boolean(campaignId) && canViewVolunteers },
-  );
 
   const { data: managerData, isLoading: isManagerLoading } = useGetCampaignManager(
     { campaignId, limit: 100, sortBy: 'assignedAt', sortOrder: 'asc' },
     { enabled: Boolean(campaignId) },
   );
-
-  const volunteers = (volunteerData?.data?.volunteers ?? []).map((v) => ({
-    id: v.id,
-    avatar: v?.volunteer?.avatar,
-    name: v?.volunteer?.name,
-    checkedIn: Boolean(v.checked_in_at),
-  }));
 
   const managers = useMemo(
     () =>
@@ -271,52 +188,76 @@ export const CurrentMember = memo(function CurrentMember() {
     return ids;
   }, [managers, creatorId]);
 
+  /** Shifts each person leads, in time order. */
+  const shiftsByLeader = useMemo(() => {
+    const points = campaign?.meeting_points ?? [];
+    const out = new Map<string, { id: string; label: string }[]>();
+    [...(campaign?.shifts ?? [])]
+      .filter((sh) => sh.min_volunteers > 0 && sh.leader_user_id)
+      .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime())
+      .forEach((sh) => {
+        const index = points.findIndex((p) => p.id === sh.meeting_point_id);
+        const point = points[index]?.name || t('Meeting point {{n}}', { n: index + 1 });
+        const label = `${point} · ${format(new Date(sh.start_at), 'dd/MM HH:mm')}`;
+        const id = sh.leader_user_id as string;
+        out.set(id, [...(out.get(id) ?? []), { id: sh.id, label }]);
+      });
+    return out;
+  }, [campaign?.meeting_points, campaign?.shifts, t]);
+
   const organizationId = campaign?.organization_id;
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* Managers card */}
-      <div className="rounded-xl border border-[rgba(136,122,71,0.4)] bg-white/60 p-5 sm:p-6 shadow-sm">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <p className="font-display-1 text-muted-foreground">
-            {t('Managers')}:{' '}
-            <span className="font-medium text-foreground tabular-nums">{managers.length}</span>
-          </p>
-          {canManageCampaign && organizationId ? (
-            <AddManagerDialog
-              campaignId={campaignId}
-              organizationId={organizationId}
-              managerIds={managerIds}
-            />
-          ) : null}
-        </div>
-        <AvatarList
-          isLoading={isManagerLoading}
-          items={managers}
-          renderBadge={(item) =>
-            item.id === creatorId ? <Pill tone="brand">{t('Creator')}</Pill> : null
-          }
-          renderAction={
-            canManageCampaign
-              ? (item) =>
-                  item.id === creatorId ? null : (
-                    <RemoveManagerAction campaignId={campaignId} manager={item} />
-                  )
-              : undefined
-          }
-        />
+    <div className="rounded-xl border border-[rgba(136,122,71,0.4)] bg-white/60 p-5 sm:p-6 shadow-sm">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <p className="font-display-1 text-muted-foreground">
+          {t('Managers')}:{' '}
+          <span className="font-medium text-foreground tabular-nums">{managers.length}</span>
+        </p>
+        {canManageCampaign && organizationId ? (
+          <AddManagerDialog
+            campaignId={campaignId}
+            organizationId={organizationId}
+            managerIds={managerIds}
+          />
+        ) : null}
       </div>
-
-      {/* Members card */}
-      <div className="rounded-xl border border-[rgba(136,122,71,0.4)] bg-white/60 p-5 sm:p-6 shadow-sm">
-        {canViewVolunteers ? (
-          <AvatarList isLoading={isVolunteerLoading} items={volunteers} showAttendance />
-        ) : (
-          <p className="text-sm text-foreground-tertiary">
-            {t('Only managers and approved volunteers can see the volunteer list.')}
-          </p>
-        )}
-      </div>
+      <AvatarList
+        isLoading={isManagerLoading}
+        items={managers}
+        renderBadge={(item) => {
+          const led = shiftsByLeader.get(item.id) ?? [];
+          return (
+            <>
+              {item.id === creatorId ? <Pill tone="brand">{t('Creator')}</Pill> : null}
+              {led.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-xs text-foreground-tertiary">{t('Shifts in charge')}:</span>
+                  {led.map((sh) => (
+                    <Link
+                      key={sh.id}
+                      href={`/campaigns/${campaignId}/shifts/${sh.id}`}
+                      className="rounded-full border border-[rgba(136,122,71,0.4)] px-2 py-0.5 text-xs text-button-accent hover:bg-[#887A47]/10"
+                    >
+                      {sh.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </>
+          );
+        }}
+        renderAction={
+          canManageCampaign
+            ? (item) =>
+                item.id === creatorId ? null : (
+                  <RemoveManagerAction campaignId={campaignId} manager={item} />
+                )
+            : undefined
+        }
+      />
     </div>
   );
 });
+
+export default CampaignManagers;

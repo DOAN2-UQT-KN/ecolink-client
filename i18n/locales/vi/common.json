@@ -427,7 +427,7 @@
   "Attendance checked in": "Đã điểm danh",
   "Attendance not checked in": "Chưa điểm danh",
   "Detail information": "Thông tin chi tiết",
-  "Managers": "Quản trị viên",
+  "Managers": "Quản lý",
   "Your Campaign": "Chiến dịch của bạn",
   "View organization": "Xem tổ chức",
   "Coins": "Xu",
@@ -1538,5 +1538,13 @@
   "Gathers at {{time}}": "Tập trung {{time}}",
   "In charge: {{name}}": "Phụ trách: {{name}}",
   "{{n}} waste points": "{{n}} điểm rác",
-  "Enough volunteers": "Đủ người"
+  "Enough volunteers": "Đủ người",
+  "Nobody has registered yet": "Chưa có ai đăng ký",
+  "Only managers and registered volunteers can see the volunteer list.": "Chỉ quản lý và TNV đã đăng ký mới xem được danh sách TNV.",
+  "Shift": "Ca",
+  "Shift not found": "Không tìm thấy ca",
+  "We couldn't find the shift you were looking for.": "Không tìm thấy ca bạn đang tìm.",
+  "Other managers": "Quản lý khác",
+  "Shifts in charge": "Ca phụ trách",
+  "Waste points at this meeting point": "Điểm rác tại điểm tập trung này"
 }

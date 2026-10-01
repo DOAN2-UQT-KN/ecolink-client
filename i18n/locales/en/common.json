@@ -1538,5 +1538,13 @@
   "Gathers at {{time}}": "Gathers at {{time}}",
   "In charge: {{name}}": "In charge: {{name}}",
   "{{n}} waste points": "{{n}} waste points",
-  "Enough volunteers": "Enough volunteers"
+  "Enough volunteers": "Enough volunteers",
+  "Nobody has registered yet": "Nobody has registered yet",
+  "Only managers and registered volunteers can see the volunteer list.": "Only managers and registered volunteers can see the volunteer list.",
+  "Shift": "Shift",
+  "Shift not found": "Shift not found",
+  "We couldn't find the shift you were looking for.": "We couldn't find the shift you were looking for.",
+  "Other managers": "Other managers",
+  "Shifts in charge": "Shifts in charge",
+  "Waste points at this meeting point": "Waste points at this meeting point"
 }
