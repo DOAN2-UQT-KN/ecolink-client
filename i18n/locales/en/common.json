@@ -1494,5 +1494,7 @@
   "Total volunteers": "Total volunteers",
   "Meeting point": "Meeting point",
   "Each row is a shift: one meeting point on one day. Enter 0 volunteers to turn a shift off. Each day needs one shift on, and at most {{max}} volunteers in total.": "Each row is a shift: one meeting point on one day. Enter 0 volunteers to turn a shift off. Each day needs one shift on, and at most {{max}} volunteers in total.",
-  "Each row is a shift: one meeting point on one day. Enter 0 volunteers to turn a shift off. Each day needs one shift on.": "Each row is a shift: one meeting point on one day. Enter 0 volunteers to turn a shift off. Each day needs one shift on."
+  "Each row is a shift: one meeting point on one day. Enter 0 volunteers to turn a shift off. Each day needs one shift on.": "Each row is a shift: one meeting point on one day. Enter 0 volunteers to turn a shift off. Each day needs one shift on.",
+  "View campaign": "View campaign",
+  "Continue editing": "Continue editing"
 }

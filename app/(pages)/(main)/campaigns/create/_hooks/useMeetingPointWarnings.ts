@@ -5,13 +5,11 @@ import {
   CAMPAIGN_MEETING_POINT_MAX_DISTANCE_KM,
   haversineKm,
 } from '@/constants/campaignLifecycle';
-import { useCampaign } from './useCampaign';
+import type { MeetingPointFormValues } from '../_services/campaign.service';
 
 /** Client-side hint for meeting points too far apart to share a campaign. */
-export function useMeetingPointWarnings(): string[] {
+export function useMeetingPointWarnings(points: MeetingPointFormValues[]): string[] {
   const { t } = useTranslation();
-  const { form } = useCampaign();
-  const points = form.watch('meeting_points');
 
   return useMemo(() => {
     const out: string[] = [];

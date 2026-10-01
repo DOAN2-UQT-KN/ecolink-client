@@ -118,13 +118,7 @@ const MeetingPoints = memo(function MeetingPoints({
 });
 
 /** The days, the slots of every day × meeting point, and who leads each shift that runs. */
-const CampaignShifts = memo(function CampaignShifts({
-  campaign,
-  isDark,
-}: {
-  campaign: ICampaign;
-  isDark: boolean;
-}) {
+const CampaignShifts = memo(function CampaignShifts({ campaign }: { campaign: ICampaign }) {
   const { t } = useTranslation();
   const days = useMemo(
     () =>
@@ -173,7 +167,7 @@ const CampaignShifts = memo(function CampaignShifts({
           }),
         )}
         maxPerDay={campaign.max_members ?? null}
-        isDark={isDark}
+        variant="admin"
       />
     </div>
   );
@@ -349,7 +343,7 @@ export function CampaignPreviewDialog({
                   defaultOpen
                   isDark={isDark}
                 >
-                  <CampaignShifts campaign={campaign} isDark={isDark} />
+                  <CampaignShifts campaign={campaign} />
                 </ReviewSectionCard>
 
                 <ReviewSectionCard

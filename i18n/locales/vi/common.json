@@ -1494,5 +1494,7 @@
   "Total volunteers": "Tổng TNV",
   "Meeting point": "Điểm tập trung",
   "Each row is a shift: one meeting point on one day. Enter 0 volunteers to turn a shift off. Each day needs one shift on, and at most {{max}} volunteers in total.": "Mỗi hàng là một ca: một điểm tập trung trong một ngày. Nhập 0 TNV để tắt ca. Mỗi ngày cần ít nhất 1 ca đang bật và tổng tối đa {{max}} TNV.",
-  "Each row is a shift: one meeting point on one day. Enter 0 volunteers to turn a shift off. Each day needs one shift on.": "Mỗi hàng là một ca: một điểm tập trung trong một ngày. Nhập 0 TNV để tắt ca. Mỗi ngày cần ít nhất 1 ca đang bật."
+  "Each row is a shift: one meeting point on one day. Enter 0 volunteers to turn a shift off. Each day needs one shift on.": "Mỗi hàng là một ca: một điểm tập trung trong một ngày. Nhập 0 TNV để tắt ca. Mỗi ngày cần ít nhất 1 ca đang bật.",
+  "View campaign": "Xem chiến dịch",
+  "Continue editing": "Tiếp tục chỉnh sửa"
 }

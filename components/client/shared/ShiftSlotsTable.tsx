@@ -20,8 +20,30 @@ export interface ShiftSlotsTableProps {
   cells: ShiftSlotsCell[][];
   /** Volunteers allowed per day; totals above it are highlighted. */
   maxPerDay?: number | null;
-  isDark?: boolean;
+  /** `admin` follows the admin console tables (theme tokens, no grid lines). */
+  variant?: 'client' | 'admin';
 }
+
+const STYLES = {
+  client: {
+    wrapper: 'overflow-x-auto',
+    headRow: 'bg-[#887A47]/10',
+    head: 'border border-[rgba(136,122,71,0.3)] px-3 py-2 align-top text-left font-semibold whitespace-nowrap',
+    row: '',
+    cell: 'border border-[rgba(136,122,71,0.3)] px-3 py-2 align-top',
+    groupStart: '',
+    groupEnd: '',
+  },
+  admin: {
+    wrapper: 'overflow-x-auto rounded-md border border-border bg-card',
+    headRow: 'bg-muted border-b border-border',
+    head: 'px-3 py-2.5 text-left font-semibold text-xs uppercase tracking-wide text-muted-foreground whitespace-nowrap',
+    row: 'border-b border-border last:border-b-0 hover:bg-muted/50',
+    cell: 'px-3 py-2.5 align-top font-display-1 text-foreground',
+    groupStart: 'border-r border-border',
+    groupEnd: 'border-l border-border',
+  },
+} as const;
 
 /**
  * Read-only list of a campaign's shifts: one row per day × meeting point with its slots,
@@ -32,11 +54,11 @@ export const ShiftSlotsTable = memo(function ShiftSlotsTable({
   points,
   cells,
   maxPerDay,
-  isDark = false,
+  variant = 'client',
 }: ShiftSlotsTableProps) {
   const { t } = useTranslation();
-  const border = isDark ? 'border-zinc-700' : 'border-[rgba(136,122,71,0.3)]';
-  const cell = cn('border px-3 py-2 align-top', border);
+  const style = STYLES[variant];
+  const cell = style.cell;
   const headers = [
     t('Day'),
     t('Meeting point'),
@@ -47,12 +69,12 @@ export const ShiftSlotsTable = memo(function ShiftSlotsTable({
   ];
 
   return (
-    <div className="overflow-x-auto">
+    <div className={style.wrapper}>
       <table className="w-full border-collapse text-sm">
         <thead>
-          <tr className={isDark ? 'bg-zinc-800' : 'bg-[#887A47]/10'}>
+          <tr className={style.headRow}>
             {headers.map((header) => (
-              <th key={header} className={cn(cell, 'text-left font-semibold whitespace-nowrap')}>
+              <th key={header} className={style.head}>
                 {header}
               </th>
             ))}
@@ -70,9 +92,9 @@ export const ShiftSlotsTable = memo(function ShiftSlotsTable({
                   const shift = row[p];
                   const off = !shift?.slots;
                   return (
-                    <tr key={p}>
+                    <tr key={p} className={style.row}>
                       {p === 0 && (
-                        <td rowSpan={span} className={cn(cell, 'whitespace-nowrap')}>
+                        <td rowSpan={span} className={cn(cell, style.groupStart, 'whitespace-nowrap')}>
                           <div className="font-medium">{day.label}</div>
                           <div className="text-xs text-muted-foreground tabular-nums">
                             {day.hours}
@@ -94,6 +116,7 @@ export const ShiftSlotsTable = memo(function ShiftSlotsTable({
                           rowSpan={span}
                           className={cn(
                             cell,
+                            style.groupEnd,
                             'font-semibold tabular-nums whitespace-nowrap',
                             over && 'text-destructive',
                           )}

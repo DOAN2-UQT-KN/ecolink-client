@@ -33,7 +33,7 @@ const MeetingPointsEditor = memo(function MeetingPointsEditor() {
   const { fields, append, remove } = useFieldArray({ control, name: 'meeting_points' });
   const isMulti = fields.length > 1;
 
-  const warnings = useMeetingPointWarnings();
+  const warnings = useMeetingPointWarnings(form.watch('meeting_points'));
 
   const pointErrors = formState.errors.meeting_points;
 

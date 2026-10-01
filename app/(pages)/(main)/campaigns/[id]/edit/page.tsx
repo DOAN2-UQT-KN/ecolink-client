@@ -1,17 +1,25 @@
 import { useTranslation } from "react-i18next";
 
-import { useParams } from "@/libs/router";
+import { useParams, useSearchParams } from "@/libs/router";
 import { useGetCampaignById } from "@/apis/campaign/campaignById";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CAMPAIGN_EDITABLE_STATUSES } from "@/constants/campaignLifecycle";
 
 import CampaignForm from "../../create/_components/CampaignForm";
-import { CampaignProvider } from "../../create/_context/CampaignContext";
+import {
+  CAMPAIGN_STEPS,
+  CampaignProvider,
+  type CampaignStep,
+} from "../../create/_context/CampaignContext";
 
 /** Edit a campaign before approval: draft, under review, or waiting for changes. */
 export default function EditCampaignPage() {
   const { t } = useTranslation();
   const { id = "" } = useParams();
+  const step = useSearchParams().get("step");
+  const initialStep = CAMPAIGN_STEPS.includes(step as CampaignStep)
+    ? (step as CampaignStep)
+    : undefined;
   const { data, isLoading, isError } = useGetCampaignById(id, { enabled: Boolean(id) });
   const campaign = data?.data?.campaign;
 
@@ -30,7 +38,7 @@ export default function EditCampaignPage() {
   }
 
   return (
-    <CampaignProvider key={campaign.id} campaign={campaign}>
+    <CampaignProvider key={campaign.id} campaign={campaign} initialStep={initialStep}>
       <CampaignForm />
     </CampaignProvider>
   );

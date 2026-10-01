@@ -19,6 +19,7 @@ import { useRouter } from '@/libs/router';
 import { useOrganizationDetail } from '../_hooks/useOrganizationDetail';
 import SummaryCampaignCard from '@/components/client/shared/SummaryCampaignCard';
 import { CampaignTable } from './CampaignTable';
+import { isOwnerRole } from '@/apis/organization/models/organization';
 
 type CampaignViewMode = 'cards' | 'list';
 
@@ -119,6 +120,7 @@ export const CampaignList = memo(function CampaignList({ enabled }: { enabled: b
       ) : viewMode === 'list' ? (
         <div className="mt-4">
           <CampaignTable
+            canManage={isOwnerRole(organization.my_role)}
             campaigns={campaigns}
             loading={isLoading}
             pagination={pagination}

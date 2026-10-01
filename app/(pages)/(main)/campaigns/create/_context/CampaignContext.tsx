@@ -115,12 +115,15 @@ export const CampaignProvider = memo(function CampaignProvider({
   organizationId,
   organization: organizationProp,
   campaign,
+  initialStep,
 }: {
   children: ReactNode;
   /** Organization of a new campaign (from the organization page). */
   organizationId?: string;
   organization?: CampaignOrganization;
   campaign?: ICampaign;
+  /** Step to open first, e.g. from a section's "Edit" link on the campaign overview. */
+  initialStep?: CampaignStep;
 }) {
   const { t } = useTranslation();
   const router = useRouter();
@@ -131,7 +134,9 @@ export const CampaignProvider = memo(function CampaignProvider({
   const currentUserId = useAuthStore((s) => s.user?.id) ?? '';
   const [issues, setIssues] = useState<ICampaignValidationIssue[]>([]);
   const [takenReportIds, setTakenReportIds] = useState<string[]>([]);
-  const [stepIndex, setStepIndex] = useState(0);
+  const [stepIndex, setStepIndex] = useState(() =>
+    initialStep && CAMPAIGN_STEPS.includes(initialStep) ? CAMPAIGN_STEPS.indexOf(initialStep) : 0,
+  );
   // An existing campaign is complete enough to open any step.
   const [maxVisitedIndex, setMaxVisitedIndex] = useState(
     campaign ? CAMPAIGN_STEPS.length - 1 : 0,
