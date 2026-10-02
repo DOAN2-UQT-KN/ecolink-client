@@ -31,7 +31,7 @@ const cardClass = cn(
 );
 export const DetailInformation = memo(function DetailInformation() {
   const { t } = useTranslation('common');
-  const { campaign } = useCampaignDetail();
+  const { campaign, canManageCampaign } = useCampaignDetail();
   const { title: localizedTitle, description: localizedDescription } =
     useLocalizedDisplay();
 
@@ -262,6 +262,13 @@ export const DetailInformation = memo(function DetailInformation() {
                             {t('In charge: {{name}}', { name: leader })}
                           </span>
                         )}
+                        {canManageCampaign &&
+                          !sh.leader_user_id &&
+                          new Date(sh.end_at).getTime() > Date.now() && (
+                            <Pill tone="red" className="self-start">
+                              {t('Needs a person in charge')}
+                            </Pill>
+                          )}
                         <ShiftFillBar
                           className="mt-2"
                           registered={registered}

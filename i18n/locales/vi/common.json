@@ -1544,7 +1544,6 @@
   "Turn this shift off?": "Tắt ca này?",
   "{{n}} registered volunteer(s) will be told to pick another shift.": "{{n}} tình nguyện viên đã đăng ký sẽ được báo để chọn ca khác.",
   "Nobody has registered for this shift yet.": "Chưa có ai đăng ký ca này.",
-  "Turn off": "Tắt",
   "Turn off": "Tắt ca",
   "Invited {{n}} nearby resident(s)": "Đã mời {{n}} người dân gần đây",
   "Who registered for each shift": "Ai đã đăng ký từng ca",
@@ -1555,5 +1554,14 @@
   "Leave this campaign?": "Rời chiến dịch này?",
   "You leave every shift that has not started yet. You can register again at any time.": "Bạn sẽ rời mọi ca chưa bắt đầu. Bạn có thể đăng ký lại bất cứ lúc nào.",
   "This shift has already started": "Ca này đã bắt đầu",
-  "Nearby residents were invited recently; try again later": "Vừa mời người dân gần đây; hãy thử lại sau"
+  "Nearby residents were invited recently; try again later": "Vừa mời người dân gần đây; hãy thử lại sau",
+  "Choose a manager": "Chọn một quản lý",
+  "Only the campaign's managers and the organization's owners can lead a shift. Add managers on the campaign page.": "Chỉ quản lý chiến dịch và owner của tổ chức mới được phụ trách ca. Thêm quản lý ở trang chiến dịch.",
+  "Person in charge updated": "Đã cập nhật người phụ trách",
+  "Change": "Đổi",
+  "Assign": "Gán",
+  "Needs a person in charge": "Cần gán người phụ trách",
+  "{{name}} still leads these shifts. Assign another person in charge first.": "{{name}} đang phụ trách các ca này. Hãy gán người phụ trách khác trước.",
+  "A shift leader must be one of the campaign's managers or an owner of its organization": "Người phụ trách ca phải là quản lý của chiến dịch hoặc owner của tổ chức",
+  "This manager still leads upcoming shifts; assign another leader first": "Quản lý này đang phụ trách các ca sắp tới; hãy gán người phụ trách khác trước"
 }

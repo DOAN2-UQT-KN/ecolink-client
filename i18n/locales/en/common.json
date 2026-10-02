@@ -1545,7 +1545,6 @@
   "{{n}} registered volunteer(s) will be told to pick another shift.": "{{n}} registered volunteer(s) will be told to pick another shift.",
   "Nobody has registered for this shift yet.": "Nobody has registered for this shift yet.",
   "Turn off": "Turn off",
-  "Turn off": "Turn off",
   "Invited {{n}} nearby resident(s)": "Invited {{n}} nearby resident(s)",
   "Who registered for each shift": "Who registered for each shift",
   "Read only: registering just keeps volunteers informed and helps you estimate numbers. Volunteers pick and leave shifts themselves.": "Read only: registering just keeps volunteers informed and helps you estimate numbers. Volunteers pick and leave shifts themselves.",
@@ -1555,5 +1554,14 @@
   "Leave this campaign?": "Leave this campaign?",
   "You leave every shift that has not started yet. You can register again at any time.": "You leave every shift that has not started yet. You can register again at any time.",
   "This shift has already started": "This shift has already started",
-  "Nearby residents were invited recently; try again later": "Nearby residents were invited recently; try again later"
+  "Nearby residents were invited recently; try again later": "Nearby residents were invited recently; try again later",
+  "Choose a manager": "Choose a manager",
+  "Only the campaign's managers and the organization's owners can lead a shift. Add managers on the campaign page.": "Only the campaign's managers and the organization's owners can lead a shift. Add managers on the campaign page.",
+  "Person in charge updated": "Person in charge updated",
+  "Change": "Change",
+  "Assign": "Assign",
+  "Needs a person in charge": "Needs a person in charge",
+  "{{name}} still leads these shifts. Assign another person in charge first.": "{{name}} still leads these shifts. Assign another person in charge first.",
+  "A shift leader must be one of the campaign's managers or an owner of its organization": "A shift leader must be one of the campaign's managers or an owner of its organization",
+  "This manager still leads upcoming shifts; assign another leader first": "This manager still leads upcoming shifts; assign another leader first"
 }

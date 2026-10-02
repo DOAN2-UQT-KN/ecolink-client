@@ -16,6 +16,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { Pill } from '@/components/ui/Pill';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from '@/libs/router';
 
@@ -39,6 +40,16 @@ export const CampaignRegistrations = memo(function CampaignRegistrations({
 }) {
   const { t } = useTranslation();
   const { campaignId, campaign } = useCampaignDetail();
+  // Shifts that lost their leader (spec 3.4) need one before attendance opens.
+  const leaderless = useMemo(
+    () =>
+      new Set(
+        (campaign?.shifts ?? [])
+          .filter((s) => s.min_volunteers > 0 && !s.leader_user_id)
+          .map((s) => s.id),
+      ),
+    [campaign?.shifts],
+  );
   const { data, isLoading, isError } = useGetCampaignRegistrations(campaignId, {
     enabled: enabled && Boolean(campaignId),
   });
@@ -166,6 +177,15 @@ export const CampaignRegistrations = memo(function CampaignRegistrations({
                           {hhmm(shift.start_at)} – {hhmm(shift.end_at)}
                         </span>
                       </div>
+                      {leaderless.has(shift.shift_id) &&
+                        new Date(shift.end_at).getTime() > now && (
+                          <Link
+                            href={`/campaigns/${campaignId}/shifts/${shift.shift_id}`}
+                            className="self-start"
+                          >
+                            <Pill tone="red">{t('Needs a person in charge')}</Pill>
+                          </Link>
+                        )}
                       <ShiftFillBar
                         registered={shift.registered_count}
                         min={shift.min_volunteers}

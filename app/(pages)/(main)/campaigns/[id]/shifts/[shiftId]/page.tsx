@@ -28,6 +28,7 @@ import ReportSummaryCard from '@/modules/ReportSummaryCard';
 import useAuthStore from '@/stores/useAuthStore';
 
 import { AvatarList } from '../../_components/AvatarList';
+import { ChangeShiftLeaderButton } from '../../_components/ChangeShiftLeaderButton';
 import { CloseShiftButton } from '../../_components/CloseShiftButton';
 import { JoinShiftsDialog } from '../../_components/JoinShiftsDialog';
 import { ShiftFillBar } from '../../_components/ShiftFillBar';
@@ -92,6 +93,7 @@ function ShiftDetailBody({ shiftId }: { shiftId: string }) {
   );
   const registrations = registrationsData?.data?.shifts?.find((s) => s.shift_id === shiftId);
   const started = shift ? new Date(shift.start_at).getTime() <= Date.now() : false;
+  const ended = shift ? new Date(shift.end_at).getTime() <= Date.now() : false;
 
   const reports = useMemo(() => {
     const ids = new Set(point?.report_ids ?? []);
@@ -274,13 +276,26 @@ function ShiftDetailBody({ shiftId }: { shiftId: string }) {
             </div>
 
             <div className={cardClass}>
-              <h2 className="font-display-6 font-semibold text-button-accent mb-2">
-                {t('Person in charge')}
-              </h2>
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                <h2 className="font-display-6 font-semibold text-button-accent">
+                  {t('Person in charge')}
+                </h2>
+                {canManageCampaign && !ended && (
+                  <ChangeShiftLeaderButton
+                    campaignId={campaignId}
+                    shiftId={shift.id}
+                    organizationId={organizationId}
+                    createdBy={creatorId}
+                    leaderUserId={leaderId}
+                  />
+                )}
+              </div>
               {leader ? (
                 <AvatarList isLoading={false} items={[leader]} />
-              ) : (
+              ) : leaderId ? (
                 <p className="text-sm text-foreground-tertiary">—</p>
+              ) : (
+                <Pill tone="red">{t('Needs a person in charge')}</Pill>
               )}
               {otherManagers.length > 0 && (
                 <>

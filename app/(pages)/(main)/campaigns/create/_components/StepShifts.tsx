@@ -15,10 +15,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/client/shared/Button';
-import { useGetMembersByOrg } from '@/apis/organization/organizationById';
 import { cn } from '@/libs/utils';
 
 import { useCampaign } from '../_hooks/useCampaign';
+import { useLeaderOptions } from '../../_hooks/useLeaderOptions';
 import { fitSchedule, type CampaignFormValues } from '../_services/campaign.service';
 import useAuthStore from '@/stores/useAuthStore';
 import { parseApiDate } from './ScheduleFields';
@@ -59,7 +59,7 @@ export function useDayLabel() {
  */
 const StepShifts = memo(function StepShifts() {
   const { t } = useTranslation();
-  const { form, suggestedMinPerDay } = useCampaign();
+  const { form, suggestedMinPerDay, campaign } = useCampaign();
   const { control, register, watch, setValue, getValues, trigger, formState } = form;
   const days = watch('days');
   const points = watch('meeting_points');
@@ -78,11 +78,12 @@ const StepShifts = memo(function StepShifts() {
     }
   }, [currentUserId, days.length, points.length, schedule, setValue]);
 
-  const { data: membersData } = useGetMembersByOrg(
-    { organization_id: organizationId, page: 1, limit: 100 },
-    { enabled: Boolean(organizationId) },
-  );
-  const members = membersData?.data?.members ?? [];
+  // Only the campaign's team may lead a shift (spec 3.4).
+  const members = useLeaderOptions({
+    organizationId,
+    campaignId: campaign?.id,
+    createdBy: campaign?.created_by ?? currentUserId,
+  });
 
   const pointName = useCallback(
     (index: number) => points[index]?.name?.trim() || t('Meeting point {{n}}', { n: index + 1 }),
@@ -298,6 +299,10 @@ const StepShifts = memo(function StepShifts() {
     [days, points, scheduleErrors],
   );
 
+  const leaderHint = t(
+    "Only the campaign's managers and the organization's owners can lead a shift. Add managers on the campaign page.",
+  );
+
   const leaderSelect = (d: number, p: number, disabled = false) => (
     <Controller
       name={`schedule.${d}.${p}.leader_user_id`}
@@ -311,7 +316,7 @@ const StepShifts = memo(function StepShifts() {
       render={({ field }) => (
         <Select value={field.value || undefined} onValueChange={field.onChange} disabled={disabled}>
           <SelectTrigger className={`${inputClassName} !h-[50px] w-full min-w-[180px]`}>
-            <SelectValue placeholder={t('Choose a member')} />
+            <SelectValue placeholder={t('Choose a manager')} />
           </SelectTrigger>
           <SelectContent>
             {members.map((m) => (
@@ -407,6 +412,7 @@ const StepShifts = memo(function StepShifts() {
           <Field>
             <FieldLabel className="text-foreground-tertiary font-display-3">
               {t('Person in charge')} <span className="text-destructive">*</span>
+              <InfoTooltip content={leaderHint} />
             </FieldLabel>
             {leaderSelect(0, 0)}
             <FieldError errors={[errors?.leader_user_id]} />
@@ -449,6 +455,11 @@ const StepShifts = memo(function StepShifts() {
               ].map((header) => (
                 <th key={header} className={cn(cellClass, 'text-left font-semibold whitespace-nowrap')}>
                   {header}
+                  {header === t('Person in charge') && (
+                    <span className="ml-1 inline-flex align-middle">
+                      <InfoTooltip content={leaderHint} />
+                    </span>
+                  )}
                 </th>
               ))}
             </tr>

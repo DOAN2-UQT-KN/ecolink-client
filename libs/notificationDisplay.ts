@@ -64,6 +64,8 @@ export function getNotificationHref(
     case 'CAMPAIGN_SHIFT_OVER_MAX':
     case 'CAMPAIGN_JOIN_INVITE':
     case 'CAMPAIGN_SHIFT_CLOSED':
+    case 'CAMPAIGN_CREATOR_TRANSFERRED':
+    case 'CAMPAIGN_SHIFT_LEADER_REMOVED':
       return campaignId ? `/campaigns/${campaignId}` : null;
     case 'CAMPAIGN_COMPLETION_PENDING_ADMIN':
       return campaignId ? `/admin/campaigns?highlight=${campaignId}` : '/admin/campaigns';

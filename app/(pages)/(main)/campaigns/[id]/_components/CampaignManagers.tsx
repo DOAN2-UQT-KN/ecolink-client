@@ -13,6 +13,8 @@ import {
   AutoCompleteUser,
   type AutoCompleteUserValue,
 } from '@/components/form/AutoCompleteUser';
+import { useGetMembersByOrg } from '@/apis/organization/organizationById';
+import { isOwnerRole } from '@/apis/organization/models/organization';
 import {
   Dialog,
   DialogContent,
@@ -107,9 +109,12 @@ const AddManagerDialog = memo(function AddManagerDialog({
 const RemoveManagerAction = memo(function RemoveManagerAction({
   campaignId,
   manager,
+  ledShifts,
 }: {
   campaignId: string;
   manager: AvatarListItem;
+  /** Shifts still to come that they lead; they are reassigned first (spec 3.4). */
+  ledShifts: { id: string; label: string }[];
 }) {
   const { t } = useTranslation('common');
   const [open, setOpen] = useState(false);
@@ -140,16 +145,33 @@ const RemoveManagerAction = memo(function RemoveManagerAction({
           <DialogHeader>
             <DialogTitle>{t('Remove {{name}} as manager?', { name })}</DialogTitle>
             <DialogDescription>
-              {t('They will no longer be able to manage this campaign.')}
+              {ledShifts.length > 0
+                ? t('{{name}} still leads these shifts. Assign another person in charge first.', {
+                    name,
+                  })
+                : t('They will no longer be able to manage this campaign.')}
             </DialogDescription>
           </DialogHeader>
+          {ledShifts.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {ledShifts.map((sh) => (
+                <Link
+                  key={sh.id}
+                  href={`/campaigns/${campaignId}/shifts/${sh.id}`}
+                  className="rounded-full border border-[rgba(136,122,71,0.4)] px-2 py-0.5 text-xs text-button-accent hover:bg-[#887A47]/10"
+                >
+                  {sh.label}
+                </Link>
+              ))}
+            </div>
+          )}
           <DialogFooter>
             <Button variant="outlined-brown" onClick={() => setOpen(false)}>
               {t('Cancel')}
             </Button>
             <Button
               variant="brown"
-              isDisabled={isPending}
+              isDisabled={isPending || ledShifts.length > 0}
               onClick={() => removeManager({ campaignId, user_id: manager.id })}
             >
               {t('Remove manager')}
@@ -188,10 +210,11 @@ export const CampaignManagers = memo(function CampaignManagers() {
     return ids;
   }, [managers, creatorId]);
 
-  /** Shifts each person leads, in time order. */
+  /** Shifts each person leads, in time order; `upcoming` only those not ended. */
   const shiftsByLeader = useMemo(() => {
     const points = campaign?.meeting_points ?? [];
-    const out = new Map<string, { id: string; label: string }[]>();
+    const now = Date.now();
+    const out = new Map<string, { id: string; label: string; upcoming: boolean }[]>();
     [...(campaign?.shifts ?? [])]
       .filter((sh) => sh.min_volunteers > 0 && sh.leader_user_id)
       .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime())
@@ -200,12 +223,27 @@ export const CampaignManagers = memo(function CampaignManagers() {
         const point = points[index]?.name || t('Meeting point {{n}}', { n: index + 1 });
         const label = `${point} · ${format(new Date(sh.start_at), 'dd/MM HH:mm')}`;
         const id = sh.leader_user_id as string;
-        out.set(id, [...(out.get(id) ?? []), { id: sh.id, label }]);
+        const upcoming = new Date(sh.end_at).getTime() > now;
+        out.set(id, [...(out.get(id) ?? []), { id: sh.id, label, upcoming }]);
       });
     return out;
   }, [campaign?.meeting_points, campaign?.shifts, t]);
 
   const organizationId = campaign?.organization_id;
+  // Owners stay on the team without being managers, so removing them never strands a shift.
+  const { data: membersData } = useGetMembersByOrg(
+    { organization_id: organizationId ?? '', page: 1, limit: 100 },
+    { enabled: Boolean(organizationId && canManageCampaign) },
+  );
+  const ownerIds = useMemo(
+    () =>
+      new Set(
+        (membersData?.data?.members ?? [])
+          .filter((m) => isOwnerRole(m.role))
+          .map((m) => m.user_id),
+      ),
+    [membersData],
+  );
 
   return (
     <div className="rounded-xl border border-[rgba(136,122,71,0.4)] bg-white/60 p-5 sm:p-6 shadow-sm">
@@ -251,7 +289,15 @@ export const CampaignManagers = memo(function CampaignManagers() {
           canManageCampaign
             ? (item) =>
                 item.id === creatorId ? null : (
-                  <RemoveManagerAction campaignId={campaignId} manager={item} />
+                  <RemoveManagerAction
+                    campaignId={campaignId}
+                    manager={item}
+                    ledShifts={
+                      ownerIds.has(item.id)
+                        ? []
+                        : (shiftsByLeader.get(item.id) ?? []).filter((sh) => sh.upcoming)
+                    }
+                  />
                 )
             : undefined
         }

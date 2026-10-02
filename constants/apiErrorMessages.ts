@@ -47,6 +47,10 @@ const API_ERROR_MESSAGES: Record<string, string> = {
   SHIFT_ALREADY_STARTED: "This shift has already started",
   DAY_NEEDS_ACTIVE_SHIFT: "Each day needs at least one shift that runs",
   NEARBY_INVITE_TOO_SOON: "Nearby residents were invited recently; try again later",
+  CAMPAIGN_LEADER_NOT_MANAGER:
+    "A shift leader must be one of the campaign's managers or an owner of its organization",
+  CAMPAIGN_MANAGER_LEADS_SHIFTS:
+    "This manager still leads upcoming shifts; assign another leader first",
   REWARD_SERVICE_UNAVAILABLE: "The reward service is not reachable right now; try again shortly",
   ROLE_NOT_ASSIGNABLE: "You cannot assign this role",
   CANNOT_ACT_ON_MEMBER: "You cannot change or remove this member",
