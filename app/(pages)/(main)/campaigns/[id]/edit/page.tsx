@@ -12,7 +12,10 @@ import {
   type CampaignStep,
 } from "../../create/_context/CampaignContext";
 
-/** Edit a campaign before approval: draft, under review, or waiting for changes. */
+/**
+ * Edit a campaign until it starts: before approval (draft, under review, needs revision) or once
+ * approved and upcoming (spec 3.5, edited in place by id).
+ */
 export default function EditCampaignPage() {
   const { t } = useTranslation();
   const { id = "" } = useParams();

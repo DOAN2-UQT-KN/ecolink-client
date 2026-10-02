@@ -23,6 +23,7 @@ import {
   getDifficultyLevel,
 } from '@/constants/difficulty';
 import UploadBanner from './UploadBanner';
+import NeedsReviewTag from './NeedsReviewTag';
 import RichTextEditor from '@/components/ui/RichTextEditor';
 
 const GeneralInformation = memo(function GeneralInformation() {
@@ -123,6 +124,7 @@ const GeneralInformation = memo(function GeneralInformation() {
           <Field className="col-span-2">
             <FieldLabel className="text-foreground-tertiary font-display-3">
               {t('Difficulty')}
+              <NeedsReviewTag />
             </FieldLabel>
             <Controller
               name="difficulty"

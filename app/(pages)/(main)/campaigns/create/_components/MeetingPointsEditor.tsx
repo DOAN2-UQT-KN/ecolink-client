@@ -17,6 +17,7 @@ import { useMeetingPointWarnings } from '../_hooks/useMeetingPointWarnings';
 import { emptyMeetingPoint } from '../_services/campaign.service';
 import LeafletAddress from './LeafletAddress';
 import IncidentList from './IncidentList';
+import NeedsReviewTag from './NeedsReviewTag';
 
 const inputClassName =
   'border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50';
@@ -43,6 +44,7 @@ const MeetingPointsEditor = memo(function MeetingPointsEditor() {
         <div className="flex items-center gap-2">
           <span className="font-display-5 font-semibold !text-button-accent ">
             {t('Meeting points')}
+            <NeedsReviewTag />
           </span>
           <InfoTooltip
             content={t('Up to {{max}} meeting points, within {{km}} km of each other', {

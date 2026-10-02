@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next";
 import { TbExternalLink, TbMapPin } from "react-icons/tb";
 
 import { useGetCampaignById } from "@/apis/campaign/campaignById";
+import { useGetCampaignHistory } from "@/apis/campaign/getCampaignHistory";
+import { CAMPAIGN_STATUS } from "@/constants/campaignLifecycle";
 import type { ICampaign } from "@/apis/campaign/models/campaign";
 import { useGetMembersByOrg } from "@/apis/organization/organizationById";
 import { useAdminLayout } from "@/app/(pages)/(admin)/_context/AdminLayoutContext";
@@ -22,6 +24,22 @@ import {
 import { RichTextContent } from "@/components/ui/RichTextContent";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CAMPAIGN_PUBLIC_STATUSES } from "@/constants/campaignLifecycle";
+
+/** Snapshot keys (snake_case after the response transform) → what changed, for the admin. */
+const CHANGE_LABELS: Record<string, string> = {
+  title: "Title",
+  description: "Description",
+  banner: "Banner",
+  difficulty: "Difficulty",
+  contact_name: "Contact name",
+  contact_phone: "Contact phone",
+  safety_notes: "Safety notes",
+  requirements: "Participation conditions",
+  days: "Days",
+  meeting_points: "Meeting points and waste points",
+  shifts: "Shifts",
+  min_volunteers_reason: "Why fewer volunteers than suggested",
+};
 import { getDifficultyLevel } from "@/constants/difficulty";
 import { useLocalizedDisplay } from "@/hooks/useLocalizedDisplay";
 import { cn } from "@/libs/utils";
@@ -211,6 +229,13 @@ export function CampaignPreviewDialog({
   ].filter(Boolean);
   const points = campaign?.meeting_points ?? [];
   const isPublic = campaign?.status != null && CAMPAIGN_PUBLIC_STATUSES.includes(campaign.status);
+  // Back under review after an edit (spec 3.5): show what changed since it was approved.
+  const reReview = Boolean(campaign?.approved_at) && campaign?.status === CAMPAIGN_STATUS.PENDING_REVIEW;
+  const { data: historyData } = useGetCampaignHistory(campaignId, { enabled: reReview });
+  const editedFields = useMemo(() => {
+    const entry = historyData?.data?.history?.find((h) => h.event === "edit_major");
+    return Object.keys(entry?.changes ?? {});
+  }, [historyData]);
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
@@ -255,6 +280,27 @@ export function CampaignPreviewDialog({
                   >
                     <span className="font-semibold">{t("Admin reason")}:</span>{" "}
                     {campaign.reject_reason}
+                  </section>
+                )}
+
+                {reReview && (
+                  <section
+                    className={cn(
+                      "rounded-lg border p-4 text-sm",
+                      isDark
+                        ? "border-sky-400/40 bg-sky-500/10 text-sky-100"
+                        : "border-sky-500/40 bg-sky-50 text-sky-900",
+                    )}
+                  >
+                    <p className="font-semibold">{t("Changed after approval")}</p>
+                    <p className="mt-1">
+                      {t("Volunteers who registered keep their place while you review it again.")}
+                    </p>
+                    {editedFields.length > 0 && (
+                      <p className="mt-1">
+                        {editedFields.map((key) => t(CHANGE_LABELS[key] ?? key)).join(" · ")}
+                      </p>
+                    )}
                   </section>
                 )}
 

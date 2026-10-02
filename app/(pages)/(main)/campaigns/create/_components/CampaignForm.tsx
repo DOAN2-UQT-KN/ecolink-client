@@ -8,6 +8,15 @@ import {
 } from "@/components/client/shared/Breadcrumbs";
 import { Button } from "@/components/client/shared/Button";
 import { Stepper } from "@/components/client/shared/Stepper";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
 import { cn } from "@/libs/utils";
 import {
   CAMPAIGN_STATUS,
@@ -53,8 +62,18 @@ const CampaignForm = memo(function CampaignForm() {
     next,
     back,
     goToStep,
+    approvedEdit,
+    hasMajorChange,
   } = useCampaign();
   const [isScrolled, setIsScrolled] = useState(false);
+  /** A save waiting for the manager to accept sending the campaign back for review. */
+  const [pendingSave, setPendingSave] = useState<(() => Promise<void>) | null>(null);
+
+  /** Approved campaign (spec 3.5): a save that changes an important field asks first. */
+  const guardMajor = (action: () => Promise<void>) => {
+    if (approvedEdit && hasMajorChange()) setPendingSave(() => action);
+    else void action();
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -126,7 +145,16 @@ const CampaignForm = memo(function CampaignForm() {
             )}
             {status === CAMPAIGN_STATUS.PENDING_REVIEW && (
               <span className="text-foreground-tertiary">
-                {t("Waiting for admin review. Your edits are saved and shown to the admin.")}
+                {approvedEdit
+                  ? t("Under review again after an edit. Volunteers keep their place; new sign-ups are paused.")
+                  : t("Waiting for admin review. Your edits are saved and shown to the admin.")}
+              </span>
+            )}
+            {approvedEdit && (
+              <span className="text-foreground-tertiary">
+                {t(
+                  "Title, description, banner, contact, safety notes and shift numbers save at once. Changing the meeting points, days, waste points, difficulty or conditions sends the campaign back for review. Times of existing days are changed by rescheduling.",
+                )}
               </span>
             )}
           </div>
@@ -175,11 +203,11 @@ const CampaignForm = memo(function CampaignForm() {
             )}
           </div>
           <div className="flex flex-col-reverse gap-3 sm:flex-row">
-            <Button variant="outlined-brown" onClick={() => void saveDraft()} isDisabled={busy}>
+            <Button variant="outlined-brown" onClick={() => guardMajor(saveDraft)} isDisabled={busy}>
               {isUploading ? t("Uploading...") : isSaving ? t("Saving...") : t("Save draft")}
             </Button>
             {!isLastStep ? (
-              <Button variant="brown" onClick={() => void next()} isDisabled={busy}>
+              <Button variant="brown" onClick={() => guardMajor(next)} isDisabled={busy}>
                 {t("Continue")}
               </Button>
             ) : (
@@ -196,6 +224,35 @@ const CampaignForm = memo(function CampaignForm() {
           </div>
         </div>
       </div>
+
+      <Dialog open={pendingSave != null} onOpenChange={(open) => !open && setPendingSave(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("Send the campaign back for review?")}</DialogTitle>
+            <DialogDescription>
+              {t(
+                "You changed an important field. The campaign goes back to Pending review until an admin approves it again: registered volunteers keep their place and are notified, and new sign-ups are paused meanwhile.",
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outlined-brown" onClick={() => setPendingSave(null)}>
+              {t("Cancel")}
+            </Button>
+            <Button
+              variant="brown"
+              isDisabled={busy}
+              onClick={() => {
+                const action = pendingSave;
+                setPendingSave(null);
+                void action?.();
+              }}
+            >
+              {t("Save and send for review")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 });

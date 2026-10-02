@@ -59,7 +59,7 @@ export function useDayLabel() {
  */
 const StepShifts = memo(function StepShifts() {
   const { t } = useTranslation();
-  const { form, suggestedMinPerDay, campaign } = useCampaign();
+  const { form, suggestedMinPerDay, campaign, approvedEdit } = useCampaign();
   const { control, register, watch, setValue, getValues, trigger, formState } = form;
   const days = watch('days');
   const points = watch('meeting_points');
@@ -134,6 +134,10 @@ const StepShifts = memo(function StepShifts() {
         if (!Number.isInteger(v) || v < 0) {
           return t('Minimum volunteers must be a whole number, 0 to turn the shift off');
         }
+        // A running shift of an approved campaign is turned off from its page (spec 3.2).
+        if (approvedEdit && v === 0 && (values.schedule[d]?.[p]?.saved_min ?? 0) > 0) {
+          return t('A running shift needs at least 1 volunteer; turn it off from the shift page');
+        }
         // Checks on the whole day live on its first shift.
         if (p !== 0) return true;
         const cells = values.schedule[d] ?? [];
@@ -143,7 +147,7 @@ const StepShifts = memo(function StepShifts() {
         return true;
       },
     }),
-    [t],
+    [approvedEdit, t],
   );
 
   const maxRules = useCallback(
@@ -214,11 +218,12 @@ const StepShifts = memo(function StepShifts() {
       validate: (v: string, values: CampaignFormValues) => {
         if (!v || !(Number(values.schedule[d]?.[p]?.min_volunteers) > 0)) return true;
         const cell = values.schedule[d]?.[p];
-        const start = minutesOf(cell?.start_time || values.days[d]?.start_time);
+        // Gathering may be after the shift starts, but not once it is over.
+        const end = minutesOf(cell?.end_time || values.days[d]?.end_time);
         const gather = minutesOf(v);
-        return start == null || gather == null || gather <= start
+        return end == null || gather == null || gather < end
           ? true
-          : t('Gathering time must be no later than the shift starts');
+          : t('Gathering time must be before the shift ends');
       },
     }),
     [t],
@@ -243,6 +248,10 @@ const StepShifts = memo(function StepShifts() {
     }),
     [t],
   );
+
+  /** An existing shift of an approved campaign: its hours change by rescheduling (3.5). */
+  const timeLocked = (d: number, p: number) =>
+    approvedEdit && schedule[d]?.[p]?.saved_min !== undefined;
 
   /** Start or end of a shift; empty means the day's hour, which is what the input shows. */
   const shiftTimeInput = (d: number, p: number, which: 'start_time' | 'end_time', disabled: boolean) => {
@@ -274,9 +283,9 @@ const StepShifts = memo(function StepShifts() {
 
   const shiftWindow = (d: number, p: number, disabled = false) => (
     <div className="flex items-center gap-2">
-      {shiftTimeInput(d, p, 'start_time', disabled)}
+      {shiftTimeInput(d, p, 'start_time', disabled || timeLocked(d, p))}
       <span className="text-muted-foreground">–</span>
-      {shiftTimeInput(d, p, 'end_time', disabled)}
+      {shiftTimeInput(d, p, 'end_time', disabled || timeLocked(d, p))}
     </div>
   );
 
@@ -339,7 +348,9 @@ const StepShifts = memo(function StepShifts() {
   const shiftsHint = t(
     'Each row is a shift: one meeting point on one day. Enter the minimum volunteers it needs (0 turns it off) and, optionally, the most you expect. Neither number blocks sign-ups; they only raise warnings.',
   );
-  const windowHint = t("A shift runs during the day's hours unless you narrow it.");
+  const windowHint = approvedEdit
+    ? t("Hours of an existing shift change by rescheduling; numbers and the person in charge save at once.")
+    : t("A shift runs during the day's hours unless you narrow it.");
 
   const cellErrors = (d: number, p: number) =>
     (scheduleErrors?.[d] as Record<number, Record<string, RHFFieldError>> | undefined)?.[p];
@@ -403,9 +414,10 @@ const StepShifts = memo(function StepShifts() {
             </FieldLabel>
             <Input
               type="time"
-              max={schedule[0]?.[0]?.start_time || days[0]?.start_time || undefined}
+              max={schedule[0]?.[0]?.end_time || days[0]?.end_time || undefined}
+              readOnly={timeLocked(0, 0)}
               {...register('schedule.0.0.gather_time', gatherRules(0, 0))}
-              className={inputClassName}
+              className={cn(inputClassName, timeLocked(0, 0) && 'opacity-50')}
             />
             <FieldError errors={[errors?.gather_time]} />
           </Field>
@@ -529,10 +541,15 @@ const StepShifts = memo(function StepShifts() {
                           <Input
                             type="time"
                             aria-label={`${dayLabel(day, d)} · ${pointName(p)} · ${t('Gathering time')}`}
-                            max={row[p]?.start_time || day.start_time || undefined}
+                            max={row[p]?.end_time || day.end_time || undefined}
                             disabled={off}
+                            readOnly={timeLocked(d, p)}
                             {...register(`schedule.${d}.${p}.gather_time`, gatherRules(d, p))}
-                            className={cn(inputClassName, 'min-w-[120px]', off && 'opacity-50')}
+                            className={cn(
+                              inputClassName,
+                              'min-w-[120px]',
+                              (off || timeLocked(d, p)) && 'opacity-50',
+                            )}
                           />
                           <FieldError errors={[errors?.gather_time]} />
                         </td>

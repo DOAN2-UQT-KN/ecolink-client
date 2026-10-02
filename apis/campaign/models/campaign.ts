@@ -66,6 +66,10 @@ export interface ICampaign {
   /** Resubmit before this while the campaign needs revision. */
   revision_deadline?: string | null;
   submitted_at?: string | null;
+  /** First admin approval; set means edits keep registrations and may send it back for review. */
+  approved_at?: string | null;
+  /** Only in an update response: the edit sent the campaign back for review (spec 3.5). */
+  re_review?: boolean;
   /** Why a day's minimum volunteers is below the difficulty's suggestion. */
   min_volunteers_reason?: string | null;
   /** Minimum volunteers per day the difficulty suggests (detail responses). */

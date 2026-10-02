@@ -47,6 +47,8 @@ const API_ERROR_MESSAGES: Record<string, string> = {
   SHIFT_ALREADY_STARTED: "This shift has already started",
   DAY_NEEDS_ACTIVE_SHIFT: "Each day needs at least one shift that runs",
   NEARBY_INVITE_TOO_SOON: "Nearby residents were invited recently; try again later",
+  CAMPAIGN_USE_RESCHEDULE: "Times of existing days and shifts change through rescheduling, not editing",
+  SHIFT_MIN_REQUIRED: "A running shift needs at least one volunteer; turn the shift off instead",
   CAMPAIGN_LEADER_NOT_MANAGER:
     "A shift leader must be one of the campaign's managers or an owner of its organization",
   CAMPAIGN_MANAGER_LEADS_SHIFTS:

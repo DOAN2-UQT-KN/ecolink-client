@@ -20,12 +20,20 @@ export const CAMPAIGN_STATUS = {
   CANCELLED: STATUS.CANCELED,
 } as const;
 
-/** Every field may still change (draft, under review, needs revision). */
+/**
+ * The edit form opens (draft, under review, needs revision, upcoming). An approved campaign is
+ * edited by id until it starts (spec 3.5); once it runs nothing changes.
+ */
 export const CAMPAIGN_EDITABLE_STATUSES: number[] = [
   CAMPAIGN_STATUS.DRAFT,
   CAMPAIGN_STATUS.PENDING_REVIEW,
   CAMPAIGN_STATUS.NEEDS_REVISION,
+  CAMPAIGN_STATUS.UPCOMING,
 ];
+
+/** An approved campaign, edited in place: its days' times and shifts' times are fixed (3.5). */
+export const isApprovedEdit = (campaign?: { approved_at?: string | null; status?: number }) =>
+  Boolean(campaign?.approved_at) && CAMPAIGN_EDITABLE_STATUSES.includes(campaign?.status ?? -1);
 export const CAMPAIGN_SUBMITTABLE_STATUSES: number[] = [
   CAMPAIGN_STATUS.DRAFT,
   CAMPAIGN_STATUS.NEEDS_REVISION,

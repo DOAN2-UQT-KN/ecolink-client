@@ -2,6 +2,8 @@ import { memo, useMemo } from 'react';
 import { Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
+import NeedsReviewTag from './NeedsReviewTag';
+
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -86,6 +88,7 @@ const ContactAndSafety = memo(function ContactAndSafety() {
         <Field>
           <FieldLabel className="text-foreground-tertiary font-display-3">
             {t('Minimum age')}
+            <NeedsReviewTag />
             <InfoTooltip
               content={
                 defaultMinAge != null

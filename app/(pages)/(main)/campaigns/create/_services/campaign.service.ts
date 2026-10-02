@@ -15,6 +15,8 @@ export const DETAIL_ADDRESS_MAX_LENGTH = 255;
 export const DEFAULT_MEETING_POINT_RADIUS_KM = 1;
 
 export interface MeetingPointFormValues {
+  /** Existing meeting point (edit); none for a new one. Not `id`: useFieldArray owns that key. */
+  server_id?: string;
   name: string;
   latitude?: number;
   longitude?: number;
@@ -24,6 +26,8 @@ export interface MeetingPointFormValues {
 }
 
 export interface CampaignDayFormValues {
+  /** Existing day (edit); none for a new one. Its times are fixed once approved (3.5). */
+  server_id?: string;
   /** "YYYY-MM-DD" (local). */
   date?: string;
   /** "HH:mm" */
@@ -43,6 +47,8 @@ export interface ShiftFormValues {
   /** "HH:mm" on that day. */
   gather_time: string;
   leader_user_id: string;
+  /** Minimum saved on the server; a running shift of an approved campaign keeps ≥ 1. */
+  saved_min?: number;
 }
 
 export interface CampaignFormValues {
@@ -181,10 +187,12 @@ const scheduleToApi = (
 
   return {
     days: days.map(({ day }) => ({
+      ...(day.server_id ? { id: day.server_id } : {}),
       start_at: combineDateTime(day.date, day.start_time) as string,
       end_at: combineDateTime(day.date, day.end_time) as string,
     })),
     meeting_points: points.map(({ point }) => ({
+      ...(point.server_id ? { id: point.server_id } : {}),
       name: optionalText(point.name),
       latitude: point.latitude as number,
       longitude: point.longitude as number,
@@ -244,6 +252,7 @@ export const campaignToFormValues = (campaign: ICampaign): CampaignFormValues =>
     days:
       days.length > 0
         ? days.map((d) => ({
+            server_id: d.id,
             date: toLocalDate(new Date(d.start_at)),
             start_time: toLocalTime(new Date(d.start_at)),
             end_time: toLocalTime(new Date(d.end_at)),
@@ -259,6 +268,7 @@ export const campaignToFormValues = (campaign: ICampaign): CampaignFormValues =>
     meeting_points:
       points.length > 0
         ? points.map((p) => ({
+            server_id: p.id,
             name: p.name ?? "",
             latitude: p.latitude,
             longitude: p.longitude,
@@ -289,6 +299,7 @@ export const campaignToFormValues = (campaign: ICampaign): CampaignFormValues =>
                 end_time: sameAs(shift.end_at, day?.end_at) ? "" : toLocalTime(new Date(shift.end_at)),
                 gather_time: shift.gather_at ? toLocalTime(new Date(shift.gather_at)) : "",
                 leader_user_id: shift.leader_user_id ?? "",
+                saved_min: shift.min_volunteers,
               }
             : emptyShift(campaign.created_by ?? "");
         }),

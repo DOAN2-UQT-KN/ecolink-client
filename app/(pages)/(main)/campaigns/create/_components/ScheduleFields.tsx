@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { useFieldArray } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { addDays, format } from 'date-fns';
@@ -21,6 +21,7 @@ import {
 
 import { useCampaign } from '../_hooks/useCampaign';
 import { emptyDay, type CampaignDayFormValues } from '../_services/campaign.service';
+import NeedsReviewTag from './NeedsReviewTag';
 
 const inputClassName =
   'border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50';
@@ -57,7 +58,12 @@ const firstDate = (days: CampaignDayFormValues[]): Date | undefined =>
  */
 const ScheduleFields = memo(function ScheduleFields() {
   const { t } = useTranslation();
-  const { form, addScheduleRow, removeScheduleRow } = useCampaign();
+  const { form, addScheduleRow, removeScheduleRow, approvedEdit } = useCampaign();
+  /** An existing day of an approved campaign: its date and hours change by rescheduling (3.5). */
+  const isLocked = useCallback(
+    (day?: { server_id?: string }) => approvedEdit && Boolean(day?.server_id),
+    [approvedEdit],
+  );
   const {
     control,
     register,
@@ -73,6 +79,7 @@ const ScheduleFields = memo(function ScheduleFields() {
     fields.forEach((_, index) =>
       register(`days.${index}.date`, {
         validate: (value, values) => {
+          if (isLocked(values.days[index])) return true;
           if (!value) return t('Pick the campaign day');
           const others = values.days.filter((_, i) => i !== index).map((d) => d.date);
           if (others.includes(value)) return t('Each day can be added only once');
@@ -95,7 +102,7 @@ const ScheduleFields = memo(function ScheduleFields() {
         },
       }),
     );
-  }, [fields, register, t]);
+  }, [fields, isLocked, register, t]);
 
   const minDay = useMemo(() => new Date(Date.now() + CAMPAIGN_MIN_LEAD_HOURS * 3_600_000), []);
   const dayErrors = errors.days;
@@ -107,6 +114,7 @@ const ScheduleFields = memo(function ScheduleFields() {
           <span className="font-display-5 font-semibold !text-button-accent ">
             {t('Campaign schedule')}
           </span>
+          <NeedsReviewTag />
           <InfoTooltip
             content={t(
               '1–{{max}} days within {{span}} days of the first, not necessarily in a row. The first day starts at least {{hours}} hours from now; each day lasts at most {{perDay}} hours.',
@@ -138,6 +146,7 @@ const ScheduleFields = memo(function ScheduleFields() {
         {fields.map((field, index) => {
           const value = days[index];
           const errs = dayErrors?.[index];
+          const locked = isLocked(value);
           return (
             <Field key={field.id}>
               <FieldLabel className="text-foreground-tertiary font-display-3">
@@ -152,6 +161,7 @@ const ScheduleFields = memo(function ScheduleFields() {
                       'w-full justify-start text-left font-normal border-[rgba(136,122,71,0.5)] hover:bg-transparent !h-[50px]',
                       !value?.date && 'text-muted-foreground',
                     )}
+                    disabled={locked}
                     onClick={() => setOpenIndex((prev) => (prev === index ? null : index))}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
@@ -189,6 +199,7 @@ const ScheduleFields = memo(function ScheduleFields() {
                   type="time"
                   aria-label={t('Start time')}
                   className={inputClassName}
+                  readOnly={locked}
                   {...register(`days.${index}.start_time`, {
                     required: t('Start time is required'),
                   })}
@@ -197,9 +208,11 @@ const ScheduleFields = memo(function ScheduleFields() {
                   type="time"
                   aria-label={t('End time')}
                   className={inputClassName}
+                  readOnly={locked}
                   {...register(`days.${index}.end_time`, {
                     required: t('End time is required'),
                     validate: (end, values) => {
+                      if (isLocked(values.days[index])) return true;
                       const a = minutesOf(values.days[index]?.start_time);
                       const b = minutesOf(end);
                       if (a == null || b == null) return true;
@@ -229,6 +242,11 @@ const ScheduleFields = memo(function ScheduleFields() {
                   <span />
                 )}
               </div>
+              {locked && (
+                <p className="text-xs text-foreground-tertiary">
+                  {t('Change the date or hours of an existing day by rescheduling.')}
+                </p>
+              )}
               <FieldError errors={[errs?.date]} />
               <FieldError errors={[errs?.start_time]} />
               <FieldError errors={[errs?.end_time]} />

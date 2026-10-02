@@ -49,6 +49,8 @@ export interface ICampaignShift {
 
 /** Request body forms: days and shifts by position. */
 export interface ICampaignDayInput {
+  /** An existing day; edits of an approved campaign match days by id (spec 3.5). */
+  id?: string;
   start_at: string;
   end_at: string;
 }

@@ -1,4 +1,4 @@
-import { createContext, memo, ReactNode, useCallback, useMemo, useState } from 'react';
+import { createContext, memo, ReactNode, useCallback, useMemo, useRef, useState } from 'react';
 import { FormProvider, Path, useForm, UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from '@/libs/router';
@@ -25,7 +25,7 @@ import type {
   ICampaignCreateEligibility,
   ICampaignValidationIssue,
 } from '@/apis/campaign/models/lifecycle';
-import { CAMPAIGN_ISSUE_MESSAGES } from '@/constants/campaignLifecycle';
+import { CAMPAIGN_ISSUE_MESSAGES, isApprovedEdit } from '@/constants/campaignLifecycle';
 import { uploadToCloudinary } from '@/app/(pages)/(main)/incidents/create/_services/upload.service';
 import useAuthStore from '@/stores/useAuthStore';
 
@@ -79,6 +79,14 @@ interface CampaignContextType {
   campaign?: ICampaign;
   saveDraft: () => Promise<void>;
   submitForReview: () => Promise<void>;
+  /**
+   * An approved campaign edited in place (spec 3.5): saved like a draft, but times of existing
+   * days and shifts are fixed and an important change sends it back for review.
+   */
+  approvedEdit: boolean;
+  /** Approved edit: the form changes an important field (location, days, waste points, …). */
+  hasMajorChange: () => boolean;
+
   isSaving: boolean;
   isSubmitting: boolean;
   isUploading: boolean;
@@ -129,6 +137,8 @@ export const CampaignProvider = memo(function CampaignProvider({
   const router = useRouter();
 
   const [isUploading, setIsUploading] = useState(false);
+  /** The last update sent an approved campaign back for review (spec 3.5). */
+  const reReviewRef = useRef(false);
   const [campaignId, setCampaignId] = useState<string | undefined>(campaign?.id);
   const [saved, setSaved] = useState<ICampaign | undefined>(campaign);
   const currentUserId = useAuthStore((s) => s.user?.id) ?? '';
@@ -289,6 +299,7 @@ export const CampaignProvider = memo(function CampaignProvider({
         void _org;
         const res = await updateAsync({ id: campaignId, data: rest });
         if (res.data?.campaign) setSaved(res.data.campaign);
+        reReviewRef.current = Boolean(res.data?.campaign?.re_review);
         return campaignId;
       }
       const res = await createAsync(payload);
@@ -303,17 +314,62 @@ export const CampaignProvider = memo(function CampaignProvider({
     }
   }, [applyServerErrors, campaignId, createAsync, currentUserId, form, showStep, updateAsync]);
 
-  const saveDraft = useCallback(async () => {
+  const approvedEdit = isApprovedEdit(saved ?? campaign);
+  /** The important part of a payload (spec 3.5), to tell whether an edit needs a new review. */
+  const majorPart = useCallback((values: CampaignFormValues) => {
+    const payload = transformToApiData({
+      ...values,
+      schedule: fitSchedule(values.schedule, values.days.length, values.meeting_points.length, currentUserId),
+    });
+    return JSON.stringify({
+      difficulty: payload.difficulty,
+      requirements: payload.requirements,
+      days: (payload.days ?? []).map((d) => d.id ?? `${d.start_at}|${d.end_at}`),
+      meeting_points: payload.meeting_points,
+    });
+  }, [currentUserId]);
+  const [savedMajor, setSavedMajor] = useState(() => majorPart(form.getValues()));
+  const hasMajorChange = useCallback(
+    () => majorPart(form.getValues()) !== savedMajor,
+    [form, majorPart, savedMajor],
+  );
+
+  /**
+   * Saves, then moves the "important part" baseline. Returns the id and whether the save sent an
+   * approved campaign back for review (told with a toast either way it is saved).
+   */
+  const saveAndTrack = useCallback(async (): Promise<string | undefined> => {
     const id = await persist();
-    if (!id) return;
+    if (!id) return undefined;
+    setSavedMajor(majorPart(form.getValues()));
     queryClient.invalidateQueries({ queryKey: ['my-campaigns'] });
     queryClient.invalidateQueries({ queryKey: ['campaign', id] });
+    return id;
+  }, [form, majorPart, persist]);
+
+  const toastReReview = useCallback(
+    () =>
+      showMessage({
+        type: MessageType.Toast,
+        level: MessageLevel.Success,
+        title: t('Changes saved. The campaign is waiting for admin review again.'),
+      }),
+    [t],
+  );
+
+  const saveDraft = useCallback(async () => {
+    const id = await saveAndTrack();
+    if (!id) return;
+    if (reReviewRef.current) {
+      toastReReview();
+      return;
+    }
     showMessage({
       type: MessageType.Toast,
       level: MessageLevel.Success,
-      title: t('Draft saved'),
+      title: approvedEdit ? t('Changes saved') : t('Draft saved'),
     });
-  }, [persist, t]);
+  }, [approvedEdit, saveAndTrack, t, toastReReview]);
 
   const submitForReview = useCallback(async () => {
     // Same rules as the server, checked here first for quick feedback.
@@ -336,11 +392,11 @@ export const CampaignProvider = memo(function CampaignProvider({
   /** Validates this step, saves the draft quietly, then moves on. */
   const next = useCallback(async () => {
     if (!(await form.trigger(STEP_FIELDS[step]))) return;
-    const id = await persist();
+    const id = await saveAndTrack();
     if (!id) return;
-    queryClient.invalidateQueries({ queryKey: ['my-campaigns'] });
+    if (reReviewRef.current) toastReReview();
     showStep(Math.min(stepIndex + 1, CAMPAIGN_STEPS.length - 1));
-  }, [form, persist, showStep, step, stepIndex]);
+  }, [form, saveAndTrack, showStep, step, stepIndex, toastReReview]);
 
   const back = useCallback(() => {
     if (stepIndex > 0) showStep(stepIndex - 1);
@@ -382,6 +438,8 @@ export const CampaignProvider = memo(function CampaignProvider({
       campaign,
       saveDraft,
       submitForReview,
+      approvedEdit,
+      hasMajorChange,
       isSaving: isCreating || isUpdating,
       isSubmitting,
       isUploading,
@@ -403,6 +461,8 @@ export const CampaignProvider = memo(function CampaignProvider({
     }),
     [
       saved,
+      approvedEdit,
+      hasMajorChange,
       addScheduleRow,
       removeScheduleRow,
       addScheduleColumn,

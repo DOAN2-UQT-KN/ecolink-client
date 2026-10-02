@@ -19,7 +19,7 @@ import { useCampaignDetail } from './_hooks/useCampaignDetail';
 import { TbArrowRight, TbPencil } from 'react-icons/tb';
 import { Button } from '@/components/client/shared/Button';
 import { STATUS } from '@/constants/status';
-import { CAMPAIGN_REGISTRABLE_STATUSES } from '@/constants/campaignLifecycle';
+import { CAMPAIGN_REGISTRABLE_STATUSES, CAMPAIGN_STATUS } from '@/constants/campaignLifecycle';
 import { ConfirmPopoverModal } from '@/modules/OrganizationCard/components/ConfirmPopoverModal';
 import { useMarkDoneCampaign } from '@/apis/campaign/campaignById';
 import { useQueryClient } from '@tanstack/react-query';
@@ -68,6 +68,11 @@ function CampaignDetailBody() {
 
   // Registration (spec 3.1): anyone, managers included, while a shift is still to come.
   const showJoinCta = isRegistered || hasOpenShift;
+  // Back under review after an edit: volunteers keep their place, new sign-ups wait.
+  const underReReview =
+    Boolean(campaign?.approved_at) &&
+    (campaign?.status === CAMPAIGN_STATUS.PENDING_REVIEW ||
+      campaign?.status === CAMPAIGN_STATUS.NEEDS_REVISION);
   const openJoin = () => {
     if (!isAuthenticated) {
       router.push(`/sign-in?redirect=${encodeURIComponent(`/campaigns/${campaignId}`)}`);
@@ -182,6 +187,16 @@ function CampaignDetailBody() {
       <Breadcrumbs breadcrumbs={breadcrumbs} />
 
       <div className="pt-5 space-y-6">
+        {underReReview && (
+          <div
+            className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
+            role="status"
+          >
+            {t(
+              'This campaign is being reviewed again after an edit. Registered volunteers keep their place; new sign-ups are paused until it is approved.',
+            )}
+          </div>
+        )}
         {(showCompletionVerification || showJoinCta) && (
           <div className="flex flex-wrap items-center justify-end gap-2">
             {showCompletionVerification ? (
