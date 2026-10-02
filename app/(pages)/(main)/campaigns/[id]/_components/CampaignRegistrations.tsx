@@ -3,9 +3,12 @@ import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { Inbox } from 'lucide-react';
 
-import { useGetCampaignRegistrations } from '@/apis/campaign/registration';
+import { useGetCampaignRegistrations, useInviteNearby } from '@/apis/campaign/registration';
+import { Button } from '@/components/client/shared/Button';
+import { InfoTooltip } from '@/components/ui/InfoTooltip';
+import showMessage, { MessageLevel, MessageType } from '@/utils/showMessage';
+import { TbSpeakerphone } from 'react-icons/tb';
 import type { IShiftRegistrations } from '@/apis/campaign/models/registration';
-import Image from '@/components/ui/AppImage';
 import {
   Empty,
   EmptyDescription,
@@ -14,36 +17,20 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/libs/utils';
 import { Link } from '@/libs/router';
 
 import { useCampaignDetail } from '../_hooks/useCampaignDetail';
+import { AvatarList } from './AvatarList';
+import { CloseShiftButton } from './CloseShiftButton';
 import { ShiftFillBar } from './ShiftFillBar';
 
-import defaultAvatar from '@/public/default-avatar.png';
-
-/** From this many in 90 days a count is shown in red (server `CAMPAIGN_ABSENCE_WARN_COUNT`). */
-const RECORD_WARN_COUNT = 3;
 
 const hhmm = (iso: string) => format(new Date(iso), 'HH:mm');
 
-export function RecordBadge({ count, label }: { count: number | null; label: string }) {
-  if (count == null || count <= 0) return null;
-  return (
-    <span
-      className={cn(
-        'rounded-full px-2 py-0.5 text-xs font-medium tabular-nums',
-        count >= RECORD_WARN_COUNT ? 'bg-red-100 text-red-700' : 'bg-zinc-100 text-zinc-700',
-      )}
-    >
-      {label} {count}
-    </span>
-  );
-}
-
 /**
- * Managers: who registered for each shift, by day (spec 3.1). Registration needs no approval;
- * each person's recent absences and late leaves are shown so the managers can follow up.
+ * Managers: who registered for each shift, by day (spec 3.1), to read only: it shows whether a
+ * shift will have enough people. Managers can re-invite nearby residents and turn a shift off
+ * (3.2), but never remove or move a volunteer.
  */
 export const CampaignRegistrations = memo(function CampaignRegistrations({
   enabled,
@@ -72,7 +59,26 @@ export const CampaignRegistrations = memo(function CampaignRegistrations({
       .filter((d) => d.shifts.length > 0);
   }, [campaign?.days, data]);
 
-  const total = (data?.data?.shifts ?? []).reduce((sum, s) => sum + s.registered_count, 0);
+  const shifts = data?.data?.shifts ?? [];
+  const nextInviteAt = data?.data?.next_invite_at ? new Date(data.data.next_invite_at) : null;
+  const now = Date.now();
+  const anyShort = shifts.some(
+    (s) => new Date(s.start_at).getTime() > now && s.registered_count < s.min_volunteers,
+  );
+  /** Running shifts per day; the last one of a day cannot be turned off. */
+  const runningPerDay = shifts.reduce<Record<string, number>>((acc, s) => {
+    if (s.min_volunteers > 0) acc[s.day_id] = (acc[s.day_id] ?? 0) + 1;
+    return acc;
+  }, {});
+
+  const { mutate: invite, isPending: isInviting } = useInviteNearby({
+    onSuccess: (response) =>
+      showMessage({
+        type: MessageType.Toast,
+        level: MessageLevel.Success,
+        title: t('Invited {{n}} nearby resident(s)', { n: response.data.invited }),
+      }),
+  });
 
   return (
     <div className="rounded-xl border border-[rgba(136,122,71,0.35)] bg-white/60 p-4 sm:p-5 shadow-sm">
@@ -83,7 +89,7 @@ export const CampaignRegistrations = memo(function CampaignRegistrations({
         </div>
       ) : isError ? (
         <p className="text-sm text-destructive">{t('Could not load registrations.')}</p>
-      ) : total === 0 ? (
+      ) : shifts.length === 0 ? (
         <div className="flex justify-center pt-12 pb-20">
           <Empty>
             <EmptyHeader>
@@ -99,69 +105,109 @@ export const CampaignRegistrations = memo(function CampaignRegistrations({
         </div>
       ) : (
         <div className="flex flex-col gap-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span className="flex items-center gap-1 text-sm text-foreground-tertiary">
+              {t('Who registered for each shift')}
+              <InfoTooltip
+                content={t(
+                  'Read only: registering just keeps volunteers informed and helps you estimate numbers. Volunteers pick and leave shifts themselves.',
+                )}
+              />
+            </span>
+            {anyShort && (
+              <div className="flex items-center gap-2">
+                {nextInviteAt && (
+                  <span className="text-xs text-foreground-tertiary">
+                    {t('You can invite again at {{time}}', { time: format(nextInviteAt, 'HH:mm, dd/MM') })}
+                  </span>
+                )}
+                <Button
+                  type="button"
+                  variant="brown"
+                  iconLeft={<TbSpeakerphone className="size-4" aria-hidden />}
+                  isLoading={isInviting}
+                  isDisabled={Boolean(nextInviteAt)}
+                  onClick={() => invite({ campaign_id: campaignId })}
+                >
+                  {t('Invite nearby residents')}
+                </Button>
+                <InfoTooltip
+                  content={t(
+                    'Notifies people within 5 km of the meeting points that this campaign still needs volunteers. Once every 24 hours.',
+                  )}
+                />
+              </div>
+            )}
+          </div>
           {days.map(({ day, index, shifts }) => (
             <section key={day.id} className="flex flex-col gap-3">
               <h3 className="font-display-3 font-semibold text-button-accent">
                 {t('Day {{n}}', { n: index + 1 })} · {format(new Date(day.start_at), 'EEEE, PP')}
               </h3>
-              {shifts.map((shift) => {
-                return (
-                  <div
-                    key={shift.shift_id}
-                    className="rounded-lg border border-[rgba(136,122,71,0.3)] bg-white p-3"
-                  >
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Link
-                        href={`/campaigns/${campaignId}/shifts/${shift.shift_id}`}
-                        className="font-medium hover:underline"
-                      >
-                        {pointName(shift)}
-                      </Link>
-                      <span className="text-xs text-foreground-tertiary tabular-nums">
-                        {hhmm(shift.start_at)} – {hhmm(shift.end_at)}
-                      </span>
-                    </div>
-                    <ShiftFillBar
-                      className="mt-2 max-w-sm"
-                      registered={shift.registered_count}
-                      min={shift.min_volunteers}
-                      max={shift.max_volunteers}
-                    />
-                    {shift.volunteers.length > 0 && (
-                      <ul className="mt-3 divide-y divide-border/60">
-                        {shift.volunteers.map((v) => (
-                          <li key={v.user_id} className="flex items-center gap-3 py-2">
-                            <Image
-                              src={v.volunteer?.avatar || defaultAvatar}
-                              alt={v.volunteer?.name || t('Unnamed volunteer')}
-                              width={32}
-                              height={32}
-                              className="rounded-full"
-                            />
-                            <div className="flex min-w-0 flex-col">
-                              <span className="truncate text-sm font-medium">
-                                {v.volunteer?.name || t('Unnamed volunteer')}
-                              </span>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {shifts.map((shift) => {
+                  const canClose =
+                    new Date(shift.start_at).getTime() > now &&
+                    shift.min_volunteers > 0 &&
+                    (runningPerDay[shift.day_id] ?? 0) > 1;
+                  return (
+                    <div
+                      key={shift.shift_id}
+                      className="flex flex-col gap-2 rounded-lg border border-[rgba(136,122,71,0.3)] bg-white/70 p-4 text-sm"
+                    >
+                      <div className="flex flex-col">
+                        <Link
+                          href={`/campaigns/${campaignId}/shifts/${shift.shift_id}`}
+                          className="font-semibold hover:underline"
+                        >
+                          {pointName(shift)}
+                        </Link>
+                        <span className="text-xs text-foreground-tertiary tabular-nums">
+                          {hhmm(shift.start_at)} – {hhmm(shift.end_at)}
+                        </span>
+                      </div>
+                      <ShiftFillBar
+                        registered={shift.registered_count}
+                        min={shift.min_volunteers}
+                        max={shift.max_volunteers}
+                      />
+                      {shift.volunteers.length === 0 ? (
+                        <p className="text-xs text-foreground-tertiary">
+                          {t('Nobody has registered yet')}
+                        </p>
+                      ) : (
+                        <AvatarList
+                          isLoading={false}
+                          items={shift.volunteers.map((v) => ({
+                            id: v.user_id,
+                            avatar: v.volunteer?.avatar,
+                            name: v.volunteer?.name || t('Unnamed volunteer'),
+                          }))}
+                          renderBadge={(item) => {
+                            const v = shift.volunteers.find((x) => x.user_id === item.id);
+                            return v ? (
                               <span className="text-xs text-foreground-tertiary">
                                 {format(new Date(v.registered_at), 'PPp')}
                               </span>
-                            </div>
-                            <div className="ml-auto flex flex-wrap gap-1">
-                              <RecordBadge count={v.absence_count} label={t('Absent')} />
-                              <RecordBadge count={v.late_leave_count} label={t('Late leave')} />
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                );
-              })}
+                            ) : null;
+                          }}
+                        />
+                      )}
+                      {canClose && (
+                        <div className="mt-auto flex justify-end pt-1">
+                          <CloseShiftButton
+                            campaignId={campaignId}
+                            shiftId={shift.shift_id}
+                            registered={shift.registered_count}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </section>
           ))}
-          <p className="text-xs text-foreground-tertiary">
-            {t('Absences and late leaves count the last 90 days.')}
-          </p>
         </div>
       )}
     </div>

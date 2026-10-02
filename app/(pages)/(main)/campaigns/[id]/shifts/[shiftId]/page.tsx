@@ -28,7 +28,7 @@ import ReportSummaryCard from '@/modules/ReportSummaryCard';
 import useAuthStore from '@/stores/useAuthStore';
 
 import { AvatarList } from '../../_components/AvatarList';
-import { RecordBadge } from '../../_components/CampaignRegistrations';
+import { CloseShiftButton } from '../../_components/CloseShiftButton';
 import { JoinShiftsDialog } from '../../_components/JoinShiftsDialog';
 import { ShiftFillBar } from '../../_components/ShiftFillBar';
 import { CampaignDetailProvider } from '../../_context/CampaignDetailContext';
@@ -86,7 +86,6 @@ function ShiftDetailBody({ shiftId }: { shiftId: string }) {
 
   // Server returns 403 for anyone else, so don't ask.
   const canViewVolunteers = canManageCampaign || isRegistered || isPlatformAdmin;
-  const seesRecord = canManageCampaign || isPlatformAdmin;
   const { data: registrationsData, isLoading: isMembersLoading } = useGetCampaignRegistrations(
     campaignId,
     { enabled: Boolean(campaignId && shift) && canViewVolunteers },
@@ -151,6 +150,12 @@ function ShiftDetailBody({ shiftId }: { shiftId: string }) {
   }
 
   const day = campaign.days?.[dayIndex];
+  const canClose =
+    canManageCampaign &&
+    !started &&
+    (campaign.shifts ?? []).some(
+      (s) => s.day_id === shift.day_id && s.id !== shift.id && s.min_volunteers > 0,
+    );
 
   return (
     <div className="max-w-7xl mx-auto w-full px-4 lg:px-8 pb-10 animate-in fade-in duration-500">
@@ -170,6 +175,15 @@ function ShiftDetailBody({ shiftId }: { shiftId: string }) {
               </span>
             </span>
           </div>
+          <div className="flex flex-wrap items-center gap-2">
+          {canClose && (
+            <CloseShiftButton
+              campaignId={campaignId}
+              shiftId={shift.id}
+              registered={shift.registered_count ?? 0}
+              onClosed={() => router.push(`/campaigns/${campaignId}`)}
+            />
+          )}
           {isRegistered ? (
             <Button
               type="button"
@@ -191,6 +205,7 @@ function ShiftDetailBody({ shiftId }: { shiftId: string }) {
               {t('Join')}
             </Button>
           ) : null}
+          </div>
         </div>
         <JoinShiftsDialog campaignId={campaignId} open={joinOpen} onOpenChange={setJoinOpen} />
 
@@ -338,12 +353,6 @@ function ShiftDetailBody({ shiftId }: { shiftId: string }) {
                           <span className="text-xs text-foreground-tertiary">
                             {t('Registered')} {format(new Date(v.registered_at), 'PPp')}
                           </span>
-                          {seesRecord && (
-                            <>
-                              <RecordBadge count={v.absence_count} label={t('Absent')} />
-                              <RecordBadge count={v.late_leave_count} label={t('Late leave')} />
-                            </>
-                          )}
                         </div>
                       );
                     }}

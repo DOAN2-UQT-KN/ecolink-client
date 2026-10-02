@@ -2,7 +2,9 @@ import requestApi from '@/utils/requestApi';
 import { useGet, UseGetOptions, usePost, UsePostOptions } from '@/hooks/reactQuery';
 import { MessageType } from '@/utils/showMessage';
 import type {
+  ICloseShiftResponse,
   IGetCampaignRegistrationsResponse,
+  IInviteNearbyResponse,
   IGetRegistrationOptionsResponse,
   IUpdateMyRegistrationsRequest,
   IUpdateMyRegistrationsResponse,
@@ -15,7 +17,7 @@ export const getRegistrationOptions = async (
 ): Promise<IGetRegistrationOptionsResponse> =>
   requestApi.get<IGetRegistrationOptionsResponse>(`${url}/${campaignId}/registration-options`);
 
-/** Shifts the viewer can pick, with counts, overlaps and their absence record. */
+/** Shifts the viewer can pick, with counts and overlaps. */
 export const useGetRegistrationOptions = (
   campaignId: string,
   options?: Omit<UseGetOptions<IGetRegistrationOptionsResponse>, 'queryKey' | 'queryFn'>,
@@ -56,5 +58,39 @@ export const useGetCampaignRegistrations = (
   useGet({
     queryKey: ['campaign-registrations', campaignId],
     queryFn: () => getCampaignRegistrations(campaignId),
+    ...options,
+  });
+
+export const inviteNearby = async ({ campaign_id }: { campaign_id: string }): Promise<IInviteNearbyResponse> =>
+  requestApi.post<IInviteNearbyResponse>(`${url}/${campaign_id}/invite-nearby`, {});
+
+/** Managers: invite residents around the meeting points (once per 24 h). */
+export const useInviteNearby = (
+  options?: UsePostOptions<IInviteNearbyResponse, { campaign_id: string }>,
+) =>
+  usePost({
+    mutationFn: inviteNearby,
+    queryKey: ['campaign-registrations'],
+    messageError: { type: MessageType.Toast },
+    ...options,
+  });
+
+export const closeShift = async ({
+  campaign_id,
+  shift_id,
+}: {
+  campaign_id: string;
+  shift_id: string;
+}): Promise<ICloseShiftResponse> =>
+  requestApi.post<ICloseShiftResponse>(`${url}/${campaign_id}/shifts/${shift_id}/close`, {});
+
+/** Managers: turn a shift off before it starts; its volunteers are told to pick another. */
+export const useCloseShift = (
+  options?: UsePostOptions<ICloseShiftResponse, { campaign_id: string; shift_id: string }>,
+) =>
+  usePost({
+    mutationFn: closeShift,
+    queryKey: ['campaign-registrations'],
+    messageError: { type: MessageType.Toast },
     ...options,
   });

@@ -60,6 +60,10 @@ export function getNotificationHref(
     case 'CAMPAIGN_COMPLETION_REJECTED_BY_ADMIN':
     case 'CAMPAIGN_APPROVED':
     case 'CAMPAIGN_REGISTRATION_DIGEST':
+    case 'CAMPAIGN_SHIFT_UNDERSTAFFED':
+    case 'CAMPAIGN_SHIFT_OVER_MAX':
+    case 'CAMPAIGN_JOIN_INVITE':
+    case 'CAMPAIGN_SHIFT_CLOSED':
       return campaignId ? `/campaigns/${campaignId}` : null;
     case 'CAMPAIGN_COMPLETION_PENDING_ADMIN':
       return campaignId ? `/admin/campaigns?highlight=${campaignId}` : '/admin/campaigns';

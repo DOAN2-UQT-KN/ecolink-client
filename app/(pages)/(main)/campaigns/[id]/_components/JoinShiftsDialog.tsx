@@ -2,7 +2,6 @@ import { memo, useEffect, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
-import { TriangleAlert } from 'lucide-react';
 
 import {
   useGetRegistrationOptions,
@@ -25,9 +24,6 @@ import { cn } from '@/libs/utils';
 import showMessage, { MessageLevel, MessageType } from '@/utils/showMessage';
 
 import { ShiftFillBar } from './ShiftFillBar';
-
-/** Same window as the server's `CAMPAIGN_FREE_LEAVE_HOURS`. */
-const FREE_LEAVE_HOURS = 24;
 
 const hhmm = (iso: string) => format(new Date(iso), 'HH:mm');
 const overlaps = (a: IRegistrationOptionShift, b: IRegistrationOptionShift) =>
@@ -124,10 +120,6 @@ export const JoinShiftsDialog = memo(function JoinShiftsDialog({
       .filter((d) => d.shifts.length > 0);
   }, [options, shifts]);
 
-  const lateLeaving = removed.some((id) => {
-    const shift = shifts.find((s) => s.id === id);
-    return shift && new Date(shift.start_at).getTime() - Date.now() < FREE_LEAVE_HOURS * 3600 * 1000;
-  });
 
   const toggle = (id: string, on: boolean) =>
     setTicked((current) => (on ? [...current, id] : current.filter((x) => x !== id)));
@@ -156,16 +148,6 @@ export const JoinShiftsDialog = memo(function JoinShiftsDialog({
           </div>
         ) : (
           <div className="flex max-h-[60vh] flex-col gap-5 overflow-y-auto pr-1">
-            {options.many_absences && (
-              <p className="flex gap-2 rounded-md border border-amber-500/40 bg-amber-50 p-3 text-sm text-amber-800">
-                <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
-                {t(
-                  'You missed {{n}} shifts you had registered for in the last 90 days. Please only register for shifts you can attend.',
-                  { n: options.absence_count },
-                )}
-              </p>
-            )}
-
             {days.length === 0 && (
               <p className="text-sm text-muted-foreground">
                 {t('The campaign has no more upcoming shifts')}
@@ -263,13 +245,6 @@ export const JoinShiftsDialog = memo(function JoinShiftsDialog({
               </label>
             )}
 
-            {lateLeaving && (
-              <p className="text-sm text-amber-700">
-                {t(
-                  'A shift you are leaving starts within 24 hours; this is recorded as a late leave.',
-                )}
-              </p>
-            )}
           </div>
         )}
 

@@ -29,6 +29,8 @@ import { CampaignAttendanceCheckInHandler } from './_components/CampaignAttendan
 import { CampaignAttendanceQrButton } from './_components/CampaignAttendanceQrButton';
 import { CampaignCompletionVerifyButton } from './_components/CampaignCompletionVerifyButton';
 import { JoinShiftsDialog } from './_components/JoinShiftsDialog';
+import { useUpdateMyRegistrations } from '@/apis/campaign/registration';
+import showMessage, { MessageLevel, MessageType } from '@/utils/showMessage';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import useAuthStore from '@/stores/useAuthStore';
 import { useRouter } from '@/libs/router';
@@ -48,6 +50,21 @@ function CampaignDetailBody() {
   const [joinOpen, setJoinOpen] = useState(false);
   const isAuthenticated = useAuthStore((s) => s.is_authenticated);
   const router = useRouter();
+
+  const { mutateAsync: updateMyShifts, isPending: isLeaving } = useUpdateMyRegistrations({
+    onSuccess: () => {
+      showMessage({ type: MessageType.Toast, level: MessageLevel.Success, title: t('You left the campaign') });
+      void queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });
+    },
+  });
+  /** Leaves every shift not started yet (spec 3.3); started ones stay with attendance. */
+  const handleLeave = async () => {
+    const now = Date.now();
+    const keep = (campaign?.shifts ?? [])
+      .filter((s) => campaign?.my_shift_ids?.includes(s.id) && new Date(s.start_at).getTime() <= now)
+      .map((s) => s.id);
+    await updateMyShifts({ campaign_id: campaignId, shift_ids: keep });
+  };
 
   // Registration (spec 3.1): anyone, managers included, while a shift is still to come.
   const showJoinCta = isRegistered || hasOpenShift;
@@ -176,15 +193,32 @@ function CampaignDetailBody() {
               />
             ) : null}
             {isRegistered ? (
-              <Button
-                type="button"
-                variant="outlined-brown"
-                size="medium"
-                iconLeft={<TbPencil className="size-4" aria-hidden />}
-                onClick={openJoin}
-              >
-                {t('Edit my shifts')}
-              </Button>
+              <>
+                <ConfirmPopoverModal
+                  title={t('Leave this campaign?')}
+                  description={t(
+                    'You leave every shift that has not started yet. You can register again at any time.',
+                  )}
+                  confirmLabel={t('Leave the campaign')}
+                  cancelLabel={t('Cancel')}
+                  confirmPending={isLeaving}
+                  onConfirm={handleLeave}
+                  trigger={
+                    <Button type="button" variant="outlined-brown" size="medium">
+                      {t('Leave the campaign')}
+                    </Button>
+                  }
+                />
+                <Button
+                  type="button"
+                  variant="outlined-brown"
+                  size="medium"
+                  iconLeft={<TbPencil className="size-4" aria-hidden />}
+                  onClick={openJoin}
+                >
+                  {t('Edit my shifts')}
+                </Button>
+              </>
             ) : hasOpenShift ? (
               <Button
                 type="button"

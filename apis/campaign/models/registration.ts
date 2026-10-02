@@ -37,8 +37,6 @@ export interface IRegistrationOptions {
   days: { id: string; start_at: string; end_at: string }[];
   /** Open shifts, plus the ones the viewer holds. */
   shifts: IRegistrationOptionShift[];
-  absence_count: number;
-  many_absences: boolean;
 }
 
 export type IGetRegistrationOptionsResponse = IBaseResponse<IRegistrationOptions>;
@@ -49,13 +47,12 @@ export interface IUpdateMyRegistrationsRequest {
   accept_conditions?: boolean;
 }
 
-export type RegistrationWarning = "OVERLAP" | "MANY_ABSENCES" | "OVER_MAX";
+export type RegistrationWarning = "OVERLAP" | "OVER_MAX";
 
 export type IUpdateMyRegistrationsResponse = IBaseResponse<{
   shift_ids: string[];
   added: string[];
   left: string[];
-  late_left: string[];
   warnings: RegistrationWarning[];
 }>;
 
@@ -63,9 +60,6 @@ export interface IRegisteredVolunteer {
   user_id: string;
   volunteer: IOrganizationOwner;
   registered_at: string;
-  /** Managers and admins only; null for other viewers. */
-  absence_count: number | null;
-  late_leave_count: number | null;
   checked_in_at: string | null;
 }
 
@@ -82,4 +76,11 @@ export interface IShiftRegistrations {
   volunteers: IRegisteredVolunteer[];
 }
 
-export type IGetCampaignRegistrationsResponse = IBaseResponse<{ shifts: IShiftRegistrations[] }>;
+export type IGetCampaignRegistrationsResponse = IBaseResponse<{
+  shifts: IShiftRegistrations[];
+  /** When managers may invite nearby residents again; null when they may now. */
+  next_invite_at: string | null;
+}>;
+
+export type IInviteNearbyResponse = IBaseResponse<{ invited: number }>;
+export type ICloseShiftResponse = IBaseResponse<{ notified: number }>;
