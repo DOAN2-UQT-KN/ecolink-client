@@ -68,6 +68,7 @@ export function getNotificationHref(
     case 'CAMPAIGN_SHIFT_LEADER_REMOVED':
     case 'CAMPAIGN_UPDATED_NEEDS_REVIEW':
     case 'CAMPAIGN_REREVIEW_EXPIRED':
+    case 'CAMPAIGN_SHIFT_REMINDER':
       return campaignId ? `/campaigns/${campaignId}` : null;
     case 'CAMPAIGN_COMPLETION_PENDING_ADMIN':
       return campaignId ? `/admin/campaigns?highlight=${campaignId}` : '/admin/campaigns';

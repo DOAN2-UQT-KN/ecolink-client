@@ -15,6 +15,7 @@ import {
 } from "@/app/(pages)/(main)/organizations/apply/_components/ApplicationPageLayout";
 
 import { CampaignSummary } from "../../create/_components/CampaignSummary";
+import { CancelCampaignButton } from "../_components/CancelCampaignButton";
 import { campaignToFormValues } from "../../create/_services/campaign.service";
 
 /**
@@ -93,15 +94,18 @@ export default function CampaignOverviewPage() {
         onEdit={canEdit ? (step) => router.push(`${editPath}?step=${step}`) : undefined}
       />
 
-      {canEdit && (
-        <div className="flex justify-end border-t border-[rgba(136,122,71,0.3)] pt-6">
-          <Link href={editPath}>
-            <Button variant="brown" iconLeft={<TbPencil className="size-5" />}>
-              {campaign.status === CAMPAIGN_STATUS.DRAFT
-                ? t("Continue editing")
-                : t("Edit campaign")}
-            </Button>
-          </Link>
+      {(canEdit || campaign.can_cancel_campaign) && (
+        <div className="flex flex-wrap justify-end gap-3 border-t border-[rgba(136,122,71,0.3)] pt-6">
+          <CancelCampaignButton campaign={campaign} />
+          {canEdit && (
+            <Link href={editPath}>
+              <Button variant="brown" iconLeft={<TbPencil className="size-5" />}>
+                {campaign.status === CAMPAIGN_STATUS.DRAFT
+                  ? t("Continue editing")
+                  : t("Edit campaign")}
+              </Button>
+            </Link>
+          )}
         </div>
       )}
     </ApplicationPageLayout>

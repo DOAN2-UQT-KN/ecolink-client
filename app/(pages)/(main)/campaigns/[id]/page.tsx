@@ -29,6 +29,7 @@ import { CampaignAttendanceCheckInHandler } from './_components/CampaignAttendan
 import { CampaignAttendanceQrButton } from './_components/CampaignAttendanceQrButton';
 import { CampaignCompletionVerifyButton } from './_components/CampaignCompletionVerifyButton';
 import { JoinShiftsDialog } from './_components/JoinShiftsDialog';
+import { CancelCampaignButton } from './_components/CancelCampaignButton';
 import { useUpdateMyRegistrations } from '@/apis/campaign/registration';
 import showMessage, { MessageLevel, MessageType } from '@/utils/showMessage';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -66,8 +67,10 @@ function CampaignDetailBody() {
     await updateMyShifts({ campaign_id: campaignId, shift_ids: keep });
   };
 
-  // Registration (spec 3.1): anyone, managers included, while a shift is still to come.
-  const showJoinCta = isRegistered || hasOpenShift;
+  // Registration (spec 3.1) while a shift is still to come. The people managing the campaign are
+  // not offered "Join"; one already registered still sees their shifts to edit or leave them.
+  const canJoin = hasOpenShift && !canManageCampaign;
+  const showJoinCta = isRegistered || canJoin;
   // Back under review after an edit: volunteers keep their place, new sign-ups wait.
   const underReReview =
     Boolean(campaign?.approved_at) &&
@@ -197,6 +200,20 @@ function CampaignDetailBody() {
             )}
           </div>
         )}
+        {campaign.status === CAMPAIGN_STATUS.CANCELLED && (
+          <div
+            className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900"
+            role="status"
+          >
+            {t('This campaign was cancelled.')}
+            {campaign.reject_reason ? ` ${t('Reason')}: ${campaign.reject_reason}` : ''}
+          </div>
+        )}
+        {campaign.can_cancel_campaign && (
+          <div className="flex justify-end">
+            <CancelCampaignButton campaign={campaign} />
+          </div>
+        )}
         {(showCompletionVerification || showJoinCta) && (
           <div className="flex flex-wrap items-center justify-end gap-2">
             {showCompletionVerification ? (
@@ -234,7 +251,7 @@ function CampaignDetailBody() {
                   {t('Edit my shifts')}
                 </Button>
               </>
-            ) : hasOpenShift ? (
+            ) : canJoin ? (
               <Button
                 type="button"
                 variant="brown"
@@ -247,7 +264,7 @@ function CampaignDetailBody() {
             ) : null}
           </div>
         )}
-        {!showJoinCta && CAMPAIGN_REGISTRABLE_STATUSES.includes(campaign.status ?? -1) ? (
+        {!showJoinCta && !canManageCampaign && CAMPAIGN_REGISTRABLE_STATUSES.includes(campaign.status ?? -1) ? (
           <div className="flex justify-end">
             <Tooltip>
               <TooltipTrigger asChild>

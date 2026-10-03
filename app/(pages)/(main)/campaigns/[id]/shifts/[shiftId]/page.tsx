@@ -196,7 +196,7 @@ function ShiftDetailBody({ shiftId }: { shiftId: string }) {
             >
               {t('Edit my shifts')}
             </Button>
-          ) : hasOpenShift ? (
+          ) : hasOpenShift && !canManageCampaign ? (
             <Button
               type="button"
               variant="brown"

@@ -80,10 +80,12 @@ interface CampaignContextType {
   saveDraft: () => Promise<void>;
   submitForReview: () => Promise<void>;
   /**
-   * An approved campaign edited in place (spec 3.5): saved like a draft, but times of existing
-   * days and shifts are fixed and an important change sends it back for review.
+   * An approved campaign edited in place (spec 3.5): saved like a draft; an important change,
+   * new hours of a day or shift included, sends it back for review.
    */
   approvedEdit: boolean;
+  /** The campaign as last saved (the edit compares days with it). */
+  savedCampaign?: ICampaign;
   /** Approved edit: the form changes an important field (location, days, waste points, …). */
   hasMajorChange: () => boolean;
 
@@ -324,8 +326,16 @@ export const CampaignProvider = memo(function CampaignProvider({
     return JSON.stringify({
       difficulty: payload.difficulty,
       requirements: payload.requirements,
-      days: (payload.days ?? []).map((d) => d.id ?? `${d.start_at}|${d.end_at}`),
+      days: (payload.days ?? []).map((d) => `${d.id ?? ''}|${d.start_at}|${d.end_at}`),
       meeting_points: payload.meeting_points,
+      // Hours of a shift are important too; its numbers and leader are not.
+      shift_times: (payload.shifts ?? []).map((sh) => [
+        sh.day_index,
+        sh.meeting_point_index,
+        sh.start_at ?? null,
+        sh.end_at ?? null,
+        sh.gather_at ?? null,
+      ]),
     });
   }, [currentUserId]);
   const [savedMajor, setSavedMajor] = useState(() => majorPart(form.getValues()));
@@ -439,6 +449,7 @@ export const CampaignProvider = memo(function CampaignProvider({
       saveDraft,
       submitForReview,
       approvedEdit,
+      savedCampaign: saved ?? campaign,
       hasMajorChange,
       isSaving: isCreating || isUpdating,
       isSubmitting,

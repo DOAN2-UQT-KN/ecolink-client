@@ -49,7 +49,11 @@ const CampaignRowActions = memo(function CampaignRowActions({ campaign }: { camp
   const canManage = Boolean(campaign.can_manage_campaign);
   const canEdit = canManage && CAMPAIGN_EDITABLE_STATUSES.includes(status);
   const canSubmit = canManage && CAMPAIGN_SUBMITTABLE_STATUSES.includes(status);
-  const canDelete = Boolean(campaign.can_delete_campaign) && CAMPAIGN_DELETABLE_STATUSES.includes(status);
+  // An approved campaign may have volunteers: it is cancelled instead (spec, "Xoá chiến dịch").
+  const canDelete =
+    Boolean(campaign.can_delete_campaign) &&
+    CAMPAIGN_DELETABLE_STATUSES.includes(status) &&
+    !campaign.approved_at;
 
   if (!canEdit && !canSubmit && !canDelete) {
     return <span className="text-xs text-zinc-400">—</span>;

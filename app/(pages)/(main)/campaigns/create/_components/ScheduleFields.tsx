@@ -20,7 +20,7 @@ import {
 } from '@/constants/campaignLifecycle';
 
 import { useCampaign } from '../_hooks/useCampaign';
-import { emptyDay, type CampaignDayFormValues } from '../_services/campaign.service';
+import { combineDateTime, emptyDay, type CampaignDayFormValues } from '../_services/campaign.service';
 import NeedsReviewTag from './NeedsReviewTag';
 
 const inputClassName =
@@ -58,11 +58,24 @@ const firstDate = (days: CampaignDayFormValues[]): Date | undefined =>
  */
 const ScheduleFields = memo(function ScheduleFields() {
   const { t } = useTranslation();
-  const { form, addScheduleRow, removeScheduleRow, approvedEdit } = useCampaign();
-  /** An existing day of an approved campaign: its date and hours change by rescheduling (3.5). */
-  const isLocked = useCallback(
-    (day?: { server_id?: string }) => approvedEdit && Boolean(day?.server_id),
-    [approvedEdit],
+  const { form, addScheduleRow, removeScheduleRow, approvedEdit, savedCampaign } = useCampaign();
+  /**
+   * An existing day of an approved campaign still at its saved times: the creation rules do not
+   * apply to it (it may well be close by now). New times are an important change (3.5).
+   */
+  const isUntouched = useCallback(
+    (day?: CampaignDayFormValues) => {
+      if (!approvedEdit || !day?.server_id) return false;
+      const stored = savedCampaign?.days?.find((d) => d.id === day.server_id);
+      if (!stored) return false;
+      const same = (a: string | undefined, b: string) =>
+        a != null && new Date(a).getTime() === new Date(b).getTime();
+      return (
+        same(combineDateTime(day.date, day.start_time), stored.start_at) &&
+        same(combineDateTime(day.date, day.end_time), stored.end_at)
+      );
+    },
+    [approvedEdit, savedCampaign],
   );
   const {
     control,
@@ -79,7 +92,7 @@ const ScheduleFields = memo(function ScheduleFields() {
     fields.forEach((_, index) =>
       register(`days.${index}.date`, {
         validate: (value, values) => {
-          if (isLocked(values.days[index])) return true;
+          if (isUntouched(values.days[index])) return true;
           if (!value) return t('Pick the campaign day');
           const others = values.days.filter((_, i) => i !== index).map((d) => d.date);
           if (others.includes(value)) return t('Each day can be added only once');
@@ -102,7 +115,7 @@ const ScheduleFields = memo(function ScheduleFields() {
         },
       }),
     );
-  }, [fields, isLocked, register, t]);
+  }, [fields, isUntouched, register, t]);
 
   const minDay = useMemo(() => new Date(Date.now() + CAMPAIGN_MIN_LEAD_HOURS * 3_600_000), []);
   const dayErrors = errors.days;
@@ -146,7 +159,6 @@ const ScheduleFields = memo(function ScheduleFields() {
         {fields.map((field, index) => {
           const value = days[index];
           const errs = dayErrors?.[index];
-          const locked = isLocked(value);
           return (
             <Field key={field.id}>
               <FieldLabel className="text-foreground-tertiary font-display-3">
@@ -161,7 +173,6 @@ const ScheduleFields = memo(function ScheduleFields() {
                       'w-full justify-start text-left font-normal border-[rgba(136,122,71,0.5)] hover:bg-transparent !h-[50px]',
                       !value?.date && 'text-muted-foreground',
                     )}
-                    disabled={locked}
                     onClick={() => setOpenIndex((prev) => (prev === index ? null : index))}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
@@ -199,7 +210,6 @@ const ScheduleFields = memo(function ScheduleFields() {
                   type="time"
                   aria-label={t('Start time')}
                   className={inputClassName}
-                  readOnly={locked}
                   {...register(`days.${index}.start_time`, {
                     required: t('Start time is required'),
                   })}
@@ -208,11 +218,10 @@ const ScheduleFields = memo(function ScheduleFields() {
                   type="time"
                   aria-label={t('End time')}
                   className={inputClassName}
-                  readOnly={locked}
                   {...register(`days.${index}.end_time`, {
                     required: t('End time is required'),
                     validate: (end, values) => {
-                      if (isLocked(values.days[index])) return true;
+                      if (isUntouched(values.days[index])) return true;
                       const a = minutesOf(values.days[index]?.start_time);
                       const b = minutesOf(end);
                       if (a == null || b == null) return true;
@@ -242,11 +251,6 @@ const ScheduleFields = memo(function ScheduleFields() {
                   <span />
                 )}
               </div>
-              {locked && (
-                <p className="text-xs text-foreground-tertiary">
-                  {t('Change the date or hours of an existing day by rescheduling.')}
-                </p>
-              )}
               <FieldError errors={[errs?.date]} />
               <FieldError errors={[errs?.start_time]} />
               <FieldError errors={[errs?.end_time]} />

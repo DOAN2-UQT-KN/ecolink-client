@@ -92,6 +92,8 @@ export interface ICampaign {
 
   /** Viewer may delete this campaign: the creator (while an active member) or an LR/OWNER. */
   can_delete_campaign?: boolean;
+  /** Viewer may cancel it now: creator or LR/OWNER, and upcoming, running or approved under review (spec 3.6). */
+  can_cancel_campaign?: boolean;
 
   /** Populated by admin-facing endpoints */
   organization?: {
