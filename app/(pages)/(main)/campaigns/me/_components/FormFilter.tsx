@@ -6,20 +6,26 @@ import { Search } from 'lucide-react';
 import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
+import SelectListOrganization, {
   ALL_ORGANIZATIONS_VALUE,
 } from '@/components/form/SelectListOrganization';
-import { STATUS } from '@/constants/status';
+import { ALL_ORG_MEMBER_ROLES } from '@/hooks/useCampaignCreatorOrganizations';
+import { CAMPAIGN_STATUS } from '@/constants/campaignLifecycle';
 import { useDebounce } from '@/hooks/useDebounce';
 import useCampaignMeContext from '../_hooks/useCampaignMeContext';
 
 const CAMPAIGN_STATUS_OPTIONS = [
   { labelKey: 'All', value: 'all' },
-  { labelKey: 'Pending', value: String(STATUS.PENDING) },
-  { labelKey: 'Active', value: String(STATUS.ACTIVE) },
-  { labelKey: 'Waiting Confirmed', value: String(STATUS.WAITING_CONFIRMED) },
-  { labelKey: 'Completed', value: String(STATUS.COMPLETED) },
-  { labelKey: 'Inactive', value: String(STATUS.INACTIVE) },
+  { labelKey: 'Draft', value: String(CAMPAIGN_STATUS.DRAFT) },
+  { labelKey: 'Pending review', value: String(CAMPAIGN_STATUS.PENDING_REVIEW) },
+  { labelKey: 'Needs revision', value: String(CAMPAIGN_STATUS.NEEDS_REVISION) },
+  { labelKey: 'Upcoming', value: String(CAMPAIGN_STATUS.UPCOMING) },
+  { labelKey: 'Active', value: String(CAMPAIGN_STATUS.ACTIVE) },
+  { labelKey: 'Waiting Confirmed', value: String(CAMPAIGN_STATUS.PENDING_COMPLETION) },
+  { labelKey: 'Completed', value: String(CAMPAIGN_STATUS.COMPLETED) },
+  { labelKey: 'Rejected', value: String(CAMPAIGN_STATUS.BLOCKED) },
+  { labelKey: 'Expired', value: String(CAMPAIGN_STATUS.EXPIRED) },
+  { labelKey: 'Cancelled', value: String(CAMPAIGN_STATUS.CANCELLED) },
 ] as const;
 
 export const FormFilter = memo(function FormFilter() {
@@ -69,7 +75,8 @@ export const FormFilter = memo(function FormFilter() {
     (value: string) => {
       const organizationId = value === ALL_ORGANIZATIONS_VALUE ? undefined : value;
       setFilters({ organizationId: organizationId });
-      setUrlParam('organizationId', organizationId);
+      // Keep "-1" in the URL for an explicit "All" so the active-org default does not re-apply.
+      setUrlParam('organizationId', value);
     },
     [setFilters, setUrlParam],
   );
@@ -104,14 +111,15 @@ export const FormFilter = memo(function FormFilter() {
             className="pl-10 h-10 border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50 text-base !font-display-1"
           />
         </div>
-        {/* <Field>
+        <Field className="w-full lg:w-[300px]">
           <SelectListOrganization
             value={filters.organizationId || ALL_ORGANIZATIONS_VALUE}
             onChange={handleOrganizationChange}
             className="!h-10 w-full border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50  !font-display-1"
             allOptions
+            roles={ALL_ORG_MEMBER_ROLES}
           />
-        </Field> */}
+        </Field>
       </div>
     </div>
   );

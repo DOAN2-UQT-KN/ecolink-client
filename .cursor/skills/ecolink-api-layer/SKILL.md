@@ -256,9 +256,11 @@ QueryError = {
 |---|---|---|
 | Nền tảng | `useAuthStore` → `user.roleId === ADMIN_ROLE_ID` | chỉ để ẩn link Admin |
 | Tổ chức | API trả `organization.my_role` + `organization.permissions.*` | `can_edit_org`, `can_invite`, `can_approve_members`, `can_propose_owners` |
-| Chiến dịch | API trả cờ trên campaign | `can_manage_campaign`, owner = `campaign.owner.id` |
+| Chiến dịch | API trả cờ trên campaign | `can_manage_campaign` (người tạo, manager được gán **hoặc** LR / OWNER của tổ chức; chỉ tính khi còn là thành viên), `can_delete_campaign` (người tạo hoặc LR / OWNER). Quyền **tạo** campaign: `organization.permissions.can_create_campaign` (LR / OWNER / CAMPAIGN_MANAGER) |
 
-`useOrgContextStore.activeOrganizationId` **chỉ để hiển thị** (highlight, switcher), không gửi lên server và không cấp quyền gì. Server kiểm quyền theo DB mỗi request.
+Đừng so `campaign.owner.id` / `created_by` với user hiện tại để quyết định quyền — người tạo đã rời tổ chức thì mất quyền, còn owner tổ chức thì có quyền dù không tạo. `campaign.created_by` chỉ dùng để hiển thị (badge "Creator", ẩn nút gỡ người tạo).
+
+`useOrgContextStore.activeOrganizationId` **không cấp quyền gì**; server kiểm quyền theo DB mỗi request. Nó chỉ là giá trị mặc định cho UI: highlight / switcher, filter tổ chức của `/campaigns/me` (URL không có `organizationId` → lọc theo tổ chức ngữ cảnh; `organizationId=-1` = người dùng chủ động chọn "All"), và tổ chức chọn sẵn ở form `/campaigns/create` (sau `?organizationId=`, chỉ khi tổ chức đó có trong `useCampaignCreatorOrganizations()`). Trang `/campaigns` không lọc theo ngữ cảnh.
 
 ## `libs/queryClient.ts`
 

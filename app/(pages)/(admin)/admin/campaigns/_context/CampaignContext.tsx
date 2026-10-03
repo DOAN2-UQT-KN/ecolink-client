@@ -10,6 +10,7 @@ import {
 import { usePathname, useRouter, useSearchParams } from '@/libs/router';
 
 import { useGetCampaigns } from '@/apis/campaign/getCampaigns';
+import { CAMPAIGN_STATUS } from '@/constants/campaignLifecycle';
 import type { IGetCampaignsRequest } from '@/apis/campaign/models/getCampaigns';
 import type { ICampaign } from '@/apis/campaign/models/campaign';
 import useGetParam from '@/hooks/useGetParam';
@@ -142,7 +143,10 @@ export function CampaignProvider({ children }: { children: React.ReactNode }) {
       limit: pagination.pageSize,
       search: filters.search.trim() || undefined,
       status: filters.status === 'all' ? undefined : Number(filters.status),
-      organization_id: filters.organizationId || undefined,
+      organizationId: filters.organizationId || undefined,
+      // The review queue leaves out organizations the admin belongs to.
+      excludeMemberOrgs:
+        Number(filters.status) === CAMPAIGN_STATUS.PENDING_REVIEW ? true : undefined,
     }),
     [filters.organizationId, filters.search, filters.status, pagination],
   );

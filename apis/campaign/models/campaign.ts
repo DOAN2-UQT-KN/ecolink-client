@@ -1,5 +1,11 @@
 import type { IUser } from '@/apis/auth/models/user';
 import { IIncident } from '@/apis/incident/models/incident';
+import type {
+  ICampaignDay,
+  ICampaignRequirements,
+  ICampaignShift,
+  IMeetingPoint,
+} from './lifecycle';
 
 export interface ICampaign {
   id: string;
@@ -41,23 +47,53 @@ export interface ICampaign {
   };
 
   saved?: boolean;
+  /** APPROVED when the viewer holds at least one shift (kept for older screens). */
   request_status?: number;
-  /** Present when the current user has a join request; used to cancel while pending. */
-  join_request_id?: string;
+  /** Detail only: the shifts the viewer is registered for. */
+  my_shift_ids?: string[];
 
   banner?: string;
   detail_address?: string;
-  start_date?: string;
-  end_date?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  radius_km?: number | null;
 
-  current_members?: number;
-  max_members?: number;
+  contact_name?: string | null;
+  /** Only returned to managers, admins and accepted volunteers. */
+  contact_phone?: string | null;
+  safety_notes?: string | null;
+  requirements?: ICampaignRequirements | null;
+  /** Resubmit before this while the campaign needs revision. */
+  revision_deadline?: string | null;
+  submitted_at?: string | null;
+  /** First admin approval; set means edits keep registrations and may send it back for review. */
+  approved_at?: string | null;
+  /** Only in an update response: the edit sent the campaign back for review (spec 3.5). */
+  re_review?: boolean;
+  /** Why a day's minimum volunteers is below the difficulty's suggestion. */
+  min_volunteers_reason?: string | null;
+  /** Minimum volunteers per day the difficulty suggests (detail responses). */
+  suggested_min_volunteers?: number | null;
+  /** In time order; the campaign runs from the first start to the last end. */
+  days?: ICampaignDay[];
+  meeting_points?: IMeetingPoint[];
+  /** Every day × meeting point. */
+  shifts?: ICampaignShift[];
 
   /** Campaign owner; may be omitted in some responses; see also `created_by` */
   owner?: Pick<IUser, 'id' | 'name' | 'email' | 'avatar'> | null;
 
-  /** Creator or assigned campaign manager (from GET campaign when authenticated). */
+  /**
+   * Viewer may manage this campaign (edit, tasks, join requests, QR, mark done, managers):
+   * the creator, an assigned manager, or an LR/OWNER of the campaign's organization. Creator and
+   * managers only count while they are still active members of that organization.
+   */
   can_manage_campaign?: boolean;
+
+  /** Viewer may delete this campaign: the creator (while an active member) or an LR/OWNER. */
+  can_delete_campaign?: boolean;
+  /** Viewer may cancel it now: creator or LR/OWNER, and upcoming, running or approved under review (spec 3.6). */
+  can_cancel_campaign?: boolean;
 
   /** Populated by admin-facing endpoints */
   organization?: {

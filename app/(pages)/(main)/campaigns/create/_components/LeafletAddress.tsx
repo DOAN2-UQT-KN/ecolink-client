@@ -60,15 +60,26 @@ function isSamePosition(a: LatLngLiteral | null, b: LatLngLiteral) {
   return a.lat.toFixed(4) === b.lat.toFixed(4) && a.lng.toFixed(4) === b.lng.toFixed(4);
 }
 
-const LeafletAddress = memo(function LeafletAddress() {
+/** Location picker for one meeting point (`meeting_points.<index>`). */
+const LeafletAddress = memo(function LeafletAddress({
+  index,
+  title,
+}: {
+  index: number;
+  title?: string;
+}) {
   const { t } = useTranslation();
   const { form } = useCampaign();
   const { register, setValue, getValues, control } = form;
-  const detailAddress = useWatch({ control, name: "detail_address" });
+  const LAT = `meeting_points.${index}.latitude` as const;
+  const LNG = `meeting_points.${index}.longitude` as const;
+  const ADDRESS = `meeting_points.${index}.detail_address` as const;
+  const detailAddress = useWatch({ control, name: ADDRESS });
   const { errors } = useFormState<CampaignFormValues>({
     control,
-    name: ["detail_address"],
+    name: [ADDRESS],
   });
+  const addressError = errors.meeting_points?.[index]?.detail_address;
 
   const [position, setPosition] = useState<LatLngLiteral | null>(null);
   const [forwardWarning, setForwardWarning] = useState<string | null>(null);
@@ -94,26 +105,26 @@ const LeafletAddress = memo(function LeafletAddress() {
         skipReverseRef.current = true;
       }
       setPosition(newPos);
-      setValue("latitude", newPos.lat, { shouldDirty: true, shouldValidate: true });
-      setValue("longitude", newPos.lng, { shouldDirty: true, shouldValidate: true });
+      setValue(LAT, newPos.lat, { shouldDirty: true, shouldValidate: true });
+      setValue(LNG, newPos.lng, { shouldDirty: true, shouldValidate: true });
     },
-    [setValue],
+    [LAT, LNG, setValue],
   );
 
   const writeDetailAddressFromReverse = useCallback(
     (text: string) => {
       if (isEditingRef.current) return;
       setForwardWarning(null);
-      setValue("detail_address", truncateDetailAddress(text), {
+      setValue(ADDRESS, truncateDetailAddress(text), {
         shouldDirty: true,
         shouldValidate: true,
       });
     },
-    [setValue],
+    [ADDRESS, setValue],
   );
 
   useEffect(() => {
-    register("detail_address", {
+    register(ADDRESS, {
       maxLength: {
         value: DETAIL_ADDRESS_MAX_LENGTH,
         message: t("Detail address must be at most {{max}} characters", {
@@ -121,7 +132,7 @@ const LeafletAddress = memo(function LeafletAddress() {
         }),
       },
     });
-  }, [register, t]);
+  }, [ADDRESS, register, t]);
 
   const parseAddress = useCallback(
     (data: {
@@ -211,8 +222,8 @@ const LeafletAddress = memo(function LeafletAddress() {
     if (initDoneRef.current) return;
     initDoneRef.current = true;
 
-    const lat = getValues("latitude");
-    const lng = getValues("longitude");
+    const lat = getValues(LAT);
+    const lng = getValues(LNG);
     const hasCoords =
       typeof lat === "number" &&
       typeof lng === "number" &&
@@ -220,7 +231,7 @@ const LeafletAddress = memo(function LeafletAddress() {
       !Number.isNaN(lng);
 
     if (hasCoords) {
-      const savedAddress = truncateDetailAddress(getValues("detail_address"));
+      const savedAddress = truncateDetailAddress(getValues(ADDRESS));
       applyPosition({ lat, lng }, "hydrate");
       if (!savedAddress) {
         skipReverseRef.current = false;
@@ -236,7 +247,7 @@ const LeafletAddress = memo(function LeafletAddress() {
       () => {},
       GPS_OPTIONS,
     );
-  }, [applyPosition, getValues]);
+  }, [LAT, LNG, ADDRESS, applyPosition, getValues]);
 
   useEffect(() => {
     if (!position) return;
@@ -298,16 +309,16 @@ const LeafletAddress = memo(function LeafletAddress() {
 
   const startEditing = useCallback(() => {
     snapshotRef.current = {
-      detailAddress: getValues("detail_address") || "",
-      latitude: getValues("latitude"),
-      longitude: getValues("longitude"),
+      detailAddress: getValues(ADDRESS) || "",
+      latitude: getValues(LAT),
+      longitude: getValues(LNG),
       position,
     };
-    setSearchQuery(getValues("detail_address") || "");
+    setSearchQuery(getValues(ADDRESS) || "");
     setCanConfirm(false);
     setForwardWarning(null);
     setIsEditing(true);
-  }, [getValues, position]);
+  }, [LAT, LNG, ADDRESS, getValues, position]);
 
   const exitEditing = useCallback(() => {
     searchGenerationRef.current += 1;
@@ -367,33 +378,33 @@ const LeafletAddress = memo(function LeafletAddress() {
 
   const handleConfirm = useCallback(() => {
     if (!canConfirm) return;
-    setValue("detail_address", truncateDetailAddress(searchQuery), {
+    setValue(ADDRESS, truncateDetailAddress(searchQuery), {
       shouldDirty: true,
       shouldValidate: true,
     });
     exitEditing();
-  }, [canConfirm, exitEditing, searchQuery, setValue]);
+  }, [ADDRESS, canConfirm, exitEditing, searchQuery, setValue]);
 
   const handleCancel = useCallback(() => {
     const snapshot = snapshotRef.current;
     if (snapshot) {
       skipReverseRef.current = true;
-      setValue("detail_address", snapshot.detailAddress, {
+      setValue(ADDRESS, snapshot.detailAddress, {
         shouldDirty: true,
         shouldValidate: true,
       });
-      setValue("latitude", snapshot.latitude, {
+      setValue(LAT, snapshot.latitude, {
         shouldDirty: true,
         shouldValidate: true,
       });
-      setValue("longitude", snapshot.longitude, {
+      setValue(LNG, snapshot.longitude, {
         shouldDirty: true,
         shouldValidate: true,
       });
       setPosition(snapshot.position);
     }
     exitEditing();
-  }, [exitEditing, setValue]);
+  }, [LAT, LNG, ADDRESS, exitEditing, setValue]);
 
   const handleMapPosition = useCallback(
     (pos: LatLngLiteral) => {
@@ -404,9 +415,9 @@ const LeafletAddress = memo(function LeafletAddress() {
   );
 
   return (
-    <div className="w-full h-full flex flex-col gap-[24px] px-[30px] py-[35px] border-1 border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5">
+    <div className="w-full h-full flex flex-col gap-[24px]">
       <span className="font-display-5 font-semibold !text-button-accent ">
-        {t("Location")}
+        {title ?? t("Location")}
       </span>
 
       <Field className="w-full gap-2">
@@ -424,7 +435,7 @@ const LeafletAddress = memo(function LeafletAddress() {
             >
               {detailAddress || t("Street, district, city...")}
             </p>
-            <FieldError errors={[errors.detail_address]} />
+            <FieldError errors={[addressError]} />
             <div className="flex flex-wrap justify-end gap-2">
               <Button
                 type="button"

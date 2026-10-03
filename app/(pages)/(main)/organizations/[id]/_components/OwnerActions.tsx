@@ -1,6 +1,6 @@
 import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { TbHelpCircle, TbUserMinus } from "react-icons/tb";
+import { TbUserMinus } from "react-icons/tb";
 
 import { useStepDown } from "@/apis/organization/memberManagement";
 import type { IOrganizationOwner } from "@/apis/organization/models/organization";
@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/libs/utils";
 import { useInvalidateOwnership } from "../_hooks/useInvalidateOwnership";
@@ -280,17 +281,10 @@ const ReplaceLegalRepDialog = memo(function ReplaceLegalRepDialog({
             {isSelf
               ? t("Step down as legal representative?")
               : t("Replace legal representative {{name}}?", { name })}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  aria-label={t("How does this work?")}
-                  className="text-foreground-tertiary hover:text-button-accent cursor-help"
-                >
-                  <TbHelpCircle className="size-5" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent className="max-w-xs">
+            <InfoTooltip
+              label={t("How does this work?")}
+              iconClassName="size-5"
+              content={
                 <p>
                   {t(
                     "The organization must keep a legal representative. Pick who takes the role over: an owner, a member or anyone by email.",
@@ -300,8 +294,8 @@ const ReplaceLegalRepDialog = memo(function ReplaceLegalRepDialog({
                     { name: isSelf ? t("you") : name },
                   )}
                 </p>
-              </TooltipContent>
-            </Tooltip>
+              }
+            />
           </DialogTitle>
           <DialogDescription>{t("Pick who takes the role over.")}</DialogDescription>
         </DialogHeader>

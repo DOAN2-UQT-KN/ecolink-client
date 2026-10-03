@@ -4,21 +4,29 @@ import { useTranslation } from 'react-i18next';
 import { Building2 } from 'lucide-react';
 
 import type { ICampaign } from '@/apis/campaign/models/campaign';
-import { StatusTag } from '@/components/ui/StatusTag';
+import { CampaignStatusTag } from '@/components/ui/CampaignStatusTag';
+import { Button } from '@/components/client/shared/Button';
+import { ConfirmPopover } from '@/components/admin/shared/ConfirmPopover';
+import { useSubmitCampaign } from '@/apis/campaign/submitCampaign';
+import { useDeleteCampaign } from '@/apis/campaign/deleteCampaign';
+import {
+  CAMPAIGN_DELETABLE_STATUSES,
+  CAMPAIGN_EDITABLE_STATUSES,
+  CAMPAIGN_STATUS,
+  CAMPAIGN_SUBMITTABLE_STATUSES,
+} from '@/constants/campaignLifecycle';
 import Image from '@/components/ui/AppImage';
 import { formattedDate } from '@/utils/formattedDate';
-import { getDifficultyLevel } from '@/constants/difficulty';
-import { cn } from '@/libs/utils';
 import {
   DataTable as SharedDataTable,
   type ColumnType,
 } from '@/components/client/shared/DataTable';
+import { CampaignGeneralInfoCell } from '@/components/client/shared/CampaignGeneralInfoCell';
 import useCampaignMeContext from '../_hooks/useCampaignMeContext';
 import FormFilter from './FormFilter';
 import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
 
 const defaultPagination = { current: 1, pageSize: 10 };
-const DEFAULT_BANNER = '/banner-default.jpg';
 
 const COLUMN_KEYS = {
   NO: 'no',
@@ -27,43 +35,67 @@ const COLUMN_KEYS = {
   ORGANIZATION: 'organization',
   STATUS: 'status',
   BAN_REASON: 'ban_reason',
-  MEMBERS: 'members',
   GREEN_POINTS: 'green_points',
+  ACTIONS: 'actions',
 } as const;
 
-const GeneralInformationCell = memo(function GeneralInformationCell({
-  campaign,
-  title,
-}: {
-  campaign: ICampaign;
-  title: string;
-}) {
+/** Edit / send for review / delete, depending on the campaign's status and the viewer's rights. */
+const CampaignRowActions = memo(function CampaignRowActions({ campaign }: { campaign: ICampaign }) {
   const { t } = useTranslation();
-  const bannerUrl = campaign.banner?.trim() ? campaign.banner : DEFAULT_BANNER;
-  const difficulty = getDifficultyLevel(campaign.difficulty);
-  const duration = `${formattedDate(campaign.start_date ?? undefined)} - ${formattedDate(campaign.end_date ?? undefined)}`;
+  const router = useRouter();
+  const { mutate: submit, isPending: isSubmitting } = useSubmitCampaign();
+  const { mutate: remove, isPending: isDeleting } = useDeleteCampaign();
+  const status = campaign.status ?? -1;
+  const canManage = Boolean(campaign.can_manage_campaign);
+  const canEdit = canManage && CAMPAIGN_EDITABLE_STATUSES.includes(status);
+  const canSubmit = canManage && CAMPAIGN_SUBMITTABLE_STATUSES.includes(status);
+  // An approved campaign may have volunteers: it is cancelled instead (spec, "Xoá chiến dịch").
+  const canDelete =
+    Boolean(campaign.can_delete_campaign) &&
+    CAMPAIGN_DELETABLE_STATUSES.includes(status) &&
+    !campaign.approved_at;
+
+  if (!canEdit && !canSubmit && !canDelete) {
+    return <span className="text-xs text-zinc-400">—</span>;
+  }
 
   return (
-    <div className="flex items-start gap-3 min-w-[280px] max-w-[420px]">
-      <Image
-        src={bannerUrl}
-        alt={title}
-        width={72}
-        height={48}
-        className="h-12 w-[72px] shrink-0 rounded-md object-cover ring-1 ring-zinc-200"
-      />
-      <div className="flex min-w-0 flex-col gap-0.5">
-        <span className="font-medium line-clamp-2 text-zinc-900">{title}</span>
-        <span className="text-xs text-zinc-600 tabular-nums">{duration}</span>
-        <span
-          className={cn(
-            'font-display-1 text-xs font-medium',
-            difficulty?.textClass ?? 'text-zinc-500',
-          )}
+    <div className="flex flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
+      {canEdit && (
+        <Button
+          size="small"
+          variant="outlined-brown"
+          onClick={() => router.push(`/campaigns/${campaign.id}/edit`)}
         >
-          {difficulty ? t(difficulty.label) : '—'}
-        </span>
-      </div>
+          {t('Edit')}
+        </Button>
+      )}
+      {canSubmit && (
+        <Button
+          size="small"
+          variant="brown"
+          disabled={isSubmitting}
+          onClick={() => submit(campaign.id, { onError: () => router.push(`/campaigns/${campaign.id}/edit`) })}
+        >
+          {status === CAMPAIGN_STATUS.NEEDS_REVISION ? t('Resubmit for review') : t('Send for review')}
+        </Button>
+      )}
+      {canDelete && (
+        <ConfirmPopover
+          title={t('Delete campaign')}
+          description={t('The campaign is removed and its waste points become available again.')}
+          confirmLabel={t('Yes')}
+          cancelLabel={t('No')}
+          theme="light"
+          confirmPending={isDeleting}
+          onConfirm={() => remove(campaign.id)}
+          trigger={
+            <Button size="small" variant="outlined-brown" className="text-red-600">
+              {t('Delete')}
+            </Button>
+          }
+        />
+      )}
     </div>
   );
 });
@@ -90,7 +122,7 @@ export const DataTable = memo(function DataTable() {
         key: COLUMN_KEYS.GENERAL_INFORMATION,
         title: t('General information'),
         render: (_, record) => (
-          <GeneralInformationCell campaign={record} title={localizedTitle(record)} />
+          <CampaignGeneralInfoCell campaign={record} title={localizedTitle(record)} />
         ),
         width: 360,
       },
@@ -134,15 +166,20 @@ export const DataTable = memo(function DataTable() {
         key: COLUMN_KEYS.STATUS,
         title: t('Status'),
         render: (_, record) => (
-          <StatusTag status={record.status} />
+          <CampaignStatusTag status={record.status} />
         ),
         width: 120,
       },
       {
         key: COLUMN_KEYS.BAN_REASON,
-        title: t('Reject Reason'),
+        title: t('Admin reason'),
         render: (_, record) =>
-          record.reject_reason ? (
+          record.reject_reason &&
+          (record.status === CAMPAIGN_STATUS.NEEDS_REVISION ||
+            record.status === CAMPAIGN_STATUS.BLOCKED ||
+            record.status === CAMPAIGN_STATUS.CANCELLED ||
+            record.status === CAMPAIGN_STATUS.UPCOMING ||
+            record.status === CAMPAIGN_STATUS.ACTIVE) ? (
             <span
               className="line-clamp-2 text-xs"
               title={record.reject_reason}
@@ -155,16 +192,10 @@ export const DataTable = memo(function DataTable() {
         width: 180,
       },
       {
-        key: COLUMN_KEYS.MEMBERS,
-        title: t('Members'),
-        render: (_, record) => (
-          <span className="tabular-nums font-display-1">
-            <span className="font-semibold text-emerald-500">{record.current_members ?? 0}</span>
-            <span className="text-zinc-400"> / </span>
-            <span>{record.max_members ?? '∞'}</span>
-          </span>
-        ),
-        width: 120,
+        key: COLUMN_KEYS.ACTIONS,
+        title: t('Actions'),
+        render: (_, record) => <CampaignRowActions campaign={record} />,
+        width: 220,
       },
       // {
       //   key: COLUMN_KEYS.GREEN_POINTS,

@@ -4,6 +4,7 @@ import { STATUS } from "@/constants/status";
 export type CampaignSearchViewMode = "explore" | "mine";
 
 export const DEFAULT_CAMPAIGN_SEARCH_STATUSES = [
+  STATUS.UPCOMING,
   STATUS.ACTIVE,
   STATUS.WAITING_CONFIRMED,
   STATUS.COMPLETED,
@@ -20,6 +21,7 @@ export const CAMPAIGN_SEARCH_DEBOUNCE_MS = 500;
 
 export const CAMPAIGN_STATUS_OPTIONS = [
   { label: "Pending", value: STATUS.PENDING },
+  { label: "Upcoming", value: STATUS.UPCOMING },
   { label: "Active", value: STATUS.ACTIVE },
   { label: "Waiting Confirmed", value: STATUS.WAITING_CONFIRMED },
   { label: "Completed", value: STATUS.COMPLETED },

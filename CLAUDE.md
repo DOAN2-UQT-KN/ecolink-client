@@ -9,7 +9,7 @@ Thư mục trông y hệt Next.js App Router (`app/(pages)/(main)/campaigns/[id]
 ## Lệnh
 
 ```bash
-npm run dev      # Vite dev server, port 5173
+npm run dev      # Vite dev server, port 5174
 npm run build    # tsc -b && vite build  ← cổng kiểm tra duy nhất, repo KHÔNG có test
 npm run lint     # eslint . --fix
 ```

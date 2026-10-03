@@ -1,20 +1,20 @@
-import { memo, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo } from 'react';
 import { Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { format } from 'date-fns';
-import { type DateRange } from 'react-day-picker';
-import { CalendarIcon } from 'lucide-react';
 
-import { Calendar } from '@/components/ui/calendar';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { cn } from '@/libs/utils';
-import SelectListOrganization from '@/components/form/SelectListOrganization';
+import Image from '@/components/ui/AppImage';
 
 import { useCampaign } from '../_hooks/useCampaign';
 import { TITLE_MAX_LENGTH } from '../_services/campaign.service';
+import {
+  CAMPAIGN_DESCRIPTION_MIN_LENGTH,
+  CAMPAIGN_TITLE_MIN_LENGTH,
+  stripHtml,
+} from '@/constants/campaignLifecycle';
 import {
   DIFFICULTY_LEVEL,
   DIFFICULTY_MAX,
@@ -23,39 +23,39 @@ import {
   getDifficultyLevel,
 } from '@/constants/difficulty';
 import UploadBanner from './UploadBanner';
+import NeedsReviewTag from './NeedsReviewTag';
 import RichTextEditor from '@/components/ui/RichTextEditor';
 
-const formatDateToApi = (date?: Date): string | undefined => {
-  if (!date) return undefined;
-  const year = date.getFullYear();
-  const month = `${date.getMonth() + 1}`.padStart(2, '0');
-  const day = `${date.getDate()}`.padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
-
-const parseApiDate = (date?: string): Date | undefined => {
-  if (!date) return undefined;
-  const parsed = new Date(date);
-  return Number.isNaN(parsed.getTime()) ? undefined : parsed;
-};
-
-const GeneralInformation = memo(function GeneralInformation({
-  organizationId,
-}: {
-  organizationId?: string;
-}) {
+const GeneralInformation = memo(function GeneralInformation() {
   const { t } = useTranslation();
-  const { form } = useCampaign();
+  const { form, eligibility, organization } = useCampaign();
   const {
     register,
     control,
     watch,
     formState: { errors },
   } = form;
-  const [isDateRangeOpen, setIsDateRangeOpen] = useState(false);
+  const maxDifficulty = eligibility?.max_difficulty ?? null;
+  const isUnverified = eligibility != null && !eligibility.is_verified;
 
-  const startDateValue = watch('start_date');
-  const endDateValue = watch('end_date');
+  // Rules checked on "Send for review"; a draft may be saved half-filled.
+  useEffect(() => {
+    register('banner', { validate: (v) => Boolean(v) || t('A cover image is required') });
+    register('description', {
+      validate: (v) =>
+        stripHtml(v).length >= CAMPAIGN_DESCRIPTION_MIN_LENGTH ||
+        t('Description must be at least {{min}} characters', {
+          min: CAMPAIGN_DESCRIPTION_MIN_LENGTH,
+        }),
+    });
+  }, [register, t]);
+
+  // An unverified organization only gets the lowest difficulty.
+  useEffect(() => {
+    if (maxDifficulty != null && form.getValues('difficulty') > maxDifficulty) {
+      form.setValue('difficulty', maxDifficulty);
+    }
+  }, [form, maxDifficulty]);
   const inputClassName = useMemo(
     () =>
       'border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50',
@@ -69,24 +69,29 @@ const GeneralInformation = memo(function GeneralInformation({
           {t('General Information')}
         </span>
 
-        <div className="grid grid-cols-2 gap-[30px]">
+        <div className="grid grid-cols-2 items-start gap-[30px]">
           <Field>
             <FieldLabel className="text-foreground-tertiary font-display-3">
-              {t('Organization')} <span className="text-destructive">*</span>
+              {t('Organization')}
             </FieldLabel>
-            <Controller
-              name="organization_id"
-              control={control}
-              rules={{ required: t('Organization is required') }}
-              render={({ field }) => (
-                <SelectListOrganization
-                  value={field.value}
-                  onChange={field.onChange}
-                  disabled={Boolean(organizationId)}
+            {/* Fixed: the campaign is created from this organization's page. */}
+            <div className="flex h-[50px] items-center gap-3 rounded-md border border-[rgba(136,122,71,0.5)] bg-muted/40 px-3">
+              {organization?.logo_url && (
+                <Image
+                  src={organization.logo_url}
+                  alt={organization.name}
+                  width={28}
+                  height={28}
+                  className="h-7 w-7 shrink-0 rounded-full object-cover"
                 />
               )}
-            />
-            <FieldError errors={[errors.organization_id]} />
+              <span className="truncate text-sm font-medium">{organization?.name ?? '—'}</span>
+            </div>
+            {isUnverified && (
+              <span className="text-xs font-medium text-amber-700">
+                {t('Unverified organization')}: {t('lowest difficulty only, at most 2 campaigns running at a time')}
+              </span>
+            )}
           </Field>
 
           <Field>
@@ -96,6 +101,12 @@ const GeneralInformation = memo(function GeneralInformation({
             <Input
               {...register('title', {
                 required: t('Title is required'),
+                minLength: {
+                  value: CAMPAIGN_TITLE_MIN_LENGTH,
+                  message: t('Title must be at least {{min}} characters', {
+                    min: CAMPAIGN_TITLE_MIN_LENGTH,
+                  }),
+                },
                 maxLength: {
                   value: TITLE_MAX_LENGTH,
                   message: t('Title must be at most {{max}} characters', {
@@ -110,62 +121,10 @@ const GeneralInformation = memo(function GeneralInformation({
             <FieldError errors={[errors.title]} />
           </Field>
 
-          <Field>
-            <FieldLabel className="text-foreground-tertiary font-display-3">
-              {t('Campaign schedule')}
-            </FieldLabel>
-            <Controller
-              name="end_date"
-              control={control}
-              render={() => (
-                <div className="relative">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className={cn(
-                      'w-full justify-start text-left font-normal border-[rgba(136,122,71,0.5)] hover:bg-transparent !h-[50px]',
-                      !startDateValue && 'text-muted-foreground',
-                    )}
-                    onClick={() => setIsDateRangeOpen((prev) => !prev)}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {startDateValue && endDateValue ? (
-                      `${format(parseApiDate(startDateValue) as Date, 'PPP')} - ${format(parseApiDate(endDateValue) as Date, 'PPP')}`
-                    ) : (
-                      <span>{t('Pick a date range')}</span>
-                    )}
-                  </Button>
-                  {isDateRangeOpen && (
-                    <div className="absolute z-50 mt-2 rounded-md border border-[rgba(136,122,71,0.5)] bg-background shadow-md">
-                      <Calendar
-                        mode="range"
-                        numberOfMonths={2}
-                        defaultMonth={parseApiDate(startDateValue) ?? new Date()}
-                        selected={{
-                          from: parseApiDate(startDateValue),
-                          to: parseApiDate(endDateValue),
-                        }}
-                        onSelect={(range: DateRange | undefined) => {
-                          form.setValue('start_date', formatDateToApi(range?.from), {
-                            shouldDirty: true,
-                          });
-                          form.setValue('end_date', formatDateToApi(range?.to), {
-                            shouldDirty: true,
-                          });
-                        }}
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
-            />
-            <FieldError errors={[errors.start_date]} />
-            <FieldError errors={[errors.end_date]} />
-          </Field>
-
-          <Field>
+          <Field className="col-span-2">
             <FieldLabel className="text-foreground-tertiary font-display-3">
               {t('Difficulty')}
+              <NeedsReviewTag />
             </FieldLabel>
             <Controller
               name="difficulty"
@@ -183,7 +142,8 @@ const GeneralInformation = memo(function GeneralInformation({
                     </div>
                     <Slider
                       min={DIFFICULTY_MIN}
-                      max={DIFFICULTY_MAX}
+                      max={maxDifficulty ?? DIFFICULTY_MAX}
+                      disabled={maxDifficulty === DIFFICULTY_MIN}
                       step={1}
                       value={[level]}
                       onValueChange={(value) => field.onChange(value[0] ?? DIFFICULTY_MIN)}
@@ -194,16 +154,19 @@ const GeneralInformation = memo(function GeneralInformation({
                       {DIFFICULTY_VALUES.map((value) => {
                         const item = DIFFICULTY_LEVEL[value];
                         const selected = value === level;
+                        const allowed = maxDifficulty == null || value <= maxDifficulty;
                         return (
                           <button
                             key={value}
                             type="button"
+                            disabled={!allowed}
                             onClick={() => field.onChange(value)}
                             className={cn(
                               'flex flex-col items-center gap-0.5 text-[10px] transition-colors',
                               selected
                                 ? cn('font-semibold', item.textClass)
                                 : 'text-foreground-tertiary',
+                              !allowed && 'opacity-40 cursor-not-allowed',
                             )}
                           >
                             <span className="hidden sm:block">{t(item.label)}</span>
@@ -220,7 +183,15 @@ const GeneralInformation = memo(function GeneralInformation({
 
           <Field>
             <FieldLabel className="text-foreground-tertiary font-display-3">
-              {t('Description')}
+              {t('Banner')} <span className="text-destructive">*</span>
+            </FieldLabel>
+            <UploadBanner />
+            <FieldError errors={[errors.banner]} />
+          </Field>
+
+          <Field>
+            <FieldLabel className="text-foreground-tertiary font-display-3">
+              {t('Description')} <span className="text-destructive">*</span>
             </FieldLabel>
             {/* <Textarea
               {...register('description')}
@@ -230,18 +201,11 @@ const GeneralInformation = memo(function GeneralInformation({
             /> */}
             <RichTextEditor
               value={watch('description')}
-              onChange={(value) => form.setValue('description', value)}
+              onChange={(value) => form.setValue('description', value, { shouldDirty: true })}
               placeholder={t('Describe this campaign...')}
               className={cn(inputClassName, 'min-h-[220px]')}
             />
-            {/* <FieldError errors={[errors.description]} /> */}
-          </Field>
-
-          <Field>
-            <FieldLabel className="text-foreground-tertiary font-display-3">
-              {t('Banner')}
-            </FieldLabel>
-            <UploadBanner />
+            <FieldError errors={[errors.description]} />
           </Field>
 
         </div>

@@ -1,39 +1,24 @@
-import React, { createContext, ReactNode, useCallback, useMemo } from 'react';
-
-import { useQueryClient } from '@tanstack/react-query';
+import React, { createContext, ReactNode, useMemo } from 'react';
 
 import { useGetCampaignById } from '@/apis/campaign/campaignById';
-import {
-  useCancelJoinCampaign,
-  useGetMyJoinRequests,
-  useJoinCampaign,
-} from '@/apis/campaign/joinCampaign';
 import type { ICampaign } from '@/apis/campaign/models/campaign';
-import { STATUS } from '@/constants/status';
-
-import useAuthStore from '@/stores/useAuthStore';
-
-import { parseCampaignDetailData } from '../_services/campaignDetailService';
+import { CAMPAIGN_REGISTRABLE_STATUSES } from '@/constants/campaignLifecycle';
 
 export interface CampaignDetailContextType {
   campaignId: string;
   campaign: ICampaign | undefined;
-  isCampaignOwner: boolean;
-  /** Campaign creator or assigned manager (from API `can_manage_campaign`). */
+  /**
+   * From API `can_manage_campaign`: creator, assigned manager, or LR/OWNER of the campaign's
+   * organization (creator/manager only while still an active member).
+   */
   canManageCampaign: boolean;
   isLoading: boolean;
   isError: boolean;
   isFetching: boolean;
-  /** Derived presentation fields */
-  currentMembers: number;
-  maxMembers: number;
-  daysSinceStart: number | null;
-  memberProgress: number;
-  archivedTasksCount: number;
-  isJoining: boolean;
-  isCancelling: boolean;
-  handleJoinCampaign: () => void;
-  handleCancelJoinRequest: () => void;
+  /** The viewer holds at least one shift. */
+  isRegistered: boolean;
+  /** Some shift is on and not started, in an upcoming or running campaign. */
+  hasOpenShift: boolean;
 }
 
 export const CampaignDetailContext = createContext<CampaignDetailContextType | undefined>(
@@ -47,119 +32,43 @@ export function CampaignDetailProvider({
   campaignId: string;
   children: ReactNode;
 }) {
-  const queryClient = useQueryClient();
-  const currentUserId = useAuthStore((s) => s.user?.id);
   const { data, isLoading, isError, isFetching } = useGetCampaignById(campaignId, {
     enabled: Boolean(campaignId),
   });
 
-  const { mutate: joinCampaignMutate, isPending: isJoining } = useJoinCampaign({
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });
-    },
-  });
-
-  const { mutate: cancelJoinMutate, isPending: isCancelling } = useCancelJoinCampaign({
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });
-    },
-  });
-
   const campaign = data?.data?.campaign;
 
-  const isCampaignOwner = useMemo(
-    () =>
-      currentUserId != null && campaign?.owner?.id != null && campaign.owner.id === currentUserId,
-    [currentUserId, campaign?.owner?.id],
-  );
-
   const canManageCampaign = Boolean(campaign?.can_manage_campaign);
-
-  const needsJoinRequestIdFromList =
-    campaign?.request_status === STATUS.PENDING && !campaign?.join_request_id;
-
-  const { data: myJoinRequestsData } = useGetMyJoinRequests(
-    {
-      campaign_id: campaignId,
-      status: STATUS.PENDING,
-      page: 1,
-      limit: 1,
-    },
-    {
-      enabled: Boolean(campaignId) && needsJoinRequestIdFromList,
-    },
-  );
-
-  const joinRequestIdForCancel =
-    campaign?.join_request_id ?? myJoinRequestsData?.data?.join_requests?.[0]?.id;
 
   const derived = useMemo(() => {
     if (!campaign) {
       return {
-        currentMembers: 0,
-        maxMembers: 0,
-        daysSinceStart: null as number | null,
-        memberProgress: 0,
-        archivedTasksCount: 0,
+        isRegistered: false,
+        hasOpenShift: false,
       };
     }
-    const p = parseCampaignDetailData(campaign);
+    const now = Date.now();
     return {
-      currentMembers: p.currentMembers,
-      maxMembers: p.maxMembers,
-      daysSinceStart: p.daysSinceStart,
-      memberProgress: p.memberProgress,
-      archivedTasksCount: p.archivedTasksDisplay,
+      isRegistered: (campaign.my_shift_ids?.length ?? 0) > 0,
+      hasOpenShift:
+        CAMPAIGN_REGISTRABLE_STATUSES.includes(campaign.status ?? -1) &&
+        (campaign.shifts ?? []).some(
+          (s) => s.min_volunteers > 0 && new Date(s.start_at).getTime() > now,
+        ),
     };
   }, [campaign]);
-
-  const handleJoinCampaign = useCallback(() => {
-    if (!campaignId || isJoining) {
-      return;
-    }
-    joinCampaignMutate({ campaign_id: campaignId });
-  }, [campaignId, isJoining, joinCampaignMutate]);
-
-  const handleCancelJoinRequest = useCallback(() => {
-    if (!joinRequestIdForCancel || isCancelling) {
-      return;
-    }
-    cancelJoinMutate({ requestId: joinRequestIdForCancel });
-  }, [joinRequestIdForCancel, isCancelling, cancelJoinMutate]);
 
   const contextValue = useMemo(
     () => ({
       campaignId,
       campaign,
-      isCampaignOwner,
       canManageCampaign,
       isLoading,
       isError,
       isFetching,
-      currentMembers: derived.currentMembers,
-      maxMembers: derived.maxMembers,
-      daysSinceStart: derived.daysSinceStart,
-      memberProgress: derived.memberProgress,
-      archivedTasksCount: derived.archivedTasksCount,
-      isJoining,
-      isCancelling,
-      handleJoinCampaign,
-      handleCancelJoinRequest,
+      ...derived,
     }),
-    [
-      campaignId,
-      campaign,
-      isCampaignOwner,
-      canManageCampaign,
-      isLoading,
-      isError,
-      isFetching,
-      derived,
-      isJoining,
-      isCancelling,
-      handleJoinCampaign,
-      handleCancelJoinRequest,
-    ],
+    [campaignId, campaign, canManageCampaign, isLoading, isError, isFetching, derived],
   );
 
   return (

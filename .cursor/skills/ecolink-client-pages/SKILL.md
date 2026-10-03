@@ -211,6 +211,8 @@ Ngoại lệ có chủ đích: `app/(pages)/(auth)/sign-in/_services/auth.servic
 const canManageCampaign = Boolean(campaign?.can_manage_campaign);
 ```
 
+Trang chi tiết campaign lấy mọi quyền quản lý từ `canManageCampaign` của `useCampaignDetail()` (không còn `isCampaignOwner`): tab Join requests, Add task / sửa / xoá task, Mark done, Attendance QR, nút Add manager và icon gỡ manager (`_components/CurrentMember.tsx`); người quản lý không thấy nút Join / Cancel. Danh sách volunteer chỉ gọi API khi `canManageCampaign || request_status === APPROVED || user là platform admin`, người khác thấy câu giải thích. Muốn biết ai được xoá thì dùng `campaign.can_delete_campaign`.
+
 ```tsx
 // organizations/[id]/_context/OrganizationDetailContext.tsx
 const myRole = organization?.my_role ?? null;            // vai trong tổ chức, do API trả
@@ -227,7 +229,9 @@ Helper quyền có sẵn — **dùng lại, đừng tự viết điều kiện**
 | `joinListingShowsJoinButton()` / `joinListingShowsCancelButton()` | `modules/OrganizationCard/utils/joinRequestListingUi.ts` |
 | `isBlueTickVisible()` — hiện tick xanh | `components/ui/BlueTickBadge.tsx` |
 
-⚠️ `components/form/SelectListOrganization.tsx` luôn lọc `is_owner: true` — chỉ ra tổ chức mình sở hữu. Cần danh sách mọi vai thì gọi `useGetMyOrganizations` trực tiếp.
+`components/form/SelectListOrganization.tsx` nhận prop `roles?: OrgMemberRole[]` (gửi `roles=` lên `GET /organizations/my`); **không truyền `roles` thì giữ lọc cũ `is_owner: true`** (admin campaigns vẫn dùng kiểu này). Params dựng bằng `buildMyOrganizationsSelectParams()` trong `hooks/useCampaignCreatorOrganizations.ts`, nên cùng `roles` là cùng cache React Query. Hằng số trong hook đó: `CAMPAIGN_CREATOR_ROLES` (LR / OWNER / CAMPAIGN_MANAGER — form tạo campaign) và `ALL_ORG_MEMBER_ROLES` (filter `/campaigns/me`).
+
+`useCampaignCreatorOrganizations()` trả các tổ chức có `permissions.can_create_campaign`: dùng để ẩn nút "Add Campaign" ở `/campaigns/me` khi rỗng và để chọn sẵn tổ chức ngữ cảnh ở `/campaigns/create`. Tab campaign của trang tổ chức có nút "Create campaign" khi `permissions.can_create_campaign`, dẫn tới `/campaigns/create?organizationId=<id>`.
 
 ⚠️ `IOrganization.owner_id` là **`string | null`**: tổ chức vừa được duyệt tồn tại một lúc ngắn
 trước khi tài khoản ORG được tạo xong. Mọi so sánh chủ sở hữu phải chịu được `null`, đừng

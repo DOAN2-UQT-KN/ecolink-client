@@ -27,6 +27,35 @@ const API_ERROR_MESSAGES: Record<string, string> = {
   OWNERS_NOT_ALL_CONFIRMED: "Not every owner has confirmed yet",
   ORG_MUST_HAVE_OWNER: "An organization must keep at least one owner",
   ORG_PERMISSION_DENIED: "Your role in this organization does not allow this action",
+  CAMPAIGN_PERMISSION_DENIED: "You do not have permission to manage this campaign",
+  SOS_PERMISSION_DENIED: "Only the campaign's managers can resolve this SOS",
+  CAMPAIGN_MANAGER_NOT_MEMBER:
+    "Campaign managers must be active members of the campaign's organization",
+  CANNOT_REMOVE_CAMPAIGN_CREATOR: "The campaign creator cannot be removed as a manager",
+  CAMPAIGN_INVALID: "The campaign is missing information or breaks a rule",
+  CAMPAIGN_REPORTS_TAKEN:
+    "Some waste points were just taken by another campaign; remove them and try again",
+  CAMPAIGN_CREATE_NOT_ALLOWED: "This organization cannot create or submit a campaign right now",
+  CAMPAIGN_INVALID_TRANSITION: "The campaign changed meanwhile; reload and try again",
+  CAMPAIGN_REVIEW_CONFLICT_OF_INTEREST:
+    "Admins cannot review campaigns of an organization they belong to",
+  CAMPAIGN_NOT_EDITABLE: "These fields cannot be changed once the campaign is approved",
+  CAMPAIGN_NOT_DELETABLE: "This campaign can no longer be deleted",
+  CAMPAIGN_NOT_REGISTRABLE: "This campaign has no shift open for registration",
+  SHIFT_NOT_REGISTRABLE: "Some shifts have started or were turned off; reload and choose again",
+  CONDITIONS_NOT_ACCEPTED: "Confirm that you meet the participation conditions",
+  SHIFT_ALREADY_STARTED: "This shift has already started",
+  DAY_NEEDS_ACTIVE_SHIFT: "Each day needs at least one shift that runs",
+  NEARBY_INVITE_TOO_SOON: "Nearby residents were invited recently; try again later",
+  CAMPAIGN_NOT_CANCELLABLE:
+    "Only an upcoming or running campaign, or an approved one under review again, can be cancelled",
+  CAMPAIGN_HAS_VOLUNTEERS: "Volunteers have registered for this campaign; cancel it instead of deleting it",
+  SHIFT_MIN_REQUIRED: "A running shift needs at least one volunteer; turn the shift off instead",
+  CAMPAIGN_LEADER_NOT_MANAGER:
+    "A shift leader must be one of the campaign's managers or an owner of its organization",
+  CAMPAIGN_MANAGER_LEADS_SHIFTS:
+    "This manager still leads upcoming shifts; assign another leader first",
+  REWARD_SERVICE_UNAVAILABLE: "The reward service is not reachable right now; try again shortly",
   ROLE_NOT_ASSIGNABLE: "You cannot assign this role",
   CANNOT_ACT_ON_MEMBER: "You cannot change or remove this member",
   MEMBER_NOT_FOUND: "This person is not a member of the organization",

@@ -10,18 +10,24 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/libs/utils";
 
+type BlueTickFields = Pick<
+  IOrganization,
+  "trust_tier" | "tick_suspended" | "kyc_status" | "verification_expires_at" | "is_verified"
+>;
+
 /**
- * The Blue Tick.
- *
- * It is driven by `trust_tier`, never by `is_email_verified` (which only says the contact
- * mailbox answered) and never by `kyc_status` (which only says the paperwork checked out).
- * A tick under suspension is hidden rather than dimmed: a half-shown badge still reads as
- * endorsement to a visitor.
+ * The Blue Tick, same rule as the server (`isOrganizationVerified` in @da2/constants): verified
+ * tier, tick not suspended, KYC approved, and a lane-B verification that has not expired. The
+ * server sends the result as `is_verified`; the fields are the fallback for older payloads.
+ * Never driven by `is_email_verified` alone. A tick under suspension is hidden rather than
+ * dimmed: a half-shown badge still reads as endorsement to a visitor.
  */
-export function isBlueTickVisible(
-  organization: Pick<IOrganization, "trust_tier" | "tick_suspended">,
-): boolean {
-  return organization.trust_tier === "VERIFIED" && !organization.tick_suspended;
+export function isBlueTickVisible(organization: BlueTickFields): boolean {
+  if (typeof organization.is_verified === "boolean") return organization.is_verified;
+  if (organization.trust_tier !== "VERIFIED" || organization.tick_suspended) return false;
+  if (organization.kyc_status && organization.kyc_status !== "APPROVED") return false;
+  const expiresAt = organization.verification_expires_at;
+  return !expiresAt || new Date(expiresAt).getTime() > Date.now();
 }
 
 export const BlueTickBadge = memo(function BlueTickBadge({
@@ -30,7 +36,7 @@ export const BlueTickBadge = memo(function BlueTickBadge({
   iconClassName,
   withLabel = false,
 }: {
-  organization: Pick<IOrganization, "trust_tier" | "tick_suspended">;
+  organization: BlueTickFields;
   className?: string;
   /** Size of the tick itself, e.g. larger next to a page title. */
   iconClassName?: string;
