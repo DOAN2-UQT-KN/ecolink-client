@@ -29,6 +29,12 @@ export interface ICampaignDay {
 }
 
 /**
+ * A shift's status (spec 4.2), derived on the server: off (turned off), upcoming, running,
+ * awaiting_result (past its end, no result yet), ended (with its result).
+ */
+export type ShiftStatus = 'upcoming' | 'running' | 'awaiting_result' | 'ended' | 'off';
+
+/**
  * One day × meeting point. `min_volunteers` 0 = the shift is off. Both numbers only drive
  * warnings; they never cap sign-ups.
  */
@@ -43,6 +49,9 @@ export interface ICampaignShift {
   /** Expected maximum; optional. */
   max_volunteers: number | null;
   leader_user_id: string | null;
+  /** Actual end when the shift was ended early (spec 4.2). */
+  ended_at?: string | null;
+  status?: ShiftStatus;
   /** Live registrations; on the campaign detail only. */
   registered_count?: number;
 }

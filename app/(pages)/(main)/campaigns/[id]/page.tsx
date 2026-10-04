@@ -20,6 +20,7 @@ import { TbArrowRight, TbPencil } from 'react-icons/tb';
 import { Button } from '@/components/client/shared/Button';
 import { STATUS } from '@/constants/status';
 import { CAMPAIGN_REGISTRABLE_STATUSES, CAMPAIGN_STATUS } from '@/constants/campaignLifecycle';
+import { useShiftOverview } from '@/apis/campaign/shiftResult';
 import { ConfirmPopoverModal } from '@/modules/OrganizationCard/components/ConfirmPopoverModal';
 import { useMarkDoneCampaign } from '@/apis/campaign/campaignById';
 import { useQueryClient } from '@tanstack/react-query';
@@ -87,6 +88,12 @@ function CampaignDetailBody() {
     canManageCampaign &&
     (campaign?.status === STATUS.ACTIVE || campaign?.status === STATUS.INREVIEW);
 
+  // Spec 5.1: "Mark done" opens once every shift that is on has ended (with its result).
+  const { data: shiftOverviewData } = useShiftOverview(campaignId, {
+    enabled: Boolean(campaignId) && canOwnerSubmitCompletion,
+  });
+  const shiftsNotEnded = shiftOverviewData?.data?.totals.not_ended_shift_ids.length ?? 0;
+
   const showAwaitingAdminCompletion =
     canManageCampaign && campaign?.status === STATUS.WAITING_CONFIRMED;
 
@@ -100,6 +107,7 @@ function CampaignDetailBody() {
   const { mutate: markDoneMutate, isPending: isMarkingDone } = useMarkDoneCampaign({
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });
+      void queryClient.invalidateQueries({ queryKey: ['shift-overview', campaignId] });
     },
   });
 
@@ -288,7 +296,20 @@ function CampaignDetailBody() {
         {canOwnerSubmitCompletion || campaign.can_cancel_campaign ? (
           <div className="flex flex-wrap items-center justify-end gap-2">
             <CancelCampaignButton campaign={campaign} />
-            {canOwnerSubmitCompletion ? (
+            {canOwnerSubmitCompletion && shiftsNotEnded > 0 ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span tabIndex={0}>
+                    <Button type="button" variant="brown" size="medium" className="!h-[45px]" isDisabled>
+                      {t('Mark done')}
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {t('{{n}} shift(s) not ended yet', { n: shiftsNotEnded })}
+                </TooltipContent>
+              </Tooltip>
+            ) : canOwnerSubmitCompletion ? (
               <ConfirmPopoverModal
                 title={t('Mark Campaign as Done')}
                 description={t('Mark campaign done confirmation')}

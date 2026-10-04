@@ -57,6 +57,12 @@ const API_ERROR_MESSAGES: Record<string, string> = {
   ATTENDANCE_MANUAL_LIMIT: "Manual attendance is limited to 20% of the people present on the shift",
   ATTENDANCE_ALREADY_RECORDED: "This person already has attendance on this shift",
   ATTENDANCE_LEGACY_GONE: "Attendance is now per shift; update the app and scan the shift's QR code",
+  SHIFT_NOT_STARTED: "This shift has not started yet",
+  SHIFT_RESULT_REQUIRED: "Submit the shift's result before ending it",
+  SHIFT_RESULT_INVALID: "The shift's result is incomplete or invalid",
+  SHIFT_RESULT_LOCKED: "The shift's result can no longer be changed",
+  CAMPAIGN_SHIFTS_NOT_ENDED:
+    "Every active shift must be ended, with its result, before the campaign is marked done",
   SHIFT_MIN_REQUIRED: "A running shift needs at least one volunteer; turn the shift off instead",
   CAMPAIGN_LEADER_NOT_MANAGER:
     "A shift leader must be one of the campaign's managers or an owner of its organization",

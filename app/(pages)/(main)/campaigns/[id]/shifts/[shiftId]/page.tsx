@@ -27,6 +27,8 @@ import { cn } from '@/libs/utils';
 import ReportSummaryCard from '@/modules/ReportSummaryCard';
 import useAuthStore from '@/stores/useAuthStore';
 import { ShiftAttendancePanel } from '../../_components/ShiftAttendancePanel';
+import { ShiftResultPanel } from '../../_components/ShiftResultPanel';
+import { ShiftStatusPill } from '../../_components/ShiftStatusPill';
 
 import { AvatarList } from '../../_components/AvatarList';
 import { ChangeShiftLeaderButton } from '../../_components/ChangeShiftLeaderButton';
@@ -49,7 +51,7 @@ function ShiftDetailBody({ shiftId }: { shiftId: string }) {
   const isAuthenticated = useAuthStore((s) => s.is_authenticated);
   const isPlatformAdmin = useAuthStore((s) => s.user?.roleId === ADMIN_ROLE_ID);
   const currentUserId = useAuthStore((s) => s.user?.id);
-  const [tab, setTab] = useState<'info' | 'members'>('info');
+  const [tab, setTab] = useState<'info' | 'members' | 'result'>('info');
   const [joinOpen, setJoinOpen] = useState(false);
 
   const shift = campaign?.shifts?.find((s) => s.id === shiftId && s.min_volunteers > 0);
@@ -95,7 +97,8 @@ function ShiftDetailBody({ shiftId }: { shiftId: string }) {
   );
   const registrations = registrationsData?.data?.shifts?.find((s) => s.shift_id === shiftId);
   const started = shift ? new Date(shift.start_at).getTime() <= Date.now() : false;
-  const ended = shift ? new Date(shift.end_at).getTime() <= Date.now() : false;
+  // Ended early (spec 4.2): `ended_at` is the actual end.
+  const ended = shift ? new Date(shift.ended_at ?? shift.end_at).getTime() <= Date.now() : false;
 
   const reports = useMemo(() => {
     const ids = new Set(point?.report_ids ?? []);
@@ -170,6 +173,7 @@ function ShiftDetailBody({ shiftId }: { shiftId: string }) {
           <div className="flex flex-col gap-1">
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="font-display-7 font-semibold !text-button-accent">{pointName}</h2>
+              {shift.status && <ShiftStatusPill status={shift.status} />}
               {mine && <Pill tone="brand">{t('Your shift')}</Pill>}
             </div>
             <span className="font-display-1 text-foreground-secondary">
@@ -213,12 +217,13 @@ function ShiftDetailBody({ shiftId }: { shiftId: string }) {
         </div>
         <JoinShiftsDialog campaignId={campaignId} open={joinOpen} onOpenChange={setJoinOpen} />
 
-        <Tabs value={tab} onValueChange={(v) => setTab(v as 'info' | 'members')}>
+        <Tabs value={tab} onValueChange={(v) => setTab(v as 'info' | 'members' | 'result')}>
           <TabsList className="w-full sm:w-auto border border-[rgba(136,122,71,0.5)] rounded-[8px] bg-background-primary/10 mb-4">
             {(
               [
                 ['info', t('Information')],
                 ['members', t('Members & attendance')],
+                ['result', t('Result')],
               ] as const
             ).map(([value, label]) => (
               <TabsTrigger
@@ -286,6 +291,12 @@ function ShiftDetailBody({ shiftId }: { shiftId: string }) {
                       <span className="font-medium tabular-nums">{hhmm(shift.gather_at)}</span>
                     </span>
                   )}
+                  {shift.ended_at && (
+                    <span>
+                      <span className="text-foreground-tertiary">{t('Ended early at')}: </span>
+                      <span className="font-medium tabular-nums">{hhmm(shift.ended_at)}</span>
+                    </span>
+                  )}
                   <ShiftFillBar
                     className="mt-2"
                     registered={shift.registered_count ?? 0}
@@ -333,6 +344,10 @@ function ShiftDetailBody({ shiftId }: { shiftId: string }) {
                 </div>
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="result" className="mt-0 flex flex-col gap-4 sm:gap-5">
+            <ShiftResultPanel className={cardClass} campaignId={campaignId} shiftId={shift.id} reports={reports} />
           </TabsContent>
 
           <TabsContent value="members" className="mt-0 flex flex-col gap-4 sm:gap-5">

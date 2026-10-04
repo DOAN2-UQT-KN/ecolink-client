@@ -156,7 +156,10 @@ export const ShiftAttendancePanel = memo(function ShiftAttendancePanel({
 
   if (isError || !view) return null;
   const now = Date.now();
-  const ended = new Date(view.end_at).getTime() + 30 * 60 * 1000 < now;
+  // Ended early (spec 4.2): no more scans; otherwise check-outs run 30 minutes past the end.
+  const ended = view.ended_at
+    ? new Date(view.ended_at).getTime() <= now
+    : new Date(view.end_at).getTime() + 30 * 60 * 1000 < now;
 
   return (
     <div className={className}>

@@ -48,6 +48,8 @@ export interface IShiftAttendanceView {
   shift_id: string;
   start_at: string;
   end_at: string;
+  /** Actual end when the shift was ended early (spec 4.2). */
+  ended_at?: string | null;
   leader_user_id: string | null;
   session: IAttendanceSession | null;
   can_run: boolean;

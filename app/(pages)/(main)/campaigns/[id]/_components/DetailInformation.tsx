@@ -21,12 +21,16 @@ import { Link } from '@/libs/router';
 
 import { ParticipationInfoCard } from './ParticipationInfoCard';
 import { CampaignManagers } from './CampaignManagers';
+import { ShiftProgressCard } from './ShiftProgressCard';
+import { ADMIN_ROLE_ID } from '@/constants/roles';
+import useAuthStore from '@/stores/useAuthStore';
 
 const DEFAULT_BANNER = '/banner-default.jpg';
 
 export const DetailInformation = memo(function DetailInformation() {
   const { t } = useTranslation('common');
-  const { campaign } = useCampaignDetail();
+  const { campaign, canManageCampaign } = useCampaignDetail();
+  const isPlatformAdmin = useAuthStore((s) => s.user?.roleId === ADMIN_ROLE_ID);
   const { title: localizedTitle, description: localizedDescription } =
     useLocalizedDisplay();
 
@@ -154,6 +158,11 @@ export const DetailInformation = memo(function DetailInformation() {
       </CollapsibleCard>
 
       <ParticipationInfoCard campaign={campaign} />
+
+      {/* Spec 4.2: every shift's status and the totals, for managers and admins. */}
+      {(canManageCampaign || isPlatformAdmin) && (campaign.shifts?.length ?? 0) > 0 && (
+        <ShiftProgressCard campaign={campaign} />
+      )}
 
       <CampaignManagers />
 
