@@ -4,10 +4,12 @@ import { TbExternalLink, TbMapPin } from "react-icons/tb";
 
 import { useGetCampaignById } from "@/apis/campaign/campaignById";
 import { useGetCampaignHistory } from "@/apis/campaign/getCampaignHistory";
+import { useCompletionReview } from "@/apis/campaign/processCampaign";
 import { CAMPAIGN_STATUS } from "@/constants/campaignLifecycle";
 import type { ICampaign } from "@/apis/campaign/models/campaign";
 import { useGetMembersByOrg } from "@/apis/organization/organizationById";
 import { useAdminLayout } from "@/app/(pages)/(admin)/_context/AdminLayoutContext";
+import { ShiftProgressCard } from "@/app/(pages)/(main)/campaigns/[id]/_components/ShiftProgressCard";
 import { impliedMinAge } from "@/app/(pages)/(main)/campaigns/create/_services/campaign.service";
 import { OrganizationIdentity } from "@/components/admin/shared/OrganizationIdentity";
 import { ReviewRow, ReviewSectionCard } from "@/components/admin/shared/ReviewSection";
@@ -23,6 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import { RichTextContent } from "@/components/ui/RichTextContent";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CAMPAIGN_PUBLIC_STATUSES } from "@/constants/campaignLifecycle";
 
 /** Snapshot keys (snake_case after the response transform) → what changed, for the admin. */
@@ -47,6 +50,55 @@ import { formattedDate } from "@/utils/formattedDate";
 import { format } from "date-fns";
 import { CampaignDateRange } from "@/components/client/shared/CampaignDateRange";
 import { ShiftSlotsTable } from "@/components/client/shared/ShiftSlotsTable";
+import { CompletionEvidence } from "./CompletionReviewDialog";
+
+/** Statuses whose shifts have results to show; BLOCKED / CANCELLED only once a shift has started. */
+const RESULT_STATUSES: number[] = [
+  CAMPAIGN_STATUS.ACTIVE,
+  CAMPAIGN_STATUS.PENDING_COMPLETION,
+  CAMPAIGN_STATUS.LEGACY_IN_REVIEW,
+  CAMPAIGN_STATUS.COMPLETED,
+];
+const STOPPED_STATUSES: number[] = [CAMPAIGN_STATUS.BLOCKED, CAMPAIGN_STATUS.CANCELLED];
+
+/** Result tab: shift progress (the popover of each shift is the one of the campaign page) and the completion submission. */
+const CampaignResult = memo(function CampaignResult({
+  campaign,
+  isDark,
+}: {
+  campaign: ICampaign;
+  isDark: boolean;
+}) {
+  const { t } = useTranslation();
+  const submitted = Boolean(campaign.completion_submitted_at);
+  const { data, isLoading } = useCompletionReview(campaign.id, { enabled: submitted });
+  const review = data?.data;
+
+  return (
+    <div className="flex min-w-0 flex-col gap-3">
+      {/* The progress card is styled for the (light) campaign page: keep it on a light surface. */}
+      <div className={cn(isDark && "rounded-xl bg-zinc-50 text-zinc-900")}>
+        <ShiftProgressCard campaign={campaign} />
+      </div>
+      {submitted && (
+        <ReviewSectionCard
+          title={t("Completion submission")}
+          hint={formattedDate(campaign.completion_submitted_at ?? undefined, true)}
+          defaultOpen
+          isDark={isDark}
+        >
+          {isLoading ? (
+            <Skeleton className="h-24 w-full" />
+          ) : review ? (
+            <CompletionEvidence review={review} isDark={isDark} />
+          ) : (
+            <p className="text-sm text-muted-foreground">—</p>
+          )}
+        </ReviewSectionCard>
+      )}
+    </div>
+  );
+});
 
 const MeetingPoints = memo(function MeetingPoints({
   campaign,
@@ -232,6 +284,13 @@ export function CampaignPreviewDialog({
   // Back under review after an edit (spec 3.5): show what changed since it was approved.
   const reReview = Boolean(campaign?.approved_at) && campaign?.status === CAMPAIGN_STATUS.PENDING_REVIEW;
   const { data: historyData } = useGetCampaignHistory(campaignId, { enabled: reReview });
+  const status = campaign?.status ?? -1;
+  const shifts = campaign?.shifts ?? [];
+  const hasResult =
+    shifts.length > 0 &&
+    (RESULT_STATUSES.includes(status) ||
+      (STOPPED_STATUSES.includes(status) &&
+        shifts.some((sh) => new Date(sh.start_at).getTime() <= Date.now())));
   const editedFields = useMemo(() => {
     const entry = historyData?.data?.history?.find((h) => h.event === "edit_major");
     return Object.keys(entry?.changes ?? {});
@@ -268,7 +327,20 @@ export function CampaignPreviewDialog({
               <CampaignStatusTag status={campaign.status} isDark={isDark} />
             </div>
 
-            <div className="flex min-w-0 flex-col gap-3">
+            <Tabs defaultValue="information" className="min-w-0 gap-4">
+              {hasResult && (
+                <TabsList
+                  className={cn(
+                    "h-10 border",
+                    isDark ? "border-zinc-700 bg-zinc-800" : "border-border bg-card",
+                  )}
+                >
+                  <TabsTrigger value="information">{t("Information")}</TabsTrigger>
+                  <TabsTrigger value="result">{t("Result")}</TabsTrigger>
+                </TabsList>
+              )}
+
+              <TabsContent value="information" className="flex min-w-0 flex-col gap-3">
                 {campaign.reject_reason && (
                   <section
                     className={cn(
@@ -408,7 +480,14 @@ export function CampaignPreviewDialog({
                 >
                   <MeetingPoints campaign={campaign} isDark={isDark} />
                 </ReviewSectionCard>
-            </div>
+              </TabsContent>
+
+              {hasResult && (
+                <TabsContent value="result" className="min-w-0">
+                  <CampaignResult campaign={campaign} isDark={isDark} />
+                </TabsContent>
+              )}
+            </Tabs>
           </div>
         )}
 

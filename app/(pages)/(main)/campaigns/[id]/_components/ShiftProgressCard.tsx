@@ -12,7 +12,13 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
 import { Link } from '@/libs/router';
 import { cn } from '@/libs/utils';
-import { SHIFT_STATUS_LABEL, SHIFT_STATUS_TONE, ShiftStatusPill } from './ShiftStatusPill';
+import {
+  SHIFT_STATUS_LABEL,
+  SHIFT_STATUS_TONE,
+  ShiftReopenedNotice,
+  ShiftReopenedPill,
+  ShiftStatusPill,
+} from './ShiftStatusPill';
 import { ShiftResultAmounts, ShiftResultIncludedMedia, ShiftResultWastePoints } from './ShiftResultView';
 
 const LEGEND = ['upcoming', 'running', 'awaiting_result', 'ended', 'off'] as const;
@@ -93,8 +99,12 @@ const ShiftCellPopover = memo(function ShiftCellPopover({
         <div className="mb-2 flex flex-col gap-1.5">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="font-semibold">{title}</span>
-            <ShiftStatusPill status={row.status} />
+            <div className="flex flex-wrap items-center gap-1.5">
+              <ShiftStatusPill status={row.status} />
+              {row.reopened_at && <ShiftReopenedPill />}
+            </div>
           </div>
+          {row.reopened_at && <ShiftReopenedNotice reason={row.reopen_reason} />}
           <span className="text-xs tabular-nums text-foreground-tertiary">{hours}</span>
           <Link
             href={`/campaigns/${campaign.id}/shifts/${row.shift_id}`}
@@ -157,7 +167,7 @@ const ShiftCellPopover = memo(function ShiftCellPopover({
 });
 
 /**
- * Progress of every shift (spec 4.2), for the campaign's managers and admins: a day × meeting
+ * Progress of every shift (spec 4.2), for anyone signed in (public campaign; managers and admins always): a day × meeting
  * point grid coloured by status (each cell opens a popover with the shift's result), and the totals
  * so far. Shown in the campaign's Progress tab.
  */
@@ -228,6 +238,9 @@ export const ShiftProgressCard = memo(function ShiftProgressCard({ campaign }: {
                     const body = (
                       <>
                         <span className="block font-medium">{t(SHIFT_STATUS_LABEL[s.status])}</span>
+                        {s.reopened_at && (
+                          <span className="block text-xs font-semibold text-red-700">{t('Needs more')}</span>
+                        )}
                         {s.status !== 'off' && (
                           <span className="block text-xs tabular-nums opacity-80">
                             {t('{{present}}/{{registered}} present', {

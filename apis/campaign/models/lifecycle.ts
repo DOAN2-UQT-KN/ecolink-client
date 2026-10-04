@@ -52,6 +52,9 @@ export interface ICampaignShift {
   /** Actual end when the shift was ended early (spec 4.2). */
   ended_at?: string | null;
   status?: ShiftStatus;
+  /** Set when the admin rejected the completion and asked for more on this shift (spec 5.2). */
+  reopened_at?: string | null;
+  reopen_reason?: string | null;
   /** Live registrations; on the campaign detail only. */
   registered_count?: number;
 }

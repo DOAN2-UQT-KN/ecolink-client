@@ -26,7 +26,7 @@ import { cn } from '@/libs/utils';
 import { ConfirmPopoverModal } from '@/modules/OrganizationCard/components/ConfirmPopoverModal';
 import useAuthStore from '@/stores/useAuthStore';
 import showMessage, { MessageLevel, MessageType } from '@/utils/showMessage';
-import { ShiftStatusPill } from './ShiftStatusPill';
+import { ShiftReopenedNotice, ShiftReopenedPill, ShiftStatusPill } from './ShiftStatusPill';
 import { REPORT_LABEL, ShiftResultView, Thumb, type ReportChoice } from './ShiftResultView';
 
 /** Files picked at once, and the video size limit. */
@@ -217,6 +217,7 @@ export const ShiftResultPanel = memo(function ShiftResultPanel({
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="font-display-6 font-semibold text-button-accent">{t('Shift result')}</h2>
           <ShiftStatusPill status={status} />
+          {view.reopened_at && <ShiftReopenedPill reason={view.reopen_reason} />}
         </div>
         {view.ended_at && (
           <span className="text-xs text-foreground-tertiary">
@@ -269,19 +270,9 @@ export const ShiftResultPanel = memo(function ShiftResultPanel({
         />
       )}
       </div>
+      {view.reopened_at && <ShiftReopenedNotice reason={view.reopen_reason} className="w-full" />}
     </div>
   );
-
-  if (!view.can_view) {
-    return (
-      <div className={className}>
-        {header}
-        <p className="text-sm text-foreground-tertiary">
-          {t("Only managers, the person in charge and volunteers who attended can see this shift's result.")}
-        </p>
-      </div>
-    );
-  }
 
   const myMedia = (m: IShiftMedia) => m.uploaded_by === currentUserId;
   const pool = (
@@ -360,7 +351,8 @@ export const ShiftResultPanel = memo(function ShiftResultPanel({
           started={started}
           reportTitle={reportTitle}
         />
-        {pool}
+        {/* Without can_view the server sends only the photos chosen for the result (public campaign). */}
+        {(view.can_view || view.result) && pool}
       </div>
     );
   }

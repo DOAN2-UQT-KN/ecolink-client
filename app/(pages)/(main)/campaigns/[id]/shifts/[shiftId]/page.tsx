@@ -28,7 +28,7 @@ import ReportSummaryCard from '@/modules/ReportSummaryCard';
 import useAuthStore from '@/stores/useAuthStore';
 import { ShiftAttendancePanel } from '../../_components/ShiftAttendancePanel';
 import { ShiftResultPanel } from '../../_components/ShiftResultPanel';
-import { ShiftStatusPill } from '../../_components/ShiftStatusPill';
+import { ShiftReopenedPill, ShiftStatusPill } from '../../_components/ShiftStatusPill';
 
 import { AvatarList } from '../../_components/AvatarList';
 import { ChangeShiftLeaderButton } from '../../_components/ChangeShiftLeaderButton';
@@ -174,6 +174,7 @@ function ShiftDetailBody({ shiftId }: { shiftId: string }) {
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="font-display-7 font-semibold !text-button-accent">{pointName}</h2>
               {shift.status && <ShiftStatusPill status={shift.status} />}
+              {shift.reopened_at && <ShiftReopenedPill reason={shift.reopen_reason} />}
               {mine && <Pill tone="brand">{t('Your shift')}</Pill>}
             </div>
             <span className="font-display-1 text-foreground-secondary">

@@ -44,6 +44,8 @@ export interface ICampaign {
     clean_count?: number;
     not_clean_count?: number;
     my_verification?: number | null;
+    /** ≥ 30% "not clean" out of ≥ 5 answers: the admin should look twice (spec 5.1). */
+    flagged?: boolean;
   };
 
   saved?: boolean;
@@ -68,6 +70,10 @@ export interface ICampaign {
   submitted_at?: string | null;
   /** First admin approval; set means edits keep registrations and may send it back for review. */
   approved_at?: string | null;
+  /** Last time a manager marked the campaign done (spec 5.1). */
+  completion_submitted_at?: string | null;
+  /** Times the admin rejected the completion; after 3 only approve or cancel remain (spec 5.2). */
+  completion_rejection_count?: number;
   /** Only in an update response: the edit sent the campaign back for review (spec 3.5). */
   re_review?: boolean;
   /** Why a day's minimum volunteers is below the difficulty's suggestion. */

@@ -2,6 +2,7 @@ import { memo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CAMPAIGN_PUBLIC_STATUSES } from '@/constants/campaignLifecycle';
 import { ADMIN_ROLE_ID } from '@/constants/roles';
 import useAuthStore from '@/stores/useAuthStore';
 
@@ -24,8 +25,13 @@ export const CampaignTabs = memo(function CampaignTabs() {
   const [tab, setTab] = useState<CampaignTabValue>('detail');
   const { campaign, canManageCampaign } = useCampaignDetail();
   const isPlatformAdmin = useAuthStore((s) => s.user?.roleId === ADMIN_ROLE_ID);
-  // Progress (spec 4.2): managers and admins only, same as the shift-overview API.
-  const canSeeProgress = Boolean(campaign) && (canManageCampaign || isPlatformAdmin);
+  const isAuthenticated = useAuthStore((s) => s.is_authenticated);
+  // Progress (spec 4.2), same as the shift-overview API: anyone signed in once the campaign is
+  // public; managers and admins in every status.
+  const canSeeProgress =
+    Boolean(campaign) &&
+    isAuthenticated &&
+    (canManageCampaign || isPlatformAdmin || CAMPAIGN_PUBLIC_STATUSES.includes(Number(campaign?.status)));
 
   // Registrations is open to everyone: names only for those allowed (CampaignRegistrations).
   const tabItems = ALL_CAMPAIGN_TAB_ITEMS.filter((item) => item.value !== 'progress' || canSeeProgress);

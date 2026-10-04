@@ -20,9 +20,7 @@ import { TbArrowRight, TbPencil } from 'react-icons/tb';
 import { Button } from '@/components/client/shared/Button';
 import { STATUS } from '@/constants/status';
 import { CAMPAIGN_REGISTRABLE_STATUSES, CAMPAIGN_STATUS } from '@/constants/campaignLifecycle';
-import { useShiftOverview } from '@/apis/campaign/shiftResult';
 import { ConfirmPopoverModal } from '@/modules/OrganizationCard/components/ConfirmPopoverModal';
-import { useMarkDoneCampaign } from '@/apis/campaign/campaignById';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
 
@@ -30,6 +28,8 @@ import { CampaignAttendanceCheckInHandler } from './_components/CampaignAttendan
 import { CampaignCompletionVerifyButton } from './_components/CampaignCompletionVerifyButton';
 import { JoinShiftsDialog } from './_components/JoinShiftsDialog';
 import { CancelCampaignButton } from './_components/CancelCampaignButton';
+import { SubmitCompletionDialog } from './_components/SubmitCompletionDialog';
+import { format } from 'date-fns';
 import { useUpdateMyRegistrations } from '@/apis/campaign/registration';
 import showMessage, { MessageLevel, MessageType } from '@/utils/showMessage';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -88,11 +88,20 @@ function CampaignDetailBody() {
     canManageCampaign &&
     (campaign?.status === STATUS.ACTIVE || campaign?.status === STATUS.INREVIEW);
 
-  // Spec 5.1: "Mark done" opens once every shift that is on has ended (with its result).
-  const { data: shiftOverviewData } = useShiftOverview(campaignId, {
-    enabled: Boolean(campaignId) && canOwnerSubmitCompletion,
-  });
-  const shiftsNotEnded = shiftOverviewData?.data?.totals.not_ended_shift_ids.length ?? 0;
+  // Spec 5.2: the admin rejected the completion and reopened some shifts.
+  const reopenedShifts = (campaign?.shifts ?? []).filter((sh) => sh.reopened_at);
+  const showCompletionRejected =
+    canManageCampaign &&
+    campaign?.status === STATUS.ACTIVE &&
+    (campaign?.completion_rejection_count ?? 0) > 0 &&
+    reopenedShifts.length > 0;
+  const shiftLabel = (shiftId: string) => {
+    const sh = campaign?.shifts?.find((x) => x.id === shiftId);
+    const points = campaign?.meeting_points ?? [];
+    const pi = points.findIndex((p) => p.id === sh?.meeting_point_id);
+    const point = pi < 0 ? '' : points[pi].name?.trim() || t('Meeting point {{n}}', { n: pi + 1 });
+    return sh ? `${point} · ${format(new Date(sh.start_at), 'dd/MM HH:mm')}` : '';
+  };
 
   const showAwaitingAdminCompletion =
     canManageCampaign && campaign?.status === STATUS.WAITING_CONFIRMED;
@@ -104,24 +113,6 @@ function CampaignDetailBody() {
   const completionVerification = campaign?.completion_verification;
 
   const queryClient = useQueryClient();
-  const { mutate: markDoneMutate, isPending: isMarkingDone } = useMarkDoneCampaign({
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });
-      void queryClient.invalidateQueries({ queryKey: ['shift-overview', campaignId] });
-    },
-  });
-
-  const handleMarkDone = () => {
-    return new Promise<void>((resolve, reject) => {
-      markDoneMutate(
-        { id: campaignId },
-        {
-          onSuccess: () => resolve(),
-          onError: () => reject(),
-        },
-      );
-    });
-  };
 
   const breadcrumbs: BreadcrumbItemProps[] = useMemo(
     () => [
@@ -282,6 +273,29 @@ function CampaignDetailBody() {
         ) : null}
         <JoinShiftsDialog campaignId={campaignId} open={joinOpen} onOpenChange={setJoinOpen} />
 
+        {showCompletionRejected ? (
+          <div
+            className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900"
+            role="status"
+          >
+            <p className="font-semibold">
+              {t('The admin did not approve the completion yet ({{n}}/{{max}}).', {
+                n: campaign.completion_rejection_count ?? 0,
+                max: 3,
+              })}
+            </p>
+            {campaign.reject_reason ? (
+              <p className="mt-1">
+                {t('Reason')}: {campaign.reject_reason}
+              </p>
+            ) : null}
+            <p className="mt-1">
+              {t('Shifts to complete again')}: {reopenedShifts.map((sh) => shiftLabel(sh.id)).join(', ')}
+            </p>
+            <p className="mt-1">{t('Save their results again, then mark the campaign done again.')}</p>
+          </div>
+        ) : null}
+
         {showAwaitingAdminCompletion ? (
           <div
             className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
@@ -296,41 +310,8 @@ function CampaignDetailBody() {
         {canOwnerSubmitCompletion || campaign.can_cancel_campaign ? (
           <div className="flex flex-wrap items-center justify-end gap-2">
             <CancelCampaignButton campaign={campaign} />
-            {canOwnerSubmitCompletion && shiftsNotEnded > 0 ? (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span tabIndex={0}>
-                    <Button type="button" variant="brown" size="medium" className="!h-[45px]" isDisabled>
-                      {t('Mark done')}
-                    </Button>
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {t('{{n}} shift(s) not ended yet', { n: shiftsNotEnded })}
-                </TooltipContent>
-              </Tooltip>
-            ) : canOwnerSubmitCompletion ? (
-              <ConfirmPopoverModal
-                title={t('Mark Campaign as Done')}
-                description={t('Mark campaign done confirmation')}
-                confirmLabel={t('Mark done')}
-                cancelLabel={t('Cancel')}
-                onConfirm={handleMarkDone}
-                confirmPending={isMarkingDone}
-                trigger={
-                  <Button
-                    type="button"
-                    variant="brown"
-                    size="medium"
-                    isLoading={isMarkingDone}
-                    className="!h-[45px]"
-                    isDisabled={isMarkingDone}
-                  >
-                    {t('Mark done')}
-                  </Button>
-                }
-              />
-            ) : null}
+            {/* Spec 5.1: opens once every shift that is on has ended (with its result). */}
+            {canOwnerSubmitCompletion ? <SubmitCompletionDialog campaign={campaign} /> : null}
           </div>
         ) : null}
         <div className="w-full min-w-0">

@@ -47,12 +47,15 @@ export interface IShiftResultView {
   leader_user_id: string | null;
   /** Leader or campaign manager: submits the result, ends the shift early. */
   can_edit: boolean;
-  /** Managers, admins, the leader and volunteers who attended see the result. */
+  /** Managers, admins, the leader and volunteers who attended: the whole photo pool. Anyone else gets the submitted result and only the photos chosen for it (public campaign). */
   can_view: boolean;
   /** May add photos to the shift's pool. */
   can_contribute: boolean;
   /** The campaign was marked done: nothing changes any more. */
   locked: boolean;
+  /** The admin asked for more on this shift (spec 5.2); cleared once the result is saved again. */
+  reopened_at: string | null;
+  reopen_reason: string | null;
   report_ids: string[];
   result: IShiftResult | null;
   media: IShiftMedia[];
@@ -70,6 +73,8 @@ export interface IShiftOverviewRow {
   present: number;
   eligible: number;
   has_result: boolean;
+  reopened_at: string | null;
+  reopen_reason: string | null;
   waste_bags: number | null;
   waste_kg: number | null;
 }

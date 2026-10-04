@@ -63,6 +63,9 @@ const API_ERROR_MESSAGES: Record<string, string> = {
   SHIFT_RESULT_LOCKED: "The shift's result can no longer be changed",
   CAMPAIGN_SHIFTS_NOT_ENDED:
     "Every active shift must be ended, with its result, before the campaign is marked done",
+  CAMPAIGN_REPORTS_UNHANDLED: "Give a reason for every trash report no shift handled",
+  CAMPAIGN_COMPLETION_REJECT_LIMIT:
+    "This completion was already rejected 3 times; approve or cancel the campaign",
   SHIFT_MIN_REQUIRED: "A running shift needs at least one volunteer; turn the shift off instead",
   CAMPAIGN_LEADER_NOT_MANAGER:
     "A shift leader must be one of the campaign's managers or an owner of its organization",

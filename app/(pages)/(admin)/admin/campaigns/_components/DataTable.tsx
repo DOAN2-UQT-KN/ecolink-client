@@ -19,7 +19,7 @@ import { OrganizationIdentity } from '@/components/admin/shared/OrganizationIden
 import { formattedDate } from '@/utils/formattedDate';
 import { CAMPAIGN_STATUS } from '@/constants/campaignLifecycle';
 import { getDifficultyLevel } from '@/constants/difficulty';
-import { CompletionReviewCampaignConfirm } from './CompletionReviewCampaignConfirm';
+import { CompletionReviewDialog } from './CompletionReviewDialog';
 import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
 
 const DEFAULT_BANNER = '/banner-default.jpg';
@@ -208,7 +208,7 @@ export const DataTable = memo(function DataTable() {
             ) : null}
 
             {record.status === CAMPAIGN_STATUS.PENDING_COMPLETION ? (
-              <CompletionReviewCampaignConfirm
+              <CompletionReviewDialog
                 campaignId={record.id}
                 campaignTitle={localizedTitle(record)}
                 theme={isDark ? 'dark' : 'light'}
