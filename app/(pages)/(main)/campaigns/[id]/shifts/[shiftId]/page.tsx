@@ -218,7 +218,7 @@ function ShiftDetailBody({ shiftId }: { shiftId: string }) {
             {(
               [
                 ['info', t('Information')],
-                ['members', t('Members')],
+                ['members', t('Members & attendance')],
               ] as const
             ).map(([value, label]) => (
               <TabsTrigger
@@ -232,16 +232,44 @@ function ShiftDetailBody({ shiftId }: { shiftId: string }) {
           </TabsList>
 
           <TabsContent value="info" className="mt-0 flex flex-col gap-4 sm:gap-5">
-            {/* Attendance (spec 4.1): the leader, managers and admins, from an hour before the shift. */}
-            {(canManageCampaign || isPlatformAdmin || (leaderId != null && leaderId === currentUserId)) &&
-              new Date(shift.start_at).getTime() - 60 * 60 * 1000 <= Date.now() && (
-                <ShiftAttendancePanel
-                  className={cardClass}
-                  campaignId={campaignId}
-                  shiftId={shift.id}
-                  registered={registrations?.volunteers ?? []}
-                />
+            <div className={cardClass}>
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                <h2 className="font-display-6 font-semibold text-button-accent">
+                  {t('Person in charge')}
+                </h2>
+                {canManageCampaign && !ended && (
+                  <ChangeShiftLeaderButton
+                    campaignId={campaignId}
+                    shiftId={shift.id}
+                    organizationId={organizationId}
+                    createdBy={creatorId}
+                    leaderUserId={leaderId}
+                  />
+                )}
+              </div>
+              {leader ? (
+                <AvatarList isLoading={false} items={[leader]} />
+              ) : leaderId ? (
+                <p className="text-sm text-foreground-tertiary">—</p>
+              ) : (
+                <Pill tone="red">{t('Needs a person in charge')}</Pill>
               )}
+              {otherManagers.length > 0 && (
+                <>
+                  <h3 className="mt-4 mb-1 text-sm font-semibold text-foreground-tertiary">
+                    {t('Other managers')}
+                  </h3>
+                  <AvatarList
+                    isLoading={false}
+                    items={otherManagers}
+                    renderBadge={(item) =>
+                      item.id === creatorId ? <Pill tone="brand">{t('Creator')}</Pill> : null
+                    }
+                  />
+                </>
+              )}
+            </div>
+
             <div className="grid gap-4 sm:gap-5 lg:grid-cols-2">
               <div className={cardClass}>
                 <h2 className="font-display-6 font-semibold text-button-accent mb-4">{t('Shift')}</h2>
@@ -287,44 +315,6 @@ function ShiftDetailBody({ shiftId }: { shiftId: string }) {
               </div>
             </div>
 
-            <div className={cardClass}>
-              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                <h2 className="font-display-6 font-semibold text-button-accent">
-                  {t('Person in charge')}
-                </h2>
-                {canManageCampaign && !ended && (
-                  <ChangeShiftLeaderButton
-                    campaignId={campaignId}
-                    shiftId={shift.id}
-                    organizationId={organizationId}
-                    createdBy={creatorId}
-                    leaderUserId={leaderId}
-                  />
-                )}
-              </div>
-              {leader ? (
-                <AvatarList isLoading={false} items={[leader]} />
-              ) : leaderId ? (
-                <p className="text-sm text-foreground-tertiary">—</p>
-              ) : (
-                <Pill tone="red">{t('Needs a person in charge')}</Pill>
-              )}
-              {otherManagers.length > 0 && (
-                <>
-                  <h3 className="mt-4 mb-1 text-sm font-semibold text-foreground-tertiary">
-                    {t('Other managers')}
-                  </h3>
-                  <AvatarList
-                    isLoading={false}
-                    items={otherManagers}
-                    renderBadge={(item) =>
-                      item.id === creatorId ? <Pill tone="brand">{t('Creator')}</Pill> : null
-                    }
-                  />
-                </>
-              )}
-            </div>
-
             {reports.length > 0 && (
               <div className={cardClass}>
                 <h2 className="font-display-6 font-semibold text-button-accent mb-4">
@@ -345,7 +335,17 @@ function ShiftDetailBody({ shiftId }: { shiftId: string }) {
             )}
           </TabsContent>
 
-          <TabsContent value="members" className="mt-0">
+          <TabsContent value="members" className="mt-0 flex flex-col gap-4 sm:gap-5">
+            {/* Attendance (spec 4.1): the leader, managers and admins, from an hour before the shift. */}
+            {(canManageCampaign || isPlatformAdmin || (leaderId != null && leaderId === currentUserId)) &&
+              new Date(shift.start_at).getTime() - 60 * 60 * 1000 <= Date.now() && (
+                <ShiftAttendancePanel
+                  className={cardClass}
+                  campaignId={campaignId}
+                  shiftId={shift.id}
+                  registered={registrations?.volunteers ?? []}
+                />
+              )}
             <div className={cardClass}>
               {!canViewVolunteers ? (
                 <p className="text-sm text-foreground-tertiary">

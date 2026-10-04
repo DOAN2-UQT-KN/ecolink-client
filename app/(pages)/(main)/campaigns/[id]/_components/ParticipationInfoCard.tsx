@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import type { ICampaign } from '@/apis/campaign/models/campaign';
 import { SummaryRow } from '@/app/(pages)/(main)/organizations/apply/_components/ApplicationDetails';
 import { impliedMinAge } from '@/app/(pages)/(main)/campaigns/create/_services/campaign.service';
-import { cn } from '@/libs/utils';
+import { CollapsibleCard } from '@/components/client/shared/CollapsibleCard';
 
 /** Contact, safety notes and participation conditions; empty rows hidden, nothing when all are. */
 export const ParticipationInfoCard = memo(function ParticipationInfoCard({
@@ -31,10 +31,7 @@ export const ParticipationInfoCard = memo(function ParticipationInfoCard({
   if (!contact && !campaign.safety_notes && conditions.length === 0) return null;
 
   return (
-    <div className={cn('rounded-xl border border-[rgba(136,122,71,0.4)] bg-white/60 p-5 sm:p-6 shadow-sm', className)}>
-      <h2 className="font-display-6 font-semibold text-button-accent mb-4">
-        {t('Participation info')}
-      </h2>
+    <CollapsibleCard title={t('Participation info')} className={className}>
       <div className="flex flex-col gap-3">
         {contact && <SummaryRow label={t('Contact person')} value={contact} />}
         {campaign.safety_notes && (
@@ -56,7 +53,7 @@ export const ParticipationInfoCard = memo(function ParticipationInfoCard({
           />
         )}
       </div>
-    </div>
+    </CollapsibleCard>
   );
 });
 

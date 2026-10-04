@@ -1,36 +1,27 @@
-import { memo, useMemo, useState } from 'react';
+import { memo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-import { useCampaignDetail } from '../_hooks/useCampaignDetail';
-
 import { CampaignRegistrations } from './CampaignRegistrations';
 import { CampaignTask } from './CampaignTask';
-import { CampaignManagers } from './CampaignManagers';
 import { DetailInformation } from './DetailInformation';
 
 const ALL_CAMPAIGN_TAB_ITEMS = [
   { value: 'detail', labelKey: 'Detail information' },
-  { value: 'managers', labelKey: 'Managers' },
   { value: 'tasks', labelKey: 'Tasks' },
   { value: 'registrations', labelKey: 'Registrations' },
 ] as const;
 
 export type CampaignTabValue = (typeof ALL_CAMPAIGN_TAB_ITEMS)[number]['value'];
 
-const CAMPAIGN_TAB_ITEMS_PUBLIC = ALL_CAMPAIGN_TAB_ITEMS.filter(
-  (item) => item.value !== 'registrations',
-);
 
 export const CampaignTabs = memo(function CampaignTabs() {
   const { t } = useTranslation('common');
-  const { canManageCampaign } = useCampaignDetail();
   const [tab, setTab] = useState<CampaignTabValue>('detail');
 
-  const tabItems = useMemo(() => {
-    return canManageCampaign ? [...ALL_CAMPAIGN_TAB_ITEMS] : [...CAMPAIGN_TAB_ITEMS_PUBLIC];
-  }, [canManageCampaign]);
+  // Registrations is open to everyone: names only for those allowed (CampaignRegistrations).
+  const tabItems = ALL_CAMPAIGN_TAB_ITEMS;
 
   return (
     <Tabs value={tab} onValueChange={(v) => setTab(v as CampaignTabValue)}>
@@ -47,9 +38,6 @@ export const CampaignTabs = memo(function CampaignTabs() {
       </TabsList>
       <TabsContent value="detail" className="mt-0">
         <DetailInformation />
-      </TabsContent>
-      <TabsContent value="managers" className="mt-0">
-        <CampaignManagers />
       </TabsContent>
       <TabsContent value="tasks" className="mt-0">
         <CampaignTask />

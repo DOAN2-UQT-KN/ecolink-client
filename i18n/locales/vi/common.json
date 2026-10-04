@@ -1641,5 +1641,8 @@
   "{{name}} will not get points for this shift. You can restore it later. A reason is required.": "{{name}} sẽ không được tính điểm ca này. Bạn có thể khôi phục sau. Bắt buộc ghi lý do.",
   "Reason (e.g. was not at the meeting point)": "Lý do (vd: không có mặt tại điểm tập trung)",
   "You are about {{m}} m from the meeting point. Your attendance is recorded; the organizers will check it.": "Bạn đang cách điểm tập trung khoảng {{m}} m. Lượt điểm danh vẫn được ghi nhận; ban tổ chức sẽ kiểm tra.",
-  "Your location was not precise. Your attendance is recorded; the organizers will check it.": "Vị trí của bạn chưa chính xác. Lượt điểm danh vẫn được ghi nhận; ban tổ chức sẽ kiểm tra."
+  "Your location was not precise. Your attendance is recorded; the organizers will check it.": "Vị trí của bạn chưa chính xác. Lượt điểm danh vẫn được ghi nhận; ban tổ chức sẽ kiểm tra.",
+  "Overview": "Tổng quan",
+  "Members & attendance": "Thành viên & điểm danh",
+  "Shifts and how many have registered; open a shift for its details.": "Các ca và số người đã đăng ký; mở một ca để xem chi tiết."
 }

@@ -1641,5 +1641,8 @@
   "{{name}} will not get points for this shift. You can restore it later. A reason is required.": "{{name}} will not get points for this shift. You can restore it later. A reason is required.",
   "Reason (e.g. was not at the meeting point)": "Reason (e.g. was not at the meeting point)",
   "You are about {{m}} m from the meeting point. Your attendance is recorded; the organizers will check it.": "You are about {{m}} m from the meeting point. Your attendance is recorded; the organizers will check it.",
-  "Your location was not precise. Your attendance is recorded; the organizers will check it.": "Your location was not precise. Your attendance is recorded; the organizers will check it."
+  "Your location was not precise. Your attendance is recorded; the organizers will check it.": "Your location was not precise. Your attendance is recorded; the organizers will check it.",
+  "Overview": "Overview",
+  "Members & attendance": "Members & attendance",
+  "Shifts and how many have registered; open a shift for its details.": "Shifts and how many have registered; open a shift for its details."
 }

@@ -2,7 +2,7 @@ import { memo, useEffect, useMemo, useState } from 'react';
 import QRCode from 'qrcode';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
-import { TbQrcode, TbUserPlus } from 'react-icons/tb';
+import { TbArrowBackUp, TbQrcode, TbUserPlus, TbUserX } from 'react-icons/tb';
 
 import {
   useAddManualAttendance,
@@ -271,23 +271,27 @@ export const ShiftAttendancePanel = memo(function ShiftAttendancePanel({
                         <Button
                           type="button"
                           variant="outlined-brown"
-                          size="small"
+                          size="medium"
+                          aria-label={t('Restore')}
+                          title={t('Restore')}
                           isDisabled={isRestoring}
                           onClick={() => restore({ ...params, user_id: a.user_id })}
                         >
-                          {t('Restore')}
+                          <TbArrowBackUp className="size-5" aria-hidden />
                         </Button>
                       ) : (
                         <Button
                           type="button"
                           variant="outlined-brown"
-                          size="small"
+                          size="medium"
+                          aria-label={t('Exclude')}
+                          title={t('Exclude')}
                           onClick={() => {
                             setExcludeReason('');
                             setExcluding(a);
                           }}
                         >
-                          {t('Exclude')}
+                          <TbUserX className="size-5" aria-hidden />
                         </Button>
                       )}
                     </td>

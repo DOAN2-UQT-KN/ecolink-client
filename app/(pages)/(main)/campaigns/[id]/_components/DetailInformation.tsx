@@ -2,9 +2,8 @@ import { memo, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TbCalendarClock } from 'react-icons/tb';
 
-import { format } from 'date-fns';
+import { CollapsibleCard } from '@/components/client/shared/CollapsibleCard';
 import { RichTextContent } from '@/components/ui/RichTextContent';
-import { cn } from '@/libs/utils';
 
 import { useCampaignDetail } from '../_hooks/useCampaignDetail';
 import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
@@ -18,20 +17,16 @@ import ReportSummaryCard from '@/modules/ReportSummaryCard';
 
 import { STATUS } from '@/constants/status';
 import { getDifficultyLevel } from '@/constants/difficulty';
-import { useGetMembersByOrg } from '@/apis/organization/organizationById';
 import { Link } from '@/libs/router';
 
 import { ParticipationInfoCard } from './ParticipationInfoCard';
-import { ShiftFillBar } from './ShiftFillBar';
+import { CampaignManagers } from './CampaignManagers';
 
 const DEFAULT_BANNER = '/banner-default.jpg';
 
-const cardClass = cn(
-  'rounded-xl border border-[rgba(136,122,71,0.4)] bg-white/60 p-5 sm:p-6 shadow-sm',
-);
 export const DetailInformation = memo(function DetailInformation() {
   const { t } = useTranslation('common');
-  const { campaign, canManageCampaign } = useCampaignDetail();
+  const { campaign } = useCampaignDetail();
   const { title: localizedTitle, description: localizedDescription } =
     useLocalizedDisplay();
 
@@ -53,17 +48,6 @@ export const DetailInformation = memo(function DetailInformation() {
     [campaign, localizedDescription],
   );
 
-  const organizationId = campaign?.organization_id ?? '';
-  const { data: membersData } = useGetMembersByOrg(
-    { organization_id: organizationId, page: 1, limit: 100 },
-    { enabled: Boolean(organizationId) },
-  );
-  const memberName = (userId?: string | null) => {
-    if (!userId) return null;
-    const member = membersData?.data?.members?.find((m) => m.user_id === userId);
-    return member?.user?.name || member?.user?.email || null;
-  };
-
   if (!campaign) {
     return null;
   }
@@ -78,13 +62,11 @@ export const DetailInformation = memo(function DetailInformation() {
   const pointName = (index: number) =>
     points[index]?.name?.trim() || t('Meeting point {{n}}', { n: index + 1 });
 
-  const hhmm = (iso: string) => format(new Date(iso), 'HH:mm');
-
   return (
     <div className="flex flex-col gap-4 sm:gap-5">
-      <div className={cardClass}>
+      <CollapsibleCard title={t('Overview')}>
         <div className="flex flex-row gap-10">
-          <div className="flex min-w-0 flex-1 flex-col p-5 sm:p-6">
+          <div className="flex min-w-0 flex-1 flex-col">
             <div className="flex flex-row items-center justify-between w-full">
               <Pill tone="green">
                 {campaign.green_points ?? ''} {t('Reward (GP & SP)')}
@@ -169,15 +151,14 @@ export const DetailInformation = memo(function DetailInformation() {
             />
           </div>
         </div>
-      </div>
+      </CollapsibleCard>
 
       <ParticipationInfoCard campaign={campaign} />
 
+      <CampaignManagers />
+
       {points.length > 0 && (
-        <div className={cardClass}>
-          <h2 className="font-display-6 font-semibold text-button-accent mb-4">
-            {t('Meeting points')}
-          </h2>
+        <CollapsibleCard title={t('Meeting points')}>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {points.map((point, index) => (
               <div
@@ -198,95 +179,10 @@ export const DetailInformation = memo(function DetailInformation() {
               </div>
             ))}
           </div>
-        </div>
+        </CollapsibleCard>
       )}
 
-      <div className={cardClass}>
-        <h2 className="font-display-6 font-semibold text-button-accent mb-4">{t('Shifts')}</h2>
-        <div className="flex flex-col gap-5">
-          {(campaign.days ?? []).map((day, d) => {
-            const shifts = (campaign.shifts ?? [])
-              .filter((sh) => sh.day_id === day.id && sh.min_volunteers > 0)
-              .sort(
-                (a, b) =>
-                  new Date(a.start_at).getTime() - new Date(b.start_at).getTime() ||
-                  points.findIndex((p) => p.id === a.meeting_point_id) -
-                    points.findIndex((p) => p.id === b.meeting_point_id),
-              );
-            if (shifts.length === 0) return null;
-            return (
-              <div key={day.id} className="flex flex-col gap-2">
-                <div className="flex flex-wrap items-baseline gap-2">
-                  <span className="text-sm font-semibold">
-                    {t('Day {{n}}', { n: d + 1 })} · {format(new Date(day.start_at), 'EEEE, PP')}
-                  </span>
-                  <span className="text-xs text-foreground-tertiary tabular-nums">
-                    {hhmm(day.start_at)} – {hhmm(day.end_at)}
-                  </span>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {shifts.map((sh) => {
-                    const pointIndex = points.findIndex((p) => p.id === sh.meeting_point_id);
-                    const registered = sh.registered_count ?? 0;
-                    const mine = campaign.my_shift_ids?.includes(sh.id);
-                    const leader = memberName(sh.leader_user_id);
-                    return (
-                      <Link
-                        key={sh.id}
-                        href={`/campaigns/${campaign.id}/shifts/${sh.id}`}
-                        className={cn(
-                          'flex flex-col gap-1.5 rounded-lg border p-4 text-sm transition-colors hover:border-[#887A47] hover:shadow-sm',
-                          mine
-                            ? 'border-[#887A47] bg-[#887A47]/10'
-                            : 'border-[rgba(136,122,71,0.3)] bg-white/70',
-                        )}
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <span className="font-semibold">{pointName(pointIndex)}</span>
-                          {mine && (
-                            <span className="shrink-0 rounded-full bg-[#887A47] px-2 py-0.5 text-xs text-white">
-                              {t('Your shift')}
-                            </span>
-                          )}
-                        </div>
-                        <span className="tabular-nums">
-                          {hhmm(sh.start_at)} – {hhmm(sh.end_at)}
-                        </span>
-                        {sh.gather_at && (
-                          <span className="text-xs text-foreground-tertiary">
-                            {t('Gathers at {{time}}', { time: hhmm(sh.gather_at) })}
-                          </span>
-                        )}
-                        {leader && (
-                          <span className="text-xs text-foreground-tertiary">
-                            {t('In charge: {{name}}', { name: leader })}
-                          </span>
-                        )}
-                        {canManageCampaign &&
-                          !sh.leader_user_id &&
-                          new Date(sh.end_at).getTime() > Date.now() && (
-                            <Pill tone="red" className="self-start">
-                              {t('Needs a person in charge')}
-                            </Pill>
-                          )}
-                        <ShiftFillBar
-                          className="mt-2"
-                          registered={registered}
-                          min={sh.min_volunteers}
-                          max={sh.max_volunteers}
-                        />
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className={cardClass}>
-        <h2 className="font-display-6 font-semibold text-button-accent mb-4">{t('Reports')}</h2>
+      <CollapsibleCard title={t('Reports')}>
         <div className="sm:grid sm:grid-cols-2 gap-4 lg:grid-cols-3">
           {campaign?.reports?.map((report) => (
             <ReportSummaryCard
@@ -298,7 +194,7 @@ export const DetailInformation = memo(function DetailInformation() {
             />
           ))}
         </div>
-      </div>
+      </CollapsibleCard>
     </div>
   );
 });

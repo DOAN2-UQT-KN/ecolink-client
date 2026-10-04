@@ -21,6 +21,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from '@/libs/router';
 
 import { useCampaignDetail } from '../_hooks/useCampaignDetail';
+import useAuthStore from '@/stores/useAuthStore';
+import { ADMIN_ROLE_ID } from '@/constants/roles';
 import { AvatarList } from './AvatarList';
 import { CloseShiftButton } from './CloseShiftButton';
 import { ShiftFillBar } from './ShiftFillBar';
@@ -39,7 +41,11 @@ export const CampaignRegistrations = memo(function CampaignRegistrations({
   enabled: boolean;
 }) {
   const { t } = useTranslation();
-  const { campaignId, campaign } = useCampaignDetail();
+  const { campaignId, campaign, canManageCampaign, isRegistered } = useCampaignDetail();
+  const isPlatformAdmin = useAuthStore((s) => s.user?.roleId === ADMIN_ROLE_ID);
+  // Who registered is only for the team, registered volunteers and admins (spec 4.5); everyone
+  // else sees the shifts with their numbers, to open a shift.
+  const canViewVolunteers = canManageCampaign || isRegistered || isPlatformAdmin;
   // Shifts that lost their leader (spec 3.4) need one before attendance opens.
   const leaderless = useMemo(
     () =>
@@ -50,9 +56,34 @@ export const CampaignRegistrations = memo(function CampaignRegistrations({
       ),
     [campaign?.shifts],
   );
-  const { data, isLoading, isError } = useGetCampaignRegistrations(campaignId, {
-    enabled: enabled && Boolean(campaignId),
+  const { data: fetched, isLoading, isError } = useGetCampaignRegistrations(campaignId, {
+    enabled: enabled && Boolean(campaignId) && canViewVolunteers,
   });
+  const data = useMemo(() => {
+    if (canViewVolunteers) return fetched;
+    const points = campaign?.meeting_points ?? [];
+    const shifts: IShiftRegistrations[] = (campaign?.shifts ?? [])
+      .filter((s) => s.min_volunteers > 0)
+      .sort(
+        (a, b) =>
+          new Date(a.start_at).getTime() - new Date(b.start_at).getTime() ||
+          points.findIndex((p) => p.id === a.meeting_point_id) -
+            points.findIndex((p) => p.id === b.meeting_point_id),
+      )
+      .map((s) => ({
+        shift_id: s.id,
+        day_id: s.day_id,
+        meeting_point_id: s.meeting_point_id,
+        meeting_point_name: points.find((p) => p.id === s.meeting_point_id)?.name ?? null,
+        start_at: s.start_at,
+        end_at: s.end_at,
+        min_volunteers: s.min_volunteers,
+        max_volunteers: s.max_volunteers,
+        registered_count: s.registered_count ?? 0,
+        volunteers: [],
+      }));
+    return { data: { shifts, next_invite_at: null } };
+  }, [canViewVolunteers, fetched, campaign?.shifts, campaign?.meeting_points]);
 
   const pointName = (shift: IShiftRegistrations) => {
     const index = (campaign?.meeting_points ?? []).findIndex((p) => p.id === shift.meeting_point_id);
@@ -73,7 +104,7 @@ export const CampaignRegistrations = memo(function CampaignRegistrations({
   const shifts = data?.data?.shifts ?? [];
   const nextInviteAt = data?.data?.next_invite_at ? new Date(data.data.next_invite_at) : null;
   const now = Date.now();
-  const anyShort = shifts.some(
+  const anyShort = canManageCampaign && shifts.some(
     (s) => new Date(s.start_at).getTime() > now && s.registered_count < s.min_volunteers,
   );
   /** Running shifts per day; the last one of a day cannot be turned off. */
@@ -93,12 +124,12 @@ export const CampaignRegistrations = memo(function CampaignRegistrations({
 
   return (
     <div className="rounded-xl border border-[rgba(136,122,71,0.35)] bg-white/60 p-4 sm:p-5 shadow-sm">
-      {isLoading ? (
+      {canViewVolunteers && isLoading ? (
         <div className="space-y-3">
           <Skeleton className="h-14 w-full rounded-lg" />
           <Skeleton className="h-14 w-full rounded-lg" />
         </div>
-      ) : isError ? (
+      ) : canViewVolunteers && isError ? (
         <p className="text-sm text-destructive">{t('Could not load registrations.')}</p>
       ) : shifts.length === 0 ? (
         <div className="flex justify-center pt-12 pb-20">
@@ -118,12 +149,18 @@ export const CampaignRegistrations = memo(function CampaignRegistrations({
         <div className="flex flex-col gap-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <span className="flex items-center gap-1 text-sm text-foreground-tertiary">
-              {t('Who registered for each shift')}
-              <InfoTooltip
-                content={t(
-                  'Read only: registering just keeps volunteers informed and helps you estimate numbers. Volunteers pick and leave shifts themselves.',
-                )}
-              />
+              {canViewVolunteers ? (
+                <>
+                  {t('Who registered for each shift')}
+                  <InfoTooltip
+                    content={t(
+                      'Read only: registering just keeps volunteers informed and helps you estimate numbers. Volunteers pick and leave shifts themselves.',
+                    )}
+                  />
+                </>
+              ) : (
+                t('Shifts and how many have registered; open a shift for its details.')
+              )}
             </span>
             {anyShort && (
               <div className="flex items-center gap-2">
@@ -158,6 +195,7 @@ export const CampaignRegistrations = memo(function CampaignRegistrations({
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {shifts.map((shift) => {
                   const canClose =
+                    canManageCampaign &&
                     new Date(shift.start_at).getTime() > now &&
                     shift.min_volunteers > 0 &&
                     (runningPerDay[shift.day_id] ?? 0) > 1;
@@ -177,7 +215,8 @@ export const CampaignRegistrations = memo(function CampaignRegistrations({
                           {hhmm(shift.start_at)} – {hhmm(shift.end_at)}
                         </span>
                       </div>
-                      {leaderless.has(shift.shift_id) &&
+                      {canManageCampaign &&
+                        leaderless.has(shift.shift_id) &&
                         new Date(shift.end_at).getTime() > now && (
                           <Link
                             href={`/campaigns/${campaignId}/shifts/${shift.shift_id}`}
@@ -191,7 +230,7 @@ export const CampaignRegistrations = memo(function CampaignRegistrations({
                         min={shift.min_volunteers}
                         max={shift.max_volunteers}
                       />
-                      {shift.volunteers.length === 0 ? (
+                      {!canViewVolunteers ? null : shift.volunteers.length === 0 ? (
                         <p className="text-xs text-foreground-tertiary">
                           {t('Nobody has registered yet')}
                         </p>

@@ -1,4 +1,5 @@
 import { memo, useMemo, useState } from 'react';
+import { CollapsibleCard } from '@/components/client/shared/CollapsibleCard';
 import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import { TbUserMinus, TbUserPlus } from 'react-icons/tb';
@@ -246,20 +247,25 @@ export const CampaignManagers = memo(function CampaignManagers() {
   );
 
   return (
-    <div className="rounded-xl border border-[rgba(136,122,71,0.4)] bg-white/60 p-5 sm:p-6 shadow-sm">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <p className="font-display-1 text-muted-foreground">
-          {t('Managers')}:{' '}
-          <span className="font-medium text-foreground tabular-nums">{managers.length}</span>
-        </p>
-        {canManageCampaign && organizationId ? (
+    <CollapsibleCard
+      title={
+        <>
+          {t('Managers')}{' '}
+          <span className="font-display-1 font-normal text-muted-foreground tabular-nums">
+            ({managers.length})
+          </span>
+        </>
+      }
+      actions={
+        canManageCampaign && organizationId ? (
           <AddManagerDialog
             campaignId={campaignId}
             organizationId={organizationId}
             managerIds={managerIds}
           />
-        ) : null}
-      </div>
+        ) : undefined
+      }
+    >
       <AvatarList
         isLoading={isManagerLoading}
         items={managers}
@@ -302,7 +308,7 @@ export const CampaignManagers = memo(function CampaignManagers() {
             : undefined
         }
       />
-    </div>
+    </CollapsibleCard>
   );
 });
 
