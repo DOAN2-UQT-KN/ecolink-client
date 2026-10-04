@@ -85,8 +85,7 @@ export function CampaignAttendanceCheckInHandler() {
         setOutcome({
           kind: 'error',
           message: apiErrorMessage(e, t) ?? e?.message ?? t('Check-in failed'),
-          // GPS errors are worth another try at once; an expired code needs a new scan.
-          retry: e?.code === 'ATTENDANCE_GPS_INACCURATE' || e?.code === 'ATTENDANCE_OUTSIDE_AREA',
+          retry: false,
         });
       } finally {
         setBusy(false);
@@ -140,6 +139,16 @@ export function CampaignAttendanceCheckInHandler() {
                         time: hhmm(result.check_in_at),
                       })
                     : ''}
+            {result && (result.flags?.out_of_area || result.flags?.low_accuracy) && (
+              <span className="mt-2 block rounded-md border border-amber-200 bg-amber-50 p-2 text-amber-900">
+                {result.flags.out_of_area
+                  ? t(
+                      'You are about {{m}} m from the meeting point. Your attendance is recorded; the organizers will check it.',
+                      { m: result.flags.distance_m },
+                    )
+                  : t('Your location was not precise. Your attendance is recorded; the organizers will check it.')}
+              </span>
+            )}
           </DialogDescription>
         </DialogHeader>
         {!busy && (

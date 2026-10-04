@@ -31,6 +31,15 @@ export interface IShiftAttendanceRow {
   manual_reason: string | null;
   pre_registered: boolean;
   offline: boolean;
+  /** A scan was farther than 50 m from the meeting point: recorded, for a manager to check. */
+  out_of_area: boolean;
+  /** A scan's GPS accuracy was worse than 50 m. */
+  low_accuracy: boolean;
+  check_in_distance_m: number | null;
+  check_out_distance_m: number | null;
+  /** Taken out of the points by a leader or manager. */
+  excluded: boolean;
+  exclude_reason: string | null;
   presence_minutes: number;
   eligible: boolean;
 }
@@ -45,6 +54,7 @@ export interface IShiftAttendanceView {
   present: number;
   manual: number;
   eligible: number;
+  flagged: number;
   attendances: IShiftAttendanceRow[];
 }
 
@@ -56,6 +66,7 @@ export interface IScanResult {
   check_in_at: string;
   check_out_at: string | null;
   eligible: boolean;
+  flags: { out_of_area: boolean; low_accuracy: boolean; distance_m: number };
 }
 
 type ShiftParams = { campaign_id: string; shift_id: string };
@@ -117,6 +128,35 @@ export const useAddManualAttendance = (
   usePost({
     mutationFn: ({ campaign_id, shift_id, ...body }: AddManualAttendanceParams) =>
       requestApi.post<IBaseResponse<unknown>>(`${shiftUrl({ campaign_id, shift_id })}/manual`, body),
+    queryKey: ['shift-attendance'],
+    messageError: { type: MessageType.Toast },
+    ...options,
+  });
+
+export type ExcludeAttendanceParams = ShiftParams & { user_id: string; reason: string };
+
+/** Take an attendance out of the points (e.g. a flagged scan), with a reason. */
+export const useExcludeAttendance = (
+  options?: UsePostOptions<IBaseResponse<unknown>, ExcludeAttendanceParams>,
+) =>
+  usePost({
+    mutationFn: ({ campaign_id, shift_id, user_id, reason }: ExcludeAttendanceParams) =>
+      requestApi.post<IBaseResponse<unknown>>(
+        `${shiftUrl({ campaign_id, shift_id })}/${user_id}/exclude`,
+        { reason },
+      ),
+    queryKey: ['shift-attendance'],
+    messageError: { type: MessageType.Toast },
+    ...options,
+  });
+
+/** Put an excluded attendance back into the points. */
+export const useRestoreAttendance = (
+  options?: UsePostOptions<IBaseResponse<unknown>, ShiftParams & { user_id: string }>,
+) =>
+  usePost({
+    mutationFn: ({ campaign_id, shift_id, user_id }: ShiftParams & { user_id: string }) =>
+      requestApi.post<IBaseResponse<unknown>>(`${shiftUrl({ campaign_id, shift_id })}/${user_id}/restore`, {}),
     queryKey: ['shift-attendance'],
     messageError: { type: MessageType.Toast },
     ...options,

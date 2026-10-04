@@ -8,8 +8,11 @@ import {
   useAddManualAttendance,
   useAttendanceQr,
   useCloseAttendance,
+  useExcludeAttendance,
   useOpenAttendanceSession,
+  useRestoreAttendance,
   useShiftAttendance,
+  type IShiftAttendanceRow,
 } from '@/apis/campaign/campaignAttendance';
 import type { IRegisteredVolunteer } from '@/apis/campaign/models/registration';
 import { Button } from '@/components/client/shared/Button';
@@ -48,7 +51,7 @@ const AttendanceQrDialog = memo(function AttendanceQrDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const { t } = useTranslation('common');
-  const [periodSec, setPeriodSec] = useState(20);
+  const [periodSec, setPeriodSec] = useState(600);
   const { data, isError } = useAttendanceQr(
     { campaign_id: campaignId, shift_id: shiftId },
     { enabled: open, refetchInterval: periodSec * 1000, refetchIntervalInBackground: true, gcTime: 0 },
@@ -70,8 +73,8 @@ const AttendanceQrDialog = memo(function AttendanceQrDialog({
           <DialogTitle>{t('Attendance QR')}</DialogTitle>
           <DialogDescription>
             {t(
-              'Volunteers scan this code with their phone at the meeting point (within 50 m, precise location on). The code changes every {{n}} seconds; a screenshot will not work.',
-              { n: periodSec },
+              'Volunteers scan this code with their phone at the meeting point, with precise location on. The code changes every {{n}} minutes. Scans farther than 50 m are recorded but flagged for you to check.',
+              { n: Math.round(periodSec / 60) },
             )}
           </DialogDescription>
         </DialogHeader>
@@ -138,6 +141,16 @@ export const ShiftAttendancePanel = memo(function ShiftAttendancePanel({
     },
   });
 
+  const [excluding, setExcluding] = useState<IShiftAttendanceRow | null>(null);
+  const [excludeReason, setExcludeReason] = useState('');
+  const { mutate: exclude, isPending: isExcluding } = useExcludeAttendance({
+    onSuccess: () => {
+      setExcluding(null);
+      setExcludeReason('');
+    },
+  });
+  const { mutate: restore, isPending: isRestoring } = useRestoreAttendance();
+
   const presentIds = useMemo(() => new Set((view?.attendances ?? []).map((a) => a.user_id)), [view]);
   const candidates = registered.filter((r) => !presentIds.has(r.user_id));
 
@@ -156,6 +169,12 @@ export const ShiftAttendancePanel = memo(function ShiftAttendancePanel({
               eligible: view.eligible,
               manual: view.manual,
             })}
+            {view.flagged > 0 && (
+              <span className="text-amber-700">
+                {' · '}
+                {t('{{n}} flagged to check', { n: view.flagged })}
+              </span>
+            )}
           </span>
         </div>
         {view.can_run && !ended && (
@@ -211,7 +230,8 @@ export const ShiftAttendancePanel = memo(function ShiftAttendancePanel({
                 <th className="py-2 pr-3 font-medium">{t('Volunteer')}</th>
                 <th className="py-2 pr-3 font-medium">{t('In')}</th>
                 <th className="py-2 pr-3 font-medium">{t('Out')}</th>
-                <th className="py-2 font-medium" />
+                <th className="py-2 pr-3 font-medium" />
+                {view.can_run && <th className="py-2 font-medium" />}
               </tr>
             </thead>
             <tbody>
@@ -220,8 +240,21 @@ export const ShiftAttendancePanel = memo(function ShiftAttendancePanel({
                   <td className="py-2 pr-3">{a.volunteer?.name || t('Unnamed volunteer')}</td>
                   <td className="py-2 pr-3 tabular-nums">{hhmm(a.check_in_at)}</td>
                   <td className="py-2 pr-3 tabular-nums">{hhmm(a.check_out_at)}</td>
-                  <td className="py-2">
+                  <td className="py-2 pr-3">
                     <div className="flex flex-wrap gap-1">
+                      {a.excluded && (
+                        <Pill tone="red" title={a.exclude_reason ?? undefined}>
+                          {t('Excluded')}
+                        </Pill>
+                      )}
+                      {a.out_of_area && (
+                        <Pill tone="amber">
+                          {t('Out of area ({{m}} m)', {
+                            m: Math.max(a.check_in_distance_m ?? 0, a.check_out_distance_m ?? 0),
+                          })}
+                        </Pill>
+                      )}
+                      {a.low_accuracy && <Pill tone="amber">{t('Imprecise GPS')}</Pill>}
                       {a.eligible ? (
                         <Pill tone="green">{t('Counts for points')}</Pill>
                       ) : a.check_out_at ? (
@@ -232,6 +265,33 @@ export const ShiftAttendancePanel = memo(function ShiftAttendancePanel({
                       {a.offline && <Pill tone="neutral">{t('Synced later')}</Pill>}
                     </div>
                   </td>
+                  {view.can_run && (
+                    <td className="py-2 text-right">
+                      {a.excluded ? (
+                        <Button
+                          type="button"
+                          variant="outlined-brown"
+                          size="small"
+                          isDisabled={isRestoring}
+                          onClick={() => restore({ ...params, user_id: a.user_id })}
+                        >
+                          {t('Restore')}
+                        </Button>
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="outlined-brown"
+                          size="small"
+                          onClick={() => {
+                            setExcludeReason('');
+                            setExcluding(a);
+                          }}
+                        >
+                          {t('Exclude')}
+                        </Button>
+                      )}
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -240,6 +300,40 @@ export const ShiftAttendancePanel = memo(function ShiftAttendancePanel({
       )}
 
       <AttendanceQrDialog campaignId={campaignId} shiftId={shiftId} open={qrOpen} onOpenChange={setQrOpen} />
+
+      <Dialog open={Boolean(excluding)} onOpenChange={(open) => !open && setExcluding(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('Exclude this attendance?')}</DialogTitle>
+            <DialogDescription>
+              {t(
+                '{{name}} will not get points for this shift. You can restore it later. A reason is required.',
+                { name: excluding?.volunteer?.name || t('Unnamed volunteer') },
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={excludeReason}
+            maxLength={500}
+            placeholder={t('Reason (e.g. was not at the meeting point)')}
+            onChange={(e) => setExcludeReason(e.target.value)}
+          />
+          <DialogFooter>
+            <Button variant="outlined-brown" onClick={() => setExcluding(null)}>
+              {t('Cancel')}
+            </Button>
+            <Button
+              variant="brown"
+              isDisabled={!excludeReason.trim() || isExcluding}
+              onClick={() =>
+                excluding && exclude({ ...params, user_id: excluding.user_id, reason: excludeReason.trim() })
+              }
+            >
+              {t('Exclude')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={manualOpen} onOpenChange={setManualOpen}>
         <DialogContent className="sm:max-w-md">

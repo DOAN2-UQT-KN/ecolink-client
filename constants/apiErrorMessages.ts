@@ -51,8 +51,6 @@ const API_ERROR_MESSAGES: Record<string, string> = {
     "Only an upcoming or running campaign, or an approved one under review again, can be cancelled",
   CAMPAIGN_HAS_VOLUNTEERS: "Volunteers have registered for this campaign; cancel it instead of deleting it",
   ATTENDANCE_QR_INVALID: "The QR code has expired; please scan again",
-  ATTENDANCE_OUTSIDE_AREA: "You are not within the campaign area",
-  ATTENDANCE_GPS_INACCURATE: "Your location is not precise enough; turn on precise location and scan again",
   ATTENDANCE_NOT_OPEN: "Attendance for this shift is not open",
   ATTENDANCE_SELF_CHECK_IN:
     "You cannot check yourself in to a shift you run; scan the code of a shift another manager runs",

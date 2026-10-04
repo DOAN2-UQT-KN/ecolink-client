@@ -208,11 +208,6 @@ function CampaignDetailBody() {
             {campaign.reject_reason ? ` ${t('Reason')}: ${campaign.reject_reason}` : ''}
           </div>
         )}
-        {campaign.can_cancel_campaign && (
-          <div className="flex justify-end">
-            <CancelCampaignButton campaign={campaign} />
-          </div>
-        )}
         {(showCompletionVerification || showJoinCta) && (
           <div className="flex flex-wrap items-center justify-end gap-2">
             {showCompletionVerification ? (
@@ -290,8 +285,9 @@ function CampaignDetailBody() {
           </div>
         ) : null}
 
-        {canOwnerSubmitCompletion ? (
-          <div className="flex flex-wrap justify-end gap-2">
+        {canOwnerSubmitCompletion || campaign.can_cancel_campaign ? (
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <CancelCampaignButton campaign={campaign} />
             {canOwnerSubmitCompletion ? (
               <ConfirmPopoverModal
                 title={t('Mark Campaign as Done')}
