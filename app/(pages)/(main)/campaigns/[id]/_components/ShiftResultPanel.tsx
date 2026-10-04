@@ -2,7 +2,7 @@ import { memo, useEffect, useMemo, useState, type ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { TbFlagCheck, TbPencil, TbPhotoPlus, TbTrash, TbVideo } from 'react-icons/tb';
+import { TbFlagCheck, TbPencil, TbPhotoPlus, TbVideo } from 'react-icons/tb';
 
 import {
   useAddShiftMedia,
@@ -12,7 +12,6 @@ import {
   useShiftResult,
   type IShiftMedia,
   type IShiftResultReport,
-  type ShiftResultReportStatus,
 } from '@/apis/campaign/shiftResult';
 import type { IIncident } from '@/apis/incident/models/incident';
 import { uploadToCloudinary } from '@/app/(pages)/(main)/incidents/create/_services/upload.service';
@@ -28,21 +27,14 @@ import { ConfirmPopoverModal } from '@/modules/OrganizationCard/components/Confi
 import useAuthStore from '@/stores/useAuthStore';
 import showMessage, { MessageLevel, MessageType } from '@/utils/showMessage';
 import { ShiftStatusPill } from './ShiftStatusPill';
+import { REPORT_LABEL, ShiftResultView, Thumb, type ReportChoice } from './ShiftResultView';
 
-/** Files picked at once, and the video size limit (same as task evidence). */
+/** Files picked at once, and the video size limit. */
 const MAX_RESULT_MEDIA = 20;
 const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
 const MAX_PHOTOS_PER_SIDE = 10;
 
-type ReportChoice = ShiftResultReportStatus | 'none';
 type ReportDraft = { status: ReportChoice; before: string[]; after: string[] };
-
-const REPORT_TONE = { cleaned: 'green', partial: 'amber', none: 'neutral' } as const;
-const REPORT_LABEL: Record<ReportChoice, string> = {
-  cleaned: 'Cleaned',
-  partial: 'Partly done',
-  none: 'Not handled',
-};
 
 /** Uploads picked photos (compressed) and videos (≤ 100 MB) to Cloudinary. */
 async function uploadPicked(
@@ -74,42 +66,6 @@ async function uploadPicked(
   }
   return out;
 }
-
-const Thumb = memo(function Thumb({
-  url,
-  kind = 'image',
-  onRemove,
-  className,
-}: {
-  url: string;
-  kind?: 'image' | 'video';
-  onRemove?: () => void;
-  className?: string;
-}) {
-  const { t } = useTranslation('common');
-  return (
-    <div className={cn('group relative size-24 overflow-hidden rounded-lg border border-border/60 bg-white', className)}>
-      {kind === 'video' ? (
-        <video src={url} className="size-full object-cover" muted playsInline controls />
-      ) : (
-        <a href={url} target="_blank" rel="noreferrer">
-          <img src={url} alt="" className="size-full object-cover" loading="lazy" />
-        </a>
-      )}
-      {onRemove && (
-        <button
-          type="button"
-          onClick={onRemove}
-          aria-label={t('Remove')}
-          title={t('Remove')}
-          className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white opacity-90 hover:opacity-100"
-        >
-          <TbTrash className="size-3.5" aria-hidden />
-        </button>
-      )}
-    </div>
-  );
-});
 
 /** A file button that uploads what is picked and hands back the URLs. */
 function UploadButton({
@@ -395,66 +351,15 @@ export const ShiftResultPanel = memo(function ShiftResultPanel({
   );
 
   if (!editable || !editing) {
-    const result = view.result;
-    const handled = new Map((result?.reports ?? []).map((r) => [r.report_id, r]));
     return (
       <div className={className}>
         {header}
-        {!result ? (
-          <p className="mb-4 text-sm text-foreground-tertiary">
-            {started ? t('The result has not been submitted yet.') : t('The shift has not started yet.')}
-          </p>
-        ) : (
-          <div className="mb-6 flex flex-col gap-4 text-sm">
-            <p className="whitespace-pre-wrap">{result.description}</p>
-            <div className="flex flex-wrap gap-4">
-              <span>
-                <span className="text-foreground-tertiary">{t('Bags')}: </span>
-                <span className="font-medium tabular-nums">{result.waste_bags ?? '—'}</span>
-              </span>
-              <span>
-                <span className="text-foreground-tertiary">{t('Weight (kg)')}: </span>
-                <span className="font-medium tabular-nums">{result.waste_kg ?? '—'}</span>
-              </span>
-            </div>
-            {view.report_ids.length > 0 && (
-              <div className="flex flex-col gap-3">
-                <h3 className="text-sm font-semibold">{t('Waste points')}</h3>
-                {view.report_ids.map((id) => {
-                  const r = handled.get(id);
-                  const choice: ReportChoice = r?.status ?? 'none';
-                  return (
-                    <div key={id} className="rounded-lg border border-[rgba(136,122,71,0.3)] bg-white/70 p-3">
-                      <div className="mb-2 flex flex-wrap items-center gap-2">
-                        <span className="font-medium">{reportTitle(id)}</span>
-                        <Pill tone={REPORT_TONE[choice]}>{t(REPORT_LABEL[choice])}</Pill>
-                      </div>
-                      {r && (
-                        <div className="grid gap-3 sm:grid-cols-2">
-                          {(
-                            [
-                              [t('Before'), r.before_urls],
-                              [t('After'), r.after_urls],
-                            ] as const
-                          ).map(([label, urls]) => (
-                            <div key={label}>
-                              <span className="text-xs text-foreground-tertiary">{label}</span>
-                              <div className="mt-1 flex flex-wrap gap-2">
-                                {urls.map((u) => (
-                                  <Thumb key={u} url={u} />
-                                ))}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
+        <ShiftResultView
+          result={view.result}
+          reportIds={view.report_ids}
+          started={started}
+          reportTitle={reportTitle}
+        />
         {pool}
       </div>
     );

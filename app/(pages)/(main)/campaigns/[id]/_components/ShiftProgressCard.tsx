@@ -1,14 +1,19 @@
-import { memo } from 'react';
+import { memo, useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
+import { TbChevronDown } from 'react-icons/tb';
 
 import type { ICampaign } from '@/apis/campaign/models/campaign';
-import { useShiftOverview, type IShiftOverviewRow } from '@/apis/campaign/shiftResult';
+import { useShiftOverview, useShiftResult, type IShiftOverviewRow } from '@/apis/campaign/shiftResult';
 import { CollapsibleCard } from '@/components/client/shared/CollapsibleCard';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { PILL_TONE } from '@/components/ui/Pill';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
 import { Link } from '@/libs/router';
 import { cn } from '@/libs/utils';
-import { SHIFT_STATUS_LABEL, SHIFT_STATUS_TONE } from './ShiftStatusPill';
+import { SHIFT_STATUS_LABEL, SHIFT_STATUS_TONE, ShiftStatusPill } from './ShiftStatusPill';
+import { ShiftResultAmounts, ShiftResultIncludedMedia, ShiftResultWastePoints } from './ShiftResultView';
 
 const LEGEND = ['upcoming', 'running', 'awaiting_result', 'ended', 'off'] as const;
 
@@ -21,15 +26,149 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
+/** One collapsible part of the shift popover. */
+function Section({ title, defaultOpen = false, children }: { title: string; defaultOpen?: boolean; children: ReactNode }) {
+  return (
+    <Collapsible defaultOpen={defaultOpen} className="border-t border-[rgba(136,122,71,0.2)]">
+      <CollapsibleTrigger className="group flex w-full items-center justify-between gap-2 py-2 text-left text-sm font-semibold">
+        {title}
+        <TbChevronDown className="size-4 shrink-0 transition-transform group-data-[state=open]:rotate-180" aria-hidden />
+      </CollapsibleTrigger>
+      <CollapsibleContent className="pb-3 text-sm">{children}</CollapsibleContent>
+    </Collapsible>
+  );
+}
+
+/**
+ * The result of one shift, opened from its cell in the grid: people (from the overview), then the
+ * waste points, the activity photos in the result and the description and amounts. The result is
+ * fetched only while the popover is open.
+ */
+const ShiftCellPopover = memo(function ShiftCellPopover({
+  campaign,
+  row,
+  title,
+  children,
+}: {
+  campaign: ICampaign;
+  row: IShiftOverviewRow;
+  /** Meeting point · day, shown in the header. */
+  title: string;
+  /** The cell itself, used as the trigger. */
+  children: ReactNode;
+}) {
+  const { t } = useTranslation('common');
+  const { title: localizedTitle } = useLocalizedDisplay();
+  const [open, setOpen] = useState(false);
+  const { data, isLoading } = useShiftResult(
+    { campaign_id: campaign.id, shift_id: row.shift_id },
+    { enabled: open },
+  );
+  const view = data?.data;
+  const result = view?.result ?? null;
+
+  // Waste points of the shift's meeting point, for their titles.
+  const reports = useMemo(() => {
+    const point = campaign.meeting_points?.find((p) => p.id === row.meeting_point_id);
+    const ids = new Set(point?.report_ids ?? []);
+    return (campaign.reports ?? []).filter((r) => ids.has(r.id));
+  }, [campaign.meeting_points, campaign.reports, row.meeting_point_id]);
+  const reportById = useMemo(() => new Map(reports.map((r) => [r.id, r])), [reports]);
+  const reportTitle = (id: string) => {
+    const r = reportById.get(id);
+    return (r && localizedTitle(r).trim()) || t('Waste point');
+  };
+
+  const hours = `${format(new Date(row.start_at), 'HH:mm')}–${format(new Date(row.ended_at ?? row.end_at), 'HH:mm')}`;
+  const notSubmitted = <p className="text-foreground-tertiary">{t('Not submitted yet')}</p>;
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>{children}</PopoverTrigger>
+      <PopoverContent
+        align="start"
+        collisionPadding={16}
+        className="flex max-h-[min(70vh,var(--radix-popover-content-available-height))] w-[min(420px,calc(100vw-32px))] flex-col overflow-y-auto p-4"
+      >
+        <div className="mb-2 flex flex-col gap-1.5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="font-semibold">{title}</span>
+            <ShiftStatusPill status={row.status} />
+          </div>
+          <span className="text-xs tabular-nums text-foreground-tertiary">{hours}</span>
+          <Link
+            href={`/campaigns/${campaign.id}/shifts/${row.shift_id}`}
+            className="w-fit text-sm text-button-accent underline-offset-2 hover:underline"
+          >
+            {t('Open shift page')}
+          </Link>
+        </div>
+
+        <Section title={t('People')} defaultOpen>
+          <div className="grid grid-cols-3 gap-2">
+            {(
+              [
+                [t('Registered'), row.registered],
+                [t('Present'), row.present],
+                [t('Eligible'), row.eligible],
+              ] as const
+            ).map(([label, value]) => (
+              <div key={label} className="flex flex-col rounded-lg border border-[rgba(136,122,71,0.3)] bg-white/70 px-3 py-2">
+                <span className="text-xs text-foreground-tertiary">{label}</span>
+                <span className="font-semibold tabular-nums">{value}</span>
+              </div>
+            ))}
+          </div>
+        </Section>
+
+        {isLoading ? (
+          <p className="py-2 text-sm text-foreground-tertiary">{t('Loading')}…</p>
+        ) : !view || !result ? (
+          <div className="border-t border-[rgba(136,122,71,0.2)] py-3 text-sm">{notSubmitted}</div>
+        ) : (
+          <>
+            <Section title={t('Waste points')}>
+              {view.report_ids.length === 0 ? (
+                <p className="text-foreground-tertiary">{t('This meeting point has no waste points.')}</p>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  <ShiftResultWastePoints
+                    reportIds={view.report_ids}
+                    reports={result.reports}
+                    reportTitle={reportTitle}
+                    thumbClassName="size-16"
+                  />
+                </div>
+              )}
+            </Section>
+            <Section title={t('Shift activity photos')}>
+              <ShiftResultIncludedMedia media={view.media} thumbClassName="size-16" />
+            </Section>
+            <Section title={t('Description and amounts')}>
+              <div className="flex flex-col gap-2">
+                <ShiftResultAmounts result={result} />
+              </div>
+            </Section>
+          </>
+        )}
+      </PopoverContent>
+    </Popover>
+  );
+});
+
 /**
  * Progress of every shift (spec 4.2), for the campaign's managers and admins: a day × meeting
- * point grid coloured by status (each cell opens the shift), and the totals so far.
+ * point grid coloured by status (each cell opens a popover with the shift's result), and the totals
+ * so far. Shown in the campaign's Progress tab.
  */
 export const ShiftProgressCard = memo(function ShiftProgressCard({ campaign }: { campaign: ICampaign }) {
   const { t } = useTranslation('common');
   const { data } = useShiftOverview(campaign.id, { enabled: Boolean(campaign.id) });
   const overview = data?.data;
-  if (!overview || overview.shifts.length === 0) return null;
+  if (!overview) return null;
+  if (overview.shifts.length === 0) {
+    return <p className="text-sm text-foreground-tertiary">{t('No shifts yet')}</p>;
+  }
 
   const days = campaign.days ?? [];
   const points = campaign.meeting_points ?? [];
@@ -104,12 +243,21 @@ export const ShiftProgressCard = memo(function ShiftProgressCard({ campaign }: {
                         {s.status === 'off' ? (
                           <div className={cn('rounded-lg border px-3 py-2', tone)}>{body}</div>
                         ) : (
-                          <Link
-                            href={`/campaigns/${campaign.id}/shifts/${s.shift_id}`}
-                            className={cn('block rounded-lg border px-3 py-2 hover:opacity-80', tone)}
+                          <ShiftCellPopover
+                            campaign={campaign}
+                            row={s}
+                            title={`${pointName(pi)} · ${t('Day {{n}}', { n: di + 1 })} ${format(new Date(day.start_at), 'dd/MM')}`}
                           >
-                            {body}
-                          </Link>
+                            <button
+                              type="button"
+                              className={cn(
+                                'block w-full rounded-lg border px-3 py-2 text-left hover:opacity-80 data-[state=open]:ring-2 data-[state=open]:ring-button-accent/40',
+                                tone,
+                              )}
+                            >
+                              {body}
+                            </button>
+                          </ShiftCellPopover>
                         )}
                       </td>
                     );

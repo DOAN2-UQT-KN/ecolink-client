@@ -84,7 +84,7 @@ export interface ICampaign {
   owner?: Pick<IUser, 'id' | 'name' | 'email' | 'avatar'> | null;
 
   /**
-   * Viewer may manage this campaign (edit, tasks, join requests, QR, mark done, managers):
+   * Viewer may manage this campaign (edit, shift results, join requests, QR, mark done, managers):
    * the creator, an assigned manager, or an LR/OWNER of the campaign's organization. Creator and
    * managers only count while they are still active members of that organization.
    */
