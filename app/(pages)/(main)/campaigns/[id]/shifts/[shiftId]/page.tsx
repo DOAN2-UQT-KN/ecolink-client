@@ -26,6 +26,7 @@ import { useParams, useRouter } from '@/libs/router';
 import { cn } from '@/libs/utils';
 import ReportSummaryCard from '@/modules/ReportSummaryCard';
 import useAuthStore from '@/stores/useAuthStore';
+import { ShiftAttendancePanel } from '../../_components/ShiftAttendancePanel';
 
 import { AvatarList } from '../../_components/AvatarList';
 import { ChangeShiftLeaderButton } from '../../_components/ChangeShiftLeaderButton';
@@ -47,6 +48,7 @@ function ShiftDetailBody({ shiftId }: { shiftId: string }) {
     useCampaignDetail();
   const isAuthenticated = useAuthStore((s) => s.is_authenticated);
   const isPlatformAdmin = useAuthStore((s) => s.user?.roleId === ADMIN_ROLE_ID);
+  const currentUserId = useAuthStore((s) => s.user?.id);
   const [tab, setTab] = useState<'info' | 'members'>('info');
   const [joinOpen, setJoinOpen] = useState(false);
 
@@ -230,6 +232,16 @@ function ShiftDetailBody({ shiftId }: { shiftId: string }) {
           </TabsList>
 
           <TabsContent value="info" className="mt-0 flex flex-col gap-4 sm:gap-5">
+            {/* Attendance (spec 4.1): the leader, managers and admins, from an hour before the shift. */}
+            {(canManageCampaign || isPlatformAdmin || (leaderId != null && leaderId === currentUserId)) &&
+              new Date(shift.start_at).getTime() - 60 * 60 * 1000 <= Date.now() && (
+                <ShiftAttendancePanel
+                  className={cardClass}
+                  campaignId={campaignId}
+                  shiftId={shift.id}
+                  registered={registrations?.volunteers ?? []}
+                />
+              )}
             <div className="grid gap-4 sm:gap-5 lg:grid-cols-2">
               <div className={cardClass}>
                 <h2 className="font-display-6 font-semibold text-button-accent mb-4">{t('Shift')}</h2>

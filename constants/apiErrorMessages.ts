@@ -50,6 +50,15 @@ const API_ERROR_MESSAGES: Record<string, string> = {
   CAMPAIGN_NOT_CANCELLABLE:
     "Only an upcoming or running campaign, or an approved one under review again, can be cancelled",
   CAMPAIGN_HAS_VOLUNTEERS: "Volunteers have registered for this campaign; cancel it instead of deleting it",
+  ATTENDANCE_QR_INVALID: "The QR code has expired; please scan again",
+  ATTENDANCE_OUTSIDE_AREA: "You are not within the campaign area",
+  ATTENDANCE_GPS_INACCURATE: "Your location is not precise enough; turn on precise location and scan again",
+  ATTENDANCE_NOT_OPEN: "Attendance for this shift is not open",
+  ATTENDANCE_SELF_CHECK_IN:
+    "You cannot check yourself in to a shift you run; scan the code of a shift another manager runs",
+  ATTENDANCE_MANUAL_LIMIT: "Manual attendance is limited to 20% of the people present on the shift",
+  ATTENDANCE_ALREADY_RECORDED: "This person already has attendance on this shift",
+  ATTENDANCE_LEGACY_GONE: "Attendance is now per shift; update the app and scan the shift's QR code",
   SHIFT_MIN_REQUIRED: "A running shift needs at least one volunteer; turn the shift off instead",
   CAMPAIGN_LEADER_NOT_MANAGER:
     "A shift leader must be one of the campaign's managers or an owner of its organization",

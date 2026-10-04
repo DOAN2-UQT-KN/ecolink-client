@@ -26,7 +26,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
 
 import { CampaignAttendanceCheckInHandler } from './_components/CampaignAttendanceCheckInHandler';
-import { CampaignAttendanceQrButton } from './_components/CampaignAttendanceQrButton';
 import { CampaignCompletionVerifyButton } from './_components/CampaignCompletionVerifyButton';
 import { JoinShiftsDialog } from './_components/JoinShiftsDialog';
 import { CancelCampaignButton } from './_components/CancelCampaignButton';
@@ -291,12 +290,8 @@ function CampaignDetailBody() {
           </div>
         ) : null}
 
-        {canOwnerSubmitCompletion ||
-        (canManageCampaign && campaign?.status === STATUS.ACTIVE) ? (
+        {canOwnerSubmitCompletion ? (
           <div className="flex flex-wrap justify-end gap-2">
-            {canManageCampaign && campaign?.status === STATUS.ACTIVE ? (
-              <CampaignAttendanceQrButton />
-            ) : null}
             {canOwnerSubmitCompletion ? (
               <ConfirmPopoverModal
                 title={t('Mark Campaign as Done')}
