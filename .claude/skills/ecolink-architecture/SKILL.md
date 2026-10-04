@@ -131,7 +131,7 @@ Chi tiết xem skill `ecolink-admin-console` và `ecolink-client-pages`.
   - Ngoài React: `useAuthStore.getState().accessToken`.
   - `partialize` **không persist `is_authenticated`**: `onRehydrateStorage` bật lại `is_authenticated` khi còn cả `accessToken` lẫn `user`, rồi mới đặt `has_hydrated = true`. Code nào đọc `is_authenticated` lúc mount phải chờ `has_hydrated`.
   - `handleSignInSuccess()` còn ghi cookie `refresh_token` bằng JS (không HttpOnly). Cookie này chỉ được ghi/xoá, **không nơi nào đọc lại** — interceptor lấy refresh token từ store.
-- `stores/useOrgContextStore.ts`: `activeOrganizationId | null` (key `org_context_store`), tự về `null` khi logout. **Chỉ để hiển thị**, không gửi lên server.
+- `stores/useOrgContextStore.ts`: `activeOrganizationId | null` (key `org_context_store`), tự về `null` khi logout. **Không cấp quyền**, không gửi như một header / claim; chỉ làm giá trị mặc định cho UI (switcher, filter tổ chức của `/campaigns/me`, tổ chức chọn sẵn ở form tạo campaign).
 - `libs/axiosClient.ts` gắn `Authorization: Bearer`, `X-Refresh-Token`, `Accept-Language`. Gặp 401 → thử refresh **1 lần** → thất bại thì `setLogoutSuccess()` + `window.location.href = "/sign-in?redirect=..."`.
 - Logout (`utils/logout.ts > clearAuthStorage()`) xoá `auth_store` và **mọi cookie của domain**, không chỉ cookie auth — đừng lưu gì cần giữ qua logout vào cookie.
 
@@ -165,7 +165,7 @@ Hệ quả: trang nào gọi API cần đăng nhập ngay khi load (`/maps`, `/i
 ## Lệnh
 
 ```bash
-npm run dev      # Vite dev server, port 5173 (README ghi 3000 là sai)
+npm run dev      # Vite dev server, port 5174 (README ghi 3000 là sai)
 npm run build    # tsc -b && vite build  ← cổng kiểm tra duy nhất
 npm run lint     # eslint . --fix
 npm run preview  # serve bản build

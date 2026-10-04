@@ -1,4 +1,4 @@
-import { Suspense, useMemo } from 'react';
+import { Suspense, useMemo, useState } from 'react';
 import { useParams } from '@/libs/router';
 import { useTranslation } from 'react-i18next';
 import { Inbox } from 'lucide-react';
@@ -14,20 +14,27 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 
 import { CampaignTabs } from './_components/CampaignTabs';
-import StatsCards from './_components/StatsCards';
 import { CampaignDetailProvider } from './_context/CampaignDetailContext';
 import { useCampaignDetail } from './_hooks/useCampaignDetail';
-import { TbArrowRight } from 'react-icons/tb';
+import { TbArrowRight, TbPencil } from 'react-icons/tb';
 import { Button } from '@/components/client/shared/Button';
 import { STATUS } from '@/constants/status';
+import { CAMPAIGN_REGISTRABLE_STATUSES, CAMPAIGN_STATUS } from '@/constants/campaignLifecycle';
 import { ConfirmPopoverModal } from '@/modules/OrganizationCard/components/ConfirmPopoverModal';
-import { useMarkDoneCampaign } from '@/apis/campaign/campaignById';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
 
 import { CampaignAttendanceCheckInHandler } from './_components/CampaignAttendanceCheckInHandler';
-import { CampaignAttendanceQrButton } from './_components/CampaignAttendanceQrButton';
 import { CampaignCompletionVerifyButton } from './_components/CampaignCompletionVerifyButton';
+import { JoinShiftsDialog } from './_components/JoinShiftsDialog';
+import { CancelCampaignButton } from './_components/CancelCampaignButton';
+import { SubmitCompletionDialog } from './_components/SubmitCompletionDialog';
+import { format } from 'date-fns';
+import { useUpdateMyRegistrations } from '@/apis/campaign/registration';
+import showMessage, { MessageLevel, MessageType } from '@/utils/showMessage';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import useAuthStore from '@/stores/useAuthStore';
+import { useRouter } from '@/libs/router';
 
 function CampaignDetailBody() {
   const { t } = useTranslation('common');
@@ -37,24 +44,67 @@ function CampaignDetailBody() {
     campaign,
     isLoading,
     isError,
-    isCampaignOwner,
-    handleJoinCampaign,
-    isJoining,
-    handleCancelJoinRequest,
-    isCancelling,
+    canManageCampaign,
+    isRegistered,
+    hasOpenShift,
   } = useCampaignDetail();
+  const [joinOpen, setJoinOpen] = useState(false);
+  const isAuthenticated = useAuthStore((s) => s.is_authenticated);
+  const router = useRouter();
 
-  const requestStatus = campaign?.request_status;
-  const isApproved = requestStatus === STATUS.APPROVED;
-  const isPending = requestStatus === STATUS.PENDING;
-  const showJoinCta = !isApproved && !isPending;
+  const { mutateAsync: updateMyShifts, isPending: isLeaving } = useUpdateMyRegistrations({
+    onSuccess: () => {
+      showMessage({ type: MessageType.Toast, level: MessageLevel.Success, title: t('You left the campaign') });
+      void queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });
+    },
+  });
+  /** Leaves every shift not started yet (spec 3.3); started ones stay with attendance. */
+  const handleLeave = async () => {
+    const now = Date.now();
+    const keep = (campaign?.shifts ?? [])
+      .filter((s) => campaign?.my_shift_ids?.includes(s.id) && new Date(s.start_at).getTime() <= now)
+      .map((s) => s.id);
+    await updateMyShifts({ campaign_id: campaignId, shift_ids: keep });
+  };
+
+  // Registration (spec 3.1) while a shift is still to come. The people managing the campaign are
+  // not offered "Join"; one already registered still sees their shifts to edit or leave them.
+  const canJoin = hasOpenShift && !canManageCampaign;
+  const showJoinCta = isRegistered || canJoin;
+  // Back under review after an edit: volunteers keep their place, new sign-ups wait.
+  const underReReview =
+    Boolean(campaign?.approved_at) &&
+    (campaign?.status === CAMPAIGN_STATUS.PENDING_REVIEW ||
+      campaign?.status === CAMPAIGN_STATUS.NEEDS_REVISION);
+  const openJoin = () => {
+    if (!isAuthenticated) {
+      router.push(`/sign-in?redirect=${encodeURIComponent(`/campaigns/${campaignId}`)}`);
+      return;
+    }
+    setJoinOpen(true);
+  };
 
   const canOwnerSubmitCompletion =
-    isCampaignOwner &&
+    canManageCampaign &&
     (campaign?.status === STATUS.ACTIVE || campaign?.status === STATUS.INREVIEW);
 
+  // Spec 5.2: the admin rejected the completion and reopened some shifts.
+  const reopenedShifts = (campaign?.shifts ?? []).filter((sh) => sh.reopened_at);
+  const showCompletionRejected =
+    canManageCampaign &&
+    campaign?.status === STATUS.ACTIVE &&
+    (campaign?.completion_rejection_count ?? 0) > 0 &&
+    reopenedShifts.length > 0;
+  const shiftLabel = (shiftId: string) => {
+    const sh = campaign?.shifts?.find((x) => x.id === shiftId);
+    const points = campaign?.meeting_points ?? [];
+    const pi = points.findIndex((p) => p.id === sh?.meeting_point_id);
+    const point = pi < 0 ? '' : points[pi].name?.trim() || t('Meeting point {{n}}', { n: pi + 1 });
+    return sh ? `${point} · ${format(new Date(sh.start_at), 'dd/MM HH:mm')}` : '';
+  };
+
   const showAwaitingAdminCompletion =
-    isCampaignOwner && campaign?.status === STATUS.WAITING_CONFIRMED;
+    canManageCampaign && campaign?.status === STATUS.WAITING_CONFIRMED;
 
   const showCompletionVerification =
     campaign?.status === STATUS.WAITING_CONFIRMED ||
@@ -63,23 +113,6 @@ function CampaignDetailBody() {
   const completionVerification = campaign?.completion_verification;
 
   const queryClient = useQueryClient();
-  const { mutate: markDoneMutate, isPending: isMarkingDone } = useMarkDoneCampaign({
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });
-    },
-  });
-
-  const handleMarkDone = () => {
-    return new Promise<void>((resolve, reject) => {
-      markDoneMutate(
-        { id: campaignId },
-        {
-          onSuccess: () => resolve(),
-          onError: () => reject(),
-        },
-      );
-    });
-  };
 
   const breadcrumbs: BreadcrumbItemProps[] = useMemo(
     () => [
@@ -155,8 +188,26 @@ function CampaignDetailBody() {
       <Breadcrumbs breadcrumbs={breadcrumbs} />
 
       <div className="pt-5 space-y-6">
-        {(showCompletionVerification ||
-          (!isApproved && !isCampaignOwner)) && (
+        {underReReview && (
+          <div
+            className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
+            role="status"
+          >
+            {t(
+              'This campaign is being reviewed again after an edit. Registered volunteers keep their place; new sign-ups are paused until it is approved.',
+            )}
+          </div>
+        )}
+        {campaign.status === CAMPAIGN_STATUS.CANCELLED && (
+          <div
+            className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900"
+            role="status"
+          >
+            {t('This campaign was cancelled.')}
+            {campaign.reject_reason ? ` ${t('Reason')}: ${campaign.reject_reason}` : ''}
+          </div>
+        )}
+        {(showCompletionVerification || showJoinCta) && (
           <div className="flex flex-wrap items-center justify-end gap-2">
             {showCompletionVerification ? (
               <CampaignCompletionVerifyButton
@@ -166,32 +217,84 @@ function CampaignDetailBody() {
                 myVerification={completionVerification?.my_verification ?? null}
               />
             ) : null}
-            {!isApproved && !isCampaignOwner ? (
-              isPending ? (
+            {isRegistered ? (
+              <>
+                <ConfirmPopoverModal
+                  title={t('Leave this campaign?')}
+                  description={t(
+                    'You leave every shift that has not started yet. You can register again at any time.',
+                  )}
+                  confirmLabel={t('Leave the campaign')}
+                  cancelLabel={t('Cancel')}
+                  confirmPending={isLeaving}
+                  onConfirm={handleLeave}
+                  trigger={
+                    <Button type="button" variant="outlined-brown" size="medium">
+                      {t('Leave the campaign')}
+                    </Button>
+                  }
+                />
                 <Button
                   type="button"
                   variant="outlined-brown"
                   size="medium"
-                  isLoading={isCancelling}
-                  onClick={handleCancelJoinRequest}
+                  iconLeft={<TbPencil className="size-4" aria-hidden />}
+                  onClick={openJoin}
                 >
-                  {t('Cancel')}
+                  {t('Edit my shifts')}
                 </Button>
-              ) : showJoinCta ? (
-                <Button
-                  type="button"
-                  variant="brown"
-                  size="medium"
-                  iconRight={<TbArrowRight className="size-4" aria-hidden />}
-                  isLoading={isJoining}
-                  onClick={handleJoinCampaign}
-                >
-                  {t('Join')}
-                </Button>
-              ) : null
+              </>
+            ) : canJoin ? (
+              <Button
+                type="button"
+                variant="brown"
+                size="medium"
+                iconRight={<TbArrowRight className="size-4" aria-hidden />}
+                onClick={openJoin}
+              >
+                {t('Join')}
+              </Button>
             ) : null}
           </div>
         )}
+        {!showJoinCta && !canManageCampaign && CAMPAIGN_REGISTRABLE_STATUSES.includes(campaign.status ?? -1) ? (
+          <div className="flex justify-end">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span tabIndex={0}>
+                  <Button type="button" variant="brown" size="medium" isDisabled>
+                    {t('Join')}
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>{t('The campaign has no more upcoming shifts')}</TooltipContent>
+            </Tooltip>
+          </div>
+        ) : null}
+        <JoinShiftsDialog campaignId={campaignId} open={joinOpen} onOpenChange={setJoinOpen} />
+
+        {showCompletionRejected ? (
+          <div
+            className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900"
+            role="status"
+          >
+            <p className="font-semibold">
+              {t('The admin did not approve the completion yet ({{n}}/{{max}}).', {
+                n: campaign.completion_rejection_count ?? 0,
+                max: 3,
+              })}
+            </p>
+            {campaign.reject_reason ? (
+              <p className="mt-1">
+                {t('Reason')}: {campaign.reject_reason}
+              </p>
+            ) : null}
+            <p className="mt-1">
+              {t('Shifts to complete again')}: {reopenedShifts.map((sh) => shiftLabel(sh.id)).join(', ')}
+            </p>
+            <p className="mt-1">{t('Save their results again, then mark the campaign done again.')}</p>
+          </div>
+        ) : null}
 
         {showAwaitingAdminCompletion ? (
           <div
@@ -204,37 +307,13 @@ function CampaignDetailBody() {
           </div>
         ) : null}
 
-        {canOwnerSubmitCompletion ||
-        (campaign?.can_manage_campaign && campaign?.status === STATUS.ACTIVE) ? (
-          <div className="flex flex-wrap justify-end gap-2">
-            {campaign?.can_manage_campaign && campaign?.status === STATUS.ACTIVE ? (
-              <CampaignAttendanceQrButton />
-            ) : null}
-            {canOwnerSubmitCompletion ? (
-              <ConfirmPopoverModal
-                title={t('Mark Campaign as Done')}
-                description={t('Mark campaign done confirmation')}
-                confirmLabel={t('Mark done')}
-                cancelLabel={t('Cancel')}
-                onConfirm={handleMarkDone}
-                confirmPending={isMarkingDone}
-                trigger={
-                  <Button
-                    type="button"
-                    variant="brown"
-                    size="medium"
-                    isLoading={isMarkingDone}
-                    className="!h-[45px]"
-                    isDisabled={isMarkingDone}
-                  >
-                    {t('Mark done')}
-                  </Button>
-                }
-              />
-            ) : null}
+        {canOwnerSubmitCompletion || campaign.can_cancel_campaign ? (
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <CancelCampaignButton campaign={campaign} />
+            {/* Spec 5.1: opens once every shift that is on has ended (with its result). */}
+            {canOwnerSubmitCompletion ? <SubmitCompletionDialog campaign={campaign} /> : null}
           </div>
         ) : null}
-        <StatsCards />
         <div className="w-full min-w-0">
           <CampaignTabs />
         </div>

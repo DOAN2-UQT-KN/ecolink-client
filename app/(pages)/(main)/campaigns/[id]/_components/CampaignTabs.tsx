@@ -1,65 +1,44 @@
-import { memo, useMemo, useState } from 'react';
+import { memo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { useGetJoinRequests } from '@/apis/campaign/joinCampaign';
-import type { IGetJoinCampaignRequest } from '@/apis/campaign/models/joinCampaign';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { STATUS } from '@/constants/status';
+import { CAMPAIGN_PUBLIC_STATUSES } from '@/constants/campaignLifecycle';
+import { ADMIN_ROLE_ID } from '@/constants/roles';
+import useAuthStore from '@/stores/useAuthStore';
 
 import { useCampaignDetail } from '../_hooks/useCampaignDetail';
-
-import { CampaignJoinRequest } from './CampaignJoinRequest';
-import { CampaignTask } from './CampaignTask';
-import { CurrentMember } from './CurrentMember';
+import { CampaignRegistrations } from './CampaignRegistrations';
 import { DetailInformation } from './DetailInformation';
-
-function formatApprovalRequestBadgeCount(total: number): string {
-  if (total >= 9) return '9+';
-  return String(total);
-}
+import { ShiftProgressCard } from './ShiftProgressCard';
 
 const ALL_CAMPAIGN_TAB_ITEMS = [
   { value: 'detail', labelKey: 'Detail information' },
-  { value: 'members', labelKey: 'Member list' },
-  { value: 'tasks', labelKey: 'Tasks' },
-  { value: 'join-requests', labelKey: 'Join requests' },
+  { value: 'progress', labelKey: 'Progress' },
+  { value: 'registrations', labelKey: 'Registrations' },
 ] as const;
 
 export type CampaignTabValue = (typeof ALL_CAMPAIGN_TAB_ITEMS)[number]['value'];
 
-const CAMPAIGN_TAB_ITEMS_PUBLIC = ALL_CAMPAIGN_TAB_ITEMS.filter(
-  (item) => item.value !== 'join-requests',
-);
 
 export const CampaignTabs = memo(function CampaignTabs() {
   const { t } = useTranslation('common');
-  const { campaignId, isCampaignOwner } = useCampaignDetail();
   const [tab, setTab] = useState<CampaignTabValue>('detail');
+  const { campaign, canManageCampaign } = useCampaignDetail();
+  const isPlatformAdmin = useAuthStore((s) => s.user?.roleId === ADMIN_ROLE_ID);
+  const isAuthenticated = useAuthStore((s) => s.is_authenticated);
+  // Progress (spec 4.2), same as the shift-overview API: anyone signed in once the campaign is
+  // public; managers and admins in every status.
+  const canSeeProgress =
+    Boolean(campaign) &&
+    isAuthenticated &&
+    (canManageCampaign || isPlatformAdmin || CAMPAIGN_PUBLIC_STATUSES.includes(Number(campaign?.status)));
 
-  const joinRequestsCountQuery = useMemo((): IGetJoinCampaignRequest => {
-    return {
-      campaignId: campaignId,
-      page: 1,
-      limit: 50,
-      status: STATUS.PENDING,
-      sort_by: 'created_at',
-      sort_order: 'desc',
-    };
-  }, [campaignId]);
-
-  const { data: joinRequestsData } = useGetJoinRequests(joinRequestsCountQuery, {
-    enabled: isCampaignOwner && Boolean(campaignId),
-  });
-
-  const pendingApprovalCount = joinRequestsData?.data?.total ?? 0;
-
-  const tabItems = useMemo(() => {
-    return isCampaignOwner ? [...ALL_CAMPAIGN_TAB_ITEMS] : [...CAMPAIGN_TAB_ITEMS_PUBLIC];
-  }, [isCampaignOwner]);
+  // Registrations is open to everyone: names only for those allowed (CampaignRegistrations).
+  const tabItems = ALL_CAMPAIGN_TAB_ITEMS.filter((item) => item.value !== 'progress' || canSeeProgress);
+  const activeTab: CampaignTabValue = tab === 'progress' && !canSeeProgress ? 'detail' : tab;
 
   return (
-    <Tabs value={tab} onValueChange={(v) => setTab(v as CampaignTabValue)}>
+    <Tabs value={activeTab} onValueChange={(v) => setTab(v as CampaignTabValue)}>
       <TabsList className="w-full sm:w-auto border border-[rgba(136,122,71,0.5)] rounded-[8px] bg-background-primary/10 mb-4">
         {tabItems.map((item) => (
           <TabsTrigger
@@ -67,31 +46,20 @@ export const CampaignTabs = memo(function CampaignTabs() {
             value={item.value}
             className="rounded-[8px] px-4 py-2 h-full data-active:bg-background data-active:shadow-sm transition-all !font-display-1"
           >
-            <span className="inline-flex items-center justify-center gap-2">
-              {t(item.labelKey)}
-              {item.value === 'join-requests' && pendingApprovalCount > 0 ? (
-                <Badge
-                  variant="secondary"
-                  className="min-w-5 px-1.5 tabular-nums border-red-500 bg-red-100 text-red-500"
-                >
-                  {formatApprovalRequestBadgeCount(pendingApprovalCount)}
-                </Badge>
-              ) : null}
-            </span>
+            {t(item.labelKey)}
           </TabsTrigger>
         ))}
       </TabsList>
       <TabsContent value="detail" className="mt-0">
         <DetailInformation />
       </TabsContent>
-      <TabsContent value="members" className="mt-0">
-        <CurrentMember />
-      </TabsContent>
-      <TabsContent value="tasks" className="mt-0">
-        <CampaignTask />
-      </TabsContent>
-      <TabsContent value="join-requests" className="mt-0">
-        <CampaignJoinRequest enabled={tab === 'join-requests'} />
+      {canSeeProgress && campaign && (
+        <TabsContent value="progress" className="mt-0">
+          <ShiftProgressCard campaign={campaign} />
+        </TabsContent>
+      )}
+      <TabsContent value="registrations" className="mt-0">
+        <CampaignRegistrations enabled={tab === 'registrations'} />
       </TabsContent>
     </Tabs>
   );

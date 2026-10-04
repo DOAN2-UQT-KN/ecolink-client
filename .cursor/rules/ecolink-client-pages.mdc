@@ -89,6 +89,8 @@ const canManageCampaign = Boolean(campaign?.can_manage_campaign);
 const myRole = organization?.my_role ?? null;                  // + organization.permissions.*
 ```
 
+Campaign detail: mọi nút quản lý (Join requests, task, Mark done, QR, Add / gỡ manager) dựa trên `canManageCampaign`, không so `campaign.owner.id`. Quyền tạo campaign: `permissions.can_create_campaign` / `useCampaignCreatorOrganizations()`; `SelectListOrganization` nhận `roles` (bỏ trống = `is_owner: true`).
+
 Dùng lại helper: `canActOnMember()`, `joinListingShows*()`, `isBlueTickVisible()`. Đăng nhập luôn qua `handleSignInSuccess`.
 
 Đọc user: `useAuthStore((s) => s.user?.id)` trong component; `useAuthStore.getState()` ngoài React.

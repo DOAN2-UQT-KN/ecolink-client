@@ -58,7 +58,25 @@ export function getNotificationHref(
     case 'CAMPAIGN_COMPLETION_VERIFY_INVITE':
     case 'CAMPAIGN_COMPLETION_APPROVED_BY_ADMIN':
     case 'CAMPAIGN_COMPLETION_REJECTED_BY_ADMIN':
+    case 'CAMPAIGN_APPROVED':
+    case 'CAMPAIGN_REGISTRATION_DIGEST':
+    case 'CAMPAIGN_SHIFT_UNDERSTAFFED':
+    case 'CAMPAIGN_SHIFT_OVER_MAX':
+    case 'CAMPAIGN_JOIN_INVITE':
+    case 'CAMPAIGN_SHIFT_CLOSED':
+    case 'CAMPAIGN_CREATOR_TRANSFERRED':
+    case 'CAMPAIGN_SHIFT_LEADER_REMOVED':
+    case 'CAMPAIGN_UPDATED_NEEDS_REVIEW':
+    case 'CAMPAIGN_REREVIEW_EXPIRED':
+    case 'CAMPAIGN_SHIFT_REMINDER':
       return campaignId ? `/campaigns/${campaignId}` : null;
+    case 'CAMPAIGN_SHIFT_RESULT_MISSING': {
+      // Spec 4.2: straight to the shift, where its result is submitted.
+      const shiftId =
+        typeof p.shiftId === 'string' ? p.shiftId : typeof p.shift_id === 'string' ? p.shift_id : null;
+      if (!campaignId) return null;
+      return shiftId ? `/campaigns/${campaignId}/shifts/${shiftId}` : `/campaigns/${campaignId}`;
+    }
     case 'CAMPAIGN_COMPLETION_PENDING_ADMIN':
       return campaignId ? `/admin/campaigns?highlight=${campaignId}` : '/admin/campaigns';
     case 'ORGANIZATION_REJECTED':

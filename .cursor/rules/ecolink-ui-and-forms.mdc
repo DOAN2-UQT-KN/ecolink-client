@@ -51,6 +51,7 @@ Dark mode (chỉ admin) dùng **prop `isDark` + ternary trong `cn()`**, không d
 ```
 
 - `<Field>` + `<FieldLabel>` từ `@/components/ui/field`; dấu bắt buộc `<span className="text-destructive">*</span>`; lỗi `<span className="text-red-500 text-sm mt-1">`.
+- Ghi chú tĩnh của field (quy tắc, ai được thấy, mặc định) → `<InfoTooltip content={t('…')} />` từ `@/components/ui/InfoTooltip` đặt trong `<FieldLabel>` / cạnh tiêu đề section, không viết dòng chữ xám dưới field. Lỗi, cảnh báo và hướng dẫn theo trạng thái vẫn để inline. Không tự dựng `Tooltip` + icon trợ giúp; tooltip làm nhãn cho nút icon vẫn dùng `Tooltip` trực tiếp.
 - Form nhiều component → `useForm` trong `_context` + `<FormProvider>` + `useFormContext()`.
 - Form trong modal → `useEffect` theo `open` gọi `reset(entityToFormValues(x))` hoặc `reset(DEFAULTS)`.
 - Giá trị số **giữ dạng string** trong form state, parse lúc submit.

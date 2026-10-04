@@ -5,6 +5,7 @@ import { ICampaign } from '@/apis/campaign/models/campaign';
 import { IGetCampaignsRequest } from '@/apis/campaign/models/getCampaigns';
 import { ALL_ORGANIZATIONS_VALUE } from '@/components/form/SelectListOrganization';
 import useGetParam from '@/hooks/useGetParam';
+import useOrgContextStore from '@/stores/useOrgContextStore';
 
 export interface CampaignMeContextType {
   campaigns: ICampaign[];
@@ -23,10 +24,21 @@ export interface CampaignMeContextType {
 export const CampaignMeContext = createContext<CampaignMeContextType | undefined>(undefined);
 
 export const CampaignMeProvider = ({ children }: { children: ReactNode }) => {
-  const normalizeOrganizationId = useCallback((value?: string) => {
-    if (!value || value === ALL_ORGANIZATIONS_VALUE) return undefined;
-    return value;
-  }, []);
+  const activeOrganizationId = useOrgContextStore((s) => s.activeOrganizationId);
+
+  /**
+   * No `organizationId` in the URL → default to the active organization context.
+   * `organizationId=-1` means the user explicitly picked "All organizations", so the default
+   * must not re-apply.
+   */
+  const normalizeOrganizationId = useCallback(
+    (value?: string) => {
+      if (!value) return activeOrganizationId ?? undefined;
+      if (value === ALL_ORGANIZATIONS_VALUE) return undefined;
+      return value;
+    },
+    [activeOrganizationId],
+  );
 
   const [pagination, setPagination] = useState({
     current: 1,

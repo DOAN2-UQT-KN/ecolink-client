@@ -24,5 +24,7 @@ export enum STATUS {
   FAILED = 23,
   CLOSED = 24,
   UPLOAD_FAILED = 26,
+  /** Campaign approved, not started yet (server `_STATUS_UPCOMING`). */
+  UPCOMING = 27,
   TODO_BYPASS = 100,
 }

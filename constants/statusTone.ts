@@ -34,6 +34,7 @@ export const STATUS_TONE: Partial<Record<STATUS, PillTone>> = {
   [STATUS.INREVIEW]: "orange",
   [STATUS.VERIFIED]: "blue",
   [STATUS.IN_PROGRESS]: "blue",
+  [STATUS.UPCOMING]: "blue",
   [STATUS.RETURNED]: "amber",
   [STATUS.OBSOLETE]: "lime",
 };
@@ -66,6 +67,7 @@ export const STATUS_LABEL: Partial<Record<STATUS, string>> = {
   [STATUS.FAILED]: "Failed",
   [STATUS.UPLOAD_FAILED]: "Failed",
   [STATUS.CLOSED]: "Closed",
+  [STATUS.UPCOMING]: "Upcoming",
 };
 
 export const statusTone = (status: number): PillTone =>

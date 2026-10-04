@@ -12,10 +12,10 @@ export interface IGetCampaignsRequest {
   longitude?: number;
   radius_km?: number;
   difficulty?: number;
-  start_date?: string;
-  end_date?: string;
 
   is_owner?: boolean;
+  /** Admin review queue: leave out organizations the admin belongs to. */
+  excludeMemberOrgs?: boolean;
 }
 
 export type IGetCampaignsResponse = IPaginationResponse<ICampaign[], 'campaigns'>;

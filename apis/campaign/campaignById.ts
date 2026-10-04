@@ -22,16 +22,22 @@ export const useGetCampaignById = (
   });
 };
 
-export const markDoneCampaign = async (id: string): Promise<IBaseResponse<null>> => {
-  return await requestApi.put<IBaseResponse<null>>(`${url}/${id}/mark-done`, {});
+export type MarkDoneCampaignParams = {
+  id: string;
+  /** One entry per trash report no shift handled, with the reason (spec 5.1). */
+  unhandled?: { report_id: string; reason: string }[];
+};
+
+export const markDoneCampaign = async ({ id, unhandled }: MarkDoneCampaignParams): Promise<IBaseResponse<null>> => {
+  return await requestApi.put<IBaseResponse<null>>(`${url}/${id}/mark-done`, { unhandled: unhandled ?? [] });
 };
 
 export const useMarkDoneCampaign = (
-  options?: UsePostOptions<IBaseResponse<null>, { id: string }>,
+  options?: UsePostOptions<IBaseResponse<null>, MarkDoneCampaignParams>,
 ) => {
   const { t } = useTranslation();
   return usePost({
-    mutationFn: ({ id }) => markDoneCampaign(id),
+    mutationFn: markDoneCampaign,
     queryKey: ['campaign'],
     messageSuccess: {
       content: t('Campaign marked as done successfully'),

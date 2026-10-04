@@ -1,7 +1,8 @@
-import { memo, useEffect } from "react";
+import { memo, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useGetMyOrganizations } from "@/apis/organization/getMyOrganizations";
+import { isOwnerRole } from "@/apis/organization/models/organization";
 import {
   DropdownMenuItem,
   DropdownMenuLabel,
@@ -20,9 +21,10 @@ import useOrgContextStore from "@/stores/useOrgContextStore";
 const PERSONAL = "personal";
 
 /**
- * Picks the organization the "Manage" pages are scoped to, inside the user menu. Lists every
- * organization the user holds a role in. Only a view preference: the server checks the role
- * on each request regardless of what is selected here.
+ * Picks the organization the "Manage" pages are scoped to, inside the user menu. Lists only the
+ * organizations the user owns (legal representative or owner); a plain member or other role has
+ * no organization context, and the block is hidden when the user owns none. Only a view
+ * preference: the server checks the role on each request regardless of what is selected here.
  */
 export const OrgContextSwitcher = memo(function OrgContextSwitcher() {
   const { t } = useTranslation();
@@ -34,10 +36,14 @@ export const OrgContextSwitcher = memo(function OrgContextSwitcher() {
     { page: 1, limit: 50, sort_by: "name", sort_order: "asc" },
     { enabled: Boolean(user) },
   );
-  const organizations = data?.data?.organizations ?? [];
+  const organizations = useMemo(
+    () => (data?.data?.organizations ?? []).filter((org) => isOwnerRole(org.my_role)),
+    [data?.data?.organizations],
+  );
   const active = organizations.find((org) => org.id === activeId) ?? null;
 
-  // The user may have left or been removed from the selected organization.
+  // The user may have left the selected organization, lost the owner role, or picked a
+  // non-owner organization before only owned ones were listed.
   useEffect(() => {
     if (isSuccess && activeId && !organizations.some((org) => org.id === activeId)) {
       setActiveId(null);

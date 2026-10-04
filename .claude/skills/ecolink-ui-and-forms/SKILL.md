@@ -39,6 +39,7 @@ Primitive shadcn viết theo khuôn: file lowercase, `function Component({ class
 | `components/ui/FileTypeIcon` | Icon theo `mimeType` (fallback đuôi `fileName`): PDF đỏ, ảnh xanh |
 | `components/ui/RoleBadge` | Pill vai trong tổ chức (`role`), nhãn ở `ORG_ROLE_LABEL` |
 | `components/ui/BlueTickBadge` | Tick xanh tổ chức; điều kiện hiện ở `isBlueTickVisible()` |
+| `components/ui/InfoTooltip` | Icon (i) + tooltip giải thích, đặt cạnh nhãn field hoặc tiêu đề section (xem "Ghi chú cho field → InfoTooltip"). Trigger là `span` focus được nên đặt được trong `<label>` hay trong `<button>` khác |
 | `components/form/AutoCompleteUser` | Chọn user có sẵn hoặc nhập email mới; `isUserDisabled` quyết định ai bị chặn (mặc định chặn owner) |
 | `components/form/SelectListUser` | Chọn user có sẵn trong tổ chức (`organizationId`, `value`, `onChange`) |
 
@@ -267,7 +268,27 @@ const onSubmit = form.handleSubmit(async (data) => {
 ### Field component dùng lại
 
 - `components/client/shared/SingleImageFileField.tsx` — chọn 1 ảnh.
-- `components/form/SelectListCampaign.tsx`, `SelectListOrganization.tsx`, `SelectListPriority.tsx` — controlled, props `{ value, onChange, disabled, className, placeholder }`, `React.FC<Props>`, default export.
+- `components/form/SelectListCampaign.tsx`, `SelectListOrganization.tsx`, `SelectListPriority.tsx` — controlled, props `{ value, onChange, disabled, className, placeholder }`, `React.FC<Props>`, default export. `SelectListOrganization` (bọc `memo`) có thêm `allOptions` (thêm lựa chọn "All" = `ALL_ORGANIZATIONS_VALUE` `"-1"`) và `roles?: OrgMemberRole[]` (lọc theo vai; bỏ trống thì giữ `is_owner: true`).
+
+### Ghi chú cho field → InfoTooltip
+
+Ghi chú / giải thích **tĩnh** của một field hoặc section (quy tắc, ai được thấy giá trị, giá trị mặc định) đặt vào `InfoTooltip` cạnh nhãn, **không** viết dòng chữ xám dưới field:
+
+```tsx
+import { InfoTooltip } from '@/components/ui/InfoTooltip';
+
+<FieldLabel className="text-foreground-tertiary font-display-3">
+  {t('Contact phone')} <span className="text-destructive">*</span>
+  <InfoTooltip content={t('Only shown to accepted volunteers')} />
+</FieldLabel>
+```
+
+- Props: `content` (đã dịch; chuỗi hoặc ReactNode), `label?` (aria-label, mặc định = `content` nếu là chuỗi), `side?`, `iconClassName?` (ví dụ `size-3.5`, `size-5`), `contentClassName?`.
+- Tiêu đề section (`<span>` / `<h2>`) thì bọc `flex items-center gap-2` rồi đặt `InfoTooltip` ngay sau chữ.
+- Vẫn để **inline** dưới field những gì người dùng phải thấy ngay: lỗi (`FieldError`), cảnh báo (amber / đỏ, ví dụ "Tổ chức chưa xác thực", điểm rác bị lấy), hướng dẫn phụ thuộc trạng thái ("Chọn vị trí trước…").
+- **Không** tự dựng `Tooltip` + icon trợ giúp (`TbHelpCircle`, `TbInfoCircle`…) — luôn dùng `InfoTooltip`.
+- Tooltip làm **nhãn cho nút chỉ có icon** (Remove, Add image…) là pattern khác: vẫn dùng `Tooltip` / `TooltipTrigger asChild` / `TooltipContent` trực tiếp (xem `organizations/[id]/_components/OwnerActions.tsx`).
+- Đang dùng ở: form tạo chiến dịch (`campaigns/create/_components/*`), chọn lane trong `admin/organization-applications/_components/ApplicationReviewDialog.tsx`, dialog thay người đại diện pháp lý (`organizations/[id]/_components/OwnerActions.tsx`).
 
 ## Upload ảnh
 
@@ -387,5 +408,6 @@ showMessage({ type: MessageType.Toast, level: MessageLevel.Success, title: t("Sa
 - [ ] Dark mode admin dùng prop `isDark` + `cn()`, không dùng `dark:`.
 - [ ] Tag / nhãn dùng `Pill` / `StatusTag`, màu lấy từ `constants/statusTone.ts` — không antd `Tag`, không pill tự viết.
 - [ ] Form validate inline bằng RHF, message bọc `t()`, không thêm zod/yup.
+- [ ] Ghi chú tĩnh của field nằm trong `InfoTooltip` cạnh nhãn, không phải dòng chữ dưới field; không tự dựng `Tooltip` + icon trợ giúp.
 - [ ] Mọi chuỗi mới có mặt trong **cả** `en/common.json` và `vi/common.json`.
 - [ ] Không reformat toàn file — Prettier không được enforce, bám style file đang sửa.

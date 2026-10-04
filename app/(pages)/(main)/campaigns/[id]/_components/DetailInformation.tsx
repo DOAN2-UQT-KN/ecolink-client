@@ -2,30 +2,31 @@ import { memo, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TbCalendarClock } from 'react-icons/tb';
 
-import { Progress } from '@/components/ui/progress';
+import { CollapsibleCard } from '@/components/client/shared/CollapsibleCard';
 import { RichTextContent } from '@/components/ui/RichTextContent';
-import { cn } from '@/libs/utils';
 
 import { useCampaignDetail } from '../_hooks/useCampaignDetail';
 import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
 import Image from '@/components/ui/AppImage';
 import { Pill } from '@/components/ui/Pill';
 import { formattedDate } from '@/utils/formattedDate';
+import { CampaignDateRange } from '@/components/client/shared/CampaignDateRange';
 import { HiMapPin } from 'react-icons/hi2';
 import { TooltipTruncatedText } from '@/components/ui/TooltipTruncatedText';
 import ReportSummaryCard from '@/modules/ReportSummaryCard';
 
 import { STATUS } from '@/constants/status';
+import { getDifficultyLevel } from '@/constants/difficulty';
+import { Link } from '@/libs/router';
+
+import { ParticipationInfoCard } from './ParticipationInfoCard';
+import { CampaignManagers } from './CampaignManagers';
 
 const DEFAULT_BANNER = '/banner-default.jpg';
 
-const cardClass = cn(
-  'rounded-xl border border-[rgba(136,122,71,0.4)] bg-white/60 p-5 sm:p-6 shadow-sm',
-);
 export const DetailInformation = memo(function DetailInformation() {
   const { t } = useTranslation('common');
-  const { campaign, currentMembers, maxMembers, memberProgress, handleJoinCampaign } =
-    useCampaignDetail();
+  const { campaign } = useCampaignDetail();
   const { title: localizedTitle, description: localizedDescription } =
     useLocalizedDisplay();
 
@@ -55,12 +56,17 @@ export const DetailInformation = memo(function DetailInformation() {
     campaign.status === STATUS.WAITING_CONFIRMED ||
     campaign.status === STATUS.COMPLETED;
   const verification = campaign.completion_verification;
+  const difficulty = getDifficultyLevel(campaign.difficulty ?? 0);
+  const organization = campaign.organization;
+  const points = campaign.meeting_points ?? [];
+  const pointName = (index: number) =>
+    points[index]?.name?.trim() || t('Meeting point {{n}}', { n: index + 1 });
 
   return (
     <div className="flex flex-col gap-4 sm:gap-5">
-      <div className={cardClass}>
+      <CollapsibleCard title={t('Overview')}>
         <div className="flex flex-row gap-10">
-          <div className="flex min-w-0 flex-1 flex-col p-5 sm:p-6">
+          <div className="flex min-w-0 flex-1 flex-col">
             <div className="flex flex-row items-center justify-between w-full">
               <Pill tone="green">
                 {campaign.green_points ?? ''} {t('Reward (GP & SP)')}
@@ -107,9 +113,31 @@ export const DetailInformation = memo(function DetailInformation() {
             <div className="flex flex-row items-center gap-2 text-muted-foreground pt-3">
               <TbCalendarClock size={14} />
               <span className="font-display-1">
-                {formattedDate(campaign?.start_date)} - {formattedDate(campaign?.end_date)}
+                <CampaignDateRange campaign={campaign} />
               </span>
             </div>
+
+            {(organization || difficulty) && (
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 pt-3 text-sm">
+                {organization && (
+                  <span>
+                    <span className="text-foreground-tertiary">{t('Organization')}: </span>
+                    <Link
+                      href={`/organizations/${organization.slug ?? organization.id}`}
+                      className="font-medium text-button-accent hover:underline"
+                    >
+                      {organization.name}
+                    </Link>
+                  </span>
+                )}
+                {difficulty && (
+                  <span>
+                    <span className="text-foreground-tertiary">{t('Difficulty')}: </span>
+                    <span className="font-medium">{t(difficulty.label)}</span>
+                  </span>
+                )}
+              </div>
+            )}
 
           </div>
 
@@ -123,28 +151,38 @@ export const DetailInformation = memo(function DetailInformation() {
             />
           </div>
         </div>
-      </div>
+      </CollapsibleCard>
 
-      <div className={cardClass}>
-        <h2 className="font-display-6 font-semibold text-button-accent mb-4">
-          {t('Current members')}
-        </h2>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between font-display-1 text-button-accent">
-            <span>{t('Members')}</span>
-            <span>
-              {currentMembers} / {maxMembers > 0 ? maxMembers : t('Not available')}
-            </span>
+      <ParticipationInfoCard campaign={campaign} />
+
+      <CampaignManagers />
+
+      {points.length > 0 && (
+        <CollapsibleCard title={t('Meeting points')}>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {points.map((point, index) => (
+              <div
+                key={point.id ?? index}
+                className="flex flex-col gap-1 rounded-lg border border-[rgba(136,122,71,0.3)] bg-white/70 p-4"
+              >
+                <span className="font-semibold">{pointName(index)}</span>
+                {point.detail_address && (
+                  <span className="flex items-start gap-1 text-sm text-foreground-secondary">
+                    <HiMapPin size={14} className="mt-0.5 shrink-0" />
+                    {point.detail_address}
+                  </span>
+                )}
+                <span className="text-xs text-foreground-tertiary">
+                  {t('{{n}} waste points', { n: point.report_ids?.length ?? 0 })} ·{' '}
+                  {t('within {{km}} km', { km: point.radius_km })}
+                </span>
+              </div>
+            ))}
           </div>
-          <Progress
-            value={memberProgress}
-            className="h-2 bg-button-accent/10 [&>[data-slot=progress-indicator]]:bg-button-accent"
-          />
-        </div>
-      </div>
+        </CollapsibleCard>
+      )}
 
-      <div className={cardClass}>
-        <h2 className="font-display-6 font-semibold text-button-accent mb-4">{t('Reports')}</h2>
+      <CollapsibleCard title={t('Reports')}>
         <div className="sm:grid sm:grid-cols-2 gap-4 lg:grid-cols-3">
           {campaign?.reports?.map((report) => (
             <ReportSummaryCard
@@ -156,7 +194,7 @@ export const DetailInformation = memo(function DetailInformation() {
             />
           ))}
         </div>
-      </div>
+      </CollapsibleCard>
     </div>
   );
 });
