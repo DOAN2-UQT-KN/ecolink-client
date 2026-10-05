@@ -7,23 +7,21 @@ import {
   useReviewCampaignCompletion,
   type CompletionDecision,
   type ICompletionReview,
+  type ICompletionReviewReport,
 } from "@/apis/campaign/processCampaign";
 import type { IResultPhotoCheck } from "@/apis/campaign/shiftResult";
 import type { IMeetingPointView } from "@/apis/campaign/verification";
 import {
   CHECK_LEVEL_LABEL,
-  CHECK_LEVEL_TONE,
   checksByUrl,
-  Layer1LevelBadge,
-  Layer1Summary,
   meetingPointLabel,
   MeetingPointStatusPill,
   PhotoCheckBadge,
-  TrashPointResultPill,
+  TRASH_POINT_RESULT_LABEL,
 } from "@/app/(pages)/(main)/campaigns/[id]/_components/ResultVerificationBadges";
 import { MeetingPointDecisionActions } from "@/app/(pages)/(main)/campaigns/[id]/_components/MeetingPointDecisionActions";
 import { MeetingPointVotesList } from "@/app/(pages)/(main)/campaigns/[id]/_components/MeetingPointVotesPopover";
-import { ReviewRow, ReviewSectionCard } from "@/components/admin/shared/ReviewSection";
+import { ReviewSectionCard } from "@/components/admin/shared/ReviewSection";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -34,7 +32,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Pill } from "@/components/ui/Pill";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
@@ -53,6 +50,7 @@ import showMessage, { MessageLevel, MessageType } from "@/utils/showMessage";
 
 const REASON_MAX = 5000;
 
+/** Before or after photos; only a photo with a warning, a failure or no check carries a badge (hover: why). */
 function Photos({
   label,
   urls,
@@ -69,26 +67,20 @@ function Photos({
   return (
     <div className="flex flex-col gap-1">
       <span className="text-xs text-muted-foreground">{label}</span>
-      <div className="flex flex-wrap gap-2">
-        {urls.map((url) => (
-          <div key={url} className="relative">
-            <a href={url} target="_blank" rel="noopener noreferrer">
-              <img
-                src={url}
-                alt=""
-                loading="lazy"
-                className="size-20 rounded-md border object-cover"
-              />
-            </a>
-            {checks && (
-              <PhotoCheckBadge
-                check={checks.get(url) ?? null}
-                isDark={isDark}
-                className="absolute bottom-1 left-1 shadow-sm"
-              />
-            )}
-          </div>
-        ))}
+      <div className="flex flex-wrap gap-1.5">
+        {urls.map((url) => {
+          const check = checks ? (checks.get(url) ?? null) : undefined;
+          return (
+            <div key={url} className="relative">
+              <a href={url} target="_blank" rel="noopener noreferrer">
+                <img src={url} alt="" loading="lazy" className="size-16 rounded-md border object-cover" />
+              </a>
+              {check !== undefined && check?.level !== "pass" && (
+                <PhotoCheckBadge check={check} isDark={isDark} className="absolute bottom-1 left-1 shadow-sm" />
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -167,118 +159,153 @@ function ScoreBar({ score, downvoted, isDark }: { score: number | null; downvote
 }
 
 /** One meeting point under result verification: status, score, Layer 1, its trash points, every vote; flagged → decide. */
+const RESULT_DOT: Record<string, string> = { cleaned: "bg-emerald-500", partial: "bg-amber-500", unhandled: "bg-red-500" };
+const LEVEL_TEXT: Record<string, { light: string; dark: string }> = {
+  pass: { light: "text-emerald-700", dark: "text-emerald-300" },
+  warn: { light: "text-amber-700", dark: "text-amber-300" },
+  fail: { light: "text-red-700", dark: "text-red-300" },
+};
+
+/** One trash point of the submission: what was declared (dot + word), why not handled, its photos. */
+function TrashPointEvidence({
+  report,
+  failed = false,
+  isDark,
+}: {
+  report: ICompletionReviewReport;
+  /** The meeting point was rejected and this trash point did not pass. */
+  failed?: boolean;
+  isDark: boolean;
+}) {
+  const { t } = useTranslation();
+  const checks = report.layer1 ? checksByUrl(report.layer1) : undefined;
+  return (
+    <li className="flex flex-col gap-1.5">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+        <a
+          href={`/incidents/${report.report_id}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 font-medium underline-offset-2 hover:underline"
+        >
+          {report.report?.title || t("Waste point")}
+          <TbExternalLink className="size-3.5" aria-hidden />
+        </a>
+        <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+          <span className={cn("size-2 rounded-full", RESULT_DOT[report.status])} aria-hidden />
+          {t(TRASH_POINT_RESULT_LABEL[report.status])}
+        </span>
+        {failed && (
+          <span className={cn("text-xs font-semibold", isDark ? "text-red-300" : "text-red-700")}>
+            {t("Did not pass")}
+          </span>
+        )}
+      </div>
+      {report.reason && (
+        <span className="text-xs text-muted-foreground">
+          {t("Why not handled")}: <span className={isDark ? "text-zinc-200" : "text-zinc-800"}>{report.reason}</span>
+        </span>
+      )}
+      {(report.before_urls.length > 0 || report.after_urls.length > 0) && (
+        <div className="flex flex-wrap gap-4">
+          <Photos label={t("Before")} urls={report.before_urls} checks={checks} isDark={isDark} />
+          <Photos label={t("After")} urls={report.after_urls} checks={checks} isDark={isDark} />
+        </div>
+      )}
+    </li>
+  );
+}
+
+/** One meeting point under result verification: score, photo check, timing, votes, its trash points; flagged → decide. */
 function VerificationMeetingPoint({
   campaignId,
   point,
   index,
+  reportsById,
   canDecide,
   isDark,
 }: {
   campaignId: string;
   point: IMeetingPointView;
   index: number;
+  reportsById: Map<string, ICompletionReviewReport>;
   canDecide: boolean;
   isDark: boolean;
 }) {
   const { t } = useTranslation();
-  const muted = isDark ? "text-zinc-400" : "text-zinc-600";
+  const name = meetingPointLabel(point.name, index, t);
   const titleById = new Map(
     point.trash_points.map((tp) => [tp.report_id, tp.report?.title || t("Waste point")]),
   );
-  const titlesOf = (ids: string[]) => ids.map((id) => titleById.get(id) ?? t("Waste point")).join(", ");
   const cleaned = point.trash_points.filter((tp) => tp.status === "cleaned");
+  const timing =
+    point.status === "voting"
+      ? t("Voting until {{date}}", { date: formattedDate(point.window_ends_at, true) })
+      : point.status === "flagged" && point.flag_deadline
+        ? t("Rejected automatically on {{date}} if not decided", { date: formattedDate(point.flag_deadline, true) })
+        : point.decided_at
+          ? t("Decided on {{date}}", { date: formattedDate(point.decided_at, true) })
+          : null;
+  const failed = point.status === "rejected" ? new Set(point.failed_report_ids) : new Set<string>();
+
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="font-medium">{meetingPointLabel(point.name, index, t)}</span>
-        <span className="flex flex-wrap items-center gap-1.5 text-xs">
-          {point.round > 1 && (
-            <Pill tone="neutral" isDark={isDark}>
-              {t("Round {{n}}", { n: point.round })}
-            </Pill>
-          )}
-          <MeetingPointStatusPill status={point.status} isDark={isDark} />
-        </span>
+    <ReviewSectionCard
+      title={name}
+      hint={point.round > 1 ? t("Round {{n}}", { n: point.round }) : undefined}
+      aside={<MeetingPointStatusPill status={point.status} isDark={isDark} />}
+      defaultOpen={point.status === "flagged"}
+      isDark={isDark}
+    >
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
+          <ScoreBar score={point.score} downvoted={point.down_count > 0} isDark={isDark} />
+          <span>
+            {t("Photos")}:{" "}
+            <span className={cn("font-medium", LEVEL_TEXT[point.layer1_level]?.[isDark ? "dark" : "light"])}>
+              {t(CHECK_LEVEL_LABEL[point.layer1_level])}
+            </span>
+          </span>
+          {timing && <span>{timing}</span>}
+        </div>
+        {point.decision_reason && (
+          <span className="text-xs text-muted-foreground">
+            {t("Reason")}: <span className={isDark ? "text-zinc-200" : "text-zinc-800"}>{point.decision_reason}</span>
+          </span>
+        )}
+        <MeetingPointVotesButtons votes={point.votes} titleById={titleById} title={name} isDark={isDark} />
+        <ul className={cn("flex flex-col gap-3 border-t pt-3", isDark ? "border-zinc-700" : "border-zinc-200")}>
+          {point.trash_points.map((tp) => {
+            const report = reportsById.get(tp.report_id);
+            if (!report) return null;
+            return <TrashPointEvidence key={tp.report_id} report={report} failed={failed.has(tp.report_id)} isDark={isDark} />;
+          })}
+        </ul>
+        {canDecide && point.status === "flagged" && (
+          <MeetingPointDecisionActions
+            campaignId={campaignId}
+            meetingPointId={point.meeting_point_id}
+            trashPoints={cleaned.map((tp) => ({ id: tp.report_id, title: titleById.get(tp.report_id) ?? "" }))}
+            isDark={isDark}
+          />
+        )}
       </div>
-      <div className="flex flex-wrap items-center gap-3">
-        <ScoreBar score={point.score} downvoted={point.down_count > 0} isDark={isDark} />
-        <Layer1LevelBadge level={point.layer1_level} isDark={isDark} />
-      </div>
-      {point.detail_address && <span className={cn("text-xs", muted)}>{point.detail_address}</span>}
-      <span className={cn("text-xs", muted)}>
-        {point.status === "voting"
-          ? t("Voting until {{date}}", { date: formattedDate(point.window_ends_at, true) })
-          : point.status === "flagged" && point.flag_deadline
-            ? t("Rejected automatically on {{date}} if not decided", {
-                date: formattedDate(point.flag_deadline, true),
-              })
-            : point.decided_at
-              ? t("Decided on {{date}}", { date: formattedDate(point.decided_at, true) })
-              : null}
-        {point.decision_reason ? ` · ${t("Reason")}: ${point.decision_reason}` : ""}
-      </span>
-      {point.status === "rejected" && point.failed_report_ids.length > 0 && (
-        <span className={cn("text-xs", isDark ? "text-red-300" : "text-red-700")}>
-          {t("Waste points that did not pass")}: {titlesOf(point.failed_report_ids)}
-        </span>
-      )}
-      <ul className="flex flex-col gap-1">
-        {point.trash_points.map((tp) => (
-          <li key={tp.report_id} className="flex flex-wrap items-center gap-1.5 text-sm">
-            <a
-              href={`/incidents/${tp.report_id}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 underline-offset-2 hover:underline"
-            >
-              {titleById.get(tp.report_id)}
-              <TbExternalLink className="size-3.5" aria-hidden />
-            </a>
-            <TrashPointResultPill status={tp.status} isDark={isDark} />
-            {tp.layer1 && (
-              <Pill tone={CHECK_LEVEL_TONE[tp.layer1.level]} isDark={isDark}>
-                {t("Photo check")}: {t(CHECK_LEVEL_LABEL[tp.layer1.level])}
-              </Pill>
-            )}
-          </li>
-        ))}
-      </ul>
-      <MeetingPointVotesButtons
-        votes={point.votes}
-        titleById={titleById}
-        title={meetingPointLabel(point.name, index, t)}
-        isDark={isDark}
-      />
-      {canDecide && point.status === "flagged" && (
-        <MeetingPointDecisionActions
-          campaignId={campaignId}
-          meetingPointId={point.meeting_point_id}
-          trashPoints={cleaned.map((tp) => ({ id: tp.report_id, title: titleById.get(tp.report_id) ?? "" }))}
-          isDark={isDark}
-        />
-      )}
-    </div>
+    </ReviewSectionCard>
   );
 }
 
-function Stat({ label, value, isDark }: { label: string; value: string; isDark: boolean }) {
+/** One "label value" of the summary line. */
+function Fact({ label, value }: { label: string; value: string }) {
   return (
-    <div
-      className={cn(
-        "flex flex-col rounded-lg border px-3 py-2",
-        isDark ? "border-zinc-700 bg-zinc-800/50" : "border-zinc-200 bg-white",
-      )}
-    >
-      <span className="text-xs text-muted-foreground">{label}</span>
-      <span className="font-semibold tabular-nums">{value}</span>
-    </div>
+    <span>
+      <span className="text-muted-foreground">{label}</span> <span className="font-semibold tabular-nums">{value}</span>
+    </span>
   );
 }
 
 /**
- * The submission, the totals and result verification (each meeting point with its status, score,
- * Layer 1, trash points and votes): everything the admin decides on. `canDecide` adds Verify /
- * Reject on flagged meeting points.
+ * What the admin decides on, each fact once: what needs a decision, a one-line summary, then each
+ * meeting point under result verification (score, photo check, votes, its trash points with their
+ * photos), and the trash points outside voting. `canDecide` adds Verify / Reject on flagged ones.
  */
 export const CompletionEvidence = memo(function CompletionEvidence({
   review,
@@ -294,6 +321,10 @@ export const CompletionEvidence = memo(function CompletionEvidence({
   const points = verification?.meeting_points ?? [];
   const flagged = points.filter((p) => p.status === "flagged").length;
   const verified = points.filter((p) => p.status === "verified").length;
+  const reportsById = new Map(submission.reports.map((r) => [r.report_id, r]));
+  const voted = new Set(points.flatMap((p) => p.trash_points.map((tp) => tp.report_id)));
+  const outside = submission.reports.filter((r) => !voted.has(r.report_id));
+  const rate = totals.present_rate == null ? "" : ` (${Math.round(totals.present_rate * 100)}%)`;
 
   return (
     <div className="flex min-w-0 flex-col gap-3">
@@ -319,112 +350,63 @@ export const CompletionEvidence = memo(function CompletionEvidence({
               </span>
             )}
             {flagged > 0 && (
-              <span>
-                {t("{{n}} flagged meeting point(s) wait for your decision.", { n: flagged })}
-              </span>
+              <span>{t("{{n}} flagged meeting point(s) wait for your decision.", { n: flagged })}</span>
             )}
           </span>
         </section>
       )}
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <Stat
-          isDark={isDark}
-          label={t("Shifts ended")}
-          value={`${totals.ended_shifts} / ${totals.active_shifts}`}
-        />
-        <Stat
-          isDark={isDark}
-          label={t("Present / registered")}
-          value={`${totals.present} / ${totals.registered}`}
-        />
-        <Stat isDark={isDark} label={t("Bags")} value={String(totals.waste_bags)} />
-        <Stat isDark={isDark} label={t("Weight (kg)")} value={String(totals.waste_kg)} />
-        <Stat isDark={isDark} label={t("Cleaned")} value={String(submission.counts.cleaned)} />
-        <Stat isDark={isDark} label={t("Partly done")} value={String(submission.counts.partial)} />
-        <Stat isDark={isDark} label={t("Not handled")} value={String(submission.counts.unhandled)} />
-        <Stat isDark={isDark} label={t("Verified meeting points")} value={`${verified} / ${points.length}`} />
+      <div
+        className={cn(
+          "flex flex-col gap-1.5 rounded-lg border px-4 py-3 text-sm",
+          isDark ? "border-zinc-700 bg-zinc-800/50" : "border-zinc-200 bg-white",
+        )}
+      >
+        {review.completion_submitted_at && (
+          <span className="text-xs text-muted-foreground">
+            {t("Submitted on {{date}}", { date: formattedDate(review.completion_submitted_at, true) })}
+            {review.rejection_count > 0 &&
+              ` · ${t("Rejected {{n}} of {{max}} times", { n: review.rejection_count, max: review.max_rejections })}`}
+          </span>
+        )}
+        <div className="flex flex-wrap gap-x-4 gap-y-1">
+          <Fact label={t("Shifts ended")} value={`${totals.ended_shifts}/${totals.active_shifts}`} />
+          <Fact label={t("Present / registered")} value={`${totals.present}/${totals.registered}${rate}`} />
+          <Fact label={t("Bags")} value={String(totals.waste_bags)} />
+          <Fact label={t("Weight (kg)")} value={String(totals.waste_kg)} />
+          <Fact
+            label={t("Waste points cleaned / partly / not handled")}
+            value={`${submission.counts.cleaned}/${submission.counts.partial}/${submission.counts.unhandled}`}
+          />
+          <Fact label={t("Verified meeting points")} value={`${verified}/${points.length}`} />
+        </div>
       </div>
 
-      <ReviewSectionCard
-        title={t("Result verification")}
-        hint={t("{{n}} meeting points", { n: points.length })}
-        defaultOpen
-        isDark={isDark}
-      >
-        {points.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t("No meeting point is being verified.")}</p>
-        ) : (
-          points.map((point, index) => (
-            <div
-              key={point.verification_id}
-              className={cn(index > 0 && "border-t pt-3", isDark ? "border-zinc-700" : "border-zinc-200")}
-            >
-              <VerificationMeetingPoint
-                campaignId={review.campaign_id}
-                point={point}
-                index={index}
-                canDecide={canDecide}
-                isDark={isDark}
-              />
-            </div>
-          ))
-        )}
-      </ReviewSectionCard>
+      {points.length === 0 ? (
+        <p className="text-sm text-muted-foreground">{t("No meeting point is being verified.")}</p>
+      ) : (
+        points.map((point, index) => (
+          <VerificationMeetingPoint
+            key={point.verification_id}
+            campaignId={review.campaign_id}
+            point={point}
+            index={index}
+            reportsById={reportsById}
+            canDecide={canDecide}
+            isDark={isDark}
+          />
+        ))
+      )}
 
-      <ReviewSectionCard
-        title={t("Waste points")}
-        hint={t("{{n}} waste points", { n: submission.reports.length })}
-        defaultOpen
-        isDark={isDark}
-      >
-        {submission.reports.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t("No waste points")}</p>
-        ) : (
-          submission.reports.map((r, index) => (
-            <div
-              key={r.report_id}
-              className={cn(
-                "flex flex-col gap-2",
-                index > 0 && "border-t pt-3",
-                isDark ? "border-zinc-700" : "border-zinc-200",
-              )}
-            >
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <a
-                  href={`/incidents/${r.report_id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 font-medium underline-offset-2 hover:underline"
-                >
-                  {r.report?.title || t("Waste point")}
-                  <TbExternalLink className="size-3.5" aria-hidden />
-                </a>
-                <TrashPointResultPill status={r.status} isDark={isDark} />
-              </div>
-              {r.report?.detail_address && (
-                <span className="text-xs text-muted-foreground">{r.report.detail_address}</span>
-              )}
-              {r.reason && <ReviewRow label={t("Why not handled")} value={r.reason} />}
-              {r.layer1 && <Layer1Summary layer1={r.layer1} isDark={isDark} showIssues={false} />}
-              <div className="flex flex-wrap gap-6">
-                <Photos
-                  label={t("Before")}
-                  urls={r.before_urls}
-                  checks={r.layer1 ? checksByUrl(r.layer1) : undefined}
-                  isDark={isDark}
-                />
-                <Photos
-                  label={t("After")}
-                  urls={r.after_urls}
-                  checks={r.layer1 ? checksByUrl(r.layer1) : undefined}
-                  isDark={isDark}
-                />
-              </div>
-            </div>
-          ))
-        )}
-      </ReviewSectionCard>
+      {outside.length > 0 && (
+        <ReviewSectionCard title={t("Waste points outside voting ({{n}})", { n: outside.length })} isDark={isDark}>
+          <ul className="flex flex-col gap-3">
+            {outside.map((r) => (
+              <TrashPointEvidence key={r.report_id} report={r} isDark={isDark} />
+            ))}
+          </ul>
+        </ReviewSectionCard>
+      )}
     </div>
   );
 });
@@ -547,18 +529,6 @@ export const CompletionReviewDialog = memo(function CompletionReviewDialog({
             </div>
           ) : (
             <div className="flex min-w-0 flex-col gap-4">
-              <div className={cn("flex flex-wrap gap-x-6 gap-y-1 text-sm", muted)}>
-                <span>
-                  {t("Submitted")}: {formattedDate(review.completion_submitted_at ?? undefined, true)}
-                </span>
-                <span>
-                  {t("Rejected {{n}} of {{max}} times", {
-                    n: review.rejection_count,
-                    max: review.max_rejections,
-                  })}
-                </span>
-              </div>
-
               <CompletionEvidence review={review} isDark={isDark} canDecide />
 
               <section

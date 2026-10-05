@@ -177,8 +177,13 @@ export const ShiftProgressCard = memo(function ShiftProgressCard({
   campaign,
   variant = 'page',
   isDark = false,
+  hideStats = false,
+  defaultOpen = true,
 }: {
   campaign: ICampaign;
+  /** Leave out the totals (shown elsewhere, e.g. the admin's completion summary). */
+  hideStats?: boolean;
+  defaultOpen?: boolean;
   /** `admin`: the admin review card (zinc, `isDark`) instead of the campaign page's card. */
   variant?: 'page' | 'admin';
   isDark?: boolean;
@@ -218,29 +223,31 @@ export const ShiftProgressCard = memo(function ShiftProgressCard({
 
   const content = (
       <div className="flex flex-col gap-4">
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-          <Stat
-            className={ui.stat}
-            labelClassName={ui.muted}
-            label={t('Shifts ended')}
-            value={`${totals.ended_shifts} / ${totals.active_shifts}`}
-          />
-          <Stat className={ui.stat} labelClassName={ui.muted} label={t('Present / registered')} value={`${totals.present} / ${totals.registered}`} />
-          <Stat
-            className={ui.stat}
-            labelClassName={ui.muted}
-            label={t('Attendance rate')}
-            value={totals.present_rate == null ? '—' : `${Math.round(totals.present_rate * 100)}%`}
-          />
-          <Stat className={ui.stat} labelClassName={ui.muted} label={t('Bags')} value={String(totals.waste_bags)} />
-          <Stat className={ui.stat} labelClassName={ui.muted} label={t('Weight (kg)')} value={String(totals.waste_kg)} />
-          <Stat
-            className={ui.stat}
-            labelClassName={ui.muted}
-            label={t('Waste points cleaned / partly / not handled')}
-            value={`${totals.reports.cleaned} / ${totals.reports.partial} / ${totals.reports.untouched}`}
-          />
-        </div>
+        {!hideStats && (
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+            <Stat
+              className={ui.stat}
+              labelClassName={ui.muted}
+              label={t('Shifts ended')}
+              value={`${totals.ended_shifts} / ${totals.active_shifts}`}
+            />
+            <Stat className={ui.stat} labelClassName={ui.muted} label={t('Present / registered')} value={`${totals.present} / ${totals.registered}`} />
+            <Stat
+              className={ui.stat}
+              labelClassName={ui.muted}
+              label={t('Attendance rate')}
+              value={totals.present_rate == null ? '—' : `${Math.round(totals.present_rate * 100)}%`}
+            />
+            <Stat className={ui.stat} labelClassName={ui.muted} label={t('Bags')} value={String(totals.waste_bags)} />
+            <Stat className={ui.stat} labelClassName={ui.muted} label={t('Weight (kg)')} value={String(totals.waste_kg)} />
+            <Stat
+              className={ui.stat}
+              labelClassName={ui.muted}
+              label={t('Waste points cleaned / partly / not handled')}
+              value={`${totals.reports.cleaned} / ${totals.reports.partial} / ${totals.reports.untouched}`}
+            />
+          </div>
+        )}
 
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -326,10 +333,12 @@ export const ShiftProgressCard = memo(function ShiftProgressCard({
   );
 
   return admin ? (
-    <ReviewSectionCard title={t('Shift progress')} defaultOpen isDark={isDark}>
+    <ReviewSectionCard title={t('Shift progress')} defaultOpen={defaultOpen} isDark={isDark}>
       {content}
     </ReviewSectionCard>
   ) : (
-    <CollapsibleCard title={t('Shift progress')}>{content}</CollapsibleCard>
+    <CollapsibleCard title={t('Shift progress')} defaultOpen={defaultOpen}>
+      {content}
+    </CollapsibleCard>
   );
 });

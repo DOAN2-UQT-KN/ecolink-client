@@ -1812,5 +1812,8 @@
   "Click again to remove your vote": "Click again to remove your vote",
   "Votes ({{n}})": "Votes ({{n}})",
   "weight {{w}}": "weight {{w}}",
-  "View results": "View results"
+  "View results": "View results",
+  "Submitted on {{date}}": "Submitted on {{date}}",
+  "Waste points outside voting ({{n}})": "Waste points outside voting ({{n}})",
+  "Photos": "Photos"
 }

@@ -1812,5 +1812,8 @@
   "Click again to remove your vote": "Bấm lần nữa để huỷ phiếu",
   "Votes ({{n}})": "Phiếu ({{n}})",
   "weight {{w}}": "trọng số {{w}}",
-  "View results": "Xem kết quả"
+  "View results": "Xem kết quả",
+  "Submitted on {{date}}": "Báo hoàn thành lúc {{date}}",
+  "Waste points outside voting ({{n}})": "Điểm rác ngoài bầu chọn ({{n}})",
+  "Photos": "Ảnh"
 }

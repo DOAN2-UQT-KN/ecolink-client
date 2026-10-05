@@ -61,7 +61,7 @@ const RESULT_STATUSES: number[] = [
 ];
 const STOPPED_STATUSES: number[] = [CAMPAIGN_STATUS.BLOCKED, CAMPAIGN_STATUS.CANCELLED];
 
-/** Result tab: shift progress (the popover of each shift is the one of the campaign page) and the completion submission. */
+/** Result tab: the completion evidence once marked done, then the shift grid (each shift's popover is the campaign page's). */
 const CampaignResult = memo(function CampaignResult({
   campaign,
   isDark,
@@ -69,30 +69,26 @@ const CampaignResult = memo(function CampaignResult({
   campaign: ICampaign;
   isDark: boolean;
 }) {
-  const { t } = useTranslation();
   const submitted = Boolean(campaign.completion_submitted_at);
   const { data, isLoading } = useCompletionReview(campaign.id, { enabled: submitted });
   const review = data?.data;
 
   return (
     <div className="flex min-w-0 flex-col gap-3">
-      <ShiftProgressCard campaign={campaign} variant="admin" isDark={isDark} />
-      {submitted && (
-        <ReviewSectionCard
-          title={t("Completion submission")}
-          hint={formattedDate(campaign.completion_submitted_at ?? undefined, true)}
-          defaultOpen
-          isDark={isDark}
-        >
-          {isLoading ? (
-            <Skeleton className="h-24 w-full" />
-          ) : review ? (
-            <CompletionEvidence review={review} isDark={isDark} />
-          ) : (
-            <p className="text-sm text-muted-foreground">—</p>
-          )}
-        </ReviewSectionCard>
-      )}
+      {submitted &&
+        (isLoading ? (
+          <Skeleton className="h-24 w-full" />
+        ) : review ? (
+          <CompletionEvidence review={review} isDark={isDark} />
+        ) : null)}
+      {/* Once marked done the summary above has the totals: the shift grid alone, folded. */}
+      <ShiftProgressCard
+        campaign={campaign}
+        variant="admin"
+        isDark={isDark}
+        hideStats={submitted}
+        defaultOpen={!submitted}
+      />
     </div>
   );
 });
