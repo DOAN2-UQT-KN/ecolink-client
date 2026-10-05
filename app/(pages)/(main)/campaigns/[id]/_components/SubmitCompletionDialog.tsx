@@ -20,6 +20,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
+import { Layer1Summary } from './ResultVerificationBadges';
 
 /** Reason for a waste point no shift handled (server: 1–500 characters). */
 const REASON_MAX = 500;
@@ -35,8 +36,9 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 /**
  * "Mark done" for the campaign's managers (spec 5.1). Opens once every shift that is on has ended;
- * the dialog sums up the shifts' results (built by the server into the submission) and asks a
- * reason for each waste point no shift handled, then sends it to the admin.
+ * the dialog sums up the shifts' results (built by the server into the submission), lists the waste
+ * points whose photos did not pass Layer 1 (a warning only) and asks a reason for each waste point
+ * no shift handled. Result verification then opens on every point declared cleaned.
  */
 export const SubmitCompletionDialog = memo(function SubmitCompletionDialog({
   campaign,
@@ -81,6 +83,8 @@ export const SubmitCompletionDialog = memo(function SubmitCompletionDialog({
 
   const unhandled = (review?.submission.reports ?? []).filter((r) => r.status === 'unhandled');
   const missing = unhandled.filter((r) => !reasons[r.report_id]?.trim());
+  // Layer 1 found something: residents and the admin will look harder at these.
+  const weak = (review?.submission.reports ?? []).filter((r) => r.layer1 && r.layer1.level !== 'pass');
 
   const onSubmit = () => {
     if (missing.length > 0) {
@@ -133,7 +137,7 @@ export const SubmitCompletionDialog = memo(function SubmitCompletionDialog({
             <DialogTitle>{t('Mark Campaign as Done')}</DialogTitle>
             <DialogDescription>
               {t(
-                'The results of every shift are sent to the admin for approval. Residents nearby are invited to confirm the area is clean.',
+                'Each meeting point with a waste point marked cleaned is then verified: the photos are checked, and the reporters and residents nearby confirm it is clean within 72 hours.',
               )}
             </DialogDescription>
           </DialogHeader>
@@ -154,12 +158,40 @@ export const SubmitCompletionDialog = memo(function SubmitCompletionDialog({
                 <Stat label={t('Weight (kg)')} value={String(totals.waste_kg)} />
               </div>
 
+              {weak.length > 0 && (
+                <div
+                  role="status"
+                  className="flex flex-col gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950"
+                >
+                  <div className="flex flex-col gap-1">
+                    <h3 className="font-semibold">{t('Some photos did not pass the automatic check')}</h3>
+                    <p className="text-xs">
+                      {t(
+                        'You can still mark the campaign done, but these waste points are more likely to be flagged. Fix their photos in the shift results first if you can.',
+                      )}
+                    </p>
+                  </div>
+                  {weak.map((r) => {
+                    const point = pointName(r.meeting_point_id);
+                    return (
+                      <div key={r.report_id} className="flex flex-col gap-1">
+                        <span className="font-medium">
+                          {reportTitle(r.report_id, r.report?.title)}
+                          {point && <span className="font-normal text-amber-900/80"> · {point}</span>}
+                        </span>
+                        {r.layer1 && <Layer1Summary layer1={r.layer1} />}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
               {unhandled.length > 0 && (
                 <div className="flex flex-col gap-3">
                   <div className="flex flex-col gap-1">
                     <h3 className="text-sm font-semibold">{t('Waste points no shift handled')}</h3>
                     <p className="text-xs text-foreground-tertiary">
-                      {t('Say why for each one; they go back to the waiting list once the admin approves.')}
+                      {t('Say why for each one; they go back to the waiting list once the campaign is completed.')}
                     </p>
                   </div>
                   {unhandled.map((r) => {
@@ -199,7 +231,7 @@ export const SubmitCompletionDialog = memo(function SubmitCompletionDialog({
               isDisabled={isPending || isLoading || !review}
               onClick={onSubmit}
             >
-              {t('Send for approval')}
+              {t('Mark done')}
             </Button>
           </DialogFooter>
         </DialogContent>

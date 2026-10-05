@@ -39,8 +39,8 @@ export const ShiftStatusPill = memo(function ShiftStatusPill({
 });
 
 /**
- * Spec 5.2: the admin rejected the completion and asked for more on this shift; it is back to
- * "Awaiting result" until its result is saved again. The reason shows on hover.
+ * Result verification did not accept a waste point of this shift (or the admin rejected it): the
+ * shift is back to "Awaiting result" until its result is saved again. The reason shows on hover.
  */
 export const ShiftReopenedPill = memo(function ShiftReopenedPill({
   reason,
@@ -57,7 +57,7 @@ export const ShiftReopenedPill = memo(function ShiftReopenedPill({
   );
 });
 
-/** The admin's reason for reopening the shift, with what to do next. */
+/** Why the shift was reopened (per waste point), with what to do next. */
 export const ShiftReopenedNotice = memo(function ShiftReopenedNotice({
   reason,
   className,
@@ -71,7 +71,7 @@ export const ShiftReopenedNotice = memo(function ShiftReopenedNotice({
       role="status"
       className={cn('rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900', className)}
     >
-      <span className="font-semibold">{t('The admin asked for more on this shift.')}</span>{' '}
+      <span className="font-semibold">{t('A waste point of this shift was not accepted.')}</span>{' '}
       {reason ? `${t('Reason')}: ${reason}. ` : ''}
       {t('Save its result again, then mark the campaign done again.')}
     </div>

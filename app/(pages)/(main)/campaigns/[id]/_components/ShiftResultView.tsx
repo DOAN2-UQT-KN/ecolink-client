@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { TbTrash } from 'react-icons/tb';
 
 import type {
+  IResultPhotoCheck,
   IShiftMedia,
   IShiftResult,
   IShiftResultReport,
@@ -10,6 +11,7 @@ import type {
 } from '@/apis/campaign/shiftResult';
 import { Pill } from '@/components/ui/Pill';
 import { cn } from '@/libs/utils';
+import { checksByUrl, Layer1Summary, PhotoCheckBadge } from './ResultVerificationBadges';
 
 export type ReportChoice = ShiftResultReportStatus | 'none';
 
@@ -56,6 +58,27 @@ export const Thumb = memo(function Thumb({
   );
 });
 
+/** A trash point photo with its Layer 1 badge (pass / warning / fail) in the corner. */
+export const CheckedThumb = memo(function CheckedThumb({
+  url,
+  check,
+  onRemove,
+  className,
+}: {
+  url: string;
+  /** null: saved before photos were checked. */
+  check: IResultPhotoCheck | null;
+  onRemove?: () => void;
+  className?: string;
+}) {
+  return (
+    <div className="relative w-fit">
+      <Thumb url={url} onRemove={onRemove} className={className} />
+      <PhotoCheckBadge check={check} className="absolute bottom-1 left-1 shadow-sm" />
+    </div>
+  );
+});
+
 /** Description, bags and kg of a saved shift result. */
 export const ShiftResultAmounts = memo(function ShiftResultAmounts({ result }: { result: IShiftResult }) {
   const { t } = useTranslation('common');
@@ -76,7 +99,10 @@ export const ShiftResultAmounts = memo(function ShiftResultAmounts({ result }: {
   );
 });
 
-/** Each waste point of the shift: its status in the result and the photos before / after. */
+/**
+ * Each waste point of the shift: its status in the result and the photos before / after, each with
+ * its Layer 1 badge, and the point's Layer 1 grade.
+ */
 export const ShiftResultWastePoints = memo(function ShiftResultWastePoints({
   reportIds,
   reports,
@@ -95,12 +121,14 @@ export const ShiftResultWastePoints = memo(function ShiftResultWastePoints({
       {reportIds.map((id) => {
         const r = handled.get(id);
         const choice: ReportChoice = r?.status ?? 'none';
+        const checks = checksByUrl(r?.layer1);
         return (
           <div key={id} className="rounded-lg border border-[rgba(136,122,71,0.3)] bg-white/70 p-3">
             <div className="mb-2 flex flex-wrap items-center gap-2">
               <span className="font-medium">{reportTitle(id)}</span>
               <Pill tone={REPORT_TONE[choice]}>{t(REPORT_LABEL[choice])}</Pill>
             </div>
+            {r?.layer1 && <Layer1Summary layer1={r.layer1} className="mb-2" />}
             {r && (
               <div className="grid gap-3 sm:grid-cols-2">
                 {(
@@ -112,9 +140,13 @@ export const ShiftResultWastePoints = memo(function ShiftResultWastePoints({
                   <div key={label}>
                     <span className="text-xs text-foreground-tertiary">{label}</span>
                     <div className="mt-1 flex flex-wrap gap-2">
-                      {urls.map((u) => (
-                        <Thumb key={u} url={u} className={thumbClassName} />
-                      ))}
+                      {urls.map((u) =>
+                        r.layer1 ? (
+                          <CheckedThumb key={u} url={u} check={checks.get(u) ?? null} className={thumbClassName} />
+                        ) : (
+                          <Thumb key={u} url={u} className={thumbClassName} />
+                        ),
+                      )}
                     </div>
                   </div>
                 ))}

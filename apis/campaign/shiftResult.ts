@@ -11,11 +11,62 @@ const base = '/api/v1/campaigns';
 
 export type ShiftResultReportStatus = 'cleaned' | 'partial';
 
+/** Result verification, Layer 1: each check and photo is graded pass / warn / fail. */
+export type ResultCheckLevel = 'pass' | 'warn' | 'fail';
+export type ResultPhotoSide = 'before' | 'after';
+
+/** The checks of one trash point photo, made when it was uploaded through `result-photos`. */
+export interface IResultPhotoCheck {
+  id: string;
+  url: string;
+  side: ResultPhotoSide;
+  level: ResultCheckLevel;
+  /** Taken at most 48 h before the upload (warn: no capture time). */
+  time_check: ResultCheckLevel;
+  /** The photo's GPS within 100 m of the pin (warn: no GPS in the photo). */
+  exif_location_check: ResultCheckLevel;
+  /** The pin within 100 m of the trash point (warn: the point has no location). */
+  pin_check: ResultCheckLevel;
+  exif_taken_at: string | null;
+  exif_lat: number | null;
+  exif_lng: number | null;
+  camera_model: string | null;
+  pin_lat: number;
+  pin_lng: number;
+  pin_distance_m: number | null;
+  exif_distance_m: number | null;
+  uploaded_at: string;
+}
+
+export type Layer1IssueCode =
+  | 'photo_fail'
+  | 'photo_warn'
+  | 'legacy_photo'
+  | 'before_not_earlier'
+  | 'before_after_same'
+  | 'hash_reused';
+
+export interface ILayer1Issue {
+  code: Layer1IssueCode;
+  side?: ResultPhotoSide;
+  url?: string;
+}
+
+/** Layer 1 of a trash point: the worst of its photos and of the checks on the pair. */
+export interface ILayer1 {
+  level: ResultCheckLevel;
+  issues: ILayer1Issue[];
+  /** `check` null: saved before photos were checked. */
+  photos: Array<{ url: string; side: ResultPhotoSide; check: IResultPhotoCheck | null }>;
+}
+
 export interface IShiftResultReport {
   report_id: string;
   status: ShiftResultReportStatus;
   before_urls: string[];
   after_urls: string[];
+  /** Response only. */
+  layer1?: ILayer1 | null;
 }
 
 export interface IShiftMedia {
@@ -123,6 +174,41 @@ export const useSaveShiftResult = (
     mutationFn: ({ campaign_id, shift_id, ...body }: SaveShiftResultParams) =>
       requestApi.put<IBaseResponse<IShiftResultView>>(`${shiftUrl({ campaign_id, shift_id })}/result`, body),
     queryKey: ['shift-result'],
+    messageError: { type: MessageType.Toast },
+    ...options,
+  });
+
+export type UploadResultPhotoParams = ShiftParams & {
+  file: File;
+  report_id: string;
+  side: ResultPhotoSide;
+  pin_lat: number;
+  pin_lng: number;
+};
+
+/**
+ * Uploads the original file of a trash point photo (no compression: the server reads its EXIF and
+ * hash), with where the uploader pinned it. The PUT of the result accepts only URLs from here.
+ */
+export const uploadResultPhoto = ({ campaign_id, shift_id, file, ...fields }: UploadResultPhotoParams) => {
+  const form = new FormData();
+  form.append('report_id', fields.report_id);
+  form.append('side', fields.side);
+  form.append('pin_lat', String(fields.pin_lat));
+  form.append('pin_lng', String(fields.pin_lng));
+  form.append('file', file);
+  return requestApi.post<IBaseResponse<{ url: string; check: IResultPhotoCheck }>>(
+    `${shiftUrl({ campaign_id, shift_id })}/result-photos`,
+    form,
+    { headers: { 'Content-Type': 'multipart/form-data' } },
+  );
+};
+
+export const useUploadResultPhoto = (
+  options?: UsePostOptions<IBaseResponse<{ url: string; check: IResultPhotoCheck }>, UploadResultPhotoParams>,
+) =>
+  usePost({
+    mutationFn: uploadResultPhoto,
     messageError: { type: MessageType.Toast },
     ...options,
   });

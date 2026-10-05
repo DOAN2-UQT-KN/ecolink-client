@@ -55,7 +55,6 @@ export function getNotificationHref(
     case 'CAMPAIGN_CREATED':
     case 'CAMPAIGN_DONE':
     case 'CAMPAIGN_VERIFY_INVITE':
-    case 'CAMPAIGN_COMPLETION_VERIFY_INVITE':
     case 'CAMPAIGN_COMPLETION_APPROVED_BY_ADMIN':
     case 'CAMPAIGN_COMPLETION_REJECTED_BY_ADMIN':
     case 'CAMPAIGN_APPROVED':
@@ -69,7 +68,29 @@ export function getNotificationHref(
     case 'CAMPAIGN_UPDATED_NEEDS_REVIEW':
     case 'CAMPAIGN_REREVIEW_EXPIRED':
     case 'CAMPAIGN_SHIFT_REMINDER':
+    case 'CAMPAIGN_RESULT_VERIFIED':
+    case 'CAMPAIGN_RESULT_REJECTED':
       return campaignId ? `/campaigns/${campaignId}` : null;
+    // Result verification: residents nearby vote, the reporters confirm their meeting point.
+    case 'CAMPAIGN_COMPLETION_VERIFY_INVITE':
+      return campaignId ? `/campaigns/${campaignId}/verify` : null;
+    case 'CAMPAIGN_MEETING_POINT_CONFIRM_REQUEST':
+    case 'CAMPAIGN_MEETING_POINT_CONFIRM_REMINDER':
+    case 'CAMPAIGN_MEETING_POINT_FLAGGED':
+    case 'CAMPAIGN_MEETING_POINT_REJECTED': {
+      if (!campaignId) return null;
+      const meetingPointId =
+        typeof p.meetingPointId === 'string'
+          ? p.meetingPointId
+          : typeof p.meeting_point_id === 'string'
+            ? p.meeting_point_id
+            : null;
+      // The page finds the meeting point holding `?report=` when the id is missing.
+      if (meetingPointId) return `/campaigns/${campaignId}/verify?point=${encodeURIComponent(meetingPointId)}`;
+      return reportId
+        ? `/campaigns/${campaignId}/verify?report=${encodeURIComponent(reportId)}`
+        : `/campaigns/${campaignId}/verify`;
+    }
     case 'CAMPAIGN_SHIFT_RESULT_MISSING': {
       // Spec 4.2: straight to the shift, where its result is submitted.
       const shiftId =
@@ -91,7 +112,7 @@ export function getNotificationHref(
     case 'ORG_OWNER_CHANGE_APPROVAL_REQUEST':
     case 'ORG_OWNER_CHANGE_DECIDED':
     case 'ORG_OWNER_REMOVAL_PROPOSED':
-    case 'ORG_OWNER_LEFT':
+    case 'ORG_OWNER_LEFT': {
       if (campaignId) return `/campaigns/${campaignId}`;
       const organizationSlug =
         typeof p.organizationSlug === "string"
@@ -109,6 +130,7 @@ export function getNotificationHref(
         return `/organizations/${p.organization_id}`;
       }
       return null;
+    }
     case 'REPORT_REJECTED':
       return '/incidents/me';
     case 'REPORT_STATUS':

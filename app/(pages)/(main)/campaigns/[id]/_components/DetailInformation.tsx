@@ -15,7 +15,6 @@ import { HiMapPin } from 'react-icons/hi2';
 import { TooltipTruncatedText } from '@/components/ui/TooltipTruncatedText';
 import ReportSummaryCard from '@/modules/ReportSummaryCard';
 
-import { STATUS } from '@/constants/status';
 import { getDifficultyLevel } from '@/constants/difficulty';
 import { Link } from '@/libs/router';
 
@@ -52,10 +51,6 @@ export const DetailInformation = memo(function DetailInformation() {
     return null;
   }
 
-  const showCompletionVerification =
-    campaign.status === STATUS.WAITING_CONFIRMED ||
-    campaign.status === STATUS.COMPLETED;
-  const verification = campaign.completion_verification;
   const difficulty = getDifficultyLevel(campaign.difficulty ?? 0);
   const organization = campaign.organization;
   const points = campaign.meeting_points ?? [];
@@ -76,18 +71,6 @@ export const DetailInformation = memo(function DetailInformation() {
               </span>
             </div>
 
-            {showCompletionVerification ? (
-              <p className="mt-3 font-display-2 text-sm text-foreground-secondary">
-                {t('Verification points')}:{' '}
-                <span className="font-semibold text-emerald-700">
-                  {verification?.clean_count ?? 0} {t('Clean')}
-                </span>
-                {' · '}
-                <span className="font-semibold text-rose-700">
-                  {verification?.not_clean_count ?? 0} {t('Not clean')}
-                </span>
-              </p>
-            ) : null}
             <div className="mt-4 text-button-accent font-display-7 font-semibold leading-tight text-foreground sm:mt-3 sm:text-2xl lg:text-3xl">
               {displayTitle}
             </div>

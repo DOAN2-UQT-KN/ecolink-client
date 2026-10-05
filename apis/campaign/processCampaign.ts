@@ -2,22 +2,24 @@ import { IBaseResponse } from '@/types/BaseResponse';
 import requestApi from '@/utils/requestApi';
 import { MessageType } from '@/utils/showMessage';
 import { useGet, UseGetOptions, usePost, UsePostOptions } from '@/hooks/reactQuery';
-import type { IShiftOverview } from './shiftResult';
+import type { ILayer1, IShiftOverview } from './shiftResult';
+import type { AwaitingAdminReason, IMeetingPointView } from './verification';
 
 const url = '/api/v1/campaigns';
 
-/** Spec 5.2: no partial approval; reject reopens shifts (at most 3 times), cancel ends it. */
-export type CompletionDecision = 'approve' | 'reject' | 'cancel';
+/**
+ * Result verification decides the campaign; the admin only cancels it, or approves it once
+ * verification hands it over (`awaiting_admin`). Flagged meeting points are decided one by one.
+ */
+export type CompletionDecision = 'approve' | 'cancel';
 
 export type ICompletionReviewRequest = {
   id: string;
   decision: CompletionDecision;
-  /** Required to reject or cancel. */
+  /** Required to cancel. */
   reject_reason?: string;
   /** Approve: the settled difficulty (points follow it). */
   difficulty?: number;
-  /** Reject: shifts with a result to complete again; at least one. */
-  shift_ids?: string[];
 };
 
 export const reviewCampaignCompletion = async (
@@ -49,6 +51,8 @@ export interface ICompletionReviewReport {
   reason: string | null;
   before_urls: string[];
   after_urls: string[];
+  /** Layer 1 from the photos; null for a point no shift handled. */
+  layer1: ILayer1 | null;
   meeting_point_id: string | null;
   report: {
     title: string | null;
@@ -81,7 +85,11 @@ export interface ICompletionReview {
   completion_submitted_at: string | null;
   rejection_count: number;
   max_rejections: number;
-  can_reject: boolean;
+  /** Result verification handed the campaign to the admin: approve or cancel. */
+  awaiting_admin: boolean;
+  awaiting_admin_reason: AwaitingAdminReason | null;
+  /** Approve is possible now. */
+  can_approve: boolean;
   /** The saved submission; `preview` = built live from the shifts' results before marking done. */
   submission: {
     preview: boolean;
@@ -90,12 +98,9 @@ export interface ICompletionReview {
   };
   totals: IShiftOverview['totals'];
   shifts: ICompletionReviewShift[];
+  /** Each meeting point under result verification (latest round), with every vote. */
   verification: {
-    clean_count: number;
-    not_clean_count: number;
-    flagged: boolean;
-    flag_ratio: number;
-    flag_min_votes: number;
+    meeting_points: IMeetingPointView[];
   };
 }
 
