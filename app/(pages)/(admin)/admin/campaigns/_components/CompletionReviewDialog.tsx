@@ -1,18 +1,28 @@
 import { memo, useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { format } from "date-fns";
-import { TbAlertTriangle, TbClipboardCheck, TbExternalLink } from "react-icons/tb";
+import { TbAlertTriangle, TbClipboardCheck, TbExternalLink, TbThumbDown, TbThumbUp } from "react-icons/tb";
 
 import {
   useCompletionReview,
   useReviewCampaignCompletion,
   type CompletionDecision,
-  type CompletionReportStatus,
   type ICompletionReview,
+  type ICompletionReviewReport,
 } from "@/apis/campaign/processCampaign";
-import { ReviewRow, ReviewSectionCard } from "@/components/admin/shared/ReviewSection";
+import type { IResultPhotoCheck } from "@/apis/campaign/shiftResult";
+import type { IMeetingPointView } from "@/apis/campaign/verification";
+import {
+  CHECK_LEVEL_LABEL,
+  checksByUrl,
+  meetingPointLabel,
+  MeetingPointStatusPill,
+  PhotoCheckBadge,
+  TRASH_POINT_RESULT_LABEL,
+} from "@/app/(pages)/(main)/campaigns/[id]/_components/ResultVerificationBadges";
+import { MeetingPointDecisionActions } from "@/app/(pages)/(main)/campaigns/[id]/_components/MeetingPointDecisionActions";
+import { MeetingPointVotesList } from "@/app/(pages)/(main)/campaigns/[id]/_components/MeetingPointVotesPopover";
+import { ReviewSectionCard } from "@/components/admin/shared/ReviewSection";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -22,7 +32,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Pill } from "@/components/ui/Pill";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
@@ -41,157 +50,363 @@ import showMessage, { MessageLevel, MessageType } from "@/utils/showMessage";
 
 const REASON_MAX = 5000;
 
-const STATUS_TONE: Record<CompletionReportStatus, "green" | "amber" | "red"> = {
-  cleaned: "green",
-  partial: "amber",
-  unhandled: "red",
-};
-/** English labels; translated with `t()`. */
-const STATUS_LABEL: Record<CompletionReportStatus, string> = {
-  cleaned: "Cleaned",
-  partial: "Partly done",
-  unhandled: "Not handled",
-};
-
-function Photos({ label, urls }: { label: string; urls: string[] }) {
+/** Before or after photos; only a photo with a warning, a failure or no check carries a badge (hover: why). */
+function Photos({
+  label,
+  urls,
+  checks,
+  isDark,
+}: {
+  label: string;
+  urls: string[];
+  /** Layer 1 checks by URL; badges show only when given. */
+  checks?: Map<string, IResultPhotoCheck | null>;
+  isDark?: boolean;
+}) {
   if (urls.length === 0) return null;
   return (
     <div className="flex flex-col gap-1">
       <span className="text-xs text-muted-foreground">{label}</span>
-      <div className="flex flex-wrap gap-2">
-        {urls.map((url) => (
-          <a key={url} href={url} target="_blank" rel="noopener noreferrer">
-            <img
-              src={url}
-              alt=""
-              loading="lazy"
-              className="size-20 rounded-md border object-cover"
-            />
-          </a>
-        ))}
+      <div className="flex flex-wrap gap-1.5">
+        {urls.map((url) => {
+          const check = checks ? (checks.get(url) ?? null) : undefined;
+          return (
+            <div key={url} className="relative">
+              <a href={url} target="_blank" rel="noopener noreferrer">
+                <img src={url} alt="" loading="lazy" className="size-16 rounded-md border object-cover" />
+              </a>
+              {check !== undefined && check?.level !== "pass" && (
+                <PhotoCheckBadge check={check} isDark={isDark} className="absolute bottom-1 left-1 shadow-sm" />
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
 }
 
-function Stat({ label, value, isDark }: { label: string; value: string; isDark: boolean }) {
-  return (
-    <div
-      className={cn(
-        "flex flex-col rounded-lg border px-3 py-2",
-        isDark ? "border-zinc-700 bg-zinc-800/50" : "border-zinc-200 bg-white",
-      )}
-    >
-      <span className="text-xs text-muted-foreground">{label}</span>
-      <span className="font-semibold tabular-nums">{value}</span>
-    </div>
-  );
-}
-
-/** The submission, the totals and residents' answers: everything the admin decides on. */
-export const CompletionEvidence = memo(function CompletionEvidence({
-  review,
+/** How many voted clean / not clean; each opens a dialog with those votes in detail. */
+function MeetingPointVotesButtons({
+  votes,
+  titleById,
+  title,
   isDark,
 }: {
-  review: ICompletionReview;
+  votes: IMeetingPointView["votes"];
+  titleById: Map<string, string>;
+  title: string;
   isDark: boolean;
 }) {
   const { t } = useTranslation();
+  const [open, setOpen] = useState<"up" | "down" | null>(null);
+  const count = (side: "up" | "down") => votes.filter((v) => v.value === side).length;
+  return (
+    <>
+      <div className="flex flex-wrap items-center gap-4 text-sm">
+        {(["up", "down"] as const).map((side) => (
+          <button
+            key={side}
+            type="button"
+            onClick={() => setOpen(side)}
+            className={cn(
+              "inline-flex items-center gap-1 underline-offset-2 hover:underline",
+              side === "up"
+                ? isDark ? "text-emerald-300" : "text-emerald-700"
+                : isDark ? "text-red-300" : "text-red-700",
+            )}
+          >
+            {side === "up" ? <TbThumbUp className="size-4" aria-hidden /> : <TbThumbDown className="size-4" aria-hidden />}
+            {count(side)} {side === "up" ? t("Clean") : t("Not clean")}
+          </button>
+        ))}
+      </div>
+      <Dialog open={open != null} onOpenChange={(v) => !v && setOpen(null)}>
+        <DialogContent
+          className={cn("max-h-[80vh] max-w-lg overflow-y-auto", isDark ? "bg-zinc-900 text-zinc-100" : "bg-zinc-50 text-zinc-900")}
+        >
+          <DialogHeader>
+            <DialogTitle className={cn(isDark ? "text-zinc-100" : "text-zinc-900")}>
+              {t("Votes")} · {title}
+            </DialogTitle>
+            <DialogDescription className="sr-only">{t("Votes")}</DialogDescription>
+          </DialogHeader>
+          {open && (
+            <MeetingPointVotesList votes={votes} titleById={titleById} isDark={isDark} defaultTab={open} />
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+/** The verification score against its 15-point threshold: green once verified, red when downvoted to ≤ 3. */
+function ScoreBar({ score, downvoted, isDark }: { score: number | null; downvoted: boolean; isDark: boolean }) {
+  const { t } = useTranslation();
+  if (score == null) return null;
+  const pct = Math.min(100, (Math.max(0, score) / 15) * 100);
+  const tone = score >= 15 ? "bg-emerald-500" : downvoted && score <= 3 ? "bg-red-500" : "bg-amber-500";
+  return (
+    <span className="flex min-w-40 flex-1 items-center gap-2 text-xs">
+      <span className={cn("shrink-0 tabular-nums", isDark ? "text-zinc-300" : "text-zinc-700")}>
+        {t("Score")} {score} / 15
+      </span>
+      <span className={cn("h-1.5 flex-1 overflow-hidden rounded-full", isDark ? "bg-zinc-700" : "bg-zinc-200")}>
+        <span className={cn("block h-full rounded-full transition-all", tone)} style={{ width: `${pct}%` }} />
+      </span>
+    </span>
+  );
+}
+
+/** One meeting point under result verification: status, score, Layer 1, its trash points, every vote; flagged → decide. */
+const RESULT_DOT: Record<string, string> = { cleaned: "bg-emerald-500", partial: "bg-amber-500", unhandled: "bg-red-500" };
+const LEVEL_TEXT: Record<string, { light: string; dark: string }> = {
+  pass: { light: "text-emerald-700", dark: "text-emerald-300" },
+  warn: { light: "text-amber-700", dark: "text-amber-300" },
+  fail: { light: "text-red-700", dark: "text-red-300" },
+};
+
+/** One trash point of the submission: what was declared (dot + word), why not handled, its photos. */
+function TrashPointEvidence({
+  report,
+  failed = false,
+  isDark,
+}: {
+  report: ICompletionReviewReport;
+  /** The meeting point was rejected and this trash point did not pass. */
+  failed?: boolean;
+  isDark: boolean;
+}) {
+  const { t } = useTranslation();
+  const checks = report.layer1 ? checksByUrl(report.layer1) : undefined;
+  return (
+    <li className="flex flex-col gap-1.5">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+        <a
+          href={`/incidents/${report.report_id}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 font-medium underline-offset-2 hover:underline"
+        >
+          {report.report?.title || t("Waste point")}
+          <TbExternalLink className="size-3.5" aria-hidden />
+        </a>
+        <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+          <span className={cn("size-2 rounded-full", RESULT_DOT[report.status])} aria-hidden />
+          {t(TRASH_POINT_RESULT_LABEL[report.status])}
+        </span>
+        {failed && (
+          <span className={cn("text-xs font-semibold", isDark ? "text-red-300" : "text-red-700")}>
+            {t("Did not pass")}
+          </span>
+        )}
+      </div>
+      {report.reason && (
+        <span className="text-xs text-muted-foreground">
+          {t("Why not handled")}: <span className={isDark ? "text-zinc-200" : "text-zinc-800"}>{report.reason}</span>
+        </span>
+      )}
+      {(report.before_urls.length > 0 || report.after_urls.length > 0) && (
+        <div className="flex flex-wrap gap-4">
+          <Photos label={t("Before")} urls={report.before_urls} checks={checks} isDark={isDark} />
+          <Photos label={t("After")} urls={report.after_urls} checks={checks} isDark={isDark} />
+        </div>
+      )}
+    </li>
+  );
+}
+
+/** One meeting point under result verification: score, photo check, timing, votes, its trash points; flagged → decide. */
+function VerificationMeetingPoint({
+  campaignId,
+  point,
+  index,
+  reportsById,
+  canDecide,
+  isDark,
+}: {
+  campaignId: string;
+  point: IMeetingPointView;
+  index: number;
+  reportsById: Map<string, ICompletionReviewReport>;
+  canDecide: boolean;
+  isDark: boolean;
+}) {
+  const { t } = useTranslation();
+  const name = meetingPointLabel(point.name, index, t);
+  const titleById = new Map(
+    point.trash_points.map((tp) => [tp.report_id, tp.report?.title || t("Waste point")]),
+  );
+  const cleaned = point.trash_points.filter((tp) => tp.status === "cleaned");
+  const timing =
+    point.status === "voting"
+      ? t("Voting until {{date}}", { date: formattedDate(point.window_ends_at, true) })
+      : point.status === "flagged" && point.flag_deadline
+        ? t("Rejected automatically on {{date}} if not decided", { date: formattedDate(point.flag_deadline, true) })
+        : point.decided_at
+          ? t("Decided on {{date}}", { date: formattedDate(point.decided_at, true) })
+          : null;
+  const failed = point.status === "rejected" ? new Set(point.failed_report_ids) : new Set<string>();
+
+  return (
+    <ReviewSectionCard
+      title={name}
+      hint={point.round > 1 ? t("Round {{n}}", { n: point.round }) : undefined}
+      aside={<MeetingPointStatusPill status={point.status} isDark={isDark} />}
+      defaultOpen={point.status === "flagged"}
+      isDark={isDark}
+    >
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
+          <ScoreBar score={point.score} downvoted={point.down_count > 0} isDark={isDark} />
+          <span>
+            {t("Photos")}:{" "}
+            <span className={cn("font-medium", LEVEL_TEXT[point.layer1_level]?.[isDark ? "dark" : "light"])}>
+              {t(CHECK_LEVEL_LABEL[point.layer1_level])}
+            </span>
+          </span>
+          {timing && <span>{timing}</span>}
+        </div>
+        {point.decision_reason && (
+          <span className="text-xs text-muted-foreground">
+            {t("Reason")}: <span className={isDark ? "text-zinc-200" : "text-zinc-800"}>{point.decision_reason}</span>
+          </span>
+        )}
+        <MeetingPointVotesButtons votes={point.votes} titleById={titleById} title={name} isDark={isDark} />
+        <ul className={cn("flex flex-col gap-3 border-t pt-3", isDark ? "border-zinc-700" : "border-zinc-200")}>
+          {point.trash_points.map((tp) => {
+            const report = reportsById.get(tp.report_id);
+            if (!report) return null;
+            return <TrashPointEvidence key={tp.report_id} report={report} failed={failed.has(tp.report_id)} isDark={isDark} />;
+          })}
+        </ul>
+        {canDecide && point.status === "flagged" && (
+          <MeetingPointDecisionActions
+            campaignId={campaignId}
+            meetingPointId={point.meeting_point_id}
+            trashPoints={cleaned.map((tp) => ({ id: tp.report_id, title: titleById.get(tp.report_id) ?? "" }))}
+            isDark={isDark}
+          />
+        )}
+      </div>
+    </ReviewSectionCard>
+  );
+}
+
+/** One "label value" of the summary line. */
+function Fact({ label, value }: { label: string; value: string }) {
+  return (
+    <span>
+      <span className="text-muted-foreground">{label}</span> <span className="font-semibold tabular-nums">{value}</span>
+    </span>
+  );
+}
+
+/**
+ * What the admin decides on, each fact once: what needs a decision, a one-line summary, then each
+ * meeting point under result verification (score, photo check, votes, its trash points with their
+ * photos), and the trash points outside voting. `canDecide` adds Verify / Reject on flagged ones.
+ */
+export const CompletionEvidence = memo(function CompletionEvidence({
+  review,
+  isDark,
+  canDecide = false,
+}: {
+  review: ICompletionReview;
+  isDark: boolean;
+  canDecide?: boolean;
+}) {
+  const { t } = useTranslation();
   const { totals, submission, verification } = review;
-  const answers = verification.clean_count + verification.not_clean_count;
+  const points = verification?.meeting_points ?? [];
+  const flagged = points.filter((p) => p.status === "flagged").length;
+  const verified = points.filter((p) => p.status === "verified").length;
+  const reportsById = new Map(submission.reports.map((r) => [r.report_id, r]));
+  const voted = new Set(points.flatMap((p) => p.trash_points.map((tp) => tp.report_id)));
+  const outside = submission.reports.filter((r) => !voted.has(r.report_id));
+  const rate = totals.present_rate == null ? "" : ` (${Math.round(totals.present_rate * 100)}%)`;
 
   return (
     <div className="flex min-w-0 flex-col gap-3">
-      {verification.flagged && (
+      {(review.awaiting_admin || flagged > 0) && (
         <section
           role="alert"
           className={cn(
             "flex items-start gap-2 rounded-lg border p-4 text-sm",
             isDark
-              ? "border-red-400/40 bg-red-500/10 text-red-200"
-              : "border-red-500/40 bg-red-50 text-red-800",
+              ? "border-amber-400/40 bg-amber-500/10 text-amber-200"
+              : "border-amber-500/40 bg-amber-50 text-amber-900",
           )}
         >
           <TbAlertTriangle className="mt-0.5 size-5 shrink-0" aria-hidden />
-          <span>
-            <span className="font-semibold">{t("Residents report it is not clean")}</span>{" "}
-            {t("{{bad}} of {{total}} answers say not clean (flag from {{ratio}}% of at least {{min}} answers).", {
-              bad: verification.not_clean_count,
-              total: answers,
-              ratio: Math.round(verification.flag_ratio * 100),
-              min: verification.flag_min_votes,
-            })}
+          <span className="flex flex-col gap-1">
+            {review.awaiting_admin && (
+              <span className="font-semibold">
+                {review.awaiting_admin_reason === "no_cleaned_points"
+                  ? t("No waste point was declared cleaned: approve or cancel the campaign.")
+                  : t("Already rejected {{max}} times: approve or cancel the campaign.", {
+                      max: review.max_rejections,
+                    })}
+              </span>
+            )}
+            {flagged > 0 && (
+              <span>{t("{{n}} flagged meeting point(s) wait for your decision.", { n: flagged })}</span>
+            )}
           </span>
         </section>
       )}
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <Stat
-          isDark={isDark}
-          label={t("Shifts ended")}
-          value={`${totals.ended_shifts} / ${totals.active_shifts}`}
-        />
-        <Stat
-          isDark={isDark}
-          label={t("Present / registered")}
-          value={`${totals.present} / ${totals.registered}`}
-        />
-        <Stat isDark={isDark} label={t("Bags")} value={String(totals.waste_bags)} />
-        <Stat isDark={isDark} label={t("Weight (kg)")} value={String(totals.waste_kg)} />
-        <Stat isDark={isDark} label={t("Cleaned")} value={String(submission.counts.cleaned)} />
-        <Stat isDark={isDark} label={t("Partly done")} value={String(submission.counts.partial)} />
-        <Stat isDark={isDark} label={t("Not handled")} value={String(submission.counts.unhandled)} />
-        <Stat
-          isDark={isDark}
-          label={t("Residents: clean / not clean")}
-          value={`${verification.clean_count} / ${verification.not_clean_count}`}
-        />
+      <div
+        className={cn(
+          "flex flex-col gap-1.5 rounded-lg border px-4 py-3 text-sm",
+          isDark ? "border-zinc-700 bg-zinc-800/50" : "border-zinc-200 bg-white",
+        )}
+      >
+        {review.completion_submitted_at && (
+          <span className="text-xs text-muted-foreground">
+            {t("Submitted on {{date}}", { date: formattedDate(review.completion_submitted_at, true) })}
+            {review.rejection_count > 0 &&
+              ` · ${t("Rejected {{n}} of {{max}} times", { n: review.rejection_count, max: review.max_rejections })}`}
+          </span>
+        )}
+        <div className="flex flex-wrap gap-x-4 gap-y-1">
+          <Fact label={t("Shifts ended")} value={`${totals.ended_shifts}/${totals.active_shifts}`} />
+          <Fact label={t("Present / registered")} value={`${totals.present}/${totals.registered}${rate}`} />
+          <Fact label={t("Bags")} value={String(totals.waste_bags)} />
+          <Fact label={t("Weight (kg)")} value={String(totals.waste_kg)} />
+          <Fact
+            label={t("Waste points cleaned / partly / not handled")}
+            value={`${submission.counts.cleaned}/${submission.counts.partial}/${submission.counts.unhandled}`}
+          />
+          <Fact label={t("Verified meeting points")} value={`${verified}/${points.length}`} />
+        </div>
       </div>
 
-      <ReviewSectionCard
-        title={t("Waste points")}
-        hint={t("{{n}} waste points", { n: submission.reports.length })}
-        defaultOpen
-        isDark={isDark}
-      >
-        {submission.reports.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t("No waste points")}</p>
-        ) : (
-          submission.reports.map((r, index) => (
-            <div
-              key={r.report_id}
-              className={cn(
-                "flex flex-col gap-2",
-                index > 0 && "border-t pt-3",
-                isDark ? "border-zinc-700" : "border-zinc-200",
-              )}
-            >
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <a
-                  href={`/incidents/${r.report_id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 font-medium underline-offset-2 hover:underline"
-                >
-                  {r.report?.title || t("Waste point")}
-                  <TbExternalLink className="size-3.5" aria-hidden />
-                </a>
-                <Pill tone={STATUS_TONE[r.status]} isDark={isDark}>
-                  {t(STATUS_LABEL[r.status])}
-                </Pill>
-              </div>
-              {r.report?.detail_address && (
-                <span className="text-xs text-muted-foreground">{r.report.detail_address}</span>
-              )}
-              {r.reason && <ReviewRow label={t("Why not handled")} value={r.reason} />}
-              <div className="flex flex-wrap gap-6">
-                <Photos label={t("Before")} urls={r.before_urls} />
-                <Photos label={t("After")} urls={r.after_urls} />
-              </div>
-            </div>
-          ))
-        )}
-      </ReviewSectionCard>
+      {points.length === 0 ? (
+        <p className="text-sm text-muted-foreground">{t("No meeting point is being verified.")}</p>
+      ) : (
+        points.map((point, index) => (
+          <VerificationMeetingPoint
+            key={point.verification_id}
+            campaignId={review.campaign_id}
+            point={point}
+            index={index}
+            reportsById={reportsById}
+            canDecide={canDecide}
+            isDark={isDark}
+          />
+        ))
+      )}
+
+      {outside.length > 0 && (
+        <ReviewSectionCard title={t("Waste points outside voting ({{n}})", { n: outside.length })} isDark={isDark}>
+          <ul className="flex flex-col gap-3">
+            {outside.map((r) => (
+              <TrashPointEvidence key={r.report_id} report={r} isDark={isDark} />
+            ))}
+          </ul>
+        </ReviewSectionCard>
+      )}
     </div>
   );
 });
@@ -203,10 +418,10 @@ type Props = {
 };
 
 /**
- * Admin decision on a campaign marked done (spec 5.2), with the evidence: each waste point with its
- * state and photos (or the manager's reason), the totals, residents' answers and the red flag.
- * Approve (settling the difficulty), reject (reason + shifts to complete again; locked after 3
- * rejections) or cancel (reason). No partial approval.
+ * Admin on a campaign marked done, with the evidence: result verification of each meeting point
+ * (flagged ones are verified or rejected here, one by one), the submission and the totals. The
+ * campaign itself is decided by verification; the admin may cancel it (reason) at any time, and
+ * approve it (settling the difficulty) only when verification hands it over (`can_approve`).
  */
 export const CompletionReviewDialog = memo(function CompletionReviewDialog({
   campaignId,
@@ -216,21 +431,21 @@ export const CompletionReviewDialog = memo(function CompletionReviewDialog({
   const { t } = useTranslation();
   const isDark = theme === "dark";
   const [open, setOpen] = useState(false);
-  const [decision, setDecision] = useState<CompletionDecision>("approve");
+  const [chosen, setChosen] = useState<CompletionDecision | null>(null);
   const [difficulty, setDifficulty] = useState<number | null>(null);
   const [reason, setReason] = useState("");
-  const [shiftIds, setShiftIds] = useState<Set<string>>(new Set());
   const [error, setError] = useState("");
 
   const { data, isLoading } = useCompletionReview(campaignId, { enabled: open });
   const review = data?.data;
   const { mutateAsync, isPending } = useReviewCampaignCompletion();
+  // Approve only while verification hands the campaign to the admin; otherwise only cancel.
+  const decision: CompletionDecision = review?.can_approve ? (chosen ?? "approve") : "cancel";
 
   const reset = useCallback(() => {
-    setDecision("approve");
+    setChosen(null);
     setDifficulty(null);
     setReason("");
-    setShiftIds(new Set());
     setError("");
   }, []);
 
@@ -238,7 +453,6 @@ export const CompletionReviewDialog = memo(function CompletionReviewDialog({
     const range = review?.difficulty_range ?? { min: 1, max: 4 };
     return Array.from({ length: range.max - range.min + 1 }, (_, i) => range.min + i);
   }, [review?.difficulty_range]);
-  const shifts = (review?.shifts ?? []).filter((s) => s.has_result);
   const chosenDifficulty = difficulty ?? review?.difficulty ?? null;
 
   const onConfirm = async () => {
@@ -246,10 +460,6 @@ export const CompletionReviewDialog = memo(function CompletionReviewDialog({
     const text = reason.trim();
     if (decision !== "approve" && !text) {
       setError(t("A reason is required"));
-      return;
-    }
-    if (decision === "reject" && shiftIds.size === 0) {
-      setError(t("Pick at least one shift to complete again"));
       return;
     }
     setError("");
@@ -261,18 +471,13 @@ export const CompletionReviewDialog = memo(function CompletionReviewDialog({
           ? { difficulty: chosenDifficulty }
           : {}
         : { reject_reason: text }),
-      ...(decision === "reject" ? { shift_ids: [...shiftIds] } : {}),
     });
     await queryClient.invalidateQueries({ queryKey: ["campaigns"] });
     showMessage({
       type: MessageType.Toast,
       level: MessageLevel.Success,
       title:
-        decision === "approve"
-          ? t("Campaign marked as done successfully")
-          : decision === "reject"
-            ? t("Completion request rejected; campaign returned to active")
-            : t("Campaign cancelled"),
+        decision === "approve" ? t("Campaign marked as done successfully") : t("Campaign cancelled"),
     });
     reset();
     setOpen(false);
@@ -280,9 +485,8 @@ export const CompletionReviewDialog = memo(function CompletionReviewDialog({
 
   const muted = isDark ? "text-zinc-400" : "text-zinc-600";
   const inputDark = isDark && "border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-500";
-  const decisions: { value: CompletionDecision; label: string; disabled?: boolean }[] = [
-    { value: "approve", label: t("Approve") },
-    { value: "reject", label: t("Reject"), disabled: review ? !review.can_reject : false },
+  const decisions: { value: CompletionDecision; label: string }[] = [
+    ...(review?.can_approve ? [{ value: "approve" as const, label: t("Approve") }] : []),
     { value: "cancel", label: t("Cancel campaign") },
   ];
 
@@ -325,19 +529,7 @@ export const CompletionReviewDialog = memo(function CompletionReviewDialog({
             </div>
           ) : (
             <div className="flex min-w-0 flex-col gap-4">
-              <div className={cn("flex flex-wrap gap-x-6 gap-y-1 text-sm", muted)}>
-                <span>
-                  {t("Submitted")}: {formattedDate(review.completion_submitted_at ?? undefined, true)}
-                </span>
-                <span>
-                  {t("Rejected {{n}} of {{max}} times", {
-                    n: review.rejection_count,
-                    max: review.max_rejections,
-                  })}
-                </span>
-              </div>
-
-              <CompletionEvidence review={review} isDark={isDark} />
+              <CompletionEvidence review={review} isDark={isDark} canDecide />
 
               <section
                 className={cn(
@@ -349,7 +541,7 @@ export const CompletionReviewDialog = memo(function CompletionReviewDialog({
                 <RadioGroup
                   value={decision}
                   onValueChange={(value) => {
-                    setDecision(value as CompletionDecision);
+                    setChosen(value as CompletionDecision);
                     setError("");
                   }}
                   disabled={isPending}
@@ -361,23 +553,21 @@ export const CompletionReviewDialog = memo(function CompletionReviewDialog({
                       htmlFor={`completion-${d.value}-${campaignId}`}
                       className={cn(
                         "flex cursor-pointer items-center gap-2 text-sm",
-                        d.disabled && "cursor-not-allowed opacity-50",
                       )}
                     >
                       <RadioGroupItem
                         value={d.value}
                         id={`completion-${d.value}-${campaignId}`}
-                        disabled={d.disabled}
                       />
                       {d.label}
                     </label>
                   ))}
                 </RadioGroup>
-                {!review.can_reject && (
+                {!review.can_approve && (
                   <p className={cn("text-xs", muted)}>
-                    {t("Already rejected {{max}} times: approve or cancel the campaign.", {
-                      max: review.max_rejections,
-                    })}
+                    {t(
+                      "Result verification decides this campaign: it is completed once every meeting point is verified. You can only cancel it here.",
+                    )}
                   </p>
                 )}
 
@@ -408,39 +598,6 @@ export const CompletionReviewDialog = memo(function CompletionReviewDialog({
                         ))}
                       </SelectContent>
                     </Select>
-                  </div>
-                )}
-
-                {decision === "reject" && (
-                  <div className="flex flex-col gap-2">
-                    <p className={cn("text-sm", muted)}>
-                      {t(
-                        "The campaign returns to running; the shifts you pick go back to awaiting result until their result is saved again. Owners and managers are told.",
-                      )}
-                    </p>
-                    <Label className={cn(isDark ? "text-zinc-200" : "text-zinc-800")}>
-                      {t("Shifts to complete again")} <span className="text-destructive">*</span>
-                    </Label>
-                    <div className="flex flex-col gap-1.5">
-                      {shifts.map((s) => (
-                        <label key={s.shift_id} className="flex items-center gap-2 text-sm">
-                          <Checkbox
-                            checked={shiftIds.has(s.shift_id)}
-                            disabled={isPending}
-                            onCheckedChange={(v) =>
-                              setShiftIds((prev) => {
-                                const next = new Set(prev);
-                                if (v) next.add(s.shift_id);
-                                else next.delete(s.shift_id);
-                                return next;
-                              })
-                            }
-                          />
-                          {s.meeting_point_name} · {format(new Date(s.start_at), "dd/MM HH:mm")}–
-                          {format(new Date(s.end_at), "HH:mm")}
-                        </label>
-                      ))}
-                    </div>
                   </div>
                 )}
 
@@ -488,11 +645,7 @@ export const CompletionReviewDialog = memo(function CompletionReviewDialog({
               onClick={() => void onConfirm().catch(() => undefined)}
               disabled={isPending || !review}
             >
-              {decision === "approve"
-                ? t("Approve")
-                : decision === "reject"
-                  ? t("Reject")
-                  : t("Cancel campaign")}
+              {decision === "approve" ? t("Approve") : t("Cancel campaign")}
             </Button>
           </DialogFooter>
         </DialogContent>

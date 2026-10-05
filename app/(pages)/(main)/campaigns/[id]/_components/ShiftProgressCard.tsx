@@ -1,10 +1,11 @@
 import { memo, useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
-import { TbChevronDown } from 'react-icons/tb';
+import { TbChevronDown, TbExternalLink } from 'react-icons/tb';
 
 import type { ICampaign } from '@/apis/campaign/models/campaign';
 import { useShiftOverview, useShiftResult, type IShiftOverviewRow } from '@/apis/campaign/shiftResult';
+import { ReviewSectionCard } from '@/components/admin/shared/ReviewSection';
 import { CollapsibleCard } from '@/components/client/shared/CollapsibleCard';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { PILL_TONE } from '@/components/ui/Pill';
@@ -23,10 +24,10 @@ import { ShiftResultAmounts, ShiftResultIncludedMedia, ShiftResultWastePoints } 
 
 const LEGEND = ['upcoming', 'running', 'awaiting_result', 'ended', 'off'] as const;
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ label, value, className, labelClassName }: { label: string; value: string; className?: string; labelClassName?: string }) {
   return (
-    <div className="flex flex-col rounded-lg border border-[rgba(136,122,71,0.3)] bg-white/70 px-3 py-2">
-      <span className="text-xs text-foreground-tertiary">{label}</span>
+    <div className={cn('flex flex-col rounded-lg border px-3 py-2', className ?? 'border-[rgba(136,122,71,0.3)] bg-white/70')}>
+      <span className={cn('text-xs', labelClassName ?? 'text-foreground-tertiary')}>{label}</span>
       <span className="font-semibold tabular-nums">{value}</span>
     </div>
   );
@@ -99,19 +100,20 @@ const ShiftCellPopover = memo(function ShiftCellPopover({
         <div className="mb-2 flex flex-col gap-1.5">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="font-semibold">{title}</span>
-            <div className="flex flex-wrap items-center gap-1.5">
-              <ShiftStatusPill status={row.status} />
-              {row.reopened_at && <ShiftReopenedPill />}
-            </div>
+            <Link
+              href={`/campaigns/${campaign.id}/shifts/${row.shift_id}`}
+              className="inline-flex items-center gap-1 text-sm text-button-accent underline underline-offset-2 hover:opacity-80"
+            >
+              {t('Open shift page')}
+              <TbExternalLink className="size-4" aria-hidden />
+            </Link>
+          </div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <ShiftStatusPill status={row.status} />
+            {row.reopened_at && <ShiftReopenedPill />}
           </div>
           {row.reopened_at && <ShiftReopenedNotice reason={row.reopen_reason} />}
           <span className="text-xs tabular-nums text-foreground-tertiary">{hours}</span>
-          <Link
-            href={`/campaigns/${campaign.id}/shifts/${row.shift_id}`}
-            className="w-fit text-sm text-button-accent underline-offset-2 hover:underline"
-          >
-            {t('Open shift page')}
-          </Link>
         </div>
 
         <Section title={t('People')} defaultOpen>
@@ -171,13 +173,43 @@ const ShiftCellPopover = memo(function ShiftCellPopover({
  * point grid coloured by status (each cell opens a popover with the shift's result), and the totals
  * so far. Shown in the campaign's Progress tab.
  */
-export const ShiftProgressCard = memo(function ShiftProgressCard({ campaign }: { campaign: ICampaign }) {
+export const ShiftProgressCard = memo(function ShiftProgressCard({
+  campaign,
+  variant = 'page',
+  isDark = false,
+  hideStats = false,
+  defaultOpen = true,
+}: {
+  campaign: ICampaign;
+  /** Leave out the totals (shown elsewhere, e.g. the admin's completion summary). */
+  hideStats?: boolean;
+  defaultOpen?: boolean;
+  /** `admin`: the admin review card (zinc, `isDark`) instead of the campaign page's card. */
+  variant?: 'page' | 'admin';
+  isDark?: boolean;
+}) {
   const { t } = useTranslation('common');
+  const admin = variant === 'admin';
+  const dark = admin && isDark;
+  const ui = admin
+    ? {
+        stat: dark ? 'border-zinc-700 bg-zinc-800/60' : 'border-zinc-200 bg-zinc-50',
+        muted: 'text-muted-foreground',
+        rule: dark ? 'border-zinc-700' : 'border-zinc-200',
+        ring: 'data-[state=open]:ring-zinc-400/50',
+      }
+    : {
+        stat: undefined,
+        muted: 'text-foreground-tertiary',
+        rule: 'border-[rgba(136,122,71,0.2)]',
+        ring: 'data-[state=open]:ring-button-accent/40',
+      };
+  const toneOf = (status: keyof typeof SHIFT_STATUS_TONE) => PILL_TONE[SHIFT_STATUS_TONE[status]][dark ? 'dark' : 'light'];
   const { data } = useShiftOverview(campaign.id, { enabled: Boolean(campaign.id) });
   const overview = data?.data;
   if (!overview) return null;
   if (overview.shifts.length === 0) {
-    return <p className="text-sm text-foreground-tertiary">{t('No shifts yet')}</p>;
+    return <p className={cn('text-sm', admin ? 'text-muted-foreground' : 'text-foreground-tertiary')}>{t('No shifts yet')}</p>;
   }
 
   const days = campaign.days ?? [];
@@ -189,30 +221,37 @@ export const ShiftProgressCard = memo(function ShiftProgressCard({ campaign }: {
     points[index]?.name?.trim() || t('Meeting point {{n}}', { n: index + 1 });
   const totals = overview.totals;
 
-  return (
-    <CollapsibleCard title={t('Shift progress')}>
+  const content = (
       <div className="flex flex-col gap-4">
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-          <Stat
-            label={t('Shifts ended')}
-            value={`${totals.ended_shifts} / ${totals.active_shifts}`}
-          />
-          <Stat label={t('Present / registered')} value={`${totals.present} / ${totals.registered}`} />
-          <Stat
-            label={t('Attendance rate')}
-            value={totals.present_rate == null ? '—' : `${Math.round(totals.present_rate * 100)}%`}
-          />
-          <Stat label={t('Bags')} value={String(totals.waste_bags)} />
-          <Stat label={t('Weight (kg)')} value={String(totals.waste_kg)} />
-          <Stat
-            label={t('Waste points cleaned / partly / not handled')}
-            value={`${totals.reports.cleaned} / ${totals.reports.partial} / ${totals.reports.untouched}`}
-          />
-        </div>
+        {!hideStats && (
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+            <Stat
+              className={ui.stat}
+              labelClassName={ui.muted}
+              label={t('Shifts ended')}
+              value={`${totals.ended_shifts} / ${totals.active_shifts}`}
+            />
+            <Stat className={ui.stat} labelClassName={ui.muted} label={t('Present / registered')} value={`${totals.present} / ${totals.registered}`} />
+            <Stat
+              className={ui.stat}
+              labelClassName={ui.muted}
+              label={t('Attendance rate')}
+              value={totals.present_rate == null ? '—' : `${Math.round(totals.present_rate * 100)}%`}
+            />
+            <Stat className={ui.stat} labelClassName={ui.muted} label={t('Bags')} value={String(totals.waste_bags)} />
+            <Stat className={ui.stat} labelClassName={ui.muted} label={t('Weight (kg)')} value={String(totals.waste_kg)} />
+            <Stat
+              className={ui.stat}
+              labelClassName={ui.muted}
+              label={t('Waste points cleaned / partly / not handled')}
+              value={`${totals.reports.cleaned} / ${totals.reports.partial} / ${totals.reports.untouched}`}
+            />
+          </div>
+        )}
 
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="text-left text-xs text-foreground-tertiary">
+            <thead className={cn('text-left text-xs', ui.muted)}>
               <tr>
                 <th className="py-2 pr-3 font-medium">{t('Day')}</th>
                 {points.map((p, i) => (
@@ -224,22 +263,22 @@ export const ShiftProgressCard = memo(function ShiftProgressCard({ campaign }: {
             </thead>
             <tbody>
               {days.map((day, di) => (
-                <tr key={day.id ?? di} className="border-t border-[rgba(136,122,71,0.2)]">
+                <tr key={day.id ?? di} className={cn('border-t', ui.rule)}>
                   <td className="whitespace-nowrap py-2 pr-3">
                     {t('Day {{n}}', { n: di + 1 })}
-                    <span className="block text-xs text-foreground-tertiary">
+                    <span className={cn('block text-xs', ui.muted)}>
                       {format(new Date(day.start_at), 'dd/MM')}
                     </span>
                   </td>
                   {points.map((p, pi) => {
                     const s = cell.get(`${day.id}:${p.id}`);
-                    if (!s) return <td key={p.id ?? pi} className="py-2 pr-3 text-foreground-tertiary">—</td>;
-                    const tone = PILL_TONE[SHIFT_STATUS_TONE[s.status]].light;
+                    if (!s) return <td key={p.id ?? pi} className={cn('py-2 pr-3', ui.muted)}>—</td>;
+                    const tone = toneOf(s.status);
                     const body = (
                       <>
                         <span className="block font-medium">{t(SHIFT_STATUS_LABEL[s.status])}</span>
                         {s.reopened_at && (
-                          <span className="block text-xs font-semibold text-red-700">{t('Needs more')}</span>
+                          <span className={cn('block text-xs font-semibold', dark ? 'text-red-300' : 'text-red-700')}>{t('Needs more')}</span>
                         )}
                         {s.status !== 'off' && (
                           <span className="block text-xs tabular-nums opacity-80">
@@ -264,7 +303,8 @@ export const ShiftProgressCard = memo(function ShiftProgressCard({ campaign }: {
                             <button
                               type="button"
                               className={cn(
-                                'block w-full rounded-lg border px-3 py-2 text-left hover:opacity-80 data-[state=open]:ring-2 data-[state=open]:ring-button-accent/40',
+                                'block w-full rounded-lg border px-3 py-2 text-left hover:opacity-80 data-[state=open]:ring-2',
+                                ui.ring,
                                 tone,
                               )}
                             >
@@ -281,15 +321,24 @@ export const ShiftProgressCard = memo(function ShiftProgressCard({ campaign }: {
           </table>
         </div>
 
-        <div className="flex flex-wrap gap-3 text-xs text-foreground-tertiary">
+        <div className={cn('flex flex-wrap gap-3 text-xs', ui.muted)}>
           {LEGEND.map((status) => (
             <span key={status} className="flex items-center gap-1.5">
-              <span className={cn('inline-block size-3 rounded-sm border', PILL_TONE[SHIFT_STATUS_TONE[status]].light)} />
+              <span className={cn('inline-block size-3 rounded-sm border', toneOf(status))} />
               {t(SHIFT_STATUS_LABEL[status])}
             </span>
           ))}
         </div>
       </div>
+  );
+
+  return admin ? (
+    <ReviewSectionCard title={t('Shift progress')} defaultOpen={defaultOpen} isDark={isDark}>
+      {content}
+    </ReviewSectionCard>
+  ) : (
+    <CollapsibleCard title={t('Shift progress')} defaultOpen={defaultOpen}>
+      {content}
     </CollapsibleCard>
   );
 });

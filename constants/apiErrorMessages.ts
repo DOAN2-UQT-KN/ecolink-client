@@ -66,6 +66,19 @@ const API_ERROR_MESSAGES: Record<string, string> = {
   CAMPAIGN_REPORTS_UNHANDLED: "Give a reason for every trash report no shift handled",
   CAMPAIGN_COMPLETION_REJECT_LIMIT:
     "This completion was already rejected 3 times; approve or cancel the campaign",
+  CAMPAIGN_COMPLETION_NOT_AWAITING_ADMIN:
+    "Result verification has not handed this campaign to the admin; it can only be cancelled",
+  CAMPAIGN_COMPLETION_VERIFICATION_GONE:
+    "Residents now verify each meeting point; open the campaign's result verification page",
+  RESULT_PHOTO_INVALID: "The photo is missing, larger than 15 MB or not an image",
+  MEETING_POINT_VOTE_CLOSED: "Voting on this meeting point is closed",
+  MEETING_POINT_VOTE_NOT_ALLOWED:
+    "Members of the organization, the campaign's managers and its volunteers cannot vote",
+  MEETING_POINT_VOTE_REASON_REQUIRED: "Add a note or a photo to say what is not clean.",
+  MEETING_POINT_VOTE_REPORTS_REQUIRED: "Pick at least one waste point of this meeting point that is not clean.",
+  MEETING_POINT_VOTE_LIMIT: "You have reached the 20 votes allowed per day; try again later",
+  MEETING_POINT_NOT_FLAGGED: "This meeting point is no longer flagged; reload to see its status",
+  MEETING_POINT_REJECT_REPORTS_REQUIRED: "Pick at least one waste point of this meeting point that did not pass.",
   SHIFT_MIN_REQUIRED: "A running shift needs at least one volunteer; turn the shift off instead",
   CAMPAIGN_LEADER_NOT_MANAGER:
     "A shift leader must be one of the campaign's managers or an owner of its organization",

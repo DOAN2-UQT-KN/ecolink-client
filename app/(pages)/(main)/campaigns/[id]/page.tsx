@@ -16,7 +16,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { CampaignTabs } from './_components/CampaignTabs';
 import { CampaignDetailProvider } from './_context/CampaignDetailContext';
 import { useCampaignDetail } from './_hooks/useCampaignDetail';
-import { TbArrowRight, TbPencil } from 'react-icons/tb';
+import { TbArrowRight, TbChecklist, TbPencil } from 'react-icons/tb';
 import { Button } from '@/components/client/shared/Button';
 import { STATUS } from '@/constants/status';
 import { CAMPAIGN_REGISTRABLE_STATUSES, CAMPAIGN_STATUS } from '@/constants/campaignLifecycle';
@@ -25,10 +25,10 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
 
 import { CampaignAttendanceCheckInHandler } from './_components/CampaignAttendanceCheckInHandler';
-import { CampaignCompletionVerifyButton } from './_components/CampaignCompletionVerifyButton';
 import { JoinShiftsDialog } from './_components/JoinShiftsDialog';
 import { CancelCampaignButton } from './_components/CancelCampaignButton';
 import { SubmitCompletionDialog } from './_components/SubmitCompletionDialog';
+import { VerificationStatusCard } from './_components/VerificationStatusCard';
 import { format } from 'date-fns';
 import { useUpdateMyRegistrations } from '@/apis/campaign/registration';
 import showMessage, { MessageLevel, MessageType } from '@/utils/showMessage';
@@ -88,7 +88,8 @@ function CampaignDetailBody() {
     canManageCampaign &&
     (campaign?.status === STATUS.ACTIVE || campaign?.status === STATUS.INREVIEW);
 
-  // Spec 5.2: the admin rejected the completion and reopened some shifts.
+  // Result verification did not accept some waste points: the campaign is back to running and the
+  // shifts that handled them are reopened, with each point's reason.
   const reopenedShifts = (campaign?.shifts ?? []).filter((sh) => sh.reopened_at);
   const showCompletionRejected =
     canManageCampaign &&
@@ -106,11 +107,10 @@ function CampaignDetailBody() {
   const showAwaitingAdminCompletion =
     canManageCampaign && campaign?.status === STATUS.WAITING_CONFIRMED;
 
+  // Result verification (anyone signed in): vote while it waits for completion, read-only once completed.
   const showCompletionVerification =
-    campaign?.status === STATUS.WAITING_CONFIRMED ||
-    campaign?.status === STATUS.COMPLETED;
-
-  const completionVerification = campaign?.completion_verification;
+    Boolean(campaign?.completion_submitted_at) &&
+    (campaign?.status === STATUS.WAITING_CONFIRMED || campaign?.status === STATUS.COMPLETED);
 
   const queryClient = useQueryClient();
 
@@ -210,12 +210,19 @@ function CampaignDetailBody() {
         {(showCompletionVerification || showJoinCta) && (
           <div className="flex flex-wrap items-center justify-end gap-2">
             {showCompletionVerification ? (
-              <CampaignCompletionVerifyButton
-                campaignId={campaignId}
-                cleanCount={completionVerification?.clean_count ?? 0}
-                notCleanCount={completionVerification?.not_clean_count ?? 0}
-                myVerification={completionVerification?.my_verification ?? null}
-              />
+              <Button
+                type="button"
+                variant={campaign.status === STATUS.COMPLETED ? 'outlined-brown' : 'brown'}
+                size="medium"
+                iconLeft={<TbChecklist className="size-4" aria-hidden />}
+                onClick={() =>
+                  isAuthenticated
+                    ? router.push(`/campaigns/${campaignId}/verify`)
+                    : router.push(`/sign-in?redirect=${encodeURIComponent(`/campaigns/${campaignId}/verify`)}`)
+                }
+              >
+                {t('Verify the result')}
+              </Button>
             ) : null}
             {isRegistered ? (
               <>
@@ -279,7 +286,7 @@ function CampaignDetailBody() {
             role="status"
           >
             <p className="font-semibold">
-              {t('The admin did not approve the completion yet ({{n}}/{{max}}).', {
+              {t('Result verification did not accept the completion ({{n}}/{{max}}).', {
                 n: campaign.completion_rejection_count ?? 0,
                 max: 3,
               })}
@@ -296,7 +303,7 @@ function CampaignDetailBody() {
           </div>
         ) : null}
 
-        {showAwaitingAdminCompletion ? (
+        {/* {showAwaitingAdminCompletion ? (
           <div
             className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
             role="status"
@@ -305,7 +312,8 @@ function CampaignDetailBody() {
               'Campaign awaiting admin completion hint',
             )}
           </div>
-        ) : null}
+        ) : null} */}
+        {showAwaitingAdminCompletion ? <VerificationStatusCard campaign={campaign} /> : null}
 
         {canOwnerSubmitCompletion || campaign.can_cancel_campaign ? (
           <div className="flex flex-wrap items-center justify-end gap-2">

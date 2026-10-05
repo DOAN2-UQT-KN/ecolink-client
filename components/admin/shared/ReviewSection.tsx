@@ -24,12 +24,15 @@ export function ReviewRow({ label, value }: { label: string; value: ReactNode })
 export function ReviewSectionCard({
   title,
   hint,
+  aside,
   defaultOpen = false,
   isDark,
   children,
 }: {
   title: string;
   hint?: string;
+  /** Next to the chevron, e.g. a status pill. */
+  aside?: ReactNode;
   defaultOpen?: boolean;
   isDark: boolean;
   children: ReactNode;
@@ -54,7 +57,10 @@ export function ReviewSectionCard({
             <span className="truncate text-xs text-muted-foreground">{hint}</span>
           )}
         </div>
-        <TbChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform group-data-[state=open]/section:rotate-180" />
+        <div className="flex shrink-0 items-center gap-2">
+          {aside}
+          <TbChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform group-data-[state=open]/section:rotate-180" />
+        </div>
       </CollapsibleTrigger>
       <CollapsibleContent className="flex flex-col gap-2 px-4 pb-4">
         {children}

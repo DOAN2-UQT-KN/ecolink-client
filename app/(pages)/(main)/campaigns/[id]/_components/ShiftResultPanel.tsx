@@ -4,14 +4,20 @@ import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { TbFlagCheck, TbPencil, TbPhotoPlus, TbVideo } from 'react-icons/tb';
 
+import type { LatLngLiteral } from 'leaflet';
+
 import {
   useAddShiftMedia,
   useEndShiftEarly,
   useRemoveShiftMedia,
   useSaveShiftResult,
   useShiftResult,
+  useUploadResultPhoto,
+  type IResultPhotoCheck,
   type IShiftMedia,
   type IShiftResultReport,
+  type ResultCheckLevel,
+  type ResultPhotoSide,
 } from '@/apis/campaign/shiftResult';
 import type { IIncident } from '@/apis/incident/models/incident';
 import { uploadToCloudinary } from '@/app/(pages)/(main)/incidents/create/_services/upload.service';
@@ -27,12 +33,19 @@ import { ConfirmPopoverModal } from '@/modules/OrganizationCard/components/Confi
 import useAuthStore from '@/stores/useAuthStore';
 import showMessage, { MessageLevel, MessageType } from '@/utils/showMessage';
 import { ShiftReopenedNotice, ShiftReopenedPill, ShiftStatusPill } from './ShiftStatusPill';
-import { REPORT_LABEL, ShiftResultView, Thumb, type ReportChoice } from './ShiftResultView';
+import { CheckedThumb, REPORT_LABEL, ShiftResultView, Thumb, type ReportChoice } from './ShiftResultView';
+import { CHECK_LEVEL_LABEL, CHECK_LEVEL_TONE, Layer1Summary } from './ResultVerificationBadges';
+import { ResultPhotoPinDialog } from './ResultPhotoPinDialog';
 
 /** Files picked at once, and the video size limit. */
 const MAX_RESULT_MEDIA = 20;
 const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
 const MAX_PHOTOS_PER_SIDE = 10;
+/** Waste point photos go up as originals (the server reads their EXIF): at most 15 MB each. */
+const MAX_RESULT_PHOTO_BYTES = 15 * 1024 * 1024;
+const LEVEL_RANK: Record<ResultCheckLevel, number> = { pass: 0, warn: 1, fail: 2 };
+
+const isImageFile = (file: File) => file.type.startsWith('image/') || /\.(heic|heif)$/i.test(file.name);
 
 type ReportDraft = { status: ReportChoice; before: string[]; after: string[] };
 
@@ -120,6 +133,113 @@ function UploadButton({
 }
 
 /**
+ * Photos before / after of a waste point (result verification, Layer 1): picked, pinned on the map
+ * (starting at the waste point), then uploaded one by one as originals; the server grades each.
+ */
+function ResultPhotoButton({
+  campaignId,
+  shiftId,
+  reportId,
+  side,
+  remaining,
+  defaultPin,
+  pointTitle,
+  onUploaded,
+}: {
+  campaignId: string;
+  shiftId: string;
+  reportId: string;
+  side: ResultPhotoSide;
+  remaining: number;
+  defaultPin: LatLngLiteral | null;
+  pointTitle: string;
+  onUploaded: (items: Array<{ url: string; check: IResultPhotoCheck }>) => void;
+}) {
+  const { t } = useTranslation('common');
+  const [pending, setPending] = useState<File[]>([]);
+  const [busy, setBusy] = useState(false);
+  const { mutateAsync: upload } = useUploadResultPhoto();
+
+  const onChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = '';
+    const ok: File[] = [];
+    for (const file of files) {
+      if (!isImageFile(file)) {
+        showMessage({ type: MessageType.Toast, level: MessageLevel.Warning, title: t('Use images only.') });
+      } else if (file.size > MAX_RESULT_PHOTO_BYTES) {
+        showMessage({
+          type: MessageType.Toast,
+          level: MessageLevel.Error,
+          title: t('{{name}} is larger than {{mb}} MB.', { name: file.name, mb: 15 }),
+        });
+      } else {
+        ok.push(file);
+      }
+    }
+    if (ok.length > remaining) {
+      showMessage({
+        type: MessageType.Toast,
+        level: MessageLevel.Warning,
+        title: t('Only {{count}} files were added because of the limit.', { count: remaining }),
+      });
+    }
+    setPending(ok.slice(0, remaining));
+  };
+
+  const onPin = async (pin: LatLngLiteral) => {
+    const files = pending;
+    setPending([]);
+    setBusy(true);
+    const out: Array<{ url: string; check: IResultPhotoCheck }> = [];
+    try {
+      for (const file of files) {
+        try {
+          const res = await upload({
+            campaign_id: campaignId,
+            shift_id: shiftId,
+            file,
+            report_id: reportId,
+            side,
+            pin_lat: pin.lat,
+            pin_lng: pin.lng,
+          });
+          out.push(res.data);
+        } catch {
+          // The error is already shown; carry on with the other photos.
+        }
+      }
+    } finally {
+      setBusy(false);
+      if (out.length > 0) onUploaded(out);
+    }
+  };
+
+  return (
+    <>
+      <label
+        className={cn(
+          'inline-flex w-fit cursor-pointer items-center gap-1.5 rounded-lg border border-dashed border-[rgba(136,122,71,0.6)] px-3 py-2 text-sm text-button-accent hover:bg-white/70',
+          busy && 'pointer-events-none opacity-60',
+        )}
+      >
+        <TbPhotoPlus className="size-4" aria-hidden />
+        {busy ? `${t('Uploading')}…` : t('Add photos')}
+        <input type="file" className="hidden" accept="image/*,.heic,.heif" multiple onChange={onChange} disabled={busy} />
+      </label>
+      <ResultPhotoPinDialog
+        open={pending.length > 0}
+        count={pending.length}
+        defaultPin={defaultPin}
+        pointTitle={pointTitle}
+        onCancel={() => setPending([])}
+        onConfirm={(pin) => void onPin(pin)}
+      />
+    </>
+  );
+}
+
+/**
  * The result of one shift (spec 4.2). Its leader or a campaign manager fills it once the shift
  * has started: each waste point of the meeting point (cleaned / partly done / not handled, with
  * photos before and after), photos picked from the shift's pool, a description and the amount
@@ -175,6 +295,8 @@ export const ShiftResultPanel = memo(function ShiftResultPanel({
 
   // The form, filled from the saved result.
   const [drafts, setDrafts] = useState<Record<string, ReportDraft>>({});
+  /** Layer 1 checks of the waste point photos: saved ones from the result, new ones from the upload. */
+  const [checks, setChecks] = useState<Record<string, IResultPhotoCheck | null>>({});
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [description, setDescription] = useState('');
   const [bags, setBags] = useState('');
@@ -184,10 +306,13 @@ export const ShiftResultPanel = memo(function ShiftResultPanel({
   const resetForm = () => {
     if (!view) return;
     const next: Record<string, ReportDraft> = {};
+    const nextChecks: Record<string, IResultPhotoCheck | null> = {};
     for (const r of view.result?.reports ?? []) {
       next[r.report_id] = { status: r.status, before: r.before_urls, after: r.after_urls };
+      for (const p of r.layer1?.photos ?? []) nextChecks[p.url] = p.check;
     }
     setDrafts(next);
+    setChecks(nextChecks);
     setPicked(new Set(view.media.filter((m) => m.included_in_result).map((m) => m.id)));
     setDescription(view.result?.description ?? '');
     setBags(view.result?.waste_bags != null ? String(view.result.waste_bags) : '');
@@ -405,6 +530,21 @@ export const ShiftResultPanel = memo(function ShiftResultPanel({
           ) : (
             view.report_ids.map((id) => {
               const d = drafts[id] ?? { status: 'none' as const, before: [], after: [] };
+              const saved = view.result?.reports.find((r) => r.report_id === id);
+              const unchanged =
+                saved != null &&
+                saved.before_urls.join('\n') === d.before.join('\n') &&
+                saved.after_urls.join('\n') === d.after.join('\n');
+              const photos = [...d.before, ...d.after];
+              const worst = photos.reduce<ResultCheckLevel>((acc, u) => {
+                const level = checks[u]?.level ?? 'warn';
+                return LEVEL_RANK[level] > LEVEL_RANK[acc] ? level : acc;
+              }, 'pass');
+              const incident = reportById.get(id);
+              const defaultPin =
+                incident?.latitude != null && incident?.longitude != null
+                  ? { lat: incident.latitude, lng: incident.longitude }
+                  : null;
               return (
                 <div key={id} className="rounded-lg border border-[rgba(136,122,71,0.3)] bg-white/70 p-3">
                   <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
@@ -429,6 +569,16 @@ export const ShiftResultPanel = memo(function ShiftResultPanel({
                       ))}
                     </div>
                   </div>
+                  {d.status !== 'none' &&
+                    (unchanged && saved?.layer1 ? (
+                      <Layer1Summary layer1={saved.layer1} className="mb-2" />
+                    ) : photos.length > 0 ? (
+                      <span className="mb-2 flex flex-wrap items-center gap-1.5 text-xs text-foreground-tertiary">
+                        {t('Photo check')}
+                        <Pill tone={CHECK_LEVEL_TONE[worst]}>{t(CHECK_LEVEL_LABEL[worst])}</Pill>
+                        {t('The pair of photos is checked again when you save.')}
+                      </span>
+                    ) : null)}
                   {d.status !== 'none' && (
                     <div className="grid gap-3 sm:grid-cols-2">
                       {(['before', 'after'] as const).map((side) => (
@@ -438,19 +588,29 @@ export const ShiftResultPanel = memo(function ShiftResultPanel({
                           </span>
                           <div className="flex flex-wrap gap-2">
                             {d[side].map((u) => (
-                              <Thumb
+                              <CheckedThumb
                                 key={u}
                                 url={u}
+                                check={checks[u] ?? null}
                                 onRemove={() => setDraft(id, { [side]: d[side].filter((x) => x !== u) })}
                               />
                             ))}
                           </div>
                           {d[side].length < MAX_PHOTOS_PER_SIDE && (
-                            <UploadButton
-                              label={t('Add photos')}
-                              accept="image/*"
-                              allowVideo={false}
-                              onUploaded={(items) =>
+                            <ResultPhotoButton
+                              campaignId={campaignId}
+                              shiftId={shiftId}
+                              reportId={id}
+                              side={side}
+                              remaining={MAX_PHOTOS_PER_SIDE - d[side].length}
+                              defaultPin={defaultPin}
+                              pointTitle={reportTitle(id)}
+                              onUploaded={(items) => {
+                                setChecks((prev) => {
+                                  const next = { ...prev };
+                                  for (const i of items) next[i.url] = i.check;
+                                  return next;
+                                });
                                 setDrafts((prev) => {
                                   const cur = prev[id] ?? d;
                                   return {
@@ -460,8 +620,8 @@ export const ShiftResultPanel = memo(function ShiftResultPanel({
                                       [side]: [...cur[side], ...items.map((i) => i.url)].slice(0, MAX_PHOTOS_PER_SIDE),
                                     },
                                   };
-                                })
-                              }
+                                });
+                              }}
                             />
                           )}
                         </div>

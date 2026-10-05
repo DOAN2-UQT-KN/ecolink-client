@@ -40,13 +40,11 @@ export interface ICampaign {
     my_vote?: number | null;
   };
 
-  completion_verification?: {
-    clean_count?: number;
-    not_clean_count?: number;
-    my_verification?: number | null;
-    /** ≥ 30% "not clean" out of ≥ 5 answers: the admin should look twice (spec 5.1). */
-    flagged?: boolean;
-  };
+  /**
+   * Result verification handed the completion to the admin (rejected 3 times, or no trash point
+   * declared cleaned): the admin approves or cancels it.
+   */
+  completion_awaiting_admin?: boolean;
 
   saved?: boolean;
   /** APPROVED when the viewer holds at least one shift (kept for older screens). */
