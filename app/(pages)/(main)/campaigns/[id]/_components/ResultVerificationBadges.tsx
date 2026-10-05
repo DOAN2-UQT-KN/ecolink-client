@@ -86,6 +86,9 @@ export function photoCheckProblems(check: IResultPhotoCheck | null | undefined, 
   return out;
 }
 
+/** Problems of a single photo, already told by its badge's tooltip. */
+const PHOTO_ISSUE_CODES = new Set<string>(['photo_fail', 'photo_warn', 'legacy_photo']);
+
 export function layer1IssueText(issue: ILayer1Issue, t: T): string {
   const text = t(ISSUE_LABEL[issue.code] ?? issue.code);
   if (!issue.side) return text;
@@ -151,16 +154,23 @@ export const Layer1LevelBadge = memo(function Layer1LevelBadge({
 export const Layer1Summary = memo(function Layer1Summary({
   layer1,
   showIssues = true,
+  photoIssues = false,
   isDark,
   className,
 }: {
   layer1: ILayer1;
   showIssues?: boolean;
+  /** Also list a photo's own problems; off where the photos show with badges (hover tells them). */
+  photoIssues?: boolean;
   isDark?: boolean;
   className?: string;
 }) {
   const { t } = useTranslation('common');
-  const issues = [...new Set(layer1.issues.map((i) => layer1IssueText(i, t)))];
+  const issues = [
+    ...new Set(
+      layer1.issues.filter((i) => photoIssues || !PHOTO_ISSUE_CODES.has(i.code)).map((i) => layer1IssueText(i, t)),
+    ),
+  ];
   return (
     <div className={cn('flex flex-col gap-1', className)}>
       <Layer1LevelBadge level={layer1.level} isDark={isDark} />

@@ -1759,7 +1759,6 @@
   "Verify the result": "Xác thực kết quả",
   "View on map": "Xem trên bản đồ",
   "Volunteers who attended the campaign cannot vote.": "Tình nguyện viên đã tham gia chiến dịch không được bỏ phiếu.",
-  "Votes ({{n}})": "Phiếu ({{n}})",
   "Voting": "Đang bỏ phiếu",
   "Voting closes in {{time}}": "Đóng bỏ phiếu sau {{time}}",
   "Voting has closed; the result is being decided": "Đã đóng bỏ phiếu; đang chờ quyết định",
@@ -1771,13 +1770,10 @@
   "Where were these photos taken?": "Ảnh được chụp ở đâu?",
   "You can still mark the campaign done, but these waste points are more likely to be flagged. Fix their photos in the shift results first if you can.": "Bạn vẫn có thể báo hoàn thành, nhưng các điểm rác này dễ bị gắn cờ hơn. Nếu được, hãy sửa ảnh trong kết quả ca trước.",
   "Your vote was saved": "Đã lưu phiếu của bạn",
-  "weight {{w}}": "trọng số {{w}}",
   "{{h}} h {{m}} min": "{{h}} giờ {{m}} phút",
   "{{m}} m away": "cách {{m}} m",
   "{{m}} min": "{{m}} phút",
   "{{name}} is larger than {{mb}} MB.": "{{name}} lớn hơn {{mb}} MB.",
-  "{{n}} clean": "{{n}} sạch",
-  "{{n}} not clean": "{{n}} chưa sạch",
   "Result verification has not handed this campaign to the admin; it can only be cancelled": "Cơ chế xác thực chưa chuyển chiến dịch này cho quản trị viên; chỉ có thể huỷ",
   "The photo is missing, larger than 15 MB or not an image": "Thiếu ảnh, ảnh lớn hơn 15 MB hoặc không phải ảnh",
   "Members of the organization, the campaign's managers and its volunteers cannot vote": "Thành viên tổ chức, người quản lý và tình nguyện viên của chiến dịch không được bỏ phiếu",
@@ -1813,5 +1809,8 @@
   "{{verified}} of {{total}} meeting points verified, {{flagged}} flagged, {{rejected}} not accepted.": "{{verified}}/{{total}} điểm tập trung đã xác thực, {{flagged}} bị gắn cờ, {{rejected}} không được công nhận.",
   "How verification works": "Cách xác thực hoạt động",
   "Your vote was removed": "Đã huỷ phiếu của bạn",
-  "Click again to remove your vote": "Bấm lần nữa để huỷ phiếu"
+  "Click again to remove your vote": "Bấm lần nữa để huỷ phiếu",
+  "Votes ({{n}})": "Phiếu ({{n}})",
+  "weight {{w}}": "trọng số {{w}}",
+  "View results": "Xem kết quả"
 }

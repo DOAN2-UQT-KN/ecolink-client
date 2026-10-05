@@ -179,7 +179,7 @@ export const SubmitCompletionDialog = memo(function SubmitCompletionDialog({
                           {reportTitle(r.report_id, r.report?.title)}
                           {point && <span className="font-normal text-amber-900/80"> · {point}</span>}
                         </span>
-                        {r.layer1 && <Layer1Summary layer1={r.layer1} />}
+                        {r.layer1 && <Layer1Summary layer1={r.layer1} photoIssues />}
                       </div>
                     );
                   })}

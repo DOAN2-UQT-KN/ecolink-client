@@ -183,12 +183,14 @@ function VerificationMeetingPoint({
                   <Pill tone={v.value === "up" ? "green" : "red"} isDark={isDark}>
                     {v.value === "up" ? t("Clean") : t("Not clean")}
                   </Pill>
-                  <Pill tone={v.weight > 0 ? "brand" : "neutral"} isDark={isDark}>
-                    {t("weight {{w}}", { w: v.weight })}
-                  </Pill>
+                  {v.weight != null && (
+                    <Pill tone={v.weight > 0 ? "brand" : "neutral"} isDark={isDark}>
+                      {t("weight {{w}}", { w: v.weight })}
+                    </Pill>
+                  )}
                 </span>
                 <span className={cn("text-xs", muted)}>
-                  {t(WEIGHT_REASON_LABEL[v.weight_reason] ?? v.weight_reason)}
+                  {v.weight_reason && t(WEIGHT_REASON_LABEL[v.weight_reason] ?? v.weight_reason)}
                   {v.distance_m != null && ` · ${t("{{m}} m away", { m: Math.round(v.distance_m) })}`}
                   {" · "}
                   {formattedDate(v.updated_at, true)}

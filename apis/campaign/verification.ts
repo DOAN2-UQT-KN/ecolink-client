@@ -38,9 +38,12 @@ export interface IMeetingPointMyVote {
   updated_at: string;
 }
 
-export interface IMeetingPointVote extends IMeetingPointMyVote {
+export interface IMeetingPointVote extends Omit<IMeetingPointMyVote, 'weight' | 'weight_reason'> {
   user_id: string;
   user: { id: string; name: string; avatar: string | null } | null;
+  /** Weight, its reason and the distance: admins and the campaign's managers only (null otherwise). */
+  weight: number | null;
+  weight_reason: MeetingPointWeightReason | null;
   distance_m: number | null;
 }
 
@@ -93,7 +96,8 @@ export interface IMeetingPointView {
   cannot_vote_reason: MeetingPointCannotVote | null;
   /** Admins and the campaign's managers only. */
   score: number | null;
-  votes: IMeetingPointVote[] | null;
+  /** Every vote with its voter; weights only for admins and managers. */
+  votes: IMeetingPointVote[];
 }
 
 /** GET /campaigns/:id/verification. */

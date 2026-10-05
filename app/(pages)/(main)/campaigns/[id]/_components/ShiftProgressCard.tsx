@@ -1,7 +1,7 @@
 import { memo, useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
-import { TbChevronDown } from 'react-icons/tb';
+import { TbChevronDown, TbExternalLink } from 'react-icons/tb';
 
 import type { ICampaign } from '@/apis/campaign/models/campaign';
 import { useShiftOverview, useShiftResult, type IShiftOverviewRow } from '@/apis/campaign/shiftResult';
@@ -99,19 +99,20 @@ const ShiftCellPopover = memo(function ShiftCellPopover({
         <div className="mb-2 flex flex-col gap-1.5">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="font-semibold">{title}</span>
-            <div className="flex flex-wrap items-center gap-1.5">
-              <ShiftStatusPill status={row.status} />
-              {row.reopened_at && <ShiftReopenedPill />}
-            </div>
+            <Link
+              href={`/campaigns/${campaign.id}/shifts/${row.shift_id}`}
+              className="inline-flex items-center gap-1 text-sm text-button-accent underline underline-offset-2 hover:opacity-80"
+            >
+              {t('Open shift page')}
+              <TbExternalLink className="size-4" aria-hidden />
+            </Link>
+          </div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <ShiftStatusPill status={row.status} />
+            {row.reopened_at && <ShiftReopenedPill />}
           </div>
           {row.reopened_at && <ShiftReopenedNotice reason={row.reopen_reason} />}
           <span className="text-xs tabular-nums text-foreground-tertiary">{hours}</span>
-          <Link
-            href={`/campaigns/${campaign.id}/shifts/${row.shift_id}`}
-            className="w-fit text-sm text-button-accent underline-offset-2 hover:underline"
-          >
-            {t('Open shift page')}
-          </Link>
         </div>
 
         <Section title={t('People')} defaultOpen>

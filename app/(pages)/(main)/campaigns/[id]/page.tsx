@@ -303,7 +303,7 @@ function CampaignDetailBody() {
           </div>
         ) : null}
 
-        {showAwaitingAdminCompletion ? (
+        {/* {showAwaitingAdminCompletion ? (
           <div
             className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
             role="status"
@@ -312,7 +312,7 @@ function CampaignDetailBody() {
               'Campaign awaiting admin completion hint',
             )}
           </div>
-        ) : null}
+        ) : null} */}
         {showAwaitingAdminCompletion ? <VerificationStatusCard campaign={campaign} /> : null}
 
         {canOwnerSubmitCompletion || campaign.can_cancel_campaign ? (

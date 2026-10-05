@@ -41,9 +41,9 @@ import {
   meetingPointLabel,
   MeetingPointStatusPill,
   TrashPointResultPill,
-  WEIGHT_REASON_LABEL,
 } from '../_components/ResultVerificationBadges';
 import { MeetingPointDecisionActions } from '../_components/MeetingPointDecisionActions';
+import { MeetingPointVotesPopover } from '../_components/MeetingPointVotesPopover';
 import { CheckedThumb, Thumb } from '../_components/ShiftResultView';
 import { CampaignDetailProvider } from '../_context/CampaignDetailContext';
 import { useCampaignDetail } from '../_hooks/useCampaignDetail';
@@ -180,11 +180,6 @@ const TrashPointItem = memo(function TrashPointItem({
  * own first), one "clean" / "not clean" vote for the whole meeting point, and (managers, admin)
  * the score and every vote; flagged → the admin decides.
  */
-/** How many votes a side has, inside its vote button. */
-function VoteCount({ n }: { n: number }) {
-  return <span className="ml-1.5 rounded-full bg-current/15 px-1.5 text-xs font-semibold tabular-nums">{n}</span>;
-}
-
 const MeetingPointCard = memo(function MeetingPointCard({
   campaignId,
   point,
@@ -443,19 +438,6 @@ const MeetingPointCard = memo(function MeetingPointCard({
 
               <div className="flex flex-wrap items-center gap-3 text-sm">
                 <Layer1LevelBadge level={point.layer1_level} />
-                {/* Voters see the counts on the vote buttons. */}
-                {!point.can_vote && (
-                  <>
-                    <span className="inline-flex items-center gap-1 text-emerald-700">
-                      <TbThumbUp className="size-4" aria-hidden />
-                      {t('{{n}} clean', { n: point.up_count })}
-                    </span>
-                    <span className="inline-flex items-center gap-1 text-rose-700">
-                      <TbThumbDown className="size-4" aria-hidden />
-                      {t('{{n}} not clean', { n: point.down_count })}
-                    </span>
-                  </>
-                )}
                 {canSeeVotes && point.score != null && (
                   <span className="text-foreground-secondary">
                     {t('Score')}: <span className="font-semibold tabular-nums">{point.score}</span> / 15
@@ -474,42 +456,46 @@ const MeetingPointCard = memo(function MeetingPointCard({
                 ))}
               </ul>
 
-              {point.can_vote ? (
-                <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex flex-wrap items-center gap-2">
-                    <Button
-                      type="button"
-                      variant={selected === 'up' ? 'brown' : 'outlined-brown'}
-                      aria-pressed={selected === 'up'}
-                      title={selected === 'up' ? t('Click again to remove your vote') : undefined}
-                      size="medium"
-                      iconLeft={<TbThumbUp className="size-4" aria-hidden />}
-                      isDisabled={busy}
-                      isLoading={acting === 'up'}
-                      onClick={onClickClean}
-                    >
-                      {t('It is clean')}
-                      <VoteCount n={point.up_count} />
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={selected === 'down' ? 'brown' : 'outlined-brown'}
-                      aria-pressed={my?.value === 'down'}
-                      aria-expanded={downOpen}
-                      title={my?.value === 'down' ? t('Click again to remove your vote') : undefined}
-                      size="medium"
-                      iconLeft={<TbThumbDown className="size-4" aria-hidden />}
-                      isDisabled={busy}
-                      isLoading={acting === 'down'}
-                      onClick={onClickNotClean}
-                    >
-                      {t('Not clean yet')}
-                      <VoteCount n={point.down_count} />
-                    </Button>
-                    {point.is_reporter && (
-                      <InfoTooltip content={t('You reported a waste point here: your confirmation weighs 10.')} />
+                    {point.can_vote && (
+                      <>
+                      <Button
+                        type="button"
+                        variant={selected === 'up' ? 'brown' : 'outlined-brown'}
+                        aria-pressed={selected === 'up'}
+                        title={selected === 'up' ? t('Click again to remove your vote') : undefined}
+                        size="medium"
+                        iconLeft={<TbThumbUp className="size-4" aria-hidden />}
+                        isDisabled={busy}
+                        isLoading={acting === 'up'}
+                        onClick={onClickClean}
+                      >
+                        {t('It is clean')}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={selected === 'down' ? 'brown' : 'outlined-brown'}
+                        aria-pressed={my?.value === 'down'}
+                        aria-expanded={downOpen}
+                        title={my?.value === 'down' ? t('Click again to remove your vote') : undefined}
+                        size="medium"
+                        iconLeft={<TbThumbDown className="size-4" aria-hidden />}
+                        isDisabled={busy}
+                        isLoading={acting === 'down'}
+                        onClick={onClickNotClean}
+                      >
+                        {t('Not clean yet')}
+                      </Button>
+                      {point.is_reporter && (
+                        <InfoTooltip content={t('You reported a waste point here: your confirmation weighs 10.')} />
+                      )}
+                      </>
                     )}
                   </div>
+                  <MeetingPointVotesPopover votes={point.votes} titleById={titleById} />
+                </div>
                   {downOpen && (
                     <div className="flex flex-col gap-2 rounded-lg border border-[rgba(136,122,71,0.3)] bg-white/70 p-3">
                       <span className="text-sm font-medium">
@@ -576,11 +562,11 @@ const MeetingPointCard = memo(function MeetingPointCard({
                       </div>
                     </div>
                   )}
-                  {locating && <p className="text-xs text-foreground-tertiary">{t('Getting your location…')}</p>}
-                </div>
-              ) : pointCannotVote ? (
-                <p className="text-sm text-foreground-tertiary">{t(CANNOT_VOTE_LABEL[pointCannotVote])}</p>
-              ) : null}
+                {locating && <p className="text-xs text-foreground-tertiary">{t('Getting your location…')}</p>}
+                {!point.can_vote && pointCannotVote && (
+                  <p className="text-sm text-foreground-tertiary">{t(CANNOT_VOTE_LABEL[pointCannotVote])}</p>
+                )}
+              </div>
 
               {canDecide && point.status === 'flagged' && (
                 <MeetingPointDecisionActions
@@ -588,41 +574,6 @@ const MeetingPointCard = memo(function MeetingPointCard({
                   meetingPointId={point.meeting_point_id}
                   trashPoints={cleaned.map((tp) => ({ id: tp.report_id, title: titleById.get(tp.report_id) ?? '' }))}
                 />
-              )}
-
-              {canSeeVotes && point.votes && (
-                <div className="flex flex-col gap-2 border-t border-[rgba(136,122,71,0.2)] pt-3">
-                  <h4 className="text-sm font-semibold">{t('Votes ({{n}})', { n: point.votes.length })}</h4>
-                  {point.votes.length === 0 ? (
-                    <p className="text-sm text-foreground-tertiary">{t('No votes yet')}</p>
-                  ) : (
-                    point.votes.map((v) => (
-                      <div key={v.user_id} className="flex flex-wrap items-start gap-3 text-sm">
-                        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                          <span className="flex flex-wrap items-center gap-1.5">
-                            <span className="font-medium">{v.user?.name || t('User')}</span>
-                            <Pill tone={v.value === 'up' ? 'green' : 'red'}>{v.value === 'up' ? t('Clean') : t('Not clean')}</Pill>
-                            <Pill tone={v.weight > 0 ? 'brand' : 'neutral'}>{t('weight {{w}}', { w: v.weight })}</Pill>
-                          </span>
-                          <span className="text-xs text-foreground-tertiary">
-                            {t(WEIGHT_REASON_LABEL[v.weight_reason] ?? v.weight_reason)}
-                            {v.distance_m != null && ` · ${t('{{m}} m away', { m: Math.round(v.distance_m) })}`}
-                            {' · '}
-                            {formattedDate(v.updated_at, true)}
-                          </span>
-                          {v.flagged_report_ids.length > 0 && (
-                            <span className="text-xs text-rose-700">
-                              {t('Not clean')}:{' '}
-                              {v.flagged_report_ids.map((id) => titleById.get(id) || t('Waste point')).join(', ')}
-                            </span>
-                          )}
-                          {v.note && <span className="whitespace-pre-wrap">{v.note}</span>}
-                        </div>
-                        {v.photo_url && <Thumb url={v.photo_url} className="size-16" />}
-                      </div>
-                    ))
-                  )}
-                </div>
               )}
             </div>
           </motion.div>

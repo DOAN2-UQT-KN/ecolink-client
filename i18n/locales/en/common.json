@@ -1759,7 +1759,6 @@
   "Verify the result": "Verify the result",
   "View on map": "View on map",
   "Volunteers who attended the campaign cannot vote.": "Volunteers who attended the campaign cannot vote.",
-  "Votes ({{n}})": "Votes ({{n}})",
   "Voting": "Voting",
   "Voting closes in {{time}}": "Voting closes in {{time}}",
   "Voting has closed; the result is being decided": "Voting has closed; the result is being decided",
@@ -1771,13 +1770,10 @@
   "Where were these photos taken?": "Where were these photos taken?",
   "You can still mark the campaign done, but these waste points are more likely to be flagged. Fix their photos in the shift results first if you can.": "You can still mark the campaign done, but these waste points are more likely to be flagged. Fix their photos in the shift results first if you can.",
   "Your vote was saved": "Your vote was saved",
-  "weight {{w}}": "weight {{w}}",
   "{{h}} h {{m}} min": "{{h}} h {{m}} min",
   "{{m}} m away": "{{m}} m away",
   "{{m}} min": "{{m}} min",
   "{{name}} is larger than {{mb}} MB.": "{{name}} is larger than {{mb}} MB.",
-  "{{n}} clean": "{{n}} clean",
-  "{{n}} not clean": "{{n}} not clean",
   "Result verification has not handed this campaign to the admin; it can only be cancelled": "Result verification has not handed this campaign to the admin; it can only be cancelled",
   "The photo is missing, larger than 15 MB or not an image": "The photo is missing, larger than 15 MB or not an image",
   "Members of the organization, the campaign's managers and its volunteers cannot vote": "Members of the organization, the campaign's managers and its volunteers cannot vote",
@@ -1813,5 +1809,8 @@
   "{{verified}} of {{total}} meeting points verified, {{flagged}} flagged, {{rejected}} not accepted.": "{{verified}} of {{total}} meeting points verified, {{flagged}} flagged, {{rejected}} not accepted.",
   "How verification works": "How verification works",
   "Your vote was removed": "Your vote was removed",
-  "Click again to remove your vote": "Click again to remove your vote"
+  "Click again to remove your vote": "Click again to remove your vote",
+  "Votes ({{n}})": "Votes ({{n}})",
+  "weight {{w}}": "weight {{w}}",
+  "View results": "View results"
 }
