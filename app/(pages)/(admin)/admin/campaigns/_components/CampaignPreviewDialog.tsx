@@ -76,10 +76,7 @@ const CampaignResult = memo(function CampaignResult({
 
   return (
     <div className="flex min-w-0 flex-col gap-3">
-      {/* The progress card is styled for the (light) campaign page: keep it on a light surface. */}
-      <div className={cn(isDark && "rounded-xl bg-zinc-50 text-zinc-900")}>
-        <ShiftProgressCard campaign={campaign} />
-      </div>
+      <ShiftProgressCard campaign={campaign} variant="admin" isDark={isDark} />
       {submitted && (
         <ReviewSectionCard
           title={t("Completion submission")}

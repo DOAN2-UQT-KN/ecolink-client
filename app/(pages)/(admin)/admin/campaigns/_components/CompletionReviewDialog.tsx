@@ -1,6 +1,6 @@
 import { memo, useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { TbAlertTriangle, TbClipboardCheck, TbExternalLink } from "react-icons/tb";
+import { TbAlertTriangle, TbClipboardCheck, TbExternalLink, TbThumbDown, TbThumbUp } from "react-icons/tb";
 
 import {
   useCompletionReview,
@@ -20,9 +20,9 @@ import {
   MeetingPointStatusPill,
   PhotoCheckBadge,
   TrashPointResultPill,
-  WEIGHT_REASON_LABEL,
 } from "@/app/(pages)/(main)/campaigns/[id]/_components/ResultVerificationBadges";
 import { MeetingPointDecisionActions } from "@/app/(pages)/(main)/campaigns/[id]/_components/MeetingPointDecisionActions";
+import { MeetingPointVotesList } from "@/app/(pages)/(main)/campaigns/[id]/_components/MeetingPointVotesPopover";
 import { ReviewRow, ReviewSectionCard } from "@/components/admin/shared/ReviewSection";
 import { Button } from "@/components/ui/button";
 import {
@@ -94,6 +94,78 @@ function Photos({
   );
 }
 
+/** How many voted clean / not clean; each opens a dialog with those votes in detail. */
+function MeetingPointVotesButtons({
+  votes,
+  titleById,
+  title,
+  isDark,
+}: {
+  votes: IMeetingPointView["votes"];
+  titleById: Map<string, string>;
+  title: string;
+  isDark: boolean;
+}) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState<"up" | "down" | null>(null);
+  const count = (side: "up" | "down") => votes.filter((v) => v.value === side).length;
+  return (
+    <>
+      <div className="flex flex-wrap items-center gap-4 text-sm">
+        {(["up", "down"] as const).map((side) => (
+          <button
+            key={side}
+            type="button"
+            onClick={() => setOpen(side)}
+            className={cn(
+              "inline-flex items-center gap-1 underline-offset-2 hover:underline",
+              side === "up"
+                ? isDark ? "text-emerald-300" : "text-emerald-700"
+                : isDark ? "text-red-300" : "text-red-700",
+            )}
+          >
+            {side === "up" ? <TbThumbUp className="size-4" aria-hidden /> : <TbThumbDown className="size-4" aria-hidden />}
+            {count(side)} {side === "up" ? t("Clean") : t("Not clean")}
+          </button>
+        ))}
+      </div>
+      <Dialog open={open != null} onOpenChange={(v) => !v && setOpen(null)}>
+        <DialogContent
+          className={cn("max-h-[80vh] max-w-lg overflow-y-auto", isDark ? "bg-zinc-900 text-zinc-100" : "bg-zinc-50 text-zinc-900")}
+        >
+          <DialogHeader>
+            <DialogTitle className={cn(isDark ? "text-zinc-100" : "text-zinc-900")}>
+              {t("Votes")} · {title}
+            </DialogTitle>
+            <DialogDescription className="sr-only">{t("Votes")}</DialogDescription>
+          </DialogHeader>
+          {open && (
+            <MeetingPointVotesList votes={votes} titleById={titleById} isDark={isDark} defaultTab={open} />
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+/** The verification score against its 15-point threshold: green once verified, red when downvoted to ≤ 3. */
+function ScoreBar({ score, downvoted, isDark }: { score: number | null; downvoted: boolean; isDark: boolean }) {
+  const { t } = useTranslation();
+  if (score == null) return null;
+  const pct = Math.min(100, (Math.max(0, score) / 15) * 100);
+  const tone = score >= 15 ? "bg-emerald-500" : downvoted && score <= 3 ? "bg-red-500" : "bg-amber-500";
+  return (
+    <span className="flex min-w-40 flex-1 items-center gap-2 text-xs">
+      <span className={cn("shrink-0 tabular-nums", isDark ? "text-zinc-300" : "text-zinc-700")}>
+        {t("Score")} {score} / 15
+      </span>
+      <span className={cn("h-1.5 flex-1 overflow-hidden rounded-full", isDark ? "bg-zinc-700" : "bg-zinc-200")}>
+        <span className={cn("block h-full rounded-full transition-all", tone)} style={{ width: `${pct}%` }} />
+      </span>
+    </span>
+  );
+}
+
 /** One meeting point under result verification: status, score, Layer 1, its trash points, every vote; flagged → decide. */
 function VerificationMeetingPoint({
   campaignId,
@@ -110,7 +182,6 @@ function VerificationMeetingPoint({
 }) {
   const { t } = useTranslation();
   const muted = isDark ? "text-zinc-400" : "text-zinc-600";
-  const votes = point.votes ?? [];
   const titleById = new Map(
     point.trash_points.map((tp) => [tp.report_id, tp.report?.title || t("Waste point")]),
   );
@@ -126,11 +197,12 @@ function VerificationMeetingPoint({
               {t("Round {{n}}", { n: point.round })}
             </Pill>
           )}
-          <span className={cn("tabular-nums", muted)}>
-            {t("Score")} {point.score ?? "—"} / 15 · {point.up_count}↑ {point.down_count}↓
-          </span>
           <MeetingPointStatusPill status={point.status} isDark={isDark} />
         </span>
+      </div>
+      <div className="flex flex-wrap items-center gap-3">
+        <ScoreBar score={point.score} downvoted={point.down_count > 0} isDark={isDark} />
+        <Layer1LevelBadge level={point.layer1_level} isDark={isDark} />
       </div>
       {point.detail_address && <span className={cn("text-xs", muted)}>{point.detail_address}</span>}
       <span className={cn("text-xs", muted)}>
@@ -150,7 +222,6 @@ function VerificationMeetingPoint({
           {t("Waste points that did not pass")}: {titlesOf(point.failed_report_ids)}
         </span>
       )}
-      <Layer1LevelBadge level={point.layer1_level} isDark={isDark} />
       <ul className="flex flex-col gap-1">
         {point.trash_points.map((tp) => (
           <li key={tp.report_id} className="flex flex-wrap items-center gap-1.5 text-sm">
@@ -172,45 +243,12 @@ function VerificationMeetingPoint({
           </li>
         ))}
       </ul>
-      {votes.length > 0 && (
-        <div className="flex flex-col gap-1.5">
-          <span className="text-xs font-semibold">{t("Votes ({{n}})", { n: votes.length })}</span>
-          {votes.map((v) => (
-            <div key={v.user_id} className="flex flex-wrap items-start gap-3 text-sm">
-              <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <span className="flex flex-wrap items-center gap-1.5">
-                  <span className="font-medium">{v.user?.name || t("User")}</span>
-                  <Pill tone={v.value === "up" ? "green" : "red"} isDark={isDark}>
-                    {v.value === "up" ? t("Clean") : t("Not clean")}
-                  </Pill>
-                  {v.weight != null && (
-                    <Pill tone={v.weight > 0 ? "brand" : "neutral"} isDark={isDark}>
-                      {t("weight {{w}}", { w: v.weight })}
-                    </Pill>
-                  )}
-                </span>
-                <span className={cn("text-xs", muted)}>
-                  {v.weight_reason && t(WEIGHT_REASON_LABEL[v.weight_reason] ?? v.weight_reason)}
-                  {v.distance_m != null && ` · ${t("{{m}} m away", { m: Math.round(v.distance_m) })}`}
-                  {" · "}
-                  {formattedDate(v.updated_at, true)}
-                </span>
-                {v.flagged_report_ids.length > 0 && (
-                  <span className={cn("text-xs", isDark ? "text-red-300" : "text-red-700")}>
-                    {t("Not clean")}: {titlesOf(v.flagged_report_ids)}
-                  </span>
-                )}
-                {v.note && <span className="whitespace-pre-wrap">{v.note}</span>}
-              </div>
-              {v.photo_url && (
-                <a href={v.photo_url} target="_blank" rel="noopener noreferrer">
-                  <img src={v.photo_url} alt="" loading="lazy" className="size-16 rounded-md border object-cover" />
-                </a>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+      <MeetingPointVotesButtons
+        votes={point.votes}
+        titleById={titleById}
+        title={meetingPointLabel(point.name, index, t)}
+        isDark={isDark}
+      />
       {canDecide && point.status === "flagged" && (
         <MeetingPointDecisionActions
           campaignId={campaignId}
