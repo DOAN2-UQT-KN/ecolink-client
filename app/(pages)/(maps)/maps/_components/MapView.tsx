@@ -5,6 +5,9 @@ import 'leaflet/dist/leaflet.css';
 import { useTranslation } from 'react-i18next';
 import type { MapMarker } from './MapPage';
 import { Pill } from '@/components/ui/Pill';
+import type { SosType } from '@/apis/sos/models/sos';
+import { SOS_TYPE_META } from '@/constants/sos';
+import { SosTypeBadge } from '@/components/sos/SosTypeBadge';
 
 // Vietnam geographic center
 const DEFAULT_CENTER: [number, number] = [16.047, 108.206];
@@ -64,26 +67,24 @@ function buildPinIcon(fill: string): L.DivIcon {
   });
 }
 
-function buildSOSIcon(): L.DivIcon {
-  // Red pin with two pulsing rings behind it
+/** One pin per SOS type, in the type's colour token, with a pulsing ring. */
+function buildSOSIcon(type: SosType): L.DivIcon {
+  const color = SOS_TYPE_META[type].color;
+  const glyph = type === 'medical' ? '+' : type === 'hazard' ? '!' : '?';
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 44" width="32" height="44">
-      <filter id="shadow-sos" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(127,29,29,0.5)"/>
-      </filter>
       <path
         d="M16 0C7.163 0 0 7.163 0 16c0 11.25 14 28 16 28s16-16.75 16-28C32 7.163 24.837 0 16 0z"
-        fill="#dc2626"
-        filter="url(#shadow-sos)"
+        style="fill:${color}"
       />
-      <circle cx="16" cy="16" r="7" fill="white" opacity="0.95"/>
-      <text x="16" y="20" text-anchor="middle" font-size="9" font-weight="bold" fill="#991b1b">!</text>
+      <circle cx="16" cy="16" r="8" fill="white" opacity="0.95"/>
+      <text x="16" y="${type === 'medical' ? 21 : 20}" text-anchor="middle" font-size="${type === 'medical' ? 15 : 11}" font-weight="bold" style="fill:${color}">${glyph}</text>
     </svg>`.trim();
 
   const html = `
-    <div style="position:relative;width:48px;height:48px;display:flex;align-items:center;justify-content:flex-end;flex-direction:column;">
-      <div class="sos-ring" style="width:44px;height:44px;"></div>
-      <div class="sos-ring sos-ring-delay" style="width:44px;height:44px;"></div>
+    <div style="position:relative;width:48px;height:48px;display:flex;align-items:center;justify-content:flex-end;flex-direction:column;filter:drop-shadow(0 2px 3px rgba(0,0,0,0.35));">
+      <div class="sos-ring" style="width:44px;height:44px;background:${color};opacity:0.35;"></div>
+      ${type === 'medical' ? `<div class="sos-ring sos-ring-delay" style="width:44px;height:44px;background:${color};opacity:0.35;"></div>` : ''}
       <div style="position:relative;z-index:1;">${svg}</div>
     </div>
   `.trim();
@@ -97,6 +98,9 @@ function buildSOSIcon(): L.DivIcon {
   });
 }
 
+/** Medical always on top, then hazard, then manpower, then the other layers. */
+const SOS_Z_INDEX: Record<SosType, number> = { medical: 3000, hazard: 2000, manpower: 1000 };
+
 // ─── marker list (memoised) ────────────────────────────────────────────────────
 const MarkerList = memo(function MarkerList({ markers }: { markers: MapMarker[] }) {
   const { t } = useTranslation();
@@ -105,7 +109,9 @@ const MarkerList = memo(function MarkerList({ markers }: { markers: MapMarker[] 
     () => ({
       CAMPAIGN: buildPinIcon('#2563eb'),
       INCIDENT: buildPinIcon('#eab308'),
-      SOS: buildSOSIcon(),
+      SOS_manpower: buildSOSIcon('manpower'),
+      SOS_hazard: buildSOSIcon('hazard'),
+      SOS_medical: buildSOSIcon('medical'),
     }),
     [],
   );
@@ -116,39 +122,28 @@ const MarkerList = memo(function MarkerList({ markers }: { markers: MapMarker[] 
         <Marker
           key={`${m.type}-${m.id}`}
           position={[m.lat, m.lng]}
-          icon={icons[m.type]}
-          zIndexOffset={m.type === 'SOS' ? 1000 : 0}
+          icon={m.type === 'SOS' ? icons[`SOS_${m.sosType ?? 'manpower'}`] : icons[m.type]}
+          zIndexOffset={m.type === 'SOS' ? SOS_Z_INDEX[m.sosType ?? 'manpower'] : 0}
         >
           <Popup minWidth={200} maxWidth={280} className="map-popup">
+            {m.type === 'SOS' ? (
+              // Public map: type and a link only, no reporter or medical details.
+              <div className="py-1 space-y-2">
+                <SosTypeBadge type={m.sosType ?? 'manpower'} />
+                <div className="flex justify-end">
+                  <a href={`/sos/${m.id}`} className="text-xs text-blue-700 underline text-right">
+                    {t('View details')}
+                  </a>
+                </div>
+              </div>
+            ) : (
             <div className="py-1 space-y-1.5">
               {/* Badge */}
-              <Pill tone={m.type === 'CAMPAIGN' ? 'blue' : m.type === 'SOS' ? 'red' : 'amber'}>
-                {m.type === 'CAMPAIGN'
-                  ? t('Campaign')
-                  : m.type === 'SOS'
-                    ? `🚨 ${t('SOS')}`
-                    : t('Incident')}
+              <Pill tone={m.type === 'CAMPAIGN' ? 'blue' : 'amber'}>
+                {m.type === 'CAMPAIGN' ? t('Campaign') : t('Incident')}
               </Pill>
 
               <p className="font-semibold text-gray-900 text-sm leading-snug">{m.title}</p>
-
-              {/* SOS-specific fields */}
-              {m.type === 'SOS' && m.content && (
-                <p className="text-xs text-gray-700 leading-snug">{m.content}</p>
-              )}
-              {m.type === 'SOS' && m.phone && (
-                <p className="text-xs text-gray-600 flex items-center gap-1">📞 {m.phone}</p>
-              )}
-              {/* {m.type === 'SOS' && (m.campaignTitle || m.campaignId || m.campaignAddress) && (
-                <div className="rounded-md border border-blue-100 bg-blue-50 px-2 py-1.5">
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-blue-700">
-                    {t('Campaign')}
-                  </p>
-                  {m.campaignTitle && (
-                    <p className="text-xs font-medium text-blue-900">{m.campaignTitle}</p>
-                  )}
-                </div>
-              )} */}
 
               {m.wasteType && <p className="text-xs text-gray-500 capitalize">{m.wasteType}</p>}
 
@@ -156,10 +151,10 @@ const MarkerList = memo(function MarkerList({ markers }: { markers: MapMarker[] 
                 <p className="text-xs text-gray-400 leading-snug line-clamp-2">📍 {m.address}</p>
               )}
 
-              {(m.type == 'SOS' || m.type == 'CAMPAIGN') && (
+              {m.type == 'CAMPAIGN' && (
                 <div className="flex justify-end">
                   <a
-                    href={`/campaigns/${m.campaignId ?? m.id}`}
+                    href={`/campaigns/${m.id}`}
                     className="text-xs text-blue-700 underline text-right"
                     target="_blank"
                   >
@@ -168,6 +163,7 @@ const MarkerList = memo(function MarkerList({ markers }: { markers: MapMarker[] 
                 </div>
               )}
             </div>
+            )}
           </Popup>
         </Marker>
       ))}

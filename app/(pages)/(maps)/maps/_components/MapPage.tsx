@@ -4,8 +4,12 @@ import { useTranslation } from 'react-i18next';
 import { cn } from '@/libs/utils';
 import { getAllCampaigns } from '@/apis/campaign/getCampaigns';
 import { getAllReports } from '@/apis/incident/getReport';
-import { getAllSOS } from '@/apis/sos/getSos';
-import type { ISOS } from '@/apis/sos/models/sos';
+import { getSosList } from '@/apis/sos/getSos';
+import type { ISosSummary, SosType } from '@/apis/sos/models/sos';
+import { CAMPAIGN_STATUS } from '@/constants/campaignLifecycle';
+import { SOS_OPEN_STATES_PARAM, isSosOpen } from '@/constants/sos';
+import useAuthStore from '@/stores/useAuthStore';
+import type { SosCampaignOption } from '@/components/sos/SosDialog';
 import { MapLoadingFallback } from './MapLoadingFallback';
 
 const MapView = dynamic(() => import('./MapView'), {
@@ -15,7 +19,7 @@ const MapView = dynamic(() => import('./MapView'), {
   ),
 });
 const FilterPanel = dynamic(() => import('./FilterPanel'), { ssr: false });
-const SOSForm = dynamic(() => import('./SOSForm'), { ssr: false });
+const SosDialog = dynamic(() => import('@/components/sos/SosDialog'), { ssr: false });
 
 // ─── shared types ──────────────────────────────────────────────────────────────
 export type MarkerType = 'CAMPAIGN' | 'INCIDENT' | 'SOS';
@@ -29,12 +33,9 @@ export interface MapMarker {
   status?: number | null;
   address?: string | null;
   wasteType?: string | null;
-  // SOS-specific
+  // SOS-specific: the public map only shows the type and the location.
   campaignId?: string | null;
-  campaignTitle?: string | null;
-  campaignAddress?: string | null;
-  phone?: string | null;
-  content?: string | null;
+  sosType?: SosType;
 }
 
 interface CampaignLike {
@@ -65,12 +66,6 @@ interface CampaignListResponse {
 interface IncidentListResponse {
   data?: {
     reports?: IncidentLike[];
-  };
-}
-
-interface SOSListResponse {
-  data?: {
-    sos?: ISOS[];
   };
 }
 
@@ -105,26 +100,18 @@ function toIncidentMarkers(raw: IncidentLike[], fallback: string): MapMarker[] {
     }));
 }
 
-function toSOSMarkers(raw: ISOS[], fallback: string): MapMarker[] {
+/** Open SOS only, at the SOS's own coordinates (not the campaign's). */
+function toSOSMarkers(raw: ISosSummary[], fallback: string): MapMarker[] {
   return raw
-    .filter((s) => {
-      const lat = s.latitude ?? s.campaign?.latitude;
-      const lng = s.longitude ?? s.campaign?.longitude;
-      return lat != null && lng != null;
-    })
+    .filter((s) => isSosOpen(s.state) && s.latitude != null && s.longitude != null)
     .map((s) => ({
       id: String(s.id),
       title: fallback,
-      lat: Number(s.latitude ?? s.campaign?.latitude),
-      lng: Number(s.longitude ?? s.campaign?.longitude),
+      lat: Number(s.latitude),
+      lng: Number(s.longitude),
       type: 'SOS' as const,
-      status: s.status ?? null,
-      address: s.detail_address ?? s.campaign?.detail_address ?? null,
-      campaignId: s.campaign_id ?? s.campaign?.id ?? null,
-      campaignTitle: s.campaign?.title ?? null,
-      campaignAddress: s.campaign?.detail_address ?? null,
-      phone: s.phone,
-      content: s.content,
+      campaignId: s.campaign_id ?? null,
+      sosType: s.type,
     }));
 }
 
@@ -142,8 +129,9 @@ export default function MapPage() {
   const [showIncidents, setShowIncidents] = useState(true);
   const [showSOS, setShowSOS] = useState(true);
 
-  // SOS modal
+  // SOS dialog
   const [sosFormOpen, setSosFormOpen] = useState(false);
+  const isAuthenticated = useAuthStore((st) => st.is_authenticated);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -151,7 +139,7 @@ export default function MapPage() {
     const [campaignRes, incidentRes, sosRes] = await Promise.allSettled([
       getAllCampaigns({}),
       getAllReports({}),
-      getAllSOS({}),
+      getSosList({ states: SOS_OPEN_STATES_PARAM, limit: 100 }),
     ]);
 
     if (campaignRes.status === 'fulfilled') {
@@ -165,7 +153,7 @@ export default function MapPage() {
     }
 
     if (sosRes.status === 'fulfilled') {
-      const data = (sosRes.value as SOSListResponse)?.data?.sos ?? [];
+      const data = sosRes.value?.data?.items ?? [];
       setSosList(toSOSMarkers(data, t('SOS Alert')));
     }
 
@@ -180,30 +168,13 @@ export default function MapPage() {
     return () => clearInterval(interval);
   }, [fetchData]);
 
-  // When a new SOS is created, optimistically add it
-  const handleSOSCreated = useCallback(
-    (sos: ISOS) => {
-      const lat = sos.latitude ?? sos.campaign?.latitude;
-      const lng = sos.longitude ?? sos.campaign?.longitude;
-      if (lat == null || lng == null) return;
-      const marker: MapMarker = {
-        id: String(sos.id),
-        title: t('SOS Alert'),
-        lat: Number(lat),
-        lng: Number(lng),
-        type: 'SOS',
-        status: sos.status ?? null,
-        address: sos.detail_address ?? sos.campaign?.detail_address ?? null,
-        campaignId: sos.campaign_id ?? sos.campaign?.id ?? null,
-        campaignTitle: sos.campaign?.title ?? null,
-        campaignAddress: sos.campaign?.detail_address ?? null,
-        phone: sos.phone,
-        content: sos.content,
-      };
-      setSosList((prev) => [marker, ...prev.filter((s) => s.id !== marker.id)]);
-      setShowSOS(true);
-    },
-    [t],
+  // The floating button asks for one of the running campaigns (no "all campaigns").
+  const runningCampaigns = useMemo<SosCampaignOption[]>(
+    () =>
+      campaigns
+        .filter((c) => c.status === CAMPAIGN_STATUS.ACTIVE)
+        .map((c) => ({ id: c.id, title: c.title })),
+    [campaigns],
   );
 
   const markers = useMemo(() => {
@@ -244,14 +215,13 @@ export default function MapPage() {
         onToggleSOS={() => setShowSOS((v) => !v)}
       />
 
-      {/* Floating SOS Button */}
-      <SOSButton onClick={() => setSosFormOpen(true)} />
+      {/* Floating SOS Button: eligibility is checked in the dialog once a campaign is chosen. */}
+      {isAuthenticated && <SOSButton onClick={() => setSosFormOpen(true)} />}
 
-      {/* SOS Modal */}
-      <SOSForm
+      <SosDialog
         open={sosFormOpen}
-        onClose={() => setSosFormOpen(false)}
-        onCreated={handleSOSCreated}
+        onOpenChange={setSosFormOpen}
+        campaignOptions={runningCampaigns}
       />
     </div>
   );

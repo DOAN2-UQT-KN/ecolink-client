@@ -33,6 +33,21 @@ export function getLocalizedNotificationText(
   return { title, body };
 }
 
+const SOS_NOTIFICATION_KINDS = new Set([
+  'SOS_TEAM_ALERT',
+  'SOS_MEDICAL_ALERT',
+  'SOS_HELP_INVITE',
+  'SOS_HAZARD_WARNING',
+  'SOS_NEARBY_ORG_REQUEST',
+  'SOS_ADMIN_ALERT',
+  'SOS_OWNER_ESCALATION',
+  'SOS_ESCALATED',
+  'SOS_LOCATION_CHANGED',
+  'SOS_EXPIRED',
+  'SOS_NO_LONGER_NEEDED',
+  'SOS_ABUSE_REVIEW',
+]);
+
 export function getNotificationHref(
   kind: string,
   payload: Record<string, unknown> | undefined,
@@ -50,6 +65,17 @@ export function getNotificationHref(
       : typeof p.report_id === 'string'
         ? p.report_id
         : null;
+
+  // SOS (spec "Tương tác 2 chiều"): every SOS_* notification opens the SOS.
+  if (SOS_NOTIFICATION_KINDS.has(kind)) {
+    const sosId =
+      typeof p.sosId === 'number' || typeof p.sosId === 'string'
+        ? p.sosId
+        : typeof p.sos_id === 'number' || typeof p.sos_id === 'string'
+          ? p.sos_id
+          : null;
+    return sosId != null ? `/sos/${sosId}` : null;
+  }
 
   switch (kind) {
     case 'CAMPAIGN_CREATED':

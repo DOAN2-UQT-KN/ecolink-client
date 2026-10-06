@@ -35,6 +35,7 @@ import showMessage, { MessageLevel, MessageType } from '@/utils/showMessage';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import useAuthStore from '@/stores/useAuthStore';
 import { useRouter } from '@/libs/router';
+import { SosButton } from '@/components/sos/SosButton';
 
 function CampaignDetailBody() {
   const { t } = useTranslation('common');
@@ -207,6 +208,10 @@ function CampaignDetailBody() {
             {campaign.reject_reason ? ` ${t('Reason')}: ${campaign.reject_reason}` : ''}
           </div>
         )}
+        {/* SOS (spec "Ai được phát SOS"): residents nearby and managers (who pick the shift). */}
+        {campaign.status === CAMPAIGN_STATUS.ACTIVE ? (
+          <SosButton campaignId={campaignId} wrapperClassName="flex justify-end" />
+        ) : null}
         {(showCompletionVerification || showJoinCta) && (
           <div className="flex flex-wrap items-center justify-end gap-2">
             {showCompletionVerification ? (

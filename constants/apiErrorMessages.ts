@@ -29,6 +29,13 @@ const API_ERROR_MESSAGES: Record<string, string> = {
   ORG_PERMISSION_DENIED: "Your role in this organization does not allow this action",
   CAMPAIGN_PERMISSION_DENIED: "You do not have permission to manage this campaign",
   SOS_PERMISSION_DENIED: "Only the campaign's managers can resolve this SOS",
+  SOS_NOT_ELIGIBLE: "You cannot send an SOS for this campaign right now",
+  SOS_RATE_LIMIT: "You can send at most 3 SOS per hour",
+  SOS_DETAILS_INVALID: "The SOS details are incomplete or invalid",
+  SOS_PHOTO_REQUIRED: "A hazardous-waste SOS needs at least one photo",
+  SOS_ALREADY_RESPONDING: "You are already on the way to another SOS; cancel it first",
+  SOS_CLOSED: "This SOS is already closed",
+  SOS_RESPOND_NOT_ALLOWED: "You cannot respond to this SOS",
   CAMPAIGN_MANAGER_NOT_MEMBER:
     "Campaign managers must be active members of the campaign's organization",
   CANNOT_REMOVE_CAMPAIGN_CREATOR: "The campaign creator cannot be removed as a manager",

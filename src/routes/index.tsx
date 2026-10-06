@@ -54,6 +54,7 @@ export const router = createBrowserRouter([
           { path: "organizations/email-verified", element: lazyPage(() => import("@/app/(pages)/(main)/organizations/email-verified/page"), "organizations-email-verified") },
           { path: "organizations/me", element: lazyPage(() => import("@/app/(pages)/(main)/organizations/me/page"), "organizations-me") },
           { path: "organizations/:slug", element: lazyPage(() => import("@/app/(pages)/(main)/organizations/[id]/page"), "organization-detail") },
+          { path: "sos/:id", element: lazyPage(() => import("@/app/(pages)/(main)/sos/[id]/page"), "sos-detail") },
           { path: "gifts", element: lazyPage(() => import("@/app/(pages)/(main)/gifts/page"), "gifts") },
           {
             path: "profile",
