@@ -88,7 +88,6 @@ export interface ISosResponder {
 export interface ISosPermissions {
   can_respond: boolean;
   can_cancel_response: boolean;
-  can_claim: boolean;
   can_update_location: boolean;
   can_resolve: boolean;
 }
@@ -111,8 +110,6 @@ export interface ISosDetail extends ISosSummary {
   reporter: { id: string; name: string; avatar: string | null } | null;
   responders: ISosResponder[];
   expires_at: string | null;
-  claimed_by: string | null;
-  claimed_at: string | null;
   escalated_at: string | null;
   radius_km: number;
   resolved_at: string | null;

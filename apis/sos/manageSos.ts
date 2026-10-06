@@ -12,11 +12,6 @@ import { SOS_URL, toSosDetailResponse } from '@/apis/sos/adapters';
 
 const url = SOS_URL;
 
-/** PUT /sos/:id/claim — the campaign team or an admin takes charge. */
-export const claimSos = async (id: number): Promise<ISosDetailResponse> => {
-  return toSosDetailResponse(await requestApi.put<IBaseResponse>(`${url}/${id}/claim`, {}));
-};
-
 /** PUT /sos/:id/location — the reporter moves the SOS. */
 export const updateSosLocation = async ({
   id,
@@ -28,17 +23,6 @@ export const updateSosLocation = async ({
 /** PUT /sos/:id/resolve */
 export const resolveSos = async ({ id, ...data }: IResolveSosRequest): Promise<ISosDetailResponse> => {
   return toSosDetailResponse(await requestApi.put<IBaseResponse>(`${url}/${id}/resolve`, data));
-};
-
-export const useClaimSos = (options?: UsePostOptions<ISosDetailResponse, number>) => {
-  const { t } = useTranslation();
-  return usePost({
-    mutationFn: claimSos,
-    queryKey: ['sos'],
-    messageSuccess: { content: t('You are now handling this SOS'), type: MessageType.Toast },
-    messageError: { type: MessageType.Toast },
-    ...options,
-  });
 };
 
 export const useUpdateSosLocation = (

@@ -9,22 +9,23 @@ import {
   TbCircleCheck,
   TbClock,
   TbCurrentLocation,
+  TbFlag,
   TbHandStop,
   TbMapPin,
   TbPhone,
   TbRoute,
-  TbShieldCheck,
+  TbUsers,
 } from 'react-icons/tb';
 
 import { useSos } from '@/apis/sos/getSosById';
-import { useClaimSos, useUpdateSosLocation } from '@/apis/sos/manageSos';
+import { useUpdateSosLocation } from '@/apis/sos/manageSos';
 import type { ISosDetail, ISosDetailResponse } from '@/apis/sos/models/sos';
 import { useCancelRespond, useRespondSos } from '@/apis/sos/respondSos';
 import { AvatarList } from '@/app/(pages)/(main)/campaigns/[id]/_components/AvatarList';
 import { Breadcrumbs, type BreadcrumbItemProps } from '@/components/client/shared/Breadcrumbs';
 import { Button } from '@/components/client/shared/Button';
 import { Call115Banner } from '@/components/sos/Call115Banner';
-import { SosStatePill, SosTypeBadge } from '@/components/sos/SosTypeBadge';
+import { SosStatePill } from '@/components/sos/SosTypeBadge';
 import {
   Empty,
   EmptyDescription,
@@ -32,6 +33,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { InfoTooltip } from '@/components/ui/InfoTooltip';
 import { Pill } from '@/components/ui/Pill';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -83,7 +85,6 @@ function SosDetailBody({ sosId }: { sosId: number }) {
 
   const respond = useRespondSos({ onSuccess: setDetail });
   const cancelRespond = useCancelRespond({ onSuccess: setDetail });
-  const claim = useClaimSos({ onSuccess: setDetail });
   const updateLocation = useUpdateSosLocation({ onSuccess: setDetail });
   const [locating, setLocating] = useState(false);
 
@@ -139,6 +140,7 @@ function SosDetailBody({ sosId }: { sosId: number }) {
   const meta = SOS_TYPE_META[sos.type];
   const Icon = meta.icon;
   const perms = sos.permissions;
+  const coming = sos.on_the_way_count + sos.arrived_count;
 
   const handleUpdateLocation = async () => {
     setLocating(true);
@@ -168,6 +170,15 @@ function SosDetailBody({ sosId }: { sosId: number }) {
   return (
     <div className="max-w-4xl mx-auto w-full px-4 lg:px-8 pb-10 animate-in fade-in duration-500">
       <Breadcrumbs breadcrumbs={breadcrumbs} />
+    
+        <div className="my-3"></div>
+        {/* Closed states */}
+        {!open ? <ClosedNotice sos={sos} /> : null}
+        {sos.state === 'escalated' ? (
+          <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
+            {t('Nobody took charge in time: an admin is contacting the reporter and the campaign team.')}
+          </p>
+        ) : null}
 
       <div className="pt-5 flex flex-col gap-5">
         {sos.type === 'medical' && open ? <Call115Banner /> : null}
@@ -184,121 +195,134 @@ function SosDetailBody({ sosId }: { sosId: number }) {
           </div>
         ) : null}
 
-        {/* Header */}
+        {/* Header: what it is, where, and what the viewer can do */}
         <div className={cn(cardClass, 'border-2', meta.borderClass)}>
-          <div className="flex flex-wrap items-start gap-4">
+          <div className="flex items-start gap-3">
             <span
               className={cn(
-                'flex size-14 shrink-0 items-center justify-center rounded-full',
+                'flex size-12 shrink-0 items-center justify-center rounded-full',
                 meta.bgClass,
                 meta.textClass,
               )}
             >
-              <Icon className="size-8" aria-hidden />
+              <Icon className="size-6" aria-hidden />
             </span>
-            <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-              <div className="flex flex-wrap items-center gap-2">
-                <SosTypeBadge type={sos.type} />
-                <SosStatePill state={sos.state} />
-                {sos.is_mine ? <Pill tone="brand">{t('Your SOS')}</Pill> : null}
+            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className={cn('font-display-6 font-semibold', meta.textClass)}>{t(meta.label)}</h2>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <SosStatePill state={sos.state} />
+                  {sos.is_mine ? <Pill tone="brand">{t('Your SOS')}</Pill> : null}
+                </div>
               </div>
-              <h2 className="font-display-6 font-semibold text-button-accent">
-                {t('SOS #{{id}}', { id: sos.id })} · {t(meta.label)}
-              </h2>
-              <p className="text-sm text-foreground-secondary">
-                {t('Sent at {{time}}', { time: format(new Date(sos.created_at), 'HH:mm, dd/MM/yyyy') })}
+              <p className="text-sm text-foreground-tertiary">
+                {t('SOS #{{id}}', { id: sos.id })} · {format(new Date(sos.created_at), 'HH:mm, dd/MM')}
                 {sos.reporter_role ? ` · ${t(SOS_ROLE_LABEL[sos.reporter_role])}` : ''}
-              </p>
-              <p className="text-sm">
-                <Link href={`/campaigns/${sos.campaign.id}`} className="text-button-accent underline">
-                  {sos.campaign.title}
-                </Link>
-                {sos.meeting_point ? ` · ${sos.meeting_point.name}` : ''}
-                {sos.shift
-                  ? ` · ${format(new Date(sos.shift.start_at), 'HH:mm')}–${format(new Date(sos.shift.end_at), 'HH:mm')}`
-                  : ''}
               </p>
             </div>
           </div>
 
-          {/* Counter (manpower / medical) */}
-          {sos.type !== 'hazard' ? (
-            <div className="mt-4 rounded-lg bg-background-primary px-4 py-3">
-              <p className="text-lg font-semibold text-foreground">
-                {sos.type === 'manpower' && sos.people_needed
-                  ? t('{{count}} / {{needed}} people on the way', {
-                      count: sos.on_the_way_count + sos.arrived_count,
-                      needed: sos.people_needed,
-                    })
-                  : t('{{count}} people are coming to help', {
-                      count: sos.on_the_way_count + sos.arrived_count,
-                    })}
-              </p>
-              {sos.arrived_count > 0 ? (
-                <p className="text-sm text-foreground-secondary">
-                  {t('{{onWay}} on the way · {{arrived}} arrived', {
-                    onWay: sos.on_the_way_count,
-                    arrived: sos.arrived_count,
-                  })}
-                </p>
-              ) : null}
-            </div>
-          ) : null}
+          <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-foreground-secondary">
+            <Link
+              href={`/campaigns/${sos.campaign.id}`}
+              className="inline-flex min-w-0 items-center gap-1.5 text-button-accent hover:underline"
+            >
+              <TbFlag className="size-4 shrink-0" aria-hidden />
+              <span className="truncate">{sos.campaign.title}</span>
+            </Link>
+            {sos.meeting_point ? (
+              <span className="inline-flex items-center gap-1.5">
+                <TbMapPin className="size-4 shrink-0" aria-hidden />
+                {sos.meeting_point.name}
+              </span>
+            ) : null}
+            {sos.shift ? (
+              <span className="inline-flex items-center gap-1.5">
+                <TbClock className="size-4 shrink-0" aria-hidden />
+                {format(new Date(sos.shift.start_at), 'HH:mm')}–{format(new Date(sos.shift.end_at), 'HH:mm')}
+              </span>
+            ) : null}
+          </div>
 
-          {/* Responder actions */}
-          {open && (perms.can_respond || perms.can_cancel_response || sos.my_response) ? (
-            <div className="mt-4 flex flex-col gap-2">
-              {sos.my_response === 'arrived' ? (
-                <Pill tone="green" className="text-sm">
-                  <TbCircleCheck className="size-4" aria-hidden />
-                  {t('You have arrived')}
-                </Pill>
-              ) : sos.my_response === 'on_the_way' ? (
-                <Pill tone="blue" className="text-sm">
-                  {t('You are on the way. Your location is shared every 30 seconds until you arrive.')}
-                </Pill>
-              ) : null}
-              <div className="flex flex-wrap gap-2">
-                {perms.can_respond ? (
-                  <Button
-                    type="button"
-                    variant="green"
-                    size="medium"
-                    isLoading={respond.isPending}
-                    iconLeft={<TbHandStop className="size-5" aria-hidden />}
-                    onClick={run(() => respond.mutateAsync(sos.id))}
-                  >
-                    {t("I'm coming to help now")}
-                  </Button>
-                ) : null}
-                {perms.can_cancel_response ? (
-                  <Button
-                    type="button"
-                    variant="outlined-brown"
-                    size="medium"
-                    isLoading={cancelRespond.isPending}
-                    onClick={run(() => cancelRespond.mutateAsync(sos.id))}
-                  >
-                    {t("I can't come anymore")}
-                  </Button>
-                ) : null}
-              </div>
-              {sos.type === 'medical' && perms.can_respond ? (
-                <p className="text-xs text-foreground-tertiary">
-                  {t('Help with first aid and transport; this does not replace emergency services.')}
+          {/* Counter + responder actions (manpower / medical; hazard invites nobody) */}
+          {sos.type !== 'hazard' ? (
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[rgba(136,122,71,0.2)] pt-4">
+              <div className="flex min-w-0 flex-col gap-1">
+                <p className="inline-flex items-center gap-1.5 font-semibold text-foreground">
+                  <TbUsers className={cn('size-5 shrink-0', meta.textClass)} aria-hidden />
+                  {sos.type === 'manpower' && sos.people_needed
+                    ? t('{{count}} / {{needed}} people on the way', { count: coming, needed: sos.people_needed })
+                    : t('{{count}} people are coming to help', { count: coming })}
+                  {sos.type === 'medical' ? (
+                    <InfoTooltip
+                      content={t('Help with first aid and transport; this does not replace emergency services.')}
+                    />
+                  ) : null}
                 </p>
+                {sos.arrived_count > 0 ? (
+                  <p className="text-xs text-foreground-tertiary">
+                    {t('{{onWay}} on the way · {{arrived}} arrived', {
+                      onWay: sos.on_the_way_count,
+                      arrived: sos.arrived_count,
+                    })}
+                  </p>
+                ) : null}
+                {sos.type === 'manpower' && sos.people_needed ? (
+                  <div className="h-1.5 w-48 max-w-full overflow-hidden rounded-full bg-background-primary">
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        width: `${Math.min(100, (coming / sos.people_needed) * 100)}%`,
+                        backgroundColor: meta.color,
+                      }}
+                    />
+                  </div>
+                ) : null}
+                {/* {sos.my_response === 'arrived' ? (
+                  <p className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700">
+                    <TbCircleCheck className="size-4" aria-hidden />
+                    {t('You have arrived')}
+                  </p>
+                ) : sos.my_response === 'on_the_way' ? (
+                  <p className="inline-flex items-center gap-1 text-xs text-zinc-700 mt-2">
+                    {t('You are on the way. Your location is shared every 30 seconds until you arrive.')}
+                  </p>
+                ) : null} */}
+              </div>
+
+              {open && (perms.can_respond || perms.can_cancel_response) ? (
+                <div className="flex w-full flex-wrap gap-2 sm:w-auto">
+                  {perms.can_respond ? (
+                    <Button
+                      type="button"
+                      variant="green"
+                      size="medium"
+                      className="w-full sm:w-auto"
+                      isLoading={respond.isPending}
+                      iconLeft={<TbHandStop className="size-5" aria-hidden />}
+                      onClick={run(() => respond.mutateAsync(sos.id))}
+                    >
+                      {t("I'm coming to help now")}
+                    </Button>
+                  ) : null}
+                  {perms.can_cancel_response ? (
+                    <Button
+                      type="button"
+                      variant="outlined-brown"
+                      size="medium"
+                      className="w-full sm:w-auto"
+                      isLoading={cancelRespond.isPending}
+                      onClick={run(() => cancelRespond.mutateAsync(sos.id))}
+                    >
+                      {t("I can't come anymore")}
+                    </Button>
+                  ) : null}
+                </div>
               ) : null}
             </div>
           ) : null}
         </div>
 
-        {/* Closed states */}
-        {!open ? <ClosedNotice sos={sos} /> : null}
-        {sos.state === 'escalated' ? (
-          <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
-            {t('Nobody took charge in time: an admin is contacting the reporter and the campaign team.')}
-          </p>
-        ) : null}
 
         {/* Location */}
         <div className={cardClass}>
@@ -396,13 +420,9 @@ function SosDetailBody({ sosId }: { sosId: number }) {
                 </InfoRow>
               ) : null}
               {sos.campaign.safety_notes ? (
-                <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-amber-950">
-                  <TbShieldCheck className="mt-0.5 size-4 shrink-0" aria-hidden />
-                  <div>
-                    <p className="font-medium">{t('Safety notes of the campaign')}</p>
-                    <p className="whitespace-pre-line">{sos.campaign.safety_notes}</p>
-                  </div>
-                </div>
+                <InfoRow label={t('Safety notes')}>
+                  <span className="whitespace-pre-line">{sos.campaign.safety_notes}</span>
+                </InfoRow>
               ) : null}
             </div>
           </div>
@@ -431,38 +451,18 @@ function SosDetailBody({ sosId }: { sosId: number }) {
         ) : null}
 
         {/* Team actions */}
-        {open && (perms.can_claim || perms.can_resolve || sos.claimed_at) ? (
-          <div className={cn(cardClass, 'flex flex-wrap items-center justify-between gap-3')}>
-            <p className="flex items-center gap-1.5 text-sm text-foreground-secondary">
-              <TbClock className="size-4" aria-hidden />
-              {sos.claimed_at
-                ? t('Being handled since {{time}}', { time: format(new Date(sos.claimed_at), 'HH:mm') })
-                : t('Nobody has taken charge yet')}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {perms.can_claim && !sos.claimed_at ? (
-                <Button
-                  type="button"
-                  variant="outlined-brown"
-                  size="medium"
-                  isLoading={claim.isPending}
-                  onClick={run(() => claim.mutateAsync(sos.id))}
-                >
-                  {t('Take charge')}
-                </Button>
-              ) : null}
-              {perms.can_resolve ? (
-                <Button
-                  type="button"
-                  variant="green"
-                  size="medium"
-                  iconLeft={<TbCircleCheck className="size-5" aria-hidden />}
-                  onClick={() => setResolveOpen(true)}
-                >
-                  {t('Resolved')}
-                </Button>
-              ) : null}
-            </div>
+        {open && perms.can_resolve ? (
+          <div className={cn(cardClass, 'flex justify-end')}>
+            <Button
+              type="button"
+              variant="green"
+              size="medium"
+              className="w-full sm:w-auto"
+              iconLeft={<TbCircleCheck className="size-5" aria-hidden />}
+              onClick={() => setResolveOpen(true)}
+            >
+              {t('Resolved')}
+            </Button>
           </div>
         ) : null}
       </div>
