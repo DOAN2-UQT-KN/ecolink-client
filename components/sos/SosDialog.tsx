@@ -78,7 +78,7 @@ interface SosFormValues {
   people_needed: string;
   tools: string[];
   tools_note: string;
-  hazard_kind: string;
+  hazard_kinds: string[];
   consciousness: string;
   affected: string;
   description: string;
@@ -89,7 +89,7 @@ const DEFAULT_VALUES: SosFormValues = {
   people_needed: '',
   tools: [],
   tools_note: '',
-  hazard_kind: '',
+  hazard_kinds: [],
   consciousness: '',
   affected: '1',
   description: '',
@@ -252,7 +252,7 @@ function SosDialogBody({ onOpenChange, campaignId, shiftId, campaignOptions }: S
         setPhotoError(t('Add at least one photo taken from a safe distance'));
         return;
       }
-      details = { hazard_kind: values.hazard_kind as ISosDetails['hazard_kind'] };
+      details = { hazard_kinds: values.hazard_kinds as ISosDetails['hazard_kinds'] };
     } else {
       details = {
         consciousness: values.consciousness as ISosDetails['consciousness'],
@@ -537,28 +537,36 @@ function SosDialogBody({ onOpenChange, campaignId, shiftId, campaignOptions }: S
             <Field>
               <FieldLabel className="text-foreground-tertiary font-display-3">
                 {t('Kind of hazardous waste')} <span className="text-destructive">*</span>
+                <InfoTooltip content={t('Choose one or more')} />
               </FieldLabel>
               <Controller
-                name="hazard_kind"
+                name="hazard_kinds"
                 control={control}
-                rules={{ required: t('Choose the kind of hazardous waste') }}
+                rules={{ validate: (v) => v.length > 0 || t('Choose the kind of hazardous waste') }}
                 render={({ field }) => (
                   <div className="flex flex-wrap gap-2">
-                    {SOS_HAZARD_KINDS.map((kind) => (
-                      <button
-                        key={kind.value}
-                        type="button"
-                        aria-pressed={field.value === kind.value}
-                        className={chipClass(field.value === kind.value)}
-                        onClick={() => field.onChange(kind.value)}
-                      >
-                        {t(kind.label)}
-                      </button>
-                    ))}
+                    {SOS_HAZARD_KINDS.map((kind) => {
+                      const active = field.value.includes(kind.value);
+                      return (
+                        <button
+                          key={kind.value}
+                          type="button"
+                          aria-pressed={active}
+                          className={chipClass(active)}
+                          onClick={() =>
+                            field.onChange(
+                              active ? field.value.filter((v) => v !== kind.value) : [...field.value, kind.value],
+                            )
+                          }
+                        >
+                          {t(kind.label)}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               />
-              <FieldError errors={[errors.hazard_kind]} />
+              <FieldError errors={[errors.hazard_kinds]} />
             </Field>
           ) : null}
 

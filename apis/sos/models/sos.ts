@@ -28,7 +28,8 @@ export interface ISosDetails {
   people_needed?: number | null;
   tools?: SosTool[];
   tools_note?: string | null;
-  hazard_kind?: SosHazardKind;
+  /** One or more kinds. */
+  hazard_kinds?: SosHazardKind[];
   consciousness?: SosConsciousness;
   affected?: number;
 }

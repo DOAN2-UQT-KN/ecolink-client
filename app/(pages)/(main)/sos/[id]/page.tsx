@@ -175,9 +175,9 @@ function SosDetailBody({ sosId }: { sosId: number }) {
         {sos.type === 'hazard' ? (
           <div
             role="alert"
-            className="flex items-start gap-3 rounded-xl border-2 border-sos-hazard/40 bg-sos-hazard/10 px-4 py-3"
+            className="flex items-center gap-3 rounded-xl border-2 border-sos-hazard/40 bg-sos-hazard/10 px-4 py-3"
           >
-            <TbAlertTriangle className="mt-0.5 size-6 shrink-0 text-sos-hazard" aria-hidden />
+            <TbAlertTriangle className="size-6 shrink-0 text-sos-hazard" aria-hidden />
             <p className="font-semibold text-sos-hazard">
               {t('Do not touch it, keep your distance and wait for the authorities.')}
             </p>
@@ -500,10 +500,10 @@ function DetailsCard({ sos }: { sos: ISosDetail }) {
         });
       }
       if (d.tools_note) rows.push({ label: t('Tools note'), value: d.tools_note });
-    } else if (sos.type === 'hazard' && d.hazard_kind) {
+    } else if (sos.type === 'hazard' && d.hazard_kinds?.length) {
       rows.push({
         label: t('Kind of hazardous waste'),
-        value: t(labelOf(SOS_HAZARD_KINDS, d.hazard_kind) ?? d.hazard_kind),
+        value: d.hazard_kinds.map((x) => t(labelOf(SOS_HAZARD_KINDS, x) ?? x)).join(', '),
       });
     } else if (sos.type === 'medical') {
       if (d.consciousness) {
@@ -530,7 +530,11 @@ function DetailsCard({ sos }: { sos: ISosDetail }) {
             {r.value}
           </InfoRow>
         ))}
-        {sos.description ? <p className="whitespace-pre-line">{sos.description}</p> : null}
+        {sos.description ? (
+          <InfoRow label={t('Note')}>
+            <span className="whitespace-pre-line">{sos.description}</span>
+          </InfoRow>
+        ) : null}
         {sos.photo_urls.length > 0 ? (
           <div className="mt-2 flex flex-wrap gap-2">
             <AntdImage.PreviewGroup>
