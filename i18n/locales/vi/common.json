@@ -1962,5 +1962,16 @@
   "{{distance}} away · about {{min}} min": "Cách {{distance}} · khoảng {{min}} phút",
   "{{km}} km": "{{km}} km",
   "{{m}} m": "{{m}} m",
-  "{{onWay}} on the way · {{arrived}} arrived": "{{onWay}} đang đến · {{arrived}} đã tới"
+  "{{onWay}} on the way · {{arrived}} arrived": "{{onWay}} đang đến · {{arrived}} đã tới",
+  "Open (live)": "Đang mở",
+  "Campaign title or #ID...": "Tên chiến dịch hoặc #ID...",
+  "People coming": "Người đến hỗ trợ",
+  "/ {{needed}} needed": "/ cần {{needed}}",
+  "Closure": "Kết quả đóng",
+  "No SOS found": "Không tìm thấy SOS",
+  "No SOS matches the current filters.": "Không có SOS nào khớp với bộ lọc hiện tại.",
+  "Could not load SOS.": "Không tải được danh sách SOS.",
+  "No open SOS": "Không có SOS nào đang mở",
+  "No SOS yet.": "Chưa có SOS nào.",
+  "SOS sent during this campaign's shifts appear here.": "Các SOS được phát trong ca của chiến dịch này sẽ hiện ở đây."
 }

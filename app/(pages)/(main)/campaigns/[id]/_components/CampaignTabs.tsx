@@ -8,6 +8,7 @@ import useAuthStore from '@/stores/useAuthStore';
 
 import { useCampaignDetail } from '../_hooks/useCampaignDetail';
 import { CampaignRegistrations } from './CampaignRegistrations';
+import { CampaignSosTab } from './CampaignSosTab';
 import { DetailInformation } from './DetailInformation';
 import { ShiftProgressCard } from './ShiftProgressCard';
 
@@ -15,6 +16,7 @@ const ALL_CAMPAIGN_TAB_ITEMS = [
   { value: 'detail', labelKey: 'Detail information' },
   { value: 'progress', labelKey: 'Progress' },
   { value: 'registrations', labelKey: 'Registrations' },
+  { value: 'sos', labelKey: 'SOS' },
 ] as const;
 
 export type CampaignTabValue = (typeof ALL_CAMPAIGN_TAB_ITEMS)[number]['value'];
@@ -34,8 +36,13 @@ export const CampaignTabs = memo(function CampaignTabs() {
     (canManageCampaign || isPlatformAdmin || CAMPAIGN_PUBLIC_STATUSES.includes(Number(campaign?.status)));
 
   // Registrations is open to everyone: names only for those allowed (CampaignRegistrations).
-  const tabItems = ALL_CAMPAIGN_TAB_ITEMS.filter((item) => item.value !== 'progress' || canSeeProgress);
-  const activeTab: CampaignTabValue = tab === 'progress' && !canSeeProgress ? 'detail' : tab;
+  // SOS: signed-in viewers only; the server hides reporter details from people outside the team.
+  const tabItems = ALL_CAMPAIGN_TAB_ITEMS.filter(
+    (item) =>
+      (item.value !== 'progress' || canSeeProgress) && (item.value !== 'sos' || isAuthenticated),
+  );
+  const activeTab: CampaignTabValue =
+    (tab === 'progress' && !canSeeProgress) || (tab === 'sos' && !isAuthenticated) ? 'detail' : tab;
 
   return (
     <Tabs value={activeTab} onValueChange={(v) => setTab(v as CampaignTabValue)}>
@@ -61,6 +68,11 @@ export const CampaignTabs = memo(function CampaignTabs() {
       <TabsContent value="registrations" className="mt-0">
         <CampaignRegistrations enabled={tab === 'registrations'} />
       </TabsContent>
+      {isAuthenticated && (
+        <TabsContent value="sos" className="mt-0">
+          <CampaignSosTab enabled={activeTab === 'sos'} />
+        </TabsContent>
+      )}
     </Tabs>
   );
 });

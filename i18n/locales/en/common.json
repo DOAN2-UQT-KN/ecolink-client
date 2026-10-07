@@ -1962,5 +1962,16 @@
   "{{distance}} away · about {{min}} min": "{{distance}} away · about {{min}} min",
   "{{km}} km": "{{km}} km",
   "{{m}} m": "{{m}} m",
-  "{{onWay}} on the way · {{arrived}} arrived": "{{onWay}} on the way · {{arrived}} arrived"
+  "{{onWay}} on the way · {{arrived}} arrived": "{{onWay}} on the way · {{arrived}} arrived",
+  "Open (live)": "Open (live)",
+  "Campaign title or #ID...": "Campaign title or #ID...",
+  "People coming": "People coming",
+  "/ {{needed}} needed": "/ {{needed}} needed",
+  "Closure": "Closure",
+  "No SOS found": "No SOS found",
+  "No SOS matches the current filters.": "No SOS matches the current filters.",
+  "Could not load SOS.": "Could not load SOS.",
+  "No open SOS": "No open SOS",
+  "No SOS yet.": "No SOS yet.",
+  "SOS sent during this campaign's shifts appear here.": "SOS sent during this campaign's shifts appear here."
 }

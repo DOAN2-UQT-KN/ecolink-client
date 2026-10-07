@@ -75,6 +75,15 @@ export interface ISosSummary {
   my_response: 'on_the_way' | 'arrived' | null;
   /** Not in the agreed contract; used when the server sends it (hazard banner of a shift). */
   meeting_point_id?: string | null;
+  shift_id?: string | null;
+  campaign_title?: string;
+  reporter_role?: SosRole | null;
+  resolved_at?: string | null;
+  resolution_code?: SosResolutionCode | null;
+  /** Only for admins and the campaign team; null for everyone else. */
+  reporter?: { id: string; name: string; avatar: string | null } | null;
+  /** Only for admins and the campaign team; null for everyone else. */
+  phone?: string | null;
 }
 
 export interface ISosResponder {
@@ -146,7 +155,10 @@ export type ISosDuplicatesResponse = IBaseResponse<ISosSummary[]>;
 
 export interface ISosListRequest {
   campaign_id?: string;
-  /** Comma-separated states, e.g. `open,helping,escalated`. */
+  type?: SosType;
+  /** Campaign title or `#id`. */
+  search?: string;
+  /** Comma-separated states, e.g. `open,helping,escalated`, or `all`. Default: the live states. */
   states?: string;
   latitude?: number;
   longitude?: number;
