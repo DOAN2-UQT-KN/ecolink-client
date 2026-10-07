@@ -6,6 +6,7 @@ import ReactQueryProvider from "@/components/client/providers/ReactQueryProvider
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/libs/utils";
+import { SosAvailabilityLocationSync } from "@/components/sos/SosAvailabilityLocationSync";
 
 export default function RootLayout() {
   return (
@@ -14,6 +15,7 @@ export default function RootLayout() {
         <TooltipProvider>
           <I18nProvider>
             <Outlet />
+            <SosAvailabilityLocationSync />
           </I18nProvider>
         </TooltipProvider>
       </ReactQueryProvider>

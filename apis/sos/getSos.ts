@@ -1,20 +1,22 @@
 import requestApi from '@/utils/requestApi';
-import type { IGetSOSRequest, IGetSOSResponse } from '@/apis/sos/models/sos';
+import type { IBaseResponse } from '@/types/BaseResponse';
+import type { ISosListRequest, ISosListResponse } from '@/apis/sos/models/sos';
 import { useGet, UseGetOptions } from '@/hooks/reactQuery';
+import { SOS_URL, toSosListResponse } from '@/apis/sos/adapters';
 
-const url = '/api/v1/sos';
+const url = SOS_URL;
 
-export const getAllSOS = async (params: IGetSOSRequest): Promise<IGetSOSResponse> => {
-  return await requestApi.get<IGetSOSResponse>(url, params);
+export const getSosList = async (params: ISosListRequest): Promise<ISosListResponse> => {
+  return toSosListResponse(await requestApi.get<IBaseResponse>(url, params));
 };
 
-export const useGetAllSOS = (
-  params: IGetSOSRequest,
-  options?: Omit<UseGetOptions<IGetSOSResponse>, 'queryKey' | 'queryFn'>,
+export const useSosList = (
+  params: ISosListRequest,
+  options?: Omit<UseGetOptions<ISosListResponse>, 'queryKey' | 'queryFn'>,
 ) => {
   return useGet({
     queryKey: ['sos', params],
-    queryFn: () => getAllSOS(params),
+    queryFn: () => getSosList(params),
     ...options,
   });
 };

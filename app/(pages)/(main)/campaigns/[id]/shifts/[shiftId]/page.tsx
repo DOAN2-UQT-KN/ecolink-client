@@ -26,6 +26,8 @@ import { useParams, useRouter } from '@/libs/router';
 import { cn } from '@/libs/utils';
 import ReportSummaryCard from '@/modules/ReportSummaryCard';
 import useAuthStore from '@/stores/useAuthStore';
+import { SosButton } from '@/components/sos/SosButton';
+import { ShiftHazardBanner } from '@/components/sos/ShiftHazardBanner';
 import { ShiftAttendancePanel } from '../../_components/ShiftAttendancePanel';
 import { ShiftResultPanel } from '../../_components/ShiftResultPanel';
 import { ShiftReopenedPill, ShiftStatusPill } from '../../_components/ShiftStatusPill';
@@ -185,6 +187,8 @@ function ShiftDetailBody({ shiftId }: { shiftId: string }) {
             </span>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+          {/* SOS from the shift screen: its checked-in volunteers and its leader (spec 4.3). */}
+          {shift.status === 'running' && <SosButton campaignId={campaignId} shiftId={shift.id} />}
           {canClose && (
             <CloseShiftButton
               campaignId={campaignId}
@@ -217,6 +221,12 @@ function ShiftDetailBody({ shiftId }: { shiftId: string }) {
           </div>
         </div>
         <JoinShiftsDialog campaignId={campaignId} open={joinOpen} onOpenChange={setJoinOpen} />
+
+        {shift.status === 'running' &&
+          point &&
+          (mine || canManageCampaign || isPlatformAdmin || (leaderId != null && leaderId === currentUserId)) && (
+            <ShiftHazardBanner campaignId={campaignId} meetingPoint={point} />
+          )}
 
         <Tabs value={tab} onValueChange={(v) => setTab(v as 'info' | 'members' | 'result')}>
           <TabsList className="w-full sm:w-auto border border-[rgba(136,122,71,0.5)] rounded-[8px] bg-background-primary/10 mb-4">
