@@ -30,7 +30,7 @@ import { Link } from '@/libs/router';
 import { useCampaignDetail } from '../_hooks/useCampaignDetail';
 import { useCampaignManagersList } from '../../_hooks/useCampaignManagersList';
 import { AvatarList, type AvatarListItem } from '@/components/client/shared/AvatarList';
-import { meetingPointName } from '../../_services/campaignLabels';
+import { meetingPointName } from '@/utils/campaignLabels';
 
 /** Manager picker: only active members of the campaign's organization who aren't managers yet. */
 const AddManagerDialog = memo(function AddManagerDialog({

@@ -29,7 +29,7 @@ import { CampaignDetailProvider } from '../../_context/CampaignDetailContext';
 import { useCampaignDetail } from '../../_hooks/useCampaignDetail';
 import { cardClass, ShiftInfoTab } from './_components/ShiftInfoTab';
 import { ShiftMembersTab } from './_components/ShiftMembersTab';
-import { dayLabel, hhmm, meetingPointName } from '../../../_services/campaignLabels';
+import { dayLabel, hhmm, meetingPointName } from '@/utils/campaignLabels';
 
 
 /** One shift of a campaign: its details and who is in charge (tab 1), who registered (tab 2). */

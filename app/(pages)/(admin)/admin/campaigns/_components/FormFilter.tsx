@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TbZoom } from 'react-icons/tb';
 
@@ -36,38 +36,31 @@ export const FormFilter = memo(function FormFilter() {
   const { t } = useTranslation();
   const { filters, onFilterChange } = useCampaignContext();
 
-  const [searchValue, setSearchValue] = useState(filters.search ?? '');
+  const urlSearch = filters.search ?? '';
+  const [searchValue, setSearchValue] = useState(urlSearch);
   const debouncedSearch = useDebounce(searchValue, 500);
 
-  useEffect(() => {
-    setSearchValue(filters.search ?? '');
-  }, [filters.search]);
+  // Adopt a search that changed in the URL from elsewhere (React's "adjust state on prop change").
+  const [syncedSearch, setSyncedSearch] = useState(urlSearch);
+  if (syncedSearch !== urlSearch) {
+    setSyncedSearch(urlSearch);
+    if (searchValue.trim() !== urlSearch) setSearchValue(urlSearch);
+  }
 
   useEffect(() => {
+    // Wait until typing settles; also skips the render right after the input was reset from the URL.
+    if (debouncedSearch !== searchValue) return;
     const normalized = debouncedSearch.trim();
-    if ((filters.search ?? '') === normalized) return;
-    onFilterChange({ search: normalized });
-  }, [debouncedSearch, filters.search, onFilterChange]);
+    if (normalized !== urlSearch) onFilterChange({ search: normalized });
+  }, [debouncedSearch, onFilterChange, searchValue, urlSearch]);
 
-  const handleStatusChange = useCallback(
-    (value: string) => {
-      onFilterChange({ status: value });
-    },
-    [onFilterChange],
-  );
+  const handleStatusChange = (value: string) => onFilterChange({ status: value });
 
-  const handleOrganizationChange = useCallback(
-    (value: string) => {
-      // treat the "-1" sentinel ("All") as no filter
-      onFilterChange({ organizationId: value === ALL_ORGANIZATIONS_VALUE ? '' : value });
-    },
-    [onFilterChange],
-  );
+  // treat the "-1" sentinel ("All") as no filter
+  const handleOrganizationChange = (value: string) =>
+    onFilterChange({ organizationId: value === ALL_ORGANIZATIONS_VALUE ? '' : value });
 
-  const statusOptions = useMemo(
-    () => CAMPAIGN_STATUS_OPTIONS.map((opt) => ({ ...opt, label: t(opt.labelKey) })),
-    [t],
-  );
+  const statusOptions = CAMPAIGN_STATUS_OPTIONS.map((opt) => ({ ...opt, label: t(opt.labelKey) }));
 
   return (
     <div className="space-y-4 rounded-[10px] border border-border bg-card p-4">
@@ -120,5 +113,3 @@ export const FormFilter = memo(function FormFilter() {
     </div>
   );
 });
-
-export default FormFilter;

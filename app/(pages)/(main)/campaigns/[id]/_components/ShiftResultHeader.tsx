@@ -6,7 +6,7 @@ import type { IShiftResultView } from '@/apis/campaign/shiftResult';
 import { Button } from '@/components/client/shared/Button';
 import { ConfirmPopoverModal } from '@/components/client/shared/ConfirmPopoverModal';
 import { ShiftReopenedNotice, ShiftReopenedPill, ShiftStatusPill } from '@/modules/CampaignVerification';
-import { hhmm } from '../../_services/campaignLabels';
+import { hhmm } from '@/utils/campaignLabels';
 
 /** Title, status and timestamps of the shift result, with "Edit" and "End shift early". */
 export function ShiftResultHeader({

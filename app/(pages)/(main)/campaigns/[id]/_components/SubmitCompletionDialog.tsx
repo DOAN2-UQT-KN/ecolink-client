@@ -20,7 +20,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Layer1Summary } from '@/modules/CampaignVerification';
-import { meetingPointName } from '../../_services/campaignLabels';
+import { meetingPointName } from '@/utils/campaignLabels';
 import { useReportTitle } from '../_hooks/useReportTitle';
 
 /** Reason for a waste point no shift handled (server: 1–500 characters). */

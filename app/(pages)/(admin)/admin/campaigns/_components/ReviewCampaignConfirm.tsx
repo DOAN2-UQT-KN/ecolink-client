@@ -1,4 +1,4 @@
-import { memo, useCallback, useState } from "react";
+import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { TbBan, TbCheckbox } from "react-icons/tb";
 
@@ -43,15 +43,15 @@ export const ReviewCampaignConfirm = memo(function ReviewCampaignConfirm({
 
   const { mutateAsync: reviewAsync, isPending } = useReviewCampaign();
 
-  const resetForm = useCallback(() => {
+  const resetForm = () => {
     setDecision(isBanMode ? "block" : "approve");
     setReason("");
-  }, [isBanMode]);
+  };
 
   const needsReason = decision !== "approve";
   const confirmDisabled = needsReason ? !reason.trim() : false;
 
-  const handleConfirm = useCallback(async () => {
+  const handleConfirm = async () => {
     try {
       await reviewAsync({
         id: campaignId,
@@ -68,7 +68,7 @@ export const ReviewCampaignConfirm = memo(function ReviewCampaignConfirm({
       // usePost surfaces API errors.
       return false;
     }
-  }, [campaignId, decision, isBanMode, needsReason, reason, resetForm, reviewAsync, t]);
+  };
 
   const isDark = theme === "dark";
 
@@ -180,5 +180,3 @@ export const ReviewCampaignConfirm = memo(function ReviewCampaignConfirm({
     />
   );
 });
-
-export default ReviewCampaignConfirm;

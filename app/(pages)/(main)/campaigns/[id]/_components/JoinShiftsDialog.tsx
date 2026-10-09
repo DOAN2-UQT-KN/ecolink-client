@@ -23,7 +23,7 @@ import { cn } from '@/libs/utils';
 import showMessage, { MessageLevel, MessageType } from '@/utils/showMessage';
 
 import { ShiftFillBar } from './ShiftFillBar';
-import { dayLabel, hhmm } from '../../_services/campaignLabels';
+import { dayLabel, hhmm } from '@/utils/campaignLabels';
 
 const overlaps = (a: IRegistrationOptionShift, b: IRegistrationOptionShift) =>
   new Date(a.start_at).getTime() < new Date(b.end_at).getTime() &&

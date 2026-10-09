@@ -33,7 +33,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { ConfirmPopoverModal } from '@/components/client/shared/ConfirmPopoverModal';
 import showMessage, { MessageLevel, MessageType } from '@/utils/showMessage';
-import { hhmm } from '../../_services/campaignLabels';
+import { hhmm } from '@/utils/campaignLabels';
 
 
 /** The dynamic QR of the open session: a new code every period (spec 4.1). */

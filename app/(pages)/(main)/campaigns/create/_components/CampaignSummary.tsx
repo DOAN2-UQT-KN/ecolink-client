@@ -14,7 +14,7 @@ import { useDayLabel } from '../_hooks/useDayLabel';
 import type { CampaignStep } from '../_services/campaignSteps.service';
 import { type CampaignFormValues } from '../_services/campaign.service';
 import { impliedMinAge } from '@/constants/campaignLifecycle';
-import { meetingPointName } from '../../_services/campaignLabels';
+import { meetingPointName } from '@/utils/campaignLabels';
 
 const Section = memo(function Section({
   title,

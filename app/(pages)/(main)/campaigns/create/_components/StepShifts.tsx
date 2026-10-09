@@ -10,7 +10,7 @@ import { useDayLabel } from '../_hooks/useDayLabel';
 import { useLeaderOptions } from '../../_hooks/useLeaderOptions';
 import { fitSchedule, type CampaignFormValues } from '../_services/campaign.service';
 import { daysBelowSuggestion } from '../_services/shiftSchedule.service';
-import { meetingPointName } from '../../_services/campaignLabels';
+import { meetingPointName } from '@/utils/campaignLabels';
 import MinVolunteersReasonField from './MinVolunteersReasonField';
 import ShiftsSingleForm from './ShiftsSingleForm';
 import ShiftsTable from './ShiftsTable';

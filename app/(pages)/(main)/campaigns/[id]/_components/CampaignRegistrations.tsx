@@ -24,7 +24,7 @@ import { useCampaignDetail } from '../_hooks/useCampaignDetail';
 import { AvatarList } from '@/components/client/shared/AvatarList';
 import { CloseShiftButton } from './CloseShiftButton';
 import { ShiftFillBar } from './ShiftFillBar';
-import { dayLabel, hhmm, meetingPointName } from '../../_services/campaignLabels';
+import { dayLabel, hhmm, meetingPointName } from '@/utils/campaignLabels';
 
 
 

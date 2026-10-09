@@ -20,7 +20,7 @@ import { Link } from '@/libs/router';
 
 import { ParticipationInfoCard } from './ParticipationInfoCard';
 import { CampaignManagers } from './CampaignManagers';
-import { meetingPointName } from '../../_services/campaignLabels';
+import { meetingPointName } from '@/utils/campaignLabels';
 
 const DEFAULT_BANNER = '/banner-default.jpg';
 

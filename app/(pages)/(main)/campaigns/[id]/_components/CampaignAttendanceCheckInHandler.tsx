@@ -16,7 +16,7 @@ import {
 import { apiErrorMessage } from '@/constants/apiErrorMessages';
 
 import { useCampaignDetail } from '../_hooks/useCampaignDetail';
-import { hhmm } from '../../_services/campaignLabels';
+import { hhmm } from '@/utils/campaignLabels';
 import { getCurrentPosition } from '@/libs/geo';
 
 type Outcome =

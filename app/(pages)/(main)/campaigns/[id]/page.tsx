@@ -35,7 +35,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import useAuthStore from '@/stores/useAuthStore';
 import { useRouter } from '@/libs/router';
 import { SosButton } from '@/components/sos/SosButton';
-import { shiftLabel } from '../_services/campaignLabels';
+import { shiftLabel } from '@/utils/campaignLabels';
 
 function CampaignDetailBody() {
   const { t } = useTranslation('common');

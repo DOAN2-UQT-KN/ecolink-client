@@ -1,12 +1,4 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { createContext, useCallback, useContext, useMemo } from 'react';
 import { usePathname, useRouter, useSearchParams } from '@/libs/router';
 
 import { useGetCampaigns } from '@/apis/campaign/getCampaigns';
@@ -59,13 +51,14 @@ function normalizePageSize(limit: number): number {
   return PAGE_SIZE_OPTIONS.includes(limit as (typeof PAGE_SIZE_OPTIONS)[number]) ? limit : 10;
 }
 
+const EMPTY_CAMPAIGNS: ICampaign[] = [];
+
 export function CampaignProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const searchParamsRef = useRef(searchParams);
-  searchParamsRef.current = searchParams;
 
+  // The URL is the only source of the filters and the page.
   const urlSearch = useGetParam<string>('search', 'string', '');
   const urlStatus = useGetParam<string>('status', 'string', 'all');
   const urlOrganizationId = useGetParam<string>('organization_id', 'string', '');
@@ -74,55 +67,24 @@ export function CampaignProvider({ children }: { children: React.ReactNode }) {
   const urlPage = useGetParam<number>('page', 'number', 1);
   const urlLimit = useGetParam<number>('limit', 'number', 10);
 
-  const [filters, setFilters] = useState<FormFilterValues>({
-    search: urlSearch ?? '',
-    status: urlStatus ?? 'all',
-    organizationId: urlOrganizationId ?? '',
-    sortBy: parseSortBy(urlSortBy),
-    sortOrder: parseSortOrder(urlSortOrder),
-  });
-
-  const [pagination, setPagination] = useState<PaginationState>({
-    current: Math.max(1, urlPage ?? 1),
-    pageSize: normalizePageSize(Math.max(1, urlLimit ?? 10)),
-  });
-
-  useEffect(() => {
-    const nextFilters: FormFilterValues = {
+  const filters = useMemo<FormFilterValues>(
+    () => ({
       search: urlSearch ?? '',
       status: urlStatus ?? 'all',
       organizationId: urlOrganizationId ?? '',
       sortBy: parseSortBy(urlSortBy),
       sortOrder: parseSortOrder(urlSortOrder),
-    };
-    setFilters((prev) => {
-      if (
-        prev.search === nextFilters.search &&
-        prev.status === nextFilters.status &&
-        prev.organizationId === nextFilters.organizationId &&
-        prev.sortBy === nextFilters.sortBy &&
-        prev.sortOrder === nextFilters.sortOrder
-      ) {
-        return prev;
-      }
-      return nextFilters;
-    });
+    }),
+    [urlOrganizationId, urlSearch, urlSortBy, urlSortOrder, urlStatus],
+  );
 
-    const nextPagination: PaginationState = {
-      current: Math.max(1, urlPage ?? 1),
-      pageSize: normalizePageSize(Math.max(1, urlLimit ?? 10)),
-    };
-    setPagination((prev) => {
-      if (prev.current === nextPagination.current && prev.pageSize === nextPagination.pageSize) {
-        return prev;
-      }
-      return nextPagination;
-    });
-  }, [urlLimit, urlOrganizationId, urlPage, urlSearch, urlSortBy, urlSortOrder, urlStatus]);
+  const current = Math.max(1, urlPage ?? 1);
+  const pageSize = normalizePageSize(Math.max(1, urlLimit ?? 10));
+  const pagination = useMemo<PaginationState>(() => ({ current, pageSize }), [current, pageSize]);
 
   const setParams = useCallback(
     (updates: Record<string, string | undefined>) => {
-      const params = new URLSearchParams(searchParamsRef.current.toString());
+      const params = new URLSearchParams(searchParams.toString());
       Object.entries(updates).forEach(([key, value]) => {
         if (value && value.length > 0) {
           params.set(key, value);
@@ -134,57 +96,42 @@ export function CampaignProvider({ children }: { children: React.ReactNode }) {
       const next = params.toString();
       router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
     },
-    [pathname, router],
+    [pathname, router, searchParams],
   );
 
-  const request: IGetCampaignsRequest = useMemo(
-    () => ({
-      page: pagination.current,
-      limit: pagination.pageSize,
-      search: filters.search.trim() || undefined,
-      status: filters.status === 'all' ? undefined : Number(filters.status),
-      organizationId: filters.organizationId || undefined,
-      // The review queue leaves out organizations the admin belongs to.
-      excludeMemberOrgs:
-        Number(filters.status) === CAMPAIGN_STATUS.PENDING_REVIEW ? true : undefined,
-    }),
-    [filters.organizationId, filters.search, filters.status, pagination],
-  );
+  // TanStack Query hashes the key, so this object needs no memo.
+  const request: IGetCampaignsRequest = {
+    page: pagination.current,
+    limit: pagination.pageSize,
+    search: filters.search.trim() || undefined,
+    status: filters.status === 'all' ? undefined : Number(filters.status),
+    organizationId: filters.organizationId || undefined,
+    // The review queue leaves out organizations the admin belongs to.
+    excludeMemberOrgs:
+      Number(filters.status) === CAMPAIGN_STATUS.PENDING_REVIEW ? true : undefined,
+  };
 
   const { data, isLoading } = useGetCampaigns(request);
 
-  const campaigns = useMemo(() => data?.data?.campaigns ?? [], [data?.data?.campaigns]);
+  const campaigns = data?.data?.campaigns ?? EMPTY_CAMPAIGNS;
   const total = data?.data?.total ?? 0;
 
   const onFilterChange = useCallback(
     (next: Partial<FormFilterValues>) => {
-      setFilters((prev) => {
-        const merged = { ...prev, ...next };
-        setPagination((prevPagination) => ({ ...prevPagination, current: 1 }));
-        setParams({
-          search: merged.search.trim() || undefined,
-          status: merged.status === 'all' ? undefined : merged.status,
-          organization_id: merged.organizationId || undefined,
-          sort_by: merged.sortBy,
-          sort_order: merged.sortOrder,
-          page: '1',
-        });
-        return merged;
+      const merged = { ...filters, ...next };
+      setParams({
+        search: merged.search.trim() || undefined,
+        status: merged.status === 'all' ? undefined : merged.status,
+        organization_id: merged.organizationId || undefined,
+        sort_by: merged.sortBy,
+        sort_order: merged.sortOrder,
+        page: '1',
       });
     },
-    [setParams],
+    [filters, setParams],
   );
 
   const onResetFilters = useCallback(() => {
-    const resetFilters: FormFilterValues = {
-      search: '',
-      status: 'all',
-      organizationId: '',
-      sortBy: 'created_at',
-      sortOrder: 'desc',
-    };
-    setFilters(resetFilters);
-    setPagination((prev) => ({ ...prev, current: 1 }));
     setParams({
       search: undefined,
       status: undefined,
@@ -197,7 +144,6 @@ export function CampaignProvider({ children }: { children: React.ReactNode }) {
 
   const onPageChange = useCallback(
     (nextPage: number) => {
-      setPagination((prev) => ({ ...prev, current: nextPage }));
       setParams({ page: String(nextPage), limit: String(pagination.pageSize) });
     },
     [pagination.pageSize, setParams],
@@ -205,9 +151,7 @@ export function CampaignProvider({ children }: { children: React.ReactNode }) {
 
   const onPageSizeChange = useCallback(
     (nextSize: number) => {
-      const pageSize = Math.max(1, Math.floor(nextSize));
-      setPagination((prev) => ({ ...prev, pageSize, current: 1 }));
-      setParams({ limit: String(pageSize), page: '1' });
+      setParams({ limit: String(Math.max(1, Math.floor(nextSize))), page: '1' });
     },
     [setParams],
   );

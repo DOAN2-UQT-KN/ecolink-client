@@ -11,7 +11,7 @@ import { ChangeShiftLeaderButton } from '../../../_components/ChangeShiftLeaderB
 import { ShiftFillBar } from '../../../_components/ShiftFillBar';
 import { useCampaignDetail } from '../../../_hooks/useCampaignDetail';
 import { useCampaignManagersList } from '../../../../_hooks/useCampaignManagersList';
-import { hhmm } from '../../../../_services/campaignLabels';
+import { hhmm } from '@/utils/campaignLabels';
 
 export const cardClass = 'rounded-xl border border-[rgba(136,122,71,0.4)] bg-white/60 p-5 sm:p-6 shadow-sm';
 
