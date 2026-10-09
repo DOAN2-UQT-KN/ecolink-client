@@ -4,7 +4,7 @@ import Image from '@/components/ui/AppImage';
 import type { IGift } from '@/apis/gift/models/gift';
 import { cn } from '@/libs/utils';
 import bannerDefault from '@/public/banner-default.jpg';
-import { ConfirmPopover } from '@/components/admin/shared/ConfirmPopover';
+import { ConfirmPopover } from '@/components/ui/ConfirmPopover';
 import { Button } from '../client/shared/Button';
 import { TbCoinFilled } from 'react-icons/tb';
 import { useTranslation } from 'react-i18next';

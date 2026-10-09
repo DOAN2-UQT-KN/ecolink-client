@@ -9,7 +9,9 @@ import { Button } from "@/components/client/shared/Button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "@/libs/router";
 import { cn } from "@/libs/utils";
-import { stepCardClassName } from "./StepEmail";
+
+export const stepCardClassName =
+  "rounded-[10px] border border-[rgba(136,122,71,0.5)] bg-white/80 px-[24px] py-[28px] shadow-sm lg:px-[30px] lg:py-[35px]";
 
 /** Breadcrumbs plus the single card the submitted and tracking pages live in. */
 export function ApplicationPageLayout({

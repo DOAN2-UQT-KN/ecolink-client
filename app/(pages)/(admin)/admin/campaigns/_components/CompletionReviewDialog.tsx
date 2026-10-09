@@ -11,17 +11,9 @@ import {
 } from "@/apis/campaign/processCampaign";
 import type { IResultPhotoCheck } from "@/apis/campaign/shiftResult";
 import type { IMeetingPointView } from "@/apis/campaign/verification";
-import {
-  CHECK_LEVEL_LABEL,
-  checksByUrl,
-  meetingPointLabel,
-  MeetingPointStatusPill,
-  PhotoCheckBadge,
-  TRASH_POINT_RESULT_LABEL,
-} from "@/app/(pages)/(main)/campaigns/[id]/_components/ResultVerificationBadges";
-import { MeetingPointDecisionActions } from "@/app/(pages)/(main)/campaigns/[id]/_components/MeetingPointDecisionActions";
-import { MeetingPointVotesList } from "@/app/(pages)/(main)/campaigns/[id]/_components/MeetingPointVotesPopover";
-import { ReviewSectionCard } from "@/components/admin/shared/ReviewSection";
+import { checksByUrl, meetingPointLabel, MeetingPointStatusPill, PhotoCheckBadge, MeetingPointDecisionActions, MeetingPointVotesList } from "@/modules/CampaignVerification";
+import { CHECK_LEVEL_LABEL, TRASH_POINT_RESULT_LABEL } from "@/constants/campaignVerification";
+import { ReviewSectionCard } from "@/components/ui/ReviewSection";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,

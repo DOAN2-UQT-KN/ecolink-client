@@ -1,15 +1,18 @@
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useWatch } from 'react-hook-form';
 
-import { useCampaign } from '../_hooks/useCampaign';
-import { CAMPAIGN_STEPS } from '../_context/CampaignContext';
+import { useCampaign } from '../_context/CampaignContext';
+import { CAMPAIGN_STEPS } from '../_services/campaignSteps.service';
+import type { CampaignFormValues } from '../_services/campaign.service';
 import { CampaignSummary } from './CampaignSummary';
 
 /** Last step: everything the admin will see, with a way back to each step. */
 const StepReview = memo(function StepReview() {
   const { t } = useTranslation();
   const { form, organization, suggestedMinPerDay, goToStep } = useCampaign();
-  const values = form.watch();
+  // useWatch, not form.watch(): watch() would re-render the whole wizard provider on every keystroke.
+  const values = useWatch({ control: form.control }) as CampaignFormValues;
 
   return (
     <div className="flex flex-col gap-6">

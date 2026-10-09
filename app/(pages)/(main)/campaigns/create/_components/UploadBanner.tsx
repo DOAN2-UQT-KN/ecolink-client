@@ -1,13 +1,11 @@
-import { memo, useCallback, useEffect, useRef, useState } from "react";
-import { useFormContext } from "react-hook-form";
+import { lazy, memo, Suspense, useEffect, useRef, useState } from "react";
+import { useFormContext, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Image as AntdImage } from "antd";
-import Cropper, { type Area } from "react-easy-crop";
-import "react-easy-crop/react-easy-crop.css";
+import type { Area } from "react-easy-crop";
 import { BiTrash } from "react-icons/bi";
 import { FaEye } from "react-icons/fa";
 import { IoDocumentAttachOutline } from "react-icons/io5";
-import { toast } from "sonner";
 
 import { Button } from "@/components/client/shared/Button";
 import { compressImage } from "@/libs/compressImage";
@@ -24,10 +22,19 @@ import { CampaignFormValues } from "../_services/campaign.service";
 import { CAMPAIGN_BANNER_MAX_BYTES } from "@/constants/campaignLifecycle";
 import showMessage, { MessageLevel, MessageType } from "@/utils/showMessage";
 
+// The cropper (and its CSS) is only needed once an image is picked.
+const Cropper = lazy(async () => {
+  await import("react-easy-crop/react-easy-crop.css");
+  return import("react-easy-crop");
+});
+
+const toastError = (title: string) =>
+  showMessage({ type: MessageType.Toast, level: MessageLevel.Error, title });
+
 const UploadBanner = memo(function UploadBanner() {
   const { t } = useTranslation();
-  const { watch, setValue } = useFormContext<CampaignFormValues>();
-  const banner = watch("banner");
+  const { control, setValue } = useFormContext<CampaignFormValues>();
+  const banner = useWatch({ control, name: "banner" });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [compressing, setCompressing] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string>("");
@@ -54,60 +61,51 @@ const UploadBanner = memo(function UploadBanner() {
     return () => URL.revokeObjectURL(url);
   }, [banner]);
 
-  const revokeCropSrc = useCallback(() => {
+  const revokeCropSrc = () => {
     setCropSrc((prev) => {
       if (prev) URL.revokeObjectURL(prev);
       return "";
     });
-  }, []);
+  };
 
-  const resetCropState = useCallback(() => {
+  const resetCropState = () => {
     setCrop({ x: 0, y: 0 });
     setZoom(1);
     setCroppedAreaPixels(null);
-  }, []);
+  };
 
-  const onCropDialogOpenChange = useCallback(
-    (open: boolean) => {
-      if (!open) {
-        setCropOpen(false);
-        revokeCropSrc();
-        resetCropState();
-      }
-    },
-    [resetCropState, revokeCropSrc],
-  );
-
-  const onCropComplete = useCallback(
-    (_croppedArea: Area, croppedPixels: Area) => {
-      setCroppedAreaPixels(croppedPixels);
-    },
-    [],
-  );
-
-  const handleFileChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
+  const onCropDialogOpenChange = (open: boolean) => {
+    if (!open) {
+      setCropOpen(false);
       revokeCropSrc();
       resetCropState();
-      const url = URL.createObjectURL(file);
-      setCropSrc(url);
-      setCropOpen(true);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-    },
-    [resetCropState, revokeCropSrc],
-  );
+    }
+  };
 
-  const removeBanner = useCallback(() => {
+  const onCropComplete = (_croppedArea: Area, croppedPixels: Area) => {
+    setCroppedAreaPixels(croppedPixels);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    revokeCropSrc();
+    resetCropState();
+    const url = URL.createObjectURL(file);
+    setCropSrc(url);
+    setCropOpen(true);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const removeBanner = () => {
     setValue("banner", undefined, { shouldDirty: true });
-  }, [setValue]);
+  };
 
-  const applyCroppedImage = useCallback(async () => {
+  const applyCroppedImage = async () => {
     if (!cropSrc || !croppedAreaPixels) {
-      toast.error(t("Failed to crop image."));
+      toastError(t("Failed to crop image."));
       return;
     }
     setCompressing(true);
@@ -115,22 +113,17 @@ const UploadBanner = memo(function UploadBanner() {
       const raw = await getCroppedImageBlob(cropSrc, croppedAreaPixels);
       const compressedImage = await compressImage(raw);
       if (compressedImage.size > CAMPAIGN_BANNER_MAX_BYTES) {
-        showMessage({
-          type: MessageType.Toast,
-          level: MessageLevel.Error,
-          title: t("The cover image must be at most 5 MB"),
-        });
+        toastError(t("The cover image must be at most 5 MB"));
         return;
       }
       setValue("banner", compressedImage, { shouldDirty: true, shouldValidate: true });
       onCropDialogOpenChange(false);
-    } catch (error) {
-      console.error("Error processing banner:", error);
-      toast.error(t("Failed to compress image."));
+    } catch {
+      toastError(t("Failed to compress image."));
     } finally {
       setCompressing(false);
     }
-  }, [cropSrc, croppedAreaPixels, onCropDialogOpenChange, setValue, t]);
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -212,15 +205,17 @@ const UploadBanner = memo(function UploadBanner() {
           {cropSrc ? (
             <>
               <div className="relative h-[min(50vh,360px)] w-full overflow-hidden rounded-lg bg-black">
-                <Cropper
-                  image={cropSrc}
-                  crop={crop}
-                  zoom={zoom}
-                  aspect={16 / 9}
-                  onCropChange={setCrop}
-                  onZoomChange={setZoom}
-                  onCropComplete={onCropComplete}
-                />
+                <Suspense fallback={null}>
+                  <Cropper
+                    image={cropSrc}
+                    crop={crop}
+                    zoom={zoom}
+                    aspect={16 / 9}
+                    onCropChange={setCrop}
+                    onZoomChange={setZoom}
+                    onCropComplete={onCropComplete}
+                  />
+                </Suspense>
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-xs text-muted-foreground">{t("Zoom")}</span>

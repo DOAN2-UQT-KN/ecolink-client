@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 
 import useAuthStore from '@/stores/useAuthStore';
 import { updateUser } from '@/apis/user/updateUser';
-import { uploadToCloudinary } from '@/app/(pages)/(main)/incidents/create/_services/upload.service';
+import { uploadToCloudinary } from '@/libs/cloudinary';
 import {
   DropdownMenu,
   DropdownMenuContent,

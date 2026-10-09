@@ -16,7 +16,7 @@ const REASON_MAX = 1000;
  * that did not pass (the team sees both, and the shifts that submitted those trash points are
  * reopened when the campaign is rejected).
  */
-export const MeetingPointDecisionActions = memo(function MeetingPointDecisionActions({
+export const MeetingPointDecisionActions = /* @__PURE__ */ memo(function MeetingPointDecisionActions({
   campaignId,
   meetingPointId,
   trashPoints,

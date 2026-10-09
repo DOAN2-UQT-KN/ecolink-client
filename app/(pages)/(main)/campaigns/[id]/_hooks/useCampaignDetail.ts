@@ -11,6 +11,3 @@ export const useCampaignDetail = () => {
   }
   return context;
 };
-
-/** @alias useCampaignDetail */
-export const useContextProvider = useCampaignDetail;

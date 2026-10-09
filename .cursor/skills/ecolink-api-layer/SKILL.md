@@ -23,10 +23,10 @@ Ngoại lệ đã có (đích không phải API của mình, hoặc cần stream
 
 | Lời gọi trực tiếp | File |
 |---|---|
-| Upload Cloudinary (axios thô) | `incidents/create/_services/upload.service.ts > uploadToCloudinary()` |
+| Upload Cloudinary (axios thô) | `libs/cloudinary.ts > uploadToCloudinary()` |
 | Upload file lên presigned URL (axios thô, cố ý bỏ interceptor) | `apis/organization-application/presignDocument.ts > uploadApplicationDocument()` |
 | SSE chat AI (`fetch`) | `components/client/ai-chat/aiChatClient.ts` |
-| Nominatim geocoding (`fetch`) | `ApplicationAddress`, `ProfileLocationSection`, `LeafletAddress`, `Address`, `AddressPickerCard` — cần địa chỉ thì **dùng lại các component này** |
+| Nominatim geocoding (`fetch`) | `ApplicationAddress`, `ProfileLocationSection`, `LeafletAddress` (→ `campaigns/create/_services/nominatim.service.ts`), `Address`, `AddressPickerCard` — cần địa chỉ thì **dùng lại các component này** |
 
 ## Cấu trúc `apis/`
 

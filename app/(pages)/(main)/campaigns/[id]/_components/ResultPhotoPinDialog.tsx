@@ -1,4 +1,4 @@
-import { memo, useEffect, useState } from 'react';
+import { memo, useState } from 'react';
 import type { LatLngLiteral } from 'leaflet';
 import { useTranslation } from 'react-i18next';
 
@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import dynamic from '@/libs/dynamic';
 import showMessage, { MessageLevel, MessageType } from '@/utils/showMessage';
+import { getCurrentPosition, hasGeolocation } from '@/libs/geo';
 
 const LeafletAddressMap = dynamic(() => import('@/modules/LeafletAddressMap'), {
   ssr: false,
@@ -45,21 +46,20 @@ export const ResultPhotoPinDialog = memo(function ResultPhotoPinDialog({
   const [position, setPosition] = useState<LatLngLiteral | null>(defaultPin);
 
   // Start from the waste point every time the dialog opens.
-  useEffect(() => {
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
     if (open) setPosition(defaultPin);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }
 
-  const useCurrentLocation = () => {
-    if (!navigator.geolocation) {
+  const useCurrentLocation = async () => {
+    if (!hasGeolocation()) {
       showMessage({ type: MessageType.Toast, level: MessageLevel.Error, title: t('Geolocation is not supported') });
       return;
     }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => setPosition({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => showMessage({ type: MessageType.Toast, level: MessageLevel.Error, title: t('No location on device') }),
-      { enableHighAccuracy: true, timeout: 15_000 },
-    );
+    const pos = await getCurrentPosition({ maximumAge: 0 });
+    if (pos) setPosition({ lat: pos.lat, lng: pos.lng });
+    else showMessage({ type: MessageType.Toast, level: MessageLevel.Error, title: t('No location on device') });
   };
 
   return (

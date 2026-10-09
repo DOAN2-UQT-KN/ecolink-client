@@ -295,7 +295,7 @@ File admin (giấy tờ hồ sơ tổ chức) phải fetch blob qua `requestApi`
 
 ## `ConfirmPopover` — dialog xác nhận
 
-`components/admin/shared/ConfirmPopover.tsx` (tên là Popover nhưng bên trong là shadcn `Dialog`).
+`components/ui/ConfirmPopover.tsx` (tên là Popover nhưng bên trong là shadcn `Dialog`).
 
 ```ts
 type ConfirmPopoverProps = {

@@ -9,7 +9,7 @@ import {
   EDITABLE_APPLICATION_STATUSES,
   type ApplicationStatus,
 } from "@/apis/organization-application/models/application";
-import { ConfirmPopoverModal } from "@/modules/OrganizationCard/components/ConfirmPopoverModal";
+import { ConfirmPopoverModal } from "@/components/client/shared/ConfirmPopoverModal";
 import { BreadcrumbItemProps } from "@/components/client/shared/Breadcrumbs";
 import { Button } from "@/components/client/shared/Button";
 import { Link, useParams, useSearchParams } from "@/libs/router";
@@ -21,7 +21,7 @@ import {
   ApplicationDetailsSkeleton,
   ApplicationNotFound,
   ApplicationPageLayout,
-} from "../_components/ApplicationPageLayout";
+} from "@/components/client/shared/ApplicationPageLayout";
 
 /** Anything before a decision can be withdrawn, drafts included. */
 const OPEN_STATUSES: ApplicationStatus[] = [

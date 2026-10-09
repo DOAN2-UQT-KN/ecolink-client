@@ -258,8 +258,8 @@ useAuthStore.getState().accessToken;                      // ngoài React
 ## Code cũ không được làm theo
 
 - **Toast trực tiếp bằng sonner** (trái quy ước, đừng chép): `CampaignAttendanceQrButton`, `CampaignAttendanceCheckInHandler`, `PopoverCreateUpdateTask`, `AiChatWidget`, `UploadBanner`, `FileUpload`, `LeafletAddress`, `Address`, `ApplicationAddress`, `ApplicationImageField`, `SingleImageFileField`, `UpdateOrganizationPopover`, các component `profile/*`... Code mới dùng `showMessage`.
-- **Mock / code chết**: `campaigns/[id]/_services/campaignDetailService.ts > MOCK_ARCHIVED_TASKS` (luôn 8), `modules/ReportDetailCard/_services/voting.service.ts` (vote ngẫu nhiên, vote thật ở `apis/vote`), `campaigns/me/_components/UpdateCampaignPopover.tsx` (không được render), `organizations/create/*` (route đã redirect; `UpdateOrganizationPopover` vẫn import `organization.service`, `upload.service` và `OrganizationImageUpload` từ đây — đừng xoá thư mục, cũng đừng thêm code mới vào).
-- **Địa chỉ / bản đồ**: Nominatim đã được bọc trong `LeafletAddress` (campaign), `Address` (incident), `ApplicationAddress`, `ProfileLocationSection`, `AddressPickerCard` (chat), cộng `modules/LeafletAddressMap.tsx`. Dùng lại, đừng viết thêm lời gọi Nominatim.
+- **Mock / code chết**: `campaigns/[id]/_services/campaignDetailService.ts > MOCK_ARCHIVED_TASKS` (luôn 8), `modules/ReportDetailCard/_services/voting.service.ts` (vote ngẫu nhiên, vote thật ở `apis/vote`), `campaigns/me/_components/UpdateCampaignPopover.tsx` (không được render), `organizations/create/*` (route đã redirect; `UpdateOrganizationPopover` vẫn import `organization.service` và `OrganizationImageUpload` từ đây — đừng xoá thư mục, cũng đừng thêm code mới vào).
+- **Địa chỉ / bản đồ**: Nominatim đã được bọc trong `LeafletAddress` (campaign, gọi qua `create/_services/nominatim.service.ts`), `Address` (incident), `ApplicationAddress`, `ProfileLocationSection`, `AddressPickerCard` (chat), cộng `modules/LeafletAddressMap.tsx`. Dùng lại, đừng viết thêm lời gọi Nominatim.
 
 ## Component dùng chung phía client
 

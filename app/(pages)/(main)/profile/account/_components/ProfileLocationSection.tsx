@@ -14,7 +14,7 @@ import { cn } from '@/libs/utils';
 import {
   DETAIL_ADDRESS_MAX_LENGTH,
   truncateDetailAddress,
-} from '@/app/(pages)/(main)/campaigns/create/_services/campaign.service';
+} from '@/constants/address';
 
 const LeafletAddressMap = dynamic(() => import('@/modules/LeafletAddressMap'), {
   ssr: false,

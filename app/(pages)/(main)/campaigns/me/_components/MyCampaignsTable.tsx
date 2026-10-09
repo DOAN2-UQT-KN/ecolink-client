@@ -6,12 +6,12 @@ import { Building2 } from 'lucide-react';
 import type { ICampaign } from '@/apis/campaign/models/campaign';
 import { CampaignStatusTag } from '@/components/ui/CampaignStatusTag';
 import { Button } from '@/components/client/shared/Button';
-import { ConfirmPopover } from '@/components/admin/shared/ConfirmPopover';
+import { ConfirmPopover } from '@/components/ui/ConfirmPopover';
 import { useSubmitCampaign } from '@/apis/campaign/submitCampaign';
 import { useDeleteCampaign } from '@/apis/campaign/deleteCampaign';
 import {
   CAMPAIGN_DELETABLE_STATUSES,
-  CAMPAIGN_EDITABLE_STATUSES,
+  canEditCampaign,
   CAMPAIGN_STATUS,
   CAMPAIGN_SUBMITTABLE_STATUSES,
 } from '@/constants/campaignLifecycle';
@@ -22,7 +22,7 @@ import {
   type ColumnType,
 } from '@/components/client/shared/DataTable';
 import { CampaignGeneralInfoCell } from '@/components/client/shared/CampaignGeneralInfoCell';
-import useCampaignMeContext from '../_hooks/useCampaignMeContext';
+import { useCampaignMeContext } from '../_context/CampaignMeContext';
 import FormFilter from './FormFilter';
 import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
 
@@ -47,7 +47,7 @@ const CampaignRowActions = memo(function CampaignRowActions({ campaign }: { camp
   const { mutate: remove, isPending: isDeleting } = useDeleteCampaign();
   const status = campaign.status ?? -1;
   const canManage = Boolean(campaign.can_manage_campaign);
-  const canEdit = canManage && CAMPAIGN_EDITABLE_STATUSES.includes(status);
+  const canEdit = canEditCampaign(campaign);
   const canSubmit = canManage && CAMPAIGN_SUBMITTABLE_STATUSES.includes(status);
   // An approved campaign may have volunteers: it is cancelled instead (spec, "Xoá chiến dịch").
   const canDelete =
@@ -100,10 +100,10 @@ const CampaignRowActions = memo(function CampaignRowActions({ campaign }: { camp
   );
 });
 
-export const DataTable = memo(function DataTable() {
+export const MyCampaignsTable = memo(function MyCampaignsTable() {
   const router = useRouter();
   const { t } = useTranslation();
-  const { title: localizedTitle, locale } = useLocalizedDisplay();
+  const { title: localizedTitle } = useLocalizedDisplay();
   const { campaigns, isLoading, pagination, setPagination, total } = useCampaignMeContext();
 
   const columns: ColumnType<ICampaign>[] = useMemo(
@@ -208,7 +208,7 @@ export const DataTable = memo(function DataTable() {
       //   width: 120,
       // },
     ],
-    [pagination.current, pagination.pageSize, t, locale, localizedTitle],
+    [pagination, t, localizedTitle],
   );
 
   const handleTableChange = useCallback(
@@ -242,4 +242,4 @@ export const DataTable = memo(function DataTable() {
   );
 });
 
-export default DataTable;
+export default MyCampaignsTable;

@@ -34,6 +34,9 @@ export const CAMPAIGN_EDITABLE_STATUSES: number[] = [
 /** An approved campaign, edited in place: its days' times and shifts' times are fixed (3.5). */
 export const isApprovedEdit = (campaign?: { approved_at?: string | null; status?: number }) =>
   Boolean(campaign?.approved_at) && CAMPAIGN_EDITABLE_STATUSES.includes(campaign?.status ?? -1);
+/** Same rule as the server (BR-154): every field stays editable until approval. */
+export const canEditCampaign = (campaign: { can_manage_campaign?: boolean; status?: number }) =>
+  Boolean(campaign.can_manage_campaign) && CAMPAIGN_EDITABLE_STATUSES.includes(campaign.status ?? -1);
 export const CAMPAIGN_SUBMITTABLE_STATUSES: number[] = [
   CAMPAIGN_STATUS.DRAFT,
   CAMPAIGN_STATUS.NEEDS_REVISION,
@@ -90,6 +93,9 @@ export const CAMPAIGN_MEETING_POINT_MAX = 5;
 export const CAMPAIGN_MEETING_POINT_MAX_DISTANCE_KM = 5;
 export const CAMPAIGN_HIGH_DIFFICULTY_LEVEL = 3;
 export const CAMPAIGN_HIGH_DIFFICULTY_MIN_AGE = 18;
+/** Minimum age implied by the difficulty (volunteers must be adults on hard campaigns). */
+export const impliedMinAge = (difficulty: number): number | null =>
+  difficulty >= CAMPAIGN_HIGH_DIFFICULTY_LEVEL ? CAMPAIGN_HIGH_DIFFICULTY_MIN_AGE : null;
 export const CAMPAIGN_REVISION_HOLD_DAYS = 7;
 
 /** Why the create button is disabled, as a translatable sentence. */

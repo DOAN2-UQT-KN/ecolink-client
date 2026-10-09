@@ -34,7 +34,7 @@ import {
   OWNER_CHANGE_STATUS_TAG,
   OWNER_CHANGE_TYPE_LABEL,
 } from "@/constants/organizationApplicationStatus";
-import { ConfirmPopoverModal } from "@/modules/OrganizationCard/components/ConfirmPopoverModal";
+import { ConfirmPopoverModal } from "@/components/client/shared/ConfirmPopoverModal";
 import { formattedDate } from "@/utils/formattedDate";
 import { useOrganizationDetail } from "../_hooks/useOrganizationDetail";
 import { useInvalidateOwnership } from "../_hooks/useInvalidateOwnership";

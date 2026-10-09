@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Pill } from '@/components/ui/Pill';
 
-import { useCampaign } from '../_hooks/useCampaign';
+import { useCampaign } from '../_context/CampaignContext';
 
 /** On an approved campaign, marks a field whose change sends it back for review (spec 3.5). */
 export const NeedsReviewTag = memo(function NeedsReviewTag() {

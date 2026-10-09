@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
-import { useFieldArray } from 'react-hook-form';
+import { useFieldArray, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { addDays, format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
@@ -19,8 +19,9 @@ import {
   CAMPAIGN_MIN_LEAD_HOURS,
 } from '@/constants/campaignLifecycle';
 
-import { useCampaign } from '../_hooks/useCampaign';
+import { useCampaign } from '../_context/CampaignContext';
 import { combineDateTime, emptyDay, type CampaignDayFormValues } from '../_services/campaign.service';
+import { minutesOf } from '../_services/shiftSchedule.service';
 import NeedsReviewTag from './NeedsReviewTag';
 
 const inputClassName =
@@ -38,11 +39,6 @@ export const parseApiDate = (date?: string): Date | undefined => {
   if (!date) return undefined;
   const parsed = new Date(`${date}T00:00:00`);
   return Number.isNaN(parsed.getTime()) ? undefined : parsed;
-};
-
-const minutesOf = (time?: string): number | null => {
-  const m = time?.match(/^(\d{2}):(\d{2})$/);
-  return m ? Number(m[1]) * 60 + Number(m[2]) : null;
 };
 
 /** Earliest picked date of the campaign, or undefined while none is picked. */
@@ -80,12 +76,11 @@ const ScheduleFields = memo(function ScheduleFields() {
   const {
     control,
     register,
-    watch,
     formState: { errors },
   } = form;
   const { fields, append, remove } = useFieldArray({ control, name: 'days' });
   const [openIndex, setOpenIndex] = useState<number | null>(null);
-  const days = watch('days');
+  const days = useWatch({ control, name: 'days' });
   const first = firstDate(days);
 
   useEffect(() => {

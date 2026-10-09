@@ -1,12 +1,5 @@
-import React, {
-  createContext,
-  ReactNode,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import React, { createContext, ReactNode, useCallback, useContext, useMemo, useState } from "react";
+import { keepPreviousData } from "@tanstack/react-query";
 import { usePathname, useRouter, useSearchParams } from "@/libs/router";
 
 import type { ICampaign } from "@/apis/campaign/models/campaign";
@@ -16,12 +9,11 @@ import type { IGetCampaignsRequest } from "@/apis/campaign/models/getCampaigns";
 
 import {
   applyGreenPointsRange,
-  areCampaignSearchFiltersEqual,
   buildCampaignSearchFilters,
   CAMPAIGN_PAGE_SIZE,
-  DEFAULT_CAMPAIGN_SEARCH_STATUSES,
   type CampaignSearchFilters,
   type CampaignSearchViewMode,
+  isDefaultCampaignStatuses,
   parseViewMode,
   serializeStatuses,
 } from "../_services/campaignSearch.service";
@@ -47,6 +39,9 @@ export const CampaignSearchContext = createContext<CampaignSearchContextType | u
   undefined,
 );
 
+/** URL keys owned by the filter panel. */
+const FILTER_URL_KEYS = ["search", "status", "statuses", "green_points_from", "green_points_to"];
+
 export const CampaignSearchProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
   const pathname = usePathname();
@@ -57,74 +52,68 @@ export const CampaignSearchProvider = ({ children }: { children: ReactNode }) =>
     pageSize: CAMPAIGN_PAGE_SIZE,
   });
 
-  const urlTab = useGetParam<string>("tab", "string", undefined);
-  const viewMode = useMemo(() => parseViewMode(urlTab), [urlTab]);
-
-  const setViewMode = useCallback(
-    (mode: CampaignSearchViewMode) => {
+  /** Applies `updates` to the URL (empty values are removed) and goes back to page 1. */
+  const replaceParams = useCallback(
+    (updates: Record<string, string | undefined>) => {
       const params = new URLSearchParams(searchParams.toString());
-
-      if (mode === "mine") {
-        params.set("tab", "mine");
-      } else {
-        params.delete("tab");
+      for (const [key, value] of Object.entries(updates)) {
+        if (value) params.set(key, value);
+        else params.delete(key);
       }
-
       const qs = params.toString();
       router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-      setPagination((prev) => ({ ...prev, current: 1 }));
+      setPagination((prev) => (prev.current === 1 ? prev : { ...prev, current: 1 }));
     },
     [pathname, router, searchParams],
   );
 
+  const viewMode = parseViewMode(useGetParam<string>("tab", "string", undefined));
+
+  const setViewMode = useCallback(
+    (mode: CampaignSearchViewMode) => replaceParams({ tab: mode === "mine" ? "mine" : undefined }),
+    [replaceParams],
+  );
+
+  // The URL is the only source of the filters.
   const urlSearch = useGetParam<string>("search", "string", "");
   const urlStatuses = useGetParam<string>("statuses", "string", undefined);
   const urlStatus = useGetParam<string>("status", "string", undefined);
   const urlGreenPointsFrom = useGetParam<string>("green_points_from", "string", undefined);
   const urlGreenPointsTo = useGetParam<string>("green_points_to", "string", undefined);
 
-  const [filters, setFiltersState] = useState<CampaignSearchFilters>(() =>
-    buildCampaignSearchFilters({
-      search: urlSearch,
-      statuses: urlStatuses,
-      status: urlStatus,
-      greenPointsFrom: urlGreenPointsFrom,
-      greenPointsTo: urlGreenPointsTo,
-    }),
+  const filters = useMemo(
+    () =>
+      buildCampaignSearchFilters({
+        search: urlSearch,
+        statuses: urlStatuses,
+        status: urlStatus,
+        greenPointsFrom: urlGreenPointsFrom,
+        greenPointsTo: urlGreenPointsTo,
+      }),
+    [urlGreenPointsFrom, urlGreenPointsTo, urlSearch, urlStatus, urlStatuses],
   );
 
-  useEffect(() => {
-    const next = buildCampaignSearchFilters({
-      search: urlSearch,
-      statuses: urlStatuses,
-      status: urlStatus,
-      greenPointsFrom: urlGreenPointsFrom,
-      greenPointsTo: urlGreenPointsTo,
-    });
-    setFiltersState((prev) => (areCampaignSearchFiltersEqual(prev, next) ? prev : next));
-  }, [urlGreenPointsFrom, urlGreenPointsTo, urlSearch, urlStatus, urlStatuses]);
+  const setFilters = useCallback(
+    (next: Partial<CampaignSearchFilters>) => {
+      const updates: Record<string, string | undefined> = {};
+      if ("search" in next) updates.search = next.search || undefined;
+      if (next.statuses) {
+        updates.statuses = isDefaultCampaignStatuses(next.statuses)
+          ? undefined
+          : serializeStatuses(next.statuses);
+        updates.status = undefined;
+      }
+      if ("greenPointsFrom" in next) updates.green_points_from = next.greenPointsFrom?.toString();
+      if ("greenPointsTo" in next) updates.green_points_to = next.greenPointsTo?.toString();
+      replaceParams(updates);
+    },
+    [replaceParams],
+  );
 
-  const setFilters = useCallback((newFilters: Partial<CampaignSearchFilters>) => {
-    setFiltersState((prev) => {
-      const next = { ...prev, ...newFilters };
-      return areCampaignSearchFiltersEqual(prev, next) ? prev : next;
-    });
-    setPagination((prev) => (prev.current === 1 ? prev : { ...prev, current: 1 }));
-  }, []);
-
-  const resetFilters = useCallback(() => {
-    setFiltersState({
-      search: "",
-      statuses: [...DEFAULT_CAMPAIGN_SEARCH_STATUSES],
-      greenPointsFrom: undefined,
-      greenPointsTo: undefined,
-    });
-    setPagination((prev) => ({ ...prev, current: 1 }));
-  }, []);
-
-  const handleSetPagination = useCallback((newPagination: { current: number; pageSize: number }) => {
-    setPagination(newPagination);
-  }, []);
+  const resetFilters = useCallback(
+    () => replaceParams(Object.fromEntries(FILTER_URL_KEYS.map((key) => [key, undefined]))),
+    [replaceParams],
+  );
 
   const requestParams = useMemo<IGetCampaignsRequest>(
     () => ({
@@ -133,14 +122,16 @@ export const CampaignSearchProvider = ({ children }: { children: ReactNode }) =>
       search: filters.search?.trim() || undefined,
       statuses: serializeStatuses(filters.statuses),
     }),
-    [filters.search, filters.statuses, pagination.current, pagination.pageSize],
+    [filters.search, filters.statuses, pagination],
   );
 
   const exploreQuery = useGetCampaigns(requestParams, {
     enabled: viewMode === "explore",
+    placeholderData: keepPreviousData,
   });
   const myQuery = useGetMyCampaigns(requestParams, {
     enabled: viewMode === "mine",
+    placeholderData: keepPreviousData,
   });
 
   const queryResult = viewMode === "mine" ? myQuery : exploreQuery;
@@ -157,10 +148,9 @@ export const CampaignSearchProvider = ({ children }: { children: ReactNode }) =>
   const hasClientGreenPointsFilter = Boolean(
     filters.greenPointsFrom || filters.greenPointsTo,
   );
-  const total = useMemo(() => {
-    if (hasClientGreenPointsFilter) return campaigns.length;
-    return queryResult.data?.data?.total ?? campaigns.length;
-  }, [campaigns.length, hasClientGreenPointsFilter, queryResult.data?.data?.total]);
+  const total = hasClientGreenPointsFilter
+    ? campaigns.length
+    : (queryResult.data?.data?.total ?? campaigns.length);
 
   const contextValue = useMemo(
     () => ({
@@ -168,7 +158,7 @@ export const CampaignSearchProvider = ({ children }: { children: ReactNode }) =>
       isLoading: queryResult.isLoading,
       total,
       pagination,
-      setPagination: handleSetPagination,
+      setPagination,
       viewMode,
       setViewMode,
       filters,
@@ -179,7 +169,6 @@ export const CampaignSearchProvider = ({ children }: { children: ReactNode }) =>
     [
       campaigns,
       filters,
-      handleSetPagination,
       pagination,
       queryResult.isLoading,
       queryResult.refetch,

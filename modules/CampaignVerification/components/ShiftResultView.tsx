@@ -7,22 +7,13 @@ import type {
   IShiftMedia,
   IShiftResult,
   IShiftResultReport,
-  ShiftResultReportStatus,
 } from '@/apis/campaign/shiftResult';
 import { Pill } from '@/components/ui/Pill';
 import { cn } from '@/libs/utils';
+import { REPORT_LABEL, REPORT_TONE, type ReportChoice } from '@/constants/campaignVerification';
 import { checksByUrl, Layer1Summary, PhotoCheckBadge } from './ResultVerificationBadges';
 
-export type ReportChoice = ShiftResultReportStatus | 'none';
-
-export const REPORT_TONE = { cleaned: 'green', partial: 'amber', none: 'neutral' } as const;
-export const REPORT_LABEL: Record<ReportChoice, string> = {
-  cleaned: 'Cleaned',
-  partial: 'Partly done',
-  none: 'Not handled',
-};
-
-export const Thumb = memo(function Thumb({
+export const Thumb = /* @__PURE__ */ memo(function Thumb({
   url,
   kind = 'image',
   onRemove,
@@ -59,7 +50,7 @@ export const Thumb = memo(function Thumb({
 });
 
 /** A trash point photo with its Layer 1 badge (pass / warning / fail) in the corner. */
-export const CheckedThumb = memo(function CheckedThumb({
+export const CheckedThumb = /* @__PURE__ */ memo(function CheckedThumb({
   url,
   check,
   onRemove,
@@ -80,7 +71,7 @@ export const CheckedThumb = memo(function CheckedThumb({
 });
 
 /** Description, bags and kg of a saved shift result. */
-export const ShiftResultAmounts = memo(function ShiftResultAmounts({ result }: { result: IShiftResult }) {
+export const ShiftResultAmounts = /* @__PURE__ */ memo(function ShiftResultAmounts({ result }: { result: IShiftResult }) {
   const { t } = useTranslation('common');
   return (
     <>
@@ -103,7 +94,7 @@ export const ShiftResultAmounts = memo(function ShiftResultAmounts({ result }: {
  * Each waste point of the shift: its status in the result and the photos before / after, each with
  * its Layer 1 badge, and the point's Layer 1 grade.
  */
-export const ShiftResultWastePoints = memo(function ShiftResultWastePoints({
+export const ShiftResultWastePoints = /* @__PURE__ */ memo(function ShiftResultWastePoints({
   reportIds,
   reports,
   reportTitle,
@@ -160,7 +151,7 @@ export const ShiftResultWastePoints = memo(function ShiftResultWastePoints({
 });
 
 /** Photos and videos of the shift's pool that went into the result (read-only). */
-export const ShiftResultIncludedMedia = memo(function ShiftResultIncludedMedia({
+export const ShiftResultIncludedMedia = /* @__PURE__ */ memo(function ShiftResultIncludedMedia({
   media,
   thumbClassName,
 }: {
@@ -185,7 +176,7 @@ export const ShiftResultIncludedMedia = memo(function ShiftResultIncludedMedia({
  * Read-only view of a shift result (spec 4.2): description, amounts and every waste point of the
  * meeting point. Used by the shift page (ShiftResultPanel) and the Progress tab popover.
  */
-export const ShiftResultView = memo(function ShiftResultView({
+export const ShiftResultView = /* @__PURE__ */ memo(function ShiftResultView({
   result,
   reportIds,
   started,

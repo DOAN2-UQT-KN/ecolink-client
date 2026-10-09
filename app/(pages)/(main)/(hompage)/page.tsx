@@ -30,10 +30,6 @@ export default function Home() {
       <Divider className="text-background-tertiary my-15" />
 
       <ForVolunteers />
-{/* 
-      <Divider className="text-background-tertiary my-15" />
-
-      <ForCitizens /> */}
 
       <Divider className="text-background-tertiary my-15" />
 

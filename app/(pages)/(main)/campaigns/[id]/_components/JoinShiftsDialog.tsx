@@ -1,7 +1,6 @@
 import { memo, useEffect, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { format } from 'date-fns';
 
 import {
   useGetRegistrationOptions,
@@ -24,8 +23,8 @@ import { cn } from '@/libs/utils';
 import showMessage, { MessageLevel, MessageType } from '@/utils/showMessage';
 
 import { ShiftFillBar } from './ShiftFillBar';
+import { dayLabel, hhmm } from '../../_services/campaignLabels';
 
-const hhmm = (iso: string) => format(new Date(iso), 'HH:mm');
 const overlaps = (a: IRegistrationOptionShift, b: IRegistrationOptionShift) =>
   new Date(a.start_at).getTime() < new Date(b.end_at).getTime() &&
   new Date(b.start_at).getTime() < new Date(a.end_at).getTime();
@@ -52,12 +51,7 @@ function Label({ tone, children, title }: { tone: 'orange'; children: string; ti
   );
 }
 
-/**
- * "Pick shifts" popup (spec 3.1): the shifts that can still be joined, grouped by day, with how
- * many signed up and labels for short, over the expected maximum and overlapping shifts. Nothing
- * here blocks: warnings show and the volunteer can still confirm. Unticking a shift they hold
- * leaves it.
- */
+
 export const JoinShiftsDialog = memo(function JoinShiftsDialog({
   campaignId,
   open,
@@ -80,7 +74,6 @@ export const JoinShiftsDialog = memo(function JoinShiftsDialog({
   const [ticked, setTicked] = useState<string[]>([]);
   const [accepted, setAccepted] = useState(false);
 
-  // Fresh selection each time it opens: what the viewer holds, or the only shift there is.
   useEffect(() => {
     if (!open || !options) return;
     setTicked(held.length > 0 ? held : shifts.length === 1 ? [shifts[0].id] : []);
@@ -157,7 +150,7 @@ export const JoinShiftsDialog = memo(function JoinShiftsDialog({
             {days.map(({ day, index, shifts: dayShifts }) => (
               <section key={day.id} className="flex flex-col gap-2">
                 <h3 className="text-sm font-semibold text-foreground">
-                  {t('Day {{n}}', { n: index + 1 })} · {format(new Date(day.start_at), 'EEEE, PP')}
+                  {dayLabel(day, index, t)}
                 </h3>
                 <ul className="grid gap-3 sm:grid-cols-2">
                   {dayShifts.map((shift) => {

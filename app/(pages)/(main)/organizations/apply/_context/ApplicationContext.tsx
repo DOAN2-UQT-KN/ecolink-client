@@ -19,7 +19,7 @@ import {
   type IApplication,
   type IApplicationDocument,
 } from "@/apis/organization-application/models/application";
-import { uploadToCloudinary } from "@/app/(pages)/(main)/incidents/create/_services/upload.service";
+import { uploadToCloudinary } from "@/libs/cloudinary";
 import { queryClient } from "@/libs/queryClient";
 import { useRouter, useSearchParams } from "@/libs/router";
 import showMessage, { MessageLevel, MessageType } from "@/utils/showMessage";

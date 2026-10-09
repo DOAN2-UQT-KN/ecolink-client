@@ -20,6 +20,7 @@ import { Link } from '@/libs/router';
 
 import { ParticipationInfoCard } from './ParticipationInfoCard';
 import { CampaignManagers } from './CampaignManagers';
+import { meetingPointName } from '../../_services/campaignLabels';
 
 const DEFAULT_BANNER = '/banner-default.jpg';
 
@@ -54,8 +55,7 @@ export const DetailInformation = memo(function DetailInformation() {
   const difficulty = getDifficultyLevel(campaign.difficulty ?? 0);
   const organization = campaign.organization;
   const points = campaign.meeting_points ?? [];
-  const pointName = (index: number) =>
-    points[index]?.name?.trim() || t('Meeting point {{n}}', { n: index + 1 });
+  const pointName = (index: number) => meetingPointName(points[index], index, t);
 
   return (
     <div className="flex flex-col gap-4 sm:gap-5">

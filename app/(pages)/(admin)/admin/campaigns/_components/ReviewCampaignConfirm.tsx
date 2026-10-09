@@ -4,7 +4,7 @@ import { TbBan, TbCheckbox } from "react-icons/tb";
 
 import { useReviewCampaign } from "@/apis/campaign/reviewCampaign";
 import type { CampaignReviewDecision } from "@/apis/campaign/models/lifecycle";
-import { ConfirmPopover } from "@/components/admin/shared/ConfirmPopover";
+import { ConfirmPopover } from "@/components/ui/ConfirmPopover";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";

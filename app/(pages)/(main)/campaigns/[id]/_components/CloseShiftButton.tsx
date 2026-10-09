@@ -5,7 +5,7 @@ import { TbCalendarOff } from 'react-icons/tb';
 
 import { useCloseShift } from '@/apis/campaign/registration';
 import { Button } from '@/components/client/shared/Button';
-import { ConfirmPopoverModal } from '@/modules/OrganizationCard/components/ConfirmPopoverModal';
+import { ConfirmPopoverModal } from '@/components/client/shared/ConfirmPopoverModal';
 import showMessage, { MessageLevel, MessageType } from '@/utils/showMessage';
 
 /**

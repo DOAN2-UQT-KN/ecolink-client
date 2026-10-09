@@ -12,13 +12,13 @@ import { cn } from '@/libs/utils';
 import defaultAvatar from '@/public/default-avatar.png';
 import { formattedDate } from '@/utils/formattedDate';
 
-import { WEIGHT_REASON_LABEL } from './ResultVerificationBadges';
+import { WEIGHT_REASON_LABEL } from '@/constants/campaignVerification';
 import { Thumb } from './ShiftResultView';
 
 type Tab = 'all' | MeetingPointVoteValue;
 
 /** One vote: the voter, and for "not clean" the reason, folded. Weights only reach admins and managers. */
-const VoteRow = memo(function VoteRow({
+const VoteRow = /* @__PURE__ */ memo(function VoteRow({
   vote: v,
   titleById,
   showSide,
@@ -100,7 +100,7 @@ const VoteRow = memo(function VoteRow({
  * The voters of a meeting point in three tabs (all, clean, not clean) with their counts; weights
  * show only for admins and managers (null otherwise).
  */
-export const MeetingPointVotesList = memo(function MeetingPointVotesList({
+export const MeetingPointVotesList = /* @__PURE__ */ memo(function MeetingPointVotesList({
   votes,
   titleById,
   isDark = false,
@@ -167,7 +167,7 @@ export const MeetingPointVotesList = memo(function MeetingPointVotesList({
  * "View results" of a meeting point: the voters list in a popover. Everyone who can open the
  * verification page sees them.
  */
-export const MeetingPointVotesPopover = memo(function MeetingPointVotesPopover({
+export const MeetingPointVotesPopover = /* @__PURE__ */ memo(function MeetingPointVotesPopover({
   votes,
   titleById,
 }: {

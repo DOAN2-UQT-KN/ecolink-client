@@ -37,12 +37,15 @@ modules/LeafletAddressMap.tsx        # 1 file → nằm thẳng ở modules/
 ```
 modules/OrganizationCard/
   OrganizationCard.tsx                          # entry, KHÔNG phải index.tsx
-  components/ConfirmPopoverModal.tsx
   hooks/useOrganizationCardEdit.ts
   services/buildOrganizationCardSavePayload.ts
   services/invalidateOrganizationLists.ts
   types/OrganizationCard.types.ts               # <Name>.types.ts
   utils/blobUrls.ts
+
+modules/CampaignVerification/                   # trang campaign + admin review cùng dùng
+  index.ts                                      # barrel: chỉ import từ '@/modules/CampaignVerification'
+  components/{ResultVerificationBadges,ShiftResultView,ShiftProgressCard,ShiftStatusPill,MeetingPointVotesPopover,MeetingPointDecisionActions}.tsx
 
 modules/ReportDetailCard/
   ReportDetailCard.tsx

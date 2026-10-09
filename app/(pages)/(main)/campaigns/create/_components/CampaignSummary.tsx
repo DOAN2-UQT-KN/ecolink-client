@@ -6,13 +6,15 @@ import { RichTextContent } from '@/components/ui/RichTextContent';
 import { useGetMembersByOrg } from '@/apis/organization/organizationById';
 import { getDifficultyLevel } from '@/constants/difficulty';
 import { useImagePreviewSrc } from '@/libs/useImagePreviewSrc';
-import { SummaryRow } from '@/app/(pages)/(main)/organizations/apply/_components/ApplicationDetails';
+import { SummaryRow } from '@/components/client/shared/SummaryRow';
 
 import { useMeetingPointWarnings } from '../_hooks/useMeetingPointWarnings';
 import { ShiftSlotsTable } from '@/components/client/shared/ShiftSlotsTable';
-import { useDayLabel } from './StepShifts';
-import type { CampaignStep } from '../_context/CampaignContext';
-import { impliedMinAge, type CampaignFormValues } from '../_services/campaign.service';
+import { useDayLabel } from '../_hooks/useDayLabel';
+import type { CampaignStep } from '../_services/campaignSteps.service';
+import { type CampaignFormValues } from '../_services/campaign.service';
+import { impliedMinAge } from '@/constants/campaignLifecycle';
+import { meetingPointName } from '../../_services/campaignLabels';
 
 const Section = memo(function Section({
   title,
@@ -74,8 +76,7 @@ export const CampaignSummary = memo(function CampaignSummary({
   };
 
   const difficulty = getDifficultyLevel(values.difficulty);
-  const pointName = (index: number) =>
-    values.meeting_points[index]?.name?.trim() || t('Meeting point {{n}}', { n: index + 1 });
+  const pointName = (index: number) => meetingPointName(values.meeting_points[index], index, t);
   const minAge = values.min_age ?? impliedMinAge(values.difficulty);
   const conditions = [
     minAge != null ? t('From {{age}} years old', { age: minAge }) : null,
@@ -138,7 +139,7 @@ export const CampaignSummary = memo(function CampaignSummary({
         {values.meeting_points.map((point, index) => (
           <div key={index} className="flex flex-col gap-1">
             <span className="text-sm font-semibold">
-              {point.name || t('Meeting point {{n}}', { n: index + 1 })}
+              {meetingPointName(point, index, t)}
             </span>
             <SummaryRow label={t('Location')} value={point.detail_address} />
             <SummaryRow

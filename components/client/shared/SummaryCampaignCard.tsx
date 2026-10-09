@@ -11,7 +11,7 @@ import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
 import { Button } from './Button';
 import { useRouter } from '@/libs/router';
 import useAuthStore from '@/stores/useAuthStore';
-import ChangeStatus from '@/components/ui/ChangeStatus';
+import { StatusPill } from '@/components/ui/StatusPill';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Pill } from '@/components/ui/Pill';
 
@@ -70,7 +70,7 @@ export default function SummaryCampaignCard({
             <h3 className="font-semibold text-button-accent font-display-6">{displayTitle}</h3>
             {campaign.status != null ? (
               <div onClick={(e) => e.stopPropagation()}>
-                <ChangeStatus type={campaign.status} enabledDropdown={false} />
+                <StatusPill type={campaign.status} />
               </div>
             ) : null}
           </div>

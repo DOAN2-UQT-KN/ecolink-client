@@ -6,7 +6,7 @@ import { BiGroup } from 'react-icons/bi';
 import { HiOutlineUserRemove } from 'react-icons/hi';
 import { Button } from '@/components/ui/button';
 import { Button as SharedButton } from '@/components/client/shared/Button';
-import { ConfirmPopoverModal } from '@/modules/OrganizationCard/components/ConfirmPopoverModal';
+import { ConfirmPopoverModal } from '@/components/client/shared/ConfirmPopoverModal';
 import type { OrganizationCardSavePayload } from './types/OrganizationCard.types';
 import { useOrganizationCardEdit } from './hooks/useOrganizationCardEdit';
 import {

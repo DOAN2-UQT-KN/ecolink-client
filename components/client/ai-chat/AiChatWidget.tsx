@@ -23,7 +23,7 @@ import {
     parseUserMessageMediaIds,
 } from "./userMessageMedia"
 import { registerChatMedia } from "@/apis/chat-media/registerChatMedia"
-import { uploadToCloudinary } from "@/app/(pages)/(main)/incidents/create/_services/upload.service"
+import { uploadToCloudinary } from "@/libs/cloudinary"
 import { compressImage } from "@/libs/compressImage"
 import { usePathname } from "@/libs/router"
 

@@ -2,8 +2,8 @@ import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { ICampaign } from '@/apis/campaign/models/campaign';
-import { SummaryRow } from '@/app/(pages)/(main)/organizations/apply/_components/ApplicationDetails';
-import { impliedMinAge } from '@/app/(pages)/(main)/campaigns/create/_services/campaign.service';
+import { SummaryRow } from '@/components/client/shared/SummaryRow';
+import { impliedMinAge } from '@/constants/campaignLifecycle';
 import { CollapsibleCard } from '@/components/client/shared/CollapsibleCard';
 
 /** Contact, safety notes and participation conditions; empty rows hidden, nothing when all are. */

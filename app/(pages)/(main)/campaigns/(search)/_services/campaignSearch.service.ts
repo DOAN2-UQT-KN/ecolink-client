@@ -79,19 +79,6 @@ export function parseGreenPoints(value: string | undefined): number | undefined 
   return Math.floor(parsed);
 }
 
-export function areCampaignSearchFiltersEqual(
-  a: CampaignSearchFilters,
-  b: CampaignSearchFilters,
-): boolean {
-  return (
-    a.search === b.search &&
-    a.greenPointsFrom === b.greenPointsFrom &&
-    a.greenPointsTo === b.greenPointsTo &&
-    a.statuses.length === b.statuses.length &&
-    a.statuses.every((status, index) => status === b.statuses[index])
-  );
-}
-
 export function buildCampaignSearchFilters(initial: {
   search?: string;
   statuses?: number[] | string;

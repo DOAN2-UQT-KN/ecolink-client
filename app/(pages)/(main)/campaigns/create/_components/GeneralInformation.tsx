@@ -1,5 +1,5 @@
 import { memo, useEffect, useMemo } from 'react';
-import { Controller } from 'react-hook-form';
+import { Controller, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,7 @@ import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { cn } from '@/libs/utils';
 import Image from '@/components/ui/AppImage';
 
-import { useCampaign } from '../_hooks/useCampaign';
+import { useCampaign } from '../_context/CampaignContext';
 import { TITLE_MAX_LENGTH } from '../_services/campaign.service';
 import {
   CAMPAIGN_DESCRIPTION_MIN_LENGTH,
@@ -32,9 +32,9 @@ const GeneralInformation = memo(function GeneralInformation() {
   const {
     register,
     control,
-    watch,
     formState: { errors },
   } = form;
+  const description = useWatch({ control, name: 'description' });
   const maxDifficulty = eligibility?.max_difficulty ?? null;
   const isUnverified = eligibility != null && !eligibility.is_verified;
 
@@ -200,7 +200,7 @@ const GeneralInformation = memo(function GeneralInformation() {
               rows={4}
             /> */}
             <RichTextEditor
-              value={watch('description')}
+              value={description}
               onChange={(value) => form.setValue('description', value, { shouldDirty: true })}
               placeholder={t('Describe this campaign...')}
               className={cn(inputClassName, 'min-h-[220px]')}

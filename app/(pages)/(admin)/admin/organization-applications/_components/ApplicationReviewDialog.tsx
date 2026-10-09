@@ -45,7 +45,7 @@ import {
   APPLICATION_STATUS_TAG,
   OWNER_CANDIDATE_STATUS_TAG,
 } from "@/constants/organizationApplicationStatus";
-import { ReviewRow, ReviewSectionCard } from "@/components/admin/shared/ReviewSection";
+import { ReviewRow, ReviewSectionCard } from "@/components/ui/ReviewSection";
 import { ApplicationActivity } from "./ApplicationActivity";
 import { queryClient } from "@/libs/queryClient";
 import { cn } from "@/libs/utils";

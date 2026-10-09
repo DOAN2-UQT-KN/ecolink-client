@@ -7,15 +7,13 @@ import { Button } from "@/components/client/shared/Button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/libs/utils";
+import { stepCardClassName } from "@/components/client/shared/ApplicationPageLayout";
 import { useApplication } from "../_hooks/useApplication";
 import { formatCountdown, useCountdown } from "../_hooks/useCountdown";
 import { OtpInput } from "./OtpInput";
 
 const inputClassName =
   "border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50";
-
-export const stepCardClassName =
-  "rounded-[10px] border border-[rgba(136,122,71,0.5)] bg-white/80 px-[24px] py-[28px] shadow-sm lg:px-[30px] lg:py-[35px]";
 
 /**
  * The form needs no account, so proving control of the contact mailbox is the only thing

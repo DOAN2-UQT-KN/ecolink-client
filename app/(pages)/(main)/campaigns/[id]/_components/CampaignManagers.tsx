@@ -6,7 +6,6 @@ import { TbUserMinus, TbUserPlus } from 'react-icons/tb';
 
 import {
   useAddCampaignManagers,
-  useGetCampaignManager,
   useRemoveCampaignManager,
 } from '@/apis/campaign/campaignManager';
 import { Button } from '@/components/client/shared/Button';
@@ -29,7 +28,9 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { Link } from '@/libs/router';
 
 import { useCampaignDetail } from '../_hooks/useCampaignDetail';
-import { AvatarList, type AvatarListItem } from './AvatarList';
+import { useCampaignManagersList } from '../../_hooks/useCampaignManagersList';
+import { AvatarList, type AvatarListItem } from '@/components/client/shared/AvatarList';
+import { meetingPointName } from '../../_services/campaignLabels';
 
 /** Manager picker: only active members of the campaign's organization who aren't managers yet. */
 const AddManagerDialog = memo(function AddManagerDialog({
@@ -189,20 +190,10 @@ export const CampaignManagers = memo(function CampaignManagers() {
   const { t } = useTranslation('common');
   const { campaignId, campaign, canManageCampaign } = useCampaignDetail();
 
-  const { data: managerData, isLoading: isManagerLoading } = useGetCampaignManager(
-    { campaignId, limit: 100, sortBy: 'assignedAt', sortOrder: 'asc' },
-    { enabled: Boolean(campaignId) },
-  );
-
-  const managers = useMemo(
-    () =>
-      (managerData?.data?.managers ?? []).map((m) => ({
-        id: m.user_id,
-        avatar: m.avatar,
-        name: m.name,
-      })),
-    [managerData?.data?.managers],
-  );
+  const {
+    managers,
+    query: { isLoading: isManagerLoading },
+  } = useCampaignManagersList(campaignId);
 
   const creatorId = campaign?.created_by ?? campaign?.owner?.id;
   const managerIds = useMemo(() => {
@@ -221,7 +212,7 @@ export const CampaignManagers = memo(function CampaignManagers() {
       .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime())
       .forEach((sh) => {
         const index = points.findIndex((p) => p.id === sh.meeting_point_id);
-        const point = points[index]?.name || t('Meeting point {{n}}', { n: index + 1 });
+        const point = meetingPointName(points[index], index, t);
         const label = `${point} · ${format(new Date(sh.start_at), 'dd/MM HH:mm')}`;
         const id = sh.leader_user_id as string;
         const upcoming = new Date(sh.end_at).getTime() > now;

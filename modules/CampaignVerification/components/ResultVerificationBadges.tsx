@@ -10,57 +10,21 @@ import type {
 } from '@/apis/campaign/shiftResult';
 import type {
   MeetingPointStatus,
-  MeetingPointWeightReason,
   VerificationTrashPointStatus,
 } from '@/apis/campaign/verification';
-import { Pill, type PillTone } from '@/components/ui/Pill';
+import { Pill } from '@/components/ui/Pill';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/libs/utils';
+import {
+  CHECK_LEVEL_LABEL,
+  CHECK_LEVEL_TONE,
+  MEETING_POINT_STATUS_LABEL,
+  MEETING_POINT_STATUS_TONE,
+  TRASH_POINT_RESULT_LABEL,
+  TRASH_POINT_RESULT_TONE,
+} from '@/constants/campaignVerification';
 
 type T = (key: string, options?: Record<string, unknown>) => string;
-
-export const CHECK_LEVEL_TONE: Record<ResultCheckLevel, PillTone> = { pass: 'green', warn: 'amber', fail: 'red' };
-/** English labels; translate with `t()`. */
-export const CHECK_LEVEL_LABEL: Record<ResultCheckLevel, string> = {
-  pass: 'Pass',
-  warn: 'Warning',
-  fail: 'Fail',
-};
-
-export const MEETING_POINT_STATUS_TONE: Record<MeetingPointStatus, PillTone> = {
-  voting: 'blue',
-  verified: 'green',
-  flagged: 'orange',
-  rejected: 'red',
-};
-export const MEETING_POINT_STATUS_LABEL: Record<MeetingPointStatus, string> = {
-  voting: 'Voting',
-  verified: 'Verified',
-  flagged: 'Flagged',
-  rejected: 'Not accepted',
-};
-
-/** How the submission declared a trash point. */
-export const TRASH_POINT_RESULT_TONE: Record<VerificationTrashPointStatus, PillTone> = {
-  cleaned: 'green',
-  partial: 'amber',
-  unhandled: 'red',
-};
-export const TRASH_POINT_RESULT_LABEL: Record<VerificationTrashPointStatus, string> = {
-  cleaned: 'Cleaned',
-  partial: 'Partly done',
-  unhandled: 'Not handled',
-};
-
-/** Why a vote weighs what it does. */
-export const WEIGHT_REASON_LABEL: Record<MeetingPointWeightReason, string> = {
-  reporter: 'Reported a waste point here',
-  on_site: 'On site (within 30 m)',
-  nearby: 'Nearby (within 5 km)',
-  zero_new_account: 'Account younger than 7 days, does not count',
-  zero_unverified: 'Email not verified, does not count',
-  zero_far: 'Too far away or no location, does not count',
-};
 
 const ISSUE_LABEL: Record<Layer1IssueCode, string> = {
   photo_fail: 'A photo failed its checks',
@@ -96,7 +60,7 @@ export function layer1IssueText(issue: ILayer1Issue, t: T): string {
 }
 
 /** Pass / warning / fail of one photo; the checks it missed show on hover. */
-export const PhotoCheckBadge = memo(function PhotoCheckBadge({
+export const PhotoCheckBadge = /* @__PURE__ */ memo(function PhotoCheckBadge({
   check,
   isDark,
   className,
@@ -130,7 +94,7 @@ export const PhotoCheckBadge = memo(function PhotoCheckBadge({
 });
 
 /** "Photo check" and a Layer 1 level (a trash point's, or a meeting point's worst). */
-export const Layer1LevelBadge = memo(function Layer1LevelBadge({
+export const Layer1LevelBadge = /* @__PURE__ */ memo(function Layer1LevelBadge({
   level,
   isDark,
   className,
@@ -151,7 +115,7 @@ export const Layer1LevelBadge = memo(function Layer1LevelBadge({
 });
 
 /** Layer 1 grade of a trash point and, optionally, what pulled it down. */
-export const Layer1Summary = memo(function Layer1Summary({
+export const Layer1Summary = /* @__PURE__ */ memo(function Layer1Summary({
   layer1,
   showIssues = true,
   photoIssues = false,
@@ -185,7 +149,7 @@ export const Layer1Summary = memo(function Layer1Summary({
   );
 });
 
-export const MeetingPointStatusPill = memo(function MeetingPointStatusPill({
+export const MeetingPointStatusPill = /* @__PURE__ */ memo(function MeetingPointStatusPill({
   status,
   isDark,
   className,
@@ -203,7 +167,7 @@ export const MeetingPointStatusPill = memo(function MeetingPointStatusPill({
 });
 
 /** How the submission declared a trash point: cleaned, partly done or not handled. */
-export const TrashPointResultPill = memo(function TrashPointResultPill({
+export const TrashPointResultPill = /* @__PURE__ */ memo(function TrashPointResultPill({
   status,
   isDark,
   className,

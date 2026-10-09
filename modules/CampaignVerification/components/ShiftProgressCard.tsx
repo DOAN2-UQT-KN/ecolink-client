@@ -5,7 +5,7 @@ import { TbChevronDown, TbExternalLink } from 'react-icons/tb';
 
 import type { ICampaign } from '@/apis/campaign/models/campaign';
 import { useShiftOverview, useShiftResult, type IShiftOverviewRow } from '@/apis/campaign/shiftResult';
-import { ReviewSectionCard } from '@/components/admin/shared/ReviewSection';
+import { ReviewSectionCard } from '@/components/ui/ReviewSection';
 import { CollapsibleCard } from '@/components/client/shared/CollapsibleCard';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { PILL_TONE } from '@/components/ui/Pill';
@@ -13,9 +13,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
 import { Link } from '@/libs/router';
 import { cn } from '@/libs/utils';
+import { SHIFT_STATUS_LABEL, SHIFT_STATUS_TONE } from '@/constants/campaignVerification';
 import {
-  SHIFT_STATUS_LABEL,
-  SHIFT_STATUS_TONE,
   ShiftReopenedNotice,
   ShiftReopenedPill,
   ShiftStatusPill,
@@ -51,7 +50,7 @@ function Section({ title, defaultOpen = false, children }: { title: string; defa
  * waste points, the activity photos in the result and the description and amounts. The result is
  * fetched only while the popover is open.
  */
-const ShiftCellPopover = memo(function ShiftCellPopover({
+const ShiftCellPopover = /* @__PURE__ */ memo(function ShiftCellPopover({
   campaign,
   row,
   title,
@@ -173,7 +172,7 @@ const ShiftCellPopover = memo(function ShiftCellPopover({
  * point grid coloured by status (each cell opens a popover with the shift's result), and the totals
  * so far. Shown in the campaign's Progress tab.
  */
-export const ShiftProgressCard = memo(function ShiftProgressCard({
+export const ShiftProgressCard = /* @__PURE__ */ memo(function ShiftProgressCard({
   campaign,
   variant = 'page',
   isDark = false,

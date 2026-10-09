@@ -1,4 +1,4 @@
-import { Descendant } from "slate";
+import type { Descendant } from "slate";
 
 const defaultNodes = (): Descendant[] => [{ type: "paragraph", children: [{ text: "" }] }];
 

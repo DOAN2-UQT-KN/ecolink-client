@@ -18,6 +18,8 @@ import {
 } from "@/components/ui/dialog";
 
 import { cn } from "@/libs/utils";
+import dynamic from "@/libs/dynamic";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   CAMPAIGN_STATUS,
   CAMPAIGN_STATUS_LABEL,
@@ -25,12 +27,15 @@ import {
 } from "@/constants/campaignLifecycle";
 
 import GeneralInformation from "./GeneralInformation";
-import StepSchedule from "./StepSchedule";
-import MeetingPointsEditor from "./MeetingPointsEditor";
-import StepReview from "./StepReview";
-import StepShifts from "./StepShifts";
-import { useCampaign } from "../_hooks/useCampaign";
-import { CAMPAIGN_STEPS, type CampaignStep } from "../_context/CampaignContext";
+import { useCampaign } from "../_context/CampaignContext";
+import { CAMPAIGN_STEPS, type CampaignStep } from "../_services/campaignSteps.service";
+
+// Step 1 loads with the page; the other steps load when first opened.
+const stepLoading = () => <Skeleton className="h-96 w-full rounded-[10px]" />;
+const StepSchedule = dynamic(() => import("./StepSchedule"), { loading: stepLoading });
+const MeetingPointsEditor = dynamic(() => import("./MeetingPointsEditor"), { loading: stepLoading });
+const StepShifts = dynamic(() => import("./StepShifts"), { loading: stepLoading });
+const StepReview = dynamic(() => import("./StepReview"), { loading: stepLoading });
 
 const STEP_LABELS: Record<CampaignStep, string> = {
   general: "General information",

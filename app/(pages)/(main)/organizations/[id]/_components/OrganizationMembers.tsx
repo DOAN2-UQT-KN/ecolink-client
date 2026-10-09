@@ -29,7 +29,7 @@ import { canActOnMember } from "@/apis/organization/models/organization";
 import { useRemoveMember } from "@/apis/organization/memberManagement";
 import { RoleBadge } from "@/components/ui/RoleBadge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { ConfirmPopoverModal } from "@/modules/OrganizationCard/components/ConfirmPopoverModal";
+import { ConfirmPopoverModal } from "@/components/client/shared/ConfirmPopoverModal";
 import { InviteMemberDialog } from "./InviteMemberDialog";
 import { OwnerActions } from "./OwnerActions";
 import {

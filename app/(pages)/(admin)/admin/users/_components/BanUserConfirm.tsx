@@ -1,7 +1,7 @@
 import { memo, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useBanUser } from "@/apis/user/banUser";
-import { ConfirmPopover } from "@/components/admin/shared/ConfirmPopover";
+import { ConfirmPopover } from "@/components/ui/ConfirmPopover";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/libs/utils";

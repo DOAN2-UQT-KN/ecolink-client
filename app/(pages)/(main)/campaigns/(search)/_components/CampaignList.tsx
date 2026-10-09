@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useMemo } from 'react';
+import { memo } from 'react';
 import { ChevronLeft, ChevronRight, Inbox } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -18,18 +18,12 @@ export const CampaignList = memo(function CampaignList() {
   const { t } = useTranslation();
   const { campaigns, isLoading, total, pagination, setPagination } = useCampaignSearch();
 
-  const handlePageChange = useCallback(
-    (newPage: number) => {
-      setPagination({ ...pagination, current: newPage });
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    },
-    [pagination, setPagination],
-  );
+  const handlePageChange = (newPage: number) => {
+    setPagination({ ...pagination, current: newPage });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
-  const totalPages = useMemo(
-    () => Math.max(1, Math.ceil(total / pagination.pageSize)),
-    [pagination.pageSize, total],
-  );
+  const totalPages = Math.max(1, Math.ceil(total / pagination.pageSize));
 
   if (isLoading) {
     return (

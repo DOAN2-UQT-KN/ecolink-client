@@ -15,7 +15,7 @@ import { useCreateSos } from '@/apis/sos/createSos';
 import { useSosDuplicates } from '@/apis/sos/getSosDuplicates';
 import { useSosEligibility } from '@/apis/sos/getSosEligibility';
 import type { ICreateSosRequest, ISosDetails, SosType } from '@/apis/sos/models/sos';
-import { uploadToCloudinary } from '@/app/(pages)/(main)/incidents/create/_services/upload.service';
+import { uploadToCloudinary } from '@/libs/cloudinary';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
