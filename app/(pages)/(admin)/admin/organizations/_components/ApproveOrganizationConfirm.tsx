@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   useVerifyOrganization,
 } from "@/apis/organization/organizationById";
-import { ConfirmPopover } from "@/components/admin/shared/ConfirmPopover";
+import { ConfirmPopover } from "@/components/ui/ConfirmPopover";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";

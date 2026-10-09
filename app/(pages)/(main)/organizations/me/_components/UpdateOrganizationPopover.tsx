@@ -17,7 +17,7 @@ import { cn } from "@/libs/utils";
 import { IOrganization } from "@/apis/organization/models/organization";
 import { useUpdateOrganization } from "@/apis/organization/organizationById";
 import { OrganizationFormValues } from "@/app/(pages)/(main)/organizations/create/_services/organization.service";
-import { uploadToCloudinary } from "@/app/(pages)/(main)/organizations/create/_services/upload.service";
+import { uploadToCloudinary } from "@/libs/cloudinary";
 import { OrganizationImageField } from "@/app/(pages)/(main)/organizations/create/_components/OrganizationImageUpload";
 import { useLocalizedDisplay } from "@/hooks/useLocalizedDisplay";
 

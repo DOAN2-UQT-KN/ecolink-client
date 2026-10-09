@@ -16,8 +16,8 @@ import {
   ApplicationDetailsSkeleton,
   ApplicationNotFound,
   ApplicationPageLayout,
-} from "../apply/_components/ApplicationPageLayout";
-import { SummaryRow } from "../apply/_components/ApplicationDetails";
+} from "@/components/client/shared/ApplicationPageLayout";
+import { SummaryRow } from "@/components/client/shared/SummaryRow";
 
 // `Breadcrumbs` runs every label through `t()` itself, so these stay raw English.
 const breadcrumbs: BreadcrumbItemProps[] = [

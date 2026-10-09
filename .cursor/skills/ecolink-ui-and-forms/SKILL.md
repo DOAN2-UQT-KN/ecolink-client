@@ -295,7 +295,7 @@ import { InfoTooltip } from '@/components/ui/InfoTooltip';
 Luồng: chọn file → `libs/compressImage.ts` (và `libs/getCroppedImage.ts` nếu có crop) → upload thẳng lên Cloudinary → gửi URL cho API.
 
 ```ts
-// app/(pages)/(main)/incidents/create/_services/upload.service.ts
+// libs/cloudinary.ts
 const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "example";
 const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || "example";
 export const uploadToCloudinary = async (file: File | Blob | string): Promise<string> => { ... }

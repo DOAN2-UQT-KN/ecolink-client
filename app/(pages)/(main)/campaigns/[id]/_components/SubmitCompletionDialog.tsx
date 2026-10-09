@@ -1,4 +1,4 @@
-import { memo, useMemo, useState } from 'react';
+import { memo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { TbFlagCheck } from 'react-icons/tb';
@@ -19,8 +19,9 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
-import { Layer1Summary } from './ResultVerificationBadges';
+import { Layer1Summary } from '@/modules/CampaignVerification';
+import { meetingPointName } from '@/utils/campaignLabels';
+import { useReportTitle } from '../_hooks/useReportTitle';
 
 /** Reason for a waste point no shift handled (server: 1–500 characters). */
 const REASON_MAX = 500;
@@ -46,7 +47,6 @@ export const SubmitCompletionDialog = memo(function SubmitCompletionDialog({
   campaign: ICampaign;
 }) {
   const { t } = useTranslation('common');
-  const { title: localizedTitle } = useLocalizedDisplay();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [reasons, setReasons] = useState<Record<string, string>>({});
@@ -59,26 +59,18 @@ export const SubmitCompletionDialog = memo(function SubmitCompletionDialog({
 
   const { mutate, isPending } = useMarkDoneCampaign({
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['campaign', campaign.id] });
       void queryClient.invalidateQueries({ queryKey: ['shift-overview', campaign.id] });
       void queryClient.invalidateQueries({ queryKey: ['completion-review', campaign.id] });
       setOpen(false);
     },
   });
 
-  const reportById = useMemo(
-    () => new Map((campaign.reports ?? []).map((r) => [r.id, r])),
-    [campaign.reports],
-  );
+  const reportTitle = useReportTitle(campaign.reports);
   const pointName = (id: string | null) => {
     const points = campaign.meeting_points ?? [];
     const index = points.findIndex((p) => p.id === id);
     if (index < 0) return '';
-    return points[index].name?.trim() || t('Meeting point {{n}}', { n: index + 1 });
-  };
-  const reportTitle = (id: string, fallback?: string | null) => {
-    const r = reportById.get(id);
-    return (r && localizedTitle(r).trim()) || fallback || t('Waste point');
+    return meetingPointName(points[index], index, t);
   };
 
   const unhandled = (review?.submission.reports ?? []).filter((r) => r.status === 'unhandled');

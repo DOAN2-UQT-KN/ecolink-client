@@ -21,14 +21,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from '@/libs/router';
 
 import { useCampaignDetail } from '../_hooks/useCampaignDetail';
-import useAuthStore from '@/stores/useAuthStore';
-import { ADMIN_ROLE_ID } from '@/constants/roles';
-import { AvatarList } from './AvatarList';
+import { AvatarList } from '@/components/client/shared/AvatarList';
 import { CloseShiftButton } from './CloseShiftButton';
 import { ShiftFillBar } from './ShiftFillBar';
+import { dayLabel, hhmm, meetingPointName } from '@/utils/campaignLabels';
 
 
-const hhmm = (iso: string) => format(new Date(iso), 'HH:mm');
 
 /**
  * Managers: who registered for each shift, by day (spec 3.1), to read only: it shows whether a
@@ -41,11 +39,7 @@ export const CampaignRegistrations = memo(function CampaignRegistrations({
   enabled: boolean;
 }) {
   const { t } = useTranslation();
-  const { campaignId, campaign, canManageCampaign, isRegistered } = useCampaignDetail();
-  const isPlatformAdmin = useAuthStore((s) => s.user?.roleId === ADMIN_ROLE_ID);
-  // Who registered is only for the team, registered volunteers and admins (spec 4.5); everyone
-  // else sees the shifts with their numbers, to open a shift.
-  const canViewVolunteers = canManageCampaign || isRegistered || isPlatformAdmin;
+  const { campaignId, campaign, canManageCampaign, canViewVolunteers } = useCampaignDetail();
   // Shifts that lost their leader (spec 3.4) need one before attendance opens.
   const leaderless = useMemo(
     () =>
@@ -87,7 +81,7 @@ export const CampaignRegistrations = memo(function CampaignRegistrations({
 
   const pointName = (shift: IShiftRegistrations) => {
     const index = (campaign?.meeting_points ?? []).findIndex((p) => p.id === shift.meeting_point_id);
-    return shift.meeting_point_name || t('Meeting point {{n}}', { n: index + 1 });
+    return meetingPointName({ name: shift.meeting_point_name }, index, t);
   };
 
   const days = useMemo(() => {
@@ -190,7 +184,7 @@ export const CampaignRegistrations = memo(function CampaignRegistrations({
           {days.map(({ day, index, shifts }) => (
             <section key={day.id} className="flex flex-col gap-3">
               <h3 className="font-display-3 font-semibold text-button-accent">
-                {t('Day {{n}}', { n: index + 1 })} · {format(new Date(day.start_at), 'EEEE, PP')}
+                {dayLabel(day, index, t)}
               </h3>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {shifts.map((shift) => {

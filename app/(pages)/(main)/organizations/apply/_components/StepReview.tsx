@@ -9,7 +9,8 @@ import {
   ORG_TYPE_OPTIONS,
 } from "../_services/application.service";
 import { useApplication } from "../_hooks/useApplication";
-import { SummaryList, SummaryRow, groupBy } from "./ApplicationDetails";
+import { groupBy } from "./ApplicationDetails";
+import { SummaryList, SummaryRow } from "@/components/client/shared/SummaryRow";
 import FileTypeIcon from "@/components/ui/FileTypeIcon";
 import { DocumentNameLink } from "./DocumentNameLink";
 

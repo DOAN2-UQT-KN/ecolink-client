@@ -1,10 +1,11 @@
 import { STATUS } from "@/constants/status";
-import { STATUS_LABEL, statusTone } from "@/constants/statusTone";
+import { statusTone } from "@/constants/statusTone";
 import { cn } from "@/libs/utils";
 import { Dropdown } from "antd";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { PILL_DOT, Pill } from "./Pill";
+import { PILL_DOT } from "./Pill";
+import { StatusPill } from "./StatusPill";
 
 interface TagTicketProps {
   type: number;
@@ -25,11 +26,6 @@ const ChangeStatus: React.FC<TagTicketProps> = ({
   useEffect(() => {
     setCurrentStatus(type);
   }, [type]);
-
-  const renderNameStatus = useCallback(() => {
-    const label = STATUS_LABEL[currentStatus as STATUS];
-    return label ? t(label) : "";
-  }, [currentStatus, t]);
 
   const statusOptionDefault = useMemo(
     () => [
@@ -119,18 +115,14 @@ const ChangeStatus: React.FC<TagTicketProps> = ({
   );
 
   if (!enabledDropdown || statusOption.length === 0) {
-    return (
-      <Pill tone={statusTone(currentStatus)}>{renderNameStatus()}</Pill>
-    );
+    return <StatusPill type={currentStatus} />;
   }
 
   if (!currentStatus) return null;
 
   return (
     <Dropdown menu={{ items: menuItems }} trigger={["hover"]}>
-      <Pill tone={statusTone(currentStatus)} className="cursor-pointer">
-        {renderNameStatus()}
-      </Pill>
+      <StatusPill type={currentStatus} className="cursor-pointer" />
     </Dropdown>
   );
 };

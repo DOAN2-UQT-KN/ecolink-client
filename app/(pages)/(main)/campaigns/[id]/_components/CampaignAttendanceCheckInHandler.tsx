@@ -14,28 +14,14 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { apiErrorMessage } from '@/constants/apiErrorMessages';
-import { format } from 'date-fns';
 
 import { useCampaignDetail } from '../_hooks/useCampaignDetail';
+import { hhmm } from '@/utils/campaignLabels';
+import { getCurrentPosition } from '@/libs/geo';
 
 type Outcome =
   | { kind: 'done'; result: IScanResult }
   | { kind: 'error'; message: string; retry: boolean };
-
-/** The device's position; precise, fresh, within 15 s. */
-function currentPosition(): Promise<GeolocationPosition> {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject(new Error('unsupported'));
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(resolve, reject, {
-      enableHighAccuracy: true,
-      timeout: 15_000,
-      maximumAge: 0,
-    });
-  });
-}
 
 /**
  * A volunteer opened a shift's QR code (`?attendance=<jwt>`, spec 4.1): sends it with the device's
@@ -60,10 +46,9 @@ export function CampaignAttendanceCheckInHandler() {
     async (raw: string) => {
       setBusy(true);
       try {
-        let position: GeolocationPosition;
-        try {
-          position = await currentPosition();
-        } catch {
+        // Precise and fresh: the server checks the distance to the meeting point.
+        const position = await getCurrentPosition({ maximumAge: 0 });
+        if (!position) {
           setOutcome({
             kind: 'error',
             message: t('Allow precise location to check in, then try again.'),
@@ -73,9 +58,9 @@ export function CampaignAttendanceCheckInHandler() {
         }
         const res = await scanAttendance(campaignId, {
           token: raw,
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy,
+          latitude: position.lat,
+          longitude: position.lng,
+          accuracy: position.accuracy ?? 0, // always set by getCurrentPosition
         });
         setOutcome({ kind: 'done', result: res.data });
         void queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });
@@ -105,7 +90,6 @@ export function CampaignAttendanceCheckInHandler() {
     setOutcome(null);
     clearQuery();
   };
-  const hhmm = (iso?: string | null) => (iso ? format(new Date(iso), 'HH:mm') : '');
   const result = outcome?.kind === 'done' ? outcome.result : null;
   const title = !outcome
     ? ''

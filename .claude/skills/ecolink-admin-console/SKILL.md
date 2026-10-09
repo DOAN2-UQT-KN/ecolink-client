@@ -295,7 +295,9 @@ File admin (giấy tờ hồ sơ tổ chức) phải fetch blob qua `requestApi`
 
 ## `ConfirmPopover` — dialog xác nhận
 
-`components/admin/shared/ConfirmPopover.tsx` (tên là Popover nhưng bên trong là shadcn `Dialog`).
+`components/ui/ConfirmPopover.tsx` (tên là Popover nhưng bên trong là shadcn `Dialog`).
+
+Dialog nặng (preview, review) chỉ tải khi mở lần đầu: nút nhẹ giữ state `open` + `dynamic(() => import(...), { loading })` (mẫu: `admin/campaigns/_components/CompletionReviewButton.tsx`, fallback `DialogLoading`). Định dạng giờ/tên điểm tập trung dùng chung `utils/campaignLabels.ts` (`hhmm`, `meetingPointName`).
 
 ```ts
 type ConfirmPopoverProps = {

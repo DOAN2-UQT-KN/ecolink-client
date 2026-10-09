@@ -16,7 +16,7 @@ import {
   ApplicationDetailsSkeleton,
   ApplicationNotFound,
   ApplicationPageLayout,
-} from "../_components/ApplicationPageLayout";
+} from "@/components/client/shared/ApplicationPageLayout";
 
 /**
  * The draft editor. Opened right after the email code (the draft and its tracking link exist

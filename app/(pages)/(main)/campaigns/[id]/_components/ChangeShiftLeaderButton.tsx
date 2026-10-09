@@ -42,7 +42,7 @@ export const ChangeShiftLeaderButton = memo(function ChangeShiftLeaderButton({
   const { t } = useTranslation('common');
   const [open, setOpen] = useState(false);
   const [picked, setPicked] = useState<string | undefined>(leaderUserId ?? undefined);
-  const options = useLeaderOptions({ organizationId, campaignId, createdBy });
+  const options = useLeaderOptions({ organizationId, campaignId, createdBy, enabled: open });
   const { mutate, isPending } = useSetShiftLeader({ onSuccess: () => setOpen(false) });
 
   return (

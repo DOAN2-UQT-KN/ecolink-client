@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { useFieldArray } from 'react-hook-form';
+import { useFieldArray, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { BiTrash } from 'react-icons/bi';
 
@@ -12,7 +12,7 @@ import {
   CAMPAIGN_MEETING_POINT_MAX_DISTANCE_KM,
 } from '@/constants/campaignLifecycle';
 
-import { useCampaign } from '../_hooks/useCampaign';
+import { useCampaign } from '../_context/CampaignContext';
 import { useMeetingPointWarnings } from '../_hooks/useMeetingPointWarnings';
 import { emptyMeetingPoint } from '../_services/campaign.service';
 import LeafletAddress from './LeafletAddress';
@@ -34,7 +34,7 @@ const MeetingPointsEditor = memo(function MeetingPointsEditor() {
   const { fields, append, remove } = useFieldArray({ control, name: 'meeting_points' });
   const isMulti = fields.length > 1;
 
-  const warnings = useMeetingPointWarnings(form.watch('meeting_points'));
+  const warnings = useMeetingPointWarnings(useWatch({ control, name: 'meeting_points' }));
 
   const pointErrors = formState.errors.meeting_points;
 

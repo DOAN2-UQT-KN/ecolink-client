@@ -27,8 +27,8 @@ import {
   ApplicationDetailsSkeleton,
   ApplicationNotFound,
   ApplicationPageLayout,
-} from "../apply/_components/ApplicationPageLayout";
-import { SummaryRow } from "../apply/_components/ApplicationDetails";
+} from "@/components/client/shared/ApplicationPageLayout";
+import { SummaryRow } from "@/components/client/shared/SummaryRow";
 import { ORG_TYPE_OPTIONS } from "../apply/_services/application.service";
 
 // `Breadcrumbs` runs every label through `t()` itself, so these stay raw English.

@@ -6,11 +6,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CAMPAIGN_EDITABLE_STATUSES } from "@/constants/campaignLifecycle";
 
 import CampaignForm from "../../create/_components/CampaignForm";
+import { CampaignProvider } from "../../create/_context/CampaignContext";
 import {
   CAMPAIGN_STEPS,
-  CampaignProvider,
   type CampaignStep,
-} from "../../create/_context/CampaignContext";
+} from "../../create/_services/campaignSteps.service";
 
 /**
  * Edit a campaign until it starts: before approval (draft, under review, needs revision) or once

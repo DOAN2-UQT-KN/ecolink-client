@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import {
   Breadcrumbs,
   type BreadcrumbItemProps,
@@ -8,18 +7,15 @@ import { CampaignProvider } from "./_context/CampaignContext";
 import { FormFilter } from "./_components/FormFilter";
 import { DataTable } from "./_components/DataTable";
 
-function CampaignsContent() {
-  const breadcrumbs: BreadcrumbItemProps[] = useMemo(
-    () => [
-      { label: "Dashboard", path: "/admin", type: "link" },
-      { label: "Campaigns", path: "/admin/campaigns", type: "page" },
-    ],
-    [],
-  );
+const BREADCRUMBS: BreadcrumbItemProps[] = [
+  { label: "Dashboard", path: "/admin", type: "link" },
+  { label: "Campaigns", path: "/admin/campaigns", type: "page" },
+];
 
+function CampaignsContent() {
   return (
     <div className="space-y-6">
-      <Breadcrumbs breadcrumbs={breadcrumbs} isAdmin={true} />
+      <Breadcrumbs breadcrumbs={BREADCRUMBS} isAdmin={true} />
       <FormFilter />
       <DataTable />
     </div>

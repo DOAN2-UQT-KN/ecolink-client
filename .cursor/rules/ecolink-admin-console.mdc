@@ -52,7 +52,7 @@ import { DataTable as SharedDataTable, type DataTableColumn } from "@/components
 
 ## `ConfirmPopover`
 
-`components/admin/shared/ConfirmPopover.tsx` — tên là Popover nhưng bên trong là shadcn `Dialog`.
+`components/ui/ConfirmPopover.tsx` — tên là Popover nhưng bên trong là shadcn `Dialog`.
 **`onConfirm` trả về `false` thì dialog KHÔNG đóng** (dùng để validate). Có `extraContent` làm slot, `confirmPending`, `confirmDisabled`, `theme` (mặc định `"dark"`).
 
 ## Dark theme

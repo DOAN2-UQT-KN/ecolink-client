@@ -9,7 +9,7 @@ import { HiEye, HiPencilAlt } from "react-icons/hi";
 import { Button as SharedButton } from "@/components/client/shared/Button";
 import BlueTickBadge from "@/components/ui/BlueTickBadge";
 import { cn } from "@/libs/utils";
-import { ConfirmPopoverModal } from "@/modules/OrganizationCard/components/ConfirmPopoverModal";
+import { ConfirmPopoverModal } from "@/components/client/shared/ConfirmPopoverModal";
 import { RoleBadge } from "@/components/ui/RoleBadge";
 import { UpdateOrganizationPopover } from "@/app/(pages)/(main)/organizations/me/_components/UpdateOrganizationPopover";
 

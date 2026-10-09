@@ -1,4 +1,4 @@
-import { memo, useCallback } from 'react';
+import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -9,12 +9,7 @@ export const CampaignTabs = memo(function CampaignTabs() {
   const { t } = useTranslation();
   const { viewMode, setViewMode } = useCampaignSearch();
 
-  const handleTabChange = useCallback(
-    (value: string) => {
-      setViewMode(value === 'mine' ? 'mine' : 'explore');
-    },
-    [setViewMode],
-  );
+  const handleTabChange = (value: string) => setViewMode(value === 'mine' ? 'mine' : 'explore');
 
   return (
     <Tabs value={viewMode} onValueChange={handleTabChange}>

@@ -1,18 +1,12 @@
-import { memo, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { TbExternalLink, TbMapPin } from "react-icons/tb";
-
+import { TbExternalLink } from "react-icons/tb";
 import { useGetCampaignById } from "@/apis/campaign/campaignById";
 import { useGetCampaignHistory } from "@/apis/campaign/getCampaignHistory";
-import { useCompletionReview } from "@/apis/campaign/processCampaign";
 import { CAMPAIGN_STATUS } from "@/constants/campaignLifecycle";
-import type { ICampaign } from "@/apis/campaign/models/campaign";
-import { useGetMembersByOrg } from "@/apis/organization/organizationById";
 import { useAdminLayout } from "@/app/(pages)/(admin)/_context/AdminLayoutContext";
-import { ShiftProgressCard } from "@/app/(pages)/(main)/campaigns/[id]/_components/ShiftProgressCard";
-import { impliedMinAge } from "@/app/(pages)/(main)/campaigns/create/_services/campaign.service";
+import { impliedMinAge } from "@/constants/campaignLifecycle";
 import { OrganizationIdentity } from "@/components/admin/shared/OrganizationIdentity";
-import { ReviewRow, ReviewSectionCard } from "@/components/admin/shared/ReviewSection";
+import { ReviewRow, ReviewSectionCard } from "@/components/ui/ReviewSection";
 import Image from "@/components/ui/AppImage";
 import { Button } from "@/components/ui/button";
 import { CampaignStatusTag } from "@/components/ui/CampaignStatusTag";
@@ -27,222 +21,16 @@ import { RichTextContent } from "@/components/ui/RichTextContent";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CAMPAIGN_PUBLIC_STATUSES } from "@/constants/campaignLifecycle";
-
-/** Snapshot keys (snake_case after the response transform) → what changed, for the admin. */
-const CHANGE_LABELS: Record<string, string> = {
-  title: "Title",
-  description: "Description",
-  banner: "Banner",
-  difficulty: "Difficulty",
-  contact_name: "Contact name",
-  contact_phone: "Contact phone",
-  safety_notes: "Safety notes",
-  requirements: "Participation conditions",
-  days: "Days",
-  meeting_points: "Meeting points and waste points",
-  shifts: "Shifts",
-  min_volunteers_reason: "Why fewer volunteers than suggested",
-};
 import { getDifficultyLevel } from "@/constants/difficulty";
 import { useLocalizedDisplay } from "@/hooks/useLocalizedDisplay";
 import { cn } from "@/libs/utils";
 import { formattedDate } from "@/utils/formattedDate";
-import { format } from "date-fns";
 import { CampaignDateRange } from "@/components/client/shared/CampaignDateRange";
-import { ShiftSlotsTable } from "@/components/client/shared/ShiftSlotsTable";
-import { CompletionEvidence } from "./CompletionReviewDialog";
-
-/** Statuses whose shifts have results to show; BLOCKED / CANCELLED only once a shift has started. */
-const RESULT_STATUSES: number[] = [
-  CAMPAIGN_STATUS.ACTIVE,
-  CAMPAIGN_STATUS.PENDING_COMPLETION,
-  CAMPAIGN_STATUS.LEGACY_IN_REVIEW,
-  CAMPAIGN_STATUS.COMPLETED,
-];
-const STOPPED_STATUSES: number[] = [CAMPAIGN_STATUS.BLOCKED, CAMPAIGN_STATUS.CANCELLED];
-
-/** Result tab: the completion evidence once marked done, then the shift grid (each shift's popover is the campaign page's). */
-const CampaignResult = memo(function CampaignResult({
-  campaign,
-  isDark,
-}: {
-  campaign: ICampaign;
-  isDark: boolean;
-}) {
-  const submitted = Boolean(campaign.completion_submitted_at);
-  const { data, isLoading } = useCompletionReview(campaign.id, { enabled: submitted });
-  const review = data?.data;
-
-  return (
-    <div className="flex min-w-0 flex-col gap-3">
-      {submitted &&
-        (isLoading ? (
-          <Skeleton className="h-24 w-full" />
-        ) : review ? (
-          <CompletionEvidence review={review} isDark={isDark} />
-        ) : null)}
-      {/* Once marked done the summary above has the totals: the shift grid alone, folded. */}
-      <ShiftProgressCard
-        campaign={campaign}
-        variant="admin"
-        isDark={isDark}
-        hideStats={submitted}
-        defaultOpen={!submitted}
-      />
-    </div>
-  );
-});
-
-const MeetingPoints = memo(function MeetingPoints({
-  campaign,
-  isDark,
-}: {
-  campaign: ICampaign;
-  isDark: boolean;
-}) {
-  const { t } = useTranslation();
-  const { title: localizedTitle } = useLocalizedDisplay();
-  const points = campaign.meeting_points ?? [];
-  const reportsById = useMemo(
-    () => new Map((campaign.reports ?? []).map((r) => [r.id, r])),
-    [campaign.reports],
-  );
-
-  if (points.length === 0) {
-    return <p className="text-sm text-muted-foreground">—</p>;
-  }
-
-  return (
-    <div className="flex flex-col gap-4">
-      {points.map((point, index) => (
-        <div
-          key={point.id ?? index}
-          className={cn(
-            "flex flex-col gap-2",
-            index > 0 && "border-t pt-4",
-            isDark ? "border-zinc-700" : "border-zinc-200",
-          )}
-        >
-          <span className="font-semibold">
-            {point.name || t("Meeting point {{n}}", { n: index + 1 })}
-          </span>
-          <ReviewRow
-            label={t("Location")}
-            value={
-              <a
-                href={`https://www.google.com/maps?q=${point.latitude},${point.longitude}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={cn(
-                  "inline-flex items-center gap-1 underline",
-                  isDark ? "text-blue-300" : "text-blue-600",
-                )}
-              >
-                <TbMapPin className="shrink-0" />
-                {point.detail_address || `${point.latitude}, ${point.longitude}`}
-              </a>
-            }
-          />
-          <ReviewRow
-            label={t("Waste points")}
-            value={
-              point.report_ids.length === 0 ? (
-                t("No waste points")
-              ) : (
-                <div className="flex flex-col gap-1">
-                  <span className="text-muted-foreground">
-                    {point.report_ids.length} · {t("within {{km}} km", { km: point.radius_km })}
-                  </span>
-                  <ul className="list-disc pl-4">
-                    {point.report_ids.map((id) => {
-                      const report = reportsById.get(id);
-                      return (
-                        <li key={id}>
-                          <a
-                            href={`/incidents/${id}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="underline-offset-2 hover:underline"
-                          >
-                            {(report && localizedTitle(report)) || id}
-                          </a>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              )
-            }
-          />
-        </div>
-      ))}
-    </div>
-  );
-});
-
-/** The days, the volunteers needed on every day × meeting point, and who leads each shift. */
-const CampaignShifts = memo(function CampaignShifts({ campaign }: { campaign: ICampaign }) {
-  const { t } = useTranslation();
-  const days = useMemo(
-    () =>
-      [...(campaign.days ?? [])].sort(
-        (a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime(),
-      ),
-    [campaign.days],
-  );
-  const points = campaign.meeting_points ?? [];
-  const shifts = campaign.shifts ?? [];
-  const { data: membersData } = useGetMembersByOrg(
-    { organization_id: campaign.organization_id ?? "", page: 1, limit: 100 },
-    { enabled: Boolean(campaign.organization_id) && shifts.length > 0 },
-  );
-  const memberName = (userId?: string | null) => {
-    if (!userId) return "—";
-    const member = membersData?.data?.members?.find((m) => m.user_id === userId);
-    return member?.user?.name || member?.user?.email || "—";
-  };
-  const shiftOf = (dayId: string, pointId?: string) =>
-    shifts.find((sh) => sh.day_id === dayId && sh.meeting_point_id === pointId);
-  const hhmm = (iso: string) => format(new Date(iso), "HH:mm");
-  const pointName = (index: number) =>
-    points[index]?.name || t("Meeting point {{n}}", { n: index + 1 });
-
-  if (days.length === 0) {
-    return <p className="text-sm text-muted-foreground">—</p>;
-  }
-
-  return (
-    <div className="flex flex-col gap-3">
-      <ShiftSlotsTable
-        days={days.map((day, d) => ({
-          label: `${t("Day {{n}}", { n: d + 1 })} · ${formattedDate(day.start_at)}`,
-          hours: `${hhmm(day.start_at)} – ${hhmm(day.end_at)}`,
-        }))}
-        points={points.map((_, p) => pointName(p))}
-        cells={days.map((day) =>
-          points.map((point) => {
-            const shift = shiftOf(day.id, point.id);
-            return {
-              hours: shift ? `${hhmm(shift.start_at)} – ${hhmm(shift.end_at)}` : null,
-              minVolunteers: shift?.min_volunteers ?? 0,
-              maxVolunteers: shift?.max_volunteers ?? null,
-              gatherTime: shift?.gather_at ? hhmm(shift.gather_at) : null,
-              leader: shift?.leader_user_id ? memberName(shift.leader_user_id) : null,
-            };
-          }),
-        )}
-        suggestedMinPerDay={campaign.suggested_min_volunteers ?? null}
-        variant="admin"
-      />
-      {campaign.min_volunteers_reason && (
-        <p className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
-          <span className="font-semibold">{t("Why fewer volunteers than suggested")}:</span>{" "}
-          {campaign.min_volunteers_reason}
-        </p>
-      )}
-    </div>
-  );
-});
+import { CHANGE_LABELS, RESULT_STATUSES, STOPPED_STATUSES } from "../_services/campaignPreview.service";
+import { CampaignResult } from "./preview/PreviewResult";
+import { MeetingPoints } from "./preview/PreviewMeetingPoints";
+import { CampaignShifts } from "./preview/PreviewShifts";
+import { meetingPointName } from "@/utils/campaignLabels";
 
 /**
  * Everything about a campaign on one screen, as its organization saw it before sending it
@@ -284,10 +72,9 @@ export function CampaignPreviewDialog({
     (RESULT_STATUSES.includes(status) ||
       (STOPPED_STATUSES.includes(status) &&
         shifts.some((sh) => new Date(sh.start_at).getTime() <= Date.now())));
-  const editedFields = useMemo(() => {
-    const entry = historyData?.data?.history?.find((h) => h.event === "edit_major");
-    return Object.keys(entry?.changes ?? {});
-  }, [historyData]);
+  const editedFields = Object.keys(
+    historyData?.data?.history?.find((h) => h.event === "edit_major")?.changes ?? {},
+  );
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
@@ -467,7 +254,7 @@ export function CampaignPreviewDialog({
                 <ReviewSectionCard
                   title={t("Meeting points")}
                   hint={points
-                    .map((p, i) => p.name || t("Meeting point {{n}}", { n: i + 1 }))
+                    .map((p, i) => meetingPointName(p, i, t))
                     .join(" · ")}
                   isDark={isDark}
                 >

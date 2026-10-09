@@ -1,5 +1,5 @@
 import { memo, useMemo } from 'react';
-import { Controller } from 'react-hook-form';
+import { Controller, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import NeedsReviewTag from './NeedsReviewTag';
@@ -10,8 +10,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { InfoTooltip } from '@/components/ui/InfoTooltip';
 
-import { useCampaign } from '../_hooks/useCampaign';
-import { impliedMinAge } from '../_services/campaign.service';
+import { useCampaign } from '../_context/CampaignContext';
+import { impliedMinAge } from '@/constants/campaignLifecycle';
 
 /** 0xxxxxxxxx or +84xxxxxxxxx, spaces/dots/dashes allowed (same rule as the server). */
 const VN_PHONE_RE = /^(?:\+84|0)\d{9}$/;
@@ -22,10 +22,9 @@ const ContactAndSafety = memo(function ContactAndSafety() {
   const {
     register,
     control,
-    watch,
     formState: { errors },
   } = form;
-  const difficulty = watch('difficulty');
+  const difficulty = useWatch({ control, name: 'difficulty' });
   const defaultMinAge = impliedMinAge(difficulty);
 
   const inputClassName = useMemo(

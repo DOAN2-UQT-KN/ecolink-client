@@ -1,7 +1,5 @@
 import { memo, useEffect, useMemo, useState } from 'react';
-import QRCode from 'qrcode';
 import { useTranslation } from 'react-i18next';
-import { format } from 'date-fns';
 import { TbArrowBackUp, TbQrcode, TbUserPlus, TbUserX } from 'react-icons/tb';
 
 import {
@@ -33,10 +31,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { ConfirmPopoverModal } from '@/modules/OrganizationCard/components/ConfirmPopoverModal';
+import { ConfirmPopoverModal } from '@/components/client/shared/ConfirmPopoverModal';
 import showMessage, { MessageLevel, MessageType } from '@/utils/showMessage';
+import { hhmm } from '@/utils/campaignLabels';
 
-const hhmm = (iso?: string | null) => (iso ? format(new Date(iso), 'HH:mm') : '—');
 
 /** The dynamic QR of the open session: a new code every period (spec 4.1). */
 const AttendanceQrDialog = memo(function AttendanceQrDialog({
@@ -51,20 +49,27 @@ const AttendanceQrDialog = memo(function AttendanceQrDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const { t } = useTranslation('common');
-  const [periodSec, setPeriodSec] = useState(600);
   const { data, isError } = useAttendanceQr(
     { campaign_id: campaignId, shift_id: shiftId },
-    { enabled: open, refetchInterval: periodSec * 1000, refetchIntervalInBackground: true, gcTime: 0 },
+    {
+      enabled: open,
+      refetchInterval: (query) => (query.state.data?.data?.period_sec || 600) * 1000,
+      refetchIntervalInBackground: true,
+      gcTime: 0,
+    },
   );
   const qr = data?.data;
+  const periodSec = qr?.period_sec || 600;
   const [image, setImage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (qr?.period_sec) setPeriodSec(qr.period_sec);
     if (!qr?.token) return;
     const url = `${window.location.origin}/campaigns/${campaignId}?attendance=${encodeURIComponent(qr.token)}`;
-    void QRCode.toDataURL(url, { width: 300, margin: 2 }).then(setImage);
-  }, [qr?.token, qr?.period_sec, campaignId]);
+    // qrcode is only needed while this dialog shows a code.
+    void import('qrcode').then(({ default: QRCode }) =>
+      QRCode.toDataURL(url, { width: 300, margin: 2 }).then(setImage),
+    );
+  }, [qr?.token, campaignId]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -88,7 +93,7 @@ const AttendanceQrDialog = memo(function AttendanceQrDialog({
           )}
           {qr?.session_expires_at && (
             <p className="text-xs text-muted-foreground">
-              {t('Session open until {{time}}', { time: hhmm(qr.session_expires_at) })}
+              {t('Session open until {{time}}', { time: hhmm(qr.session_expires_at, '—') })}
             </p>
           )}
         </div>
@@ -241,8 +246,8 @@ export const ShiftAttendancePanel = memo(function ShiftAttendancePanel({
               {view.attendances.map((a) => (
                 <tr key={a.user_id} className="border-t border-[rgba(136,122,71,0.2)]">
                   <td className="py-2 pr-3">{a.volunteer?.name || t('Unnamed volunteer')}</td>
-                  <td className="py-2 pr-3 tabular-nums">{hhmm(a.check_in_at)}</td>
-                  <td className="py-2 pr-3 tabular-nums">{hhmm(a.check_out_at)}</td>
+                  <td className="py-2 pr-3 tabular-nums">{hhmm(a.check_in_at, '—')}</td>
+                  <td className="py-2 pr-3 tabular-nums">{hhmm(a.check_out_at, '—')}</td>
                   <td className="py-2 pr-3">
                     <div className="flex flex-wrap gap-1">
                       {a.excluded && (

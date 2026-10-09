@@ -6,13 +6,13 @@ import { useGetCampaignById } from "@/apis/campaign/campaignById";
 import { BreadcrumbItemProps } from "@/components/client/shared/Breadcrumbs";
 import { Button } from "@/components/client/shared/Button";
 import { CampaignStatusTag } from "@/components/ui/CampaignStatusTag";
-import { CAMPAIGN_EDITABLE_STATUSES, CAMPAIGN_STATUS } from "@/constants/campaignLifecycle";
+import { CAMPAIGN_STATUS, canEditCampaign } from "@/constants/campaignLifecycle";
 import { useLocalizedDisplay } from "@/hooks/useLocalizedDisplay";
 import { Link, useParams, useRouter } from "@/libs/router";
 import {
   ApplicationDetailsSkeleton,
   ApplicationPageLayout,
-} from "@/app/(pages)/(main)/organizations/apply/_components/ApplicationPageLayout";
+} from "@/components/client/shared/ApplicationPageLayout";
 
 import { CampaignSummary } from "../../create/_components/CampaignSummary";
 import { CancelCampaignButton } from "../_components/CancelCampaignButton";
@@ -68,10 +68,7 @@ export default function CampaignOverviewPage() {
     );
   }
 
-  // Same rule as the server (BR-154): every field stays editable until approval.
-  const canEdit =
-    Boolean(campaign.can_manage_campaign) &&
-    CAMPAIGN_EDITABLE_STATUSES.includes(campaign.status ?? -1);
+  const canEdit = canEditCampaign(campaign);
   const editPath = `/campaigns/${campaign.id}/edit`;
 
   return (

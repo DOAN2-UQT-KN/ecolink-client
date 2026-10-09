@@ -3,22 +3,21 @@ import React, { createContext, ReactNode, useMemo } from 'react';
 import { useGetCampaignById } from '@/apis/campaign/campaignById';
 import type { ICampaign } from '@/apis/campaign/models/campaign';
 import { CAMPAIGN_REGISTRABLE_STATUSES } from '@/constants/campaignLifecycle';
+import { ADMIN_ROLE_ID } from '@/constants/roles';
+import useAuthStore from '@/stores/useAuthStore';
 
 export interface CampaignDetailContextType {
   campaignId: string;
   campaign: ICampaign | undefined;
-  /**
-   * From API `can_manage_campaign`: creator, assigned manager, or LR/OWNER of the campaign's
-   * organization (creator/manager only while still an active member).
-   */
+
   canManageCampaign: boolean;
   isLoading: boolean;
   isError: boolean;
-  isFetching: boolean;
-  /** The viewer holds at least one shift. */
   isRegistered: boolean;
-  /** Some shift is on and not started, in an upcoming or running campaign. */
   hasOpenShift: boolean;
+  isPlatformAdmin: boolean;
+
+  canViewVolunteers: boolean;
 }
 
 export const CampaignDetailContext = createContext<CampaignDetailContextType | undefined>(
@@ -32,13 +31,14 @@ export function CampaignDetailProvider({
   campaignId: string;
   children: ReactNode;
 }) {
-  const { data, isLoading, isError, isFetching } = useGetCampaignById(campaignId, {
+  const { data, isLoading, isError } = useGetCampaignById(campaignId, {
     enabled: Boolean(campaignId),
   });
 
   const campaign = data?.data?.campaign;
 
   const canManageCampaign = Boolean(campaign?.can_manage_campaign);
+  const isPlatformAdmin = useAuthStore((s) => s.user?.roleId === ADMIN_ROLE_ID);
 
   const derived = useMemo(() => {
     if (!campaign) {
@@ -65,10 +65,11 @@ export function CampaignDetailProvider({
       canManageCampaign,
       isLoading,
       isError,
-      isFetching,
+      isPlatformAdmin,
+      canViewVolunteers: canManageCampaign || derived.isRegistered || isPlatformAdmin,
       ...derived,
     }),
-    [campaignId, campaign, canManageCampaign, isLoading, isError, isFetching, derived],
+    [campaignId, campaign, canManageCampaign, isLoading, isError, isPlatformAdmin, derived],
   );
 
   return (

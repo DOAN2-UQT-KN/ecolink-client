@@ -13,13 +13,19 @@ import {
 import { cn } from '@/libs/utils';
 import { useCampaignContext } from '../_context/CampaignContext';
 import { ReviewCampaignConfirm } from './ReviewCampaignConfirm';
-import { CampaignPreviewDialog } from './CampaignPreviewDialog';
 import { CampaignDateRange } from '@/components/client/shared/CampaignDateRange';
 import { OrganizationIdentity } from '@/components/admin/shared/OrganizationIdentity';
 import { formattedDate } from '@/utils/formattedDate';
 import { CAMPAIGN_STATUS } from '@/constants/campaignLifecycle';
 import { getDifficultyLevel } from '@/constants/difficulty';
-import { CompletionReviewDialog } from './CompletionReviewDialog';
+import { CompletionReviewButton } from './CompletionReviewButton';
+import { DialogLoading } from './DialogLoading';
+import dynamic from '@/libs/dynamic';
+
+// The preview loads only when an admin first opens one.
+const CampaignPreviewDialog = dynamic(() => import('./CampaignPreviewDialog'), {
+  loading: () => <DialogLoading />,
+});
 import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
 
 const DEFAULT_BANNER = '/banner-default.jpg';
@@ -91,7 +97,7 @@ const GeneralInformationCell = memo(function GeneralInformationCell({
 
 export const DataTable = memo(function DataTable() {
   const { t } = useTranslation();
-  const { title: localizedTitle, locale } = useLocalizedDisplay();
+  const { title: localizedTitle } = useLocalizedDisplay();
   const { campaigns, loading, pagination, total, onPageChange, onPageSizeChange } =
     useCampaignContext();
   const [previewId, setPreviewId] = useState<string | null>(null);
@@ -208,7 +214,7 @@ export const DataTable = memo(function DataTable() {
             ) : null}
 
             {record.status === CAMPAIGN_STATUS.PENDING_COMPLETION ? (
-              <CompletionReviewDialog
+              <CompletionReviewButton
                 campaignId={record.id}
                 campaignTitle={localizedTitle(record)}
                 theme={isDark ? 'dark' : 'light'}
@@ -218,7 +224,7 @@ export const DataTable = memo(function DataTable() {
         ),
       },
     ],
-    [isDark, pagination.current, pagination.pageSize, t, locale, localizedTitle],
+    [isDark, pagination, t, localizedTitle],
   );
 
   return (
@@ -244,5 +250,3 @@ export const DataTable = memo(function DataTable() {
     </>
   );
 });
-
-export default DataTable;

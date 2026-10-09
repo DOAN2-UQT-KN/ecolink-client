@@ -3,14 +3,13 @@ import { useTranslation } from 'react-i18next';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CAMPAIGN_PUBLIC_STATUSES } from '@/constants/campaignLifecycle';
-import { ADMIN_ROLE_ID } from '@/constants/roles';
 import useAuthStore from '@/stores/useAuthStore';
 
 import { useCampaignDetail } from '../_hooks/useCampaignDetail';
 import { CampaignRegistrations } from './CampaignRegistrations';
 import { CampaignSosTab } from './CampaignSosTab';
 import { DetailInformation } from './DetailInformation';
-import { ShiftProgressCard } from './ShiftProgressCard';
+import { ShiftProgressCard } from '@/modules/CampaignVerification';
 
 const ALL_CAMPAIGN_TAB_ITEMS = [
   { value: 'detail', labelKey: 'Detail information' },
@@ -25,8 +24,7 @@ export type CampaignTabValue = (typeof ALL_CAMPAIGN_TAB_ITEMS)[number]['value'];
 export const CampaignTabs = memo(function CampaignTabs() {
   const { t } = useTranslation('common');
   const [tab, setTab] = useState<CampaignTabValue>('detail');
-  const { campaign, canManageCampaign } = useCampaignDetail();
-  const isPlatformAdmin = useAuthStore((s) => s.user?.roleId === ADMIN_ROLE_ID);
+  const { campaign, canManageCampaign, isPlatformAdmin } = useCampaignDetail();
   const isAuthenticated = useAuthStore((s) => s.is_authenticated);
   // Progress (spec 4.2), same as the shift-overview API: anyone signed in once the campaign is
   // public; managers and admins in every status.

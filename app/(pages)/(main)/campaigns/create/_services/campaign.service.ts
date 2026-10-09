@@ -2,17 +2,14 @@ import { IIncident } from "@/apis/incident/models/incident";
 import { IResource } from "@/apis/saved-resource/models/getResource";
 import { ICampaign } from "@/apis/campaign/models/campaign";
 import { ICreateCampaignRequest } from "@/apis/campaign/models/createCampaign";
-import type { ICampaignValidationIssue } from "@/apis/campaign/models/lifecycle";
 import { DIFFICULTY_MIN, clampDifficulty } from "@/constants/difficulty";
+import { truncateDetailAddress } from "@/constants/address";
 import {
-  CAMPAIGN_HIGH_DIFFICULTY_LEVEL,
-  CAMPAIGN_HIGH_DIFFICULTY_MIN_AGE,
   CAMPAIGN_TITLE_MAX_LENGTH,
 } from "@/constants/campaignLifecycle";
 
 export const TITLE_MAX_LENGTH = CAMPAIGN_TITLE_MAX_LENGTH;
-export const DETAIL_ADDRESS_MAX_LENGTH = 255;
-export const DEFAULT_MEETING_POINT_RADIUS_KM = 1;
+const DEFAULT_MEETING_POINT_RADIUS_KM = 1;
 
 export interface MeetingPointFormValues {
   /** Existing meeting point (edit); none for a new one. Not `id`: useFieldArray owns that key. */
@@ -126,14 +123,6 @@ export const DEFAULT_CAMPAIGN_FORM_VALUES: CampaignFormValues = {
   meeting_points: [emptyMeetingPoint()],
   schedule: [[emptyShift()]],
   min_volunteers_reason: "",
-};
-
-export const truncateDetailAddress = (value?: string | null): string => {
-  const trimmed = value?.trim() ?? "";
-  if (trimmed.length <= DETAIL_ADDRESS_MAX_LENGTH) {
-    return trimmed;
-  }
-  return trimmed.slice(0, DETAIL_ADDRESS_MAX_LENGTH);
 };
 
 /** Local date + "HH:mm" → ISO string, or undefined while either is missing. */
@@ -311,69 +300,58 @@ export const campaignToFormValues = (campaign: ICampaign): CampaignFormValues =>
   };
 };
 
-/** Minimum age implied by the difficulty (volunteers must be adults on hard campaigns). */
-export const impliedMinAge = (difficulty: number): number | null =>
-  difficulty >= CAMPAIGN_HIGH_DIFFICULTY_LEVEL ? CAMPAIGN_HIGH_DIFFICULTY_MIN_AGE : null;
+/** The organization the campaign belongs to; fixed, never picked in the form. */
+export interface CampaignOrganization {
+  id: string;
+  name: string;
+  logo_url?: string | null;
+}
 
-/** Day-level codes that belong on the date picker rather than the time inputs. */
-const DAY_DATE_CODES = ["START_TOO_SOON", "DAY_DUPLICATED", "DAY_SPAN_TOO_WIDE"];
-/** Day-level codes about its shifts, shown on the grid row. */
-const DAY_SHIFT_CODES = ["DAY_NO_ACTIVE_SHIFT", "DAY_SLOTS_OVER_LIMIT"];
+export const organizationOfCampaign = (campaign?: ICampaign): CampaignOrganization | undefined =>
+  campaign?.organization
+    ? {
+        id: campaign.organization_id ?? campaign.organization.id,
+        name: campaign.organization.name,
+        logo_url: campaign.organization.logo_url,
+      }
+    : undefined;
 
-/**
- * Server field path (camelCase, e.g. `schedule[1][0].minVolunteers`) → form field name.
- * Unknown paths return null and are shown in the summary only.
- */
-export const issueFieldToFormName = (field: string, code?: string): string | null => {
-  if (field === "meetingPoints") return "meeting_points";
-  if (field === "days") return "days";
-
-  const day = field.match(/^days\[(\d+)\]\.?(\w+)?$/);
-  if (day) {
-    const [, index, key] = day;
-    if (code && DAY_SHIFT_CODES.includes(code)) return `schedule.${index}`;
-    if (!key || (code && DAY_DATE_CODES.includes(code))) return `days.${index}.date`;
-    return `days.${index}.${key === "endAt" ? "end_time" : "start_time"}`;
-  }
-
-  const shift = field.match(/^schedule\[(\d+)\]\[(\d+)\]\.(\w+)$/);
-  if (shift) {
-    const [, d, p, key] = shift;
-    const map: Record<string, string> = {
-      minVolunteers: "min_volunteers",
-      maxVolunteers: "max_volunteers",
-      leaderUserId: "leader_user_id",
-      startAt: "start_time",
-      endAt: "end_time",
-      gatherAt: "gather_time",
-    };
-    return `schedule.${d}.${p}.${map[key] ?? "min_volunteers"}`;
-  }
-
-  const point = field.match(/^meetingPoints\[(\d+)\]\.?(\w+)?$/);
-  if (point) {
-    const [, index, key] = point;
-    const map: Record<string, string> = {
-      name: "name",
-      radiusKm: "radius_km",
-      reportIds: "reports",
-    };
-    return `meeting_points.${index}.${key ? (map[key] ?? "latitude") : "latitude"}`;
-  }
-  const top: Record<string, string> = {
-    title: "title",
-    description: "description",
-    banner: "banner",
-    contactName: "contact_name",
-    contactPhone: "contact_phone",
-    difficulty: "difficulty",
-    "requirements.minAge": "min_age",
-    minVolunteersReason: "min_volunteers_reason",
-  };
-  return top[field] ?? null;
+/** The grid without day `dayIndex`. */
+export const dropScheduleRow = (grid: ShiftFormValues[][] | undefined, dayIndex: number) => {
+  const next = [...(grid ?? [])];
+  next.splice(dayIndex, 1);
+  return next;
 };
 
-export type { ICampaignValidationIssue };
+/** The grid without meeting point `pointIndex`. */
+export const dropScheduleColumn = (grid: ShiftFormValues[][] | undefined, pointIndex: number) =>
+  (grid ?? []).map((row) => {
+    const next = [...row];
+    next.splice(pointIndex, 1);
+    return next;
+  });
+
+/** The important part of a payload (spec 3.5), to tell whether an edit needs a new review. */
+export const majorFieldsFingerprint = (values: CampaignFormValues, leaderUserId: string): string => {
+  const payload = transformToApiData({
+    ...values,
+    schedule: fitSchedule(values.schedule, values.days.length, values.meeting_points.length, leaderUserId),
+  });
+  return JSON.stringify({
+    difficulty: payload.difficulty,
+    requirements: payload.requirements,
+    days: (payload.days ?? []).map((d) => `${d.id ?? ""}|${d.start_at}|${d.end_at}`),
+    meeting_points: payload.meeting_points,
+    // Hours of a shift are important too; its numbers and leader are not.
+    shift_times: (payload.shifts ?? []).map((sh) => [
+      sh.day_index,
+      sh.meeting_point_index,
+      sh.start_at ?? null,
+      sh.end_at ?? null,
+      sh.gather_at ?? null,
+    ]),
+  });
+};
 
 export const mapResourceToIncident = (resource: IResource): IIncident | null => {
   const nestedIncident = resource.resource;

@@ -1,5 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
-import { usePathname, useRouter, useSearchParams } from '@/libs/router';
+import { memo, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TbZoom, TbZoomReset } from 'react-icons/tb';
 
@@ -22,7 +21,6 @@ import {
   CAMPAIGN_STATUS_OPTIONS,
   DEFAULT_CAMPAIGN_SEARCH_STATUSES,
   isDefaultCampaignStatuses,
-  serializeStatuses,
 } from '../_services/campaignSearch.service';
 import { useCampaignSearch } from '../_context/CampaignSearchContext';
 
@@ -60,119 +58,61 @@ const RESET_BUTTON_CLASS = cn(
 export const SearchFilter = memo(function SearchFilter() {
   const { t } = useTranslation();
   const { filters, setFilters, resetFilters } = useCampaignSearch();
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
 
-  const [searchValue, setSearchValue] = useState(filters.search || '');
-  const [greenPointsRange, setGreenPointsRange] = useState<[number, number]>(
-    normalizeGreenPointsRange(filters.greenPointsFrom, filters.greenPointsTo),
-  );
-
+  const urlSearch = filters.search ?? '';
+  const [searchValue, setSearchValue] = useState(urlSearch);
   const debouncedSearchValue = useDebounce(searchValue, CAMPAIGN_SEARCH_DEBOUNCE_MS);
 
-  useEffect(() => {
-    setSearchValue(filters.search || '');
-  }, [filters.search]);
+  const urlRange = normalizeGreenPointsRange(filters.greenPointsFrom, filters.greenPointsTo);
+  const [greenPointsRange, setGreenPointsRange] = useState<[number, number]>(urlRange);
 
-  const updateURL = useCallback(
-    (updates: Record<string, string | undefined>) => {
-      const params = new URLSearchParams(searchParams.toString());
-
-      for (const [key, value] of Object.entries(updates)) {
-        if (value) {
-          params.set(key, value);
-        } else {
-          params.delete(key);
-        }
-      }
-
-      const qs = params.toString();
-      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-    },
-    [pathname, router, searchParams],
-  );
+  // Adopt URL changes made elsewhere (reset, reload, links) — React's "adjust state on prop change".
+  const urlKey = `${urlSearch}|${urlRange.join('-')}`;
+  const [syncedKey, setSyncedKey] = useState(urlKey);
+  if (syncedKey !== urlKey) {
+    setSyncedKey(urlKey);
+    if (searchValue.trim() !== urlSearch) setSearchValue(urlSearch);
+    setGreenPointsRange(urlRange);
+  }
 
   useEffect(() => {
-    if (debouncedSearchValue === (filters.search ?? "")) return;
-    setFilters({ search: debouncedSearchValue });
-    updateURL({ search: debouncedSearchValue || undefined });
-  }, [debouncedSearchValue, filters.search, setFilters, updateURL]);
+    // Wait until typing settles; also skips the render right after the input was reset from the URL.
+    if (debouncedSearchValue !== searchValue) return;
+    if (debouncedSearchValue.trim() !== urlSearch) setFilters({ search: debouncedSearchValue });
+  }, [debouncedSearchValue, searchValue, setFilters, urlSearch]);
 
-  const handleStatusChange = useCallback(
-    (value: string) => {
-      const statuses =
-        value === 'all' ? [...DEFAULT_CAMPAIGN_SEARCH_STATUSES] : [Number(value)];
-      setFilters({ statuses });
-      updateURL({
-        statuses: value === 'all' ? undefined : serializeStatuses(statuses),
-        status: undefined,
-      });
-    },
-    [setFilters, updateURL],
-  );
+  const handleStatusChange = (value: string) => {
+    setFilters({ statuses: value === 'all' ? [...DEFAULT_CAMPAIGN_SEARCH_STATUSES] : [Number(value)] });
+  };
 
-  useEffect(() => {
-    setGreenPointsRange(normalizeGreenPointsRange(filters.greenPointsFrom, filters.greenPointsTo));
-  }, [filters.greenPointsFrom, filters.greenPointsTo]);
-
-  const handleGreenPointsChange = useCallback((value: number[]) => {
+  const handleGreenPointsChange = (value: number[]) => {
     if (value.length < 2) return;
     setGreenPointsRange([value[0] ?? GREEN_POINTS_MIN, value[1] ?? GREEN_POINTS_MAX]);
-  }, []);
+  };
 
-  const handleGreenPointsCommit = useCallback(
-    (value: number[]) => {
-      if (value.length < 2) return;
+  const handleGreenPointsCommit = (value: number[]) => {
+    if (value.length < 2) return;
+    setFilters({
+      greenPointsFrom: value[0] ?? GREEN_POINTS_MIN,
+      greenPointsTo: value[1] ?? GREEN_POINTS_MAX,
+    });
+  };
 
-      const greenPointsFrom = value[0] ?? GREEN_POINTS_MIN;
-      const greenPointsTo = value[1] ?? GREEN_POINTS_MAX;
-
-      setFilters({ greenPointsFrom, greenPointsTo });
-      updateURL({
-        green_points_from: greenPointsFrom.toString(),
-        green_points_to: greenPointsTo.toString(),
-      });
-    },
-    [setFilters, updateURL],
-  );
-
-  const onReset = useCallback(() => {
+  const onReset = () => {
     resetFilters();
     setSearchValue('');
     setGreenPointsRange([GREEN_POINTS_MIN, GREEN_POINTS_MAX]);
+  };
 
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete('search');
-    params.delete('status');
-    params.delete('statuses');
-    params.delete('green_points_from');
-    params.delete('green_points_to');
+  const statusItems = CAMPAIGN_STATUS_OPTIONS.map((option) => ({
+    value: option.value.toString(),
+    label: t(option.label),
+  }));
 
-    const qs = params.toString();
-    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-  }, [pathname, resetFilters, router, searchParams]);
-
-  const statusItems = useMemo(
-    () =>
-      CAMPAIGN_STATUS_OPTIONS.map((option) => ({
-        value: option.value.toString(),
-        label: t(option.label),
-      })),
-    [t],
-  );
-
-  const selectedStatusValue = useMemo(() => {
-    if (isDefaultCampaignStatuses(filters.statuses)) {
-      return 'all';
-    }
-
-    if (filters.statuses.length === 1) {
-      return filters.statuses[0]?.toString() ?? 'all';
-    }
-
-    return 'all';
-  }, [filters.statuses]);
+  const selectedStatusValue =
+    !isDefaultCampaignStatuses(filters.statuses) && filters.statuses.length === 1
+      ? (filters.statuses[0]?.toString() ?? 'all')
+      : 'all';
 
   return (
     <aside

@@ -1,5 +1,4 @@
-import { memo, useCallback, useEffect, useState } from 'react';
-import { usePathname, useRouter, useSearchParams } from '@/libs/router';
+import { memo, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search } from 'lucide-react';
 
@@ -12,7 +11,7 @@ import SelectListOrganization, {
 import { ALL_ORG_MEMBER_ROLES } from '@/hooks/useCampaignCreatorOrganizations';
 import { CAMPAIGN_STATUS } from '@/constants/campaignLifecycle';
 import { useDebounce } from '@/hooks/useDebounce';
-import useCampaignMeContext from '../_hooks/useCampaignMeContext';
+import { useCampaignMeContext } from '../_context/CampaignMeContext';
 
 const CAMPAIGN_STATUS_OPTIONS = [
   { labelKey: 'All', value: 'all' },
@@ -30,56 +29,34 @@ const CAMPAIGN_STATUS_OPTIONS = [
 
 export const FormFilter = memo(function FormFilter() {
   const { t } = useTranslation();
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
   const { filters, setFilters } = useCampaignMeContext();
 
-  const [searchValue, setSearchValue] = useState(filters.search ?? '');
+  const urlSearch = filters.search ?? '';
+  const [searchValue, setSearchValue] = useState(urlSearch);
   const debouncedSearch = useDebounce(searchValue, 500);
 
-  useEffect(() => {
-    setSearchValue(filters.search ?? '');
-  }, [filters.search]);
-
-  const setUrlParam = useCallback(
-    (key: string, value?: string) => {
-      const params = new URLSearchParams(searchParams.toString());
-      if (value && value.length > 0) {
-        params.set(key, value);
-      } else {
-        params.delete(key);
-      }
-      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-    },
-    [pathname, router, searchParams],
-  );
+  // Adopt a search that changed in the URL from elsewhere (React's "adjust state on prop change").
+  const [syncedSearch, setSyncedSearch] = useState(urlSearch);
+  if (syncedSearch !== urlSearch) {
+    setSyncedSearch(urlSearch);
+    if (searchValue.trim() !== urlSearch) setSearchValue(urlSearch);
+  }
 
   useEffect(() => {
+    // Wait until typing settles; also skips the render right after the input was reset from the URL.
+    if (debouncedSearch !== searchValue) return;
     const normalized = debouncedSearch.trim();
-    if ((filters.search ?? '') === normalized) return;
-    setFilters({ search: normalized || undefined });
-    setUrlParam('search', normalized || undefined);
-  }, [debouncedSearch, filters.search, setFilters, setUrlParam]);
+    if (normalized !== urlSearch) setFilters({ search: normalized });
+  }, [debouncedSearch, searchValue, setFilters, urlSearch]);
 
-  const handleStatusChange = useCallback(
-    (value: string) => {
-      const status = value === 'all' ? undefined : Number(value);
-      setFilters({ status });
-      setUrlParam('status', status != null ? String(status) : undefined);
-    },
-    [setFilters, setUrlParam],
-  );
+  const handleStatusChange = (value: string) => {
+    setFilters({ status: value === 'all' ? undefined : Number(value) });
+  };
 
-  const handleOrganizationChange = useCallback(
-    (value: string) => {
-      const organizationId = value === ALL_ORGANIZATIONS_VALUE ? undefined : value;
-      setFilters({ organizationId: organizationId });
-      // Keep "-1" in the URL for an explicit "All" so the active-org default does not re-apply.
-      setUrlParam('organizationId', value);
-    },
-    [setFilters, setUrlParam],
-  );
+  // Keeps "-1" in the URL for an explicit "All" so the active-org default does not re-apply.
+  const handleOrganizationChange = (value: string) => {
+    setFilters({ organizationId: value });
+  };
 
   return (
     <div className="space-y-4 rounded-[10px] border border-zinc-200 bg-card p-4">

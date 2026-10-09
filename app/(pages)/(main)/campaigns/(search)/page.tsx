@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Breadcrumbs, type BreadcrumbItemProps } from '@/components/client/shared/Breadcrumbs';
@@ -9,7 +9,7 @@ import { CampaignList } from './_components/CampaignList';
 import { SearchFilter } from './_components/SearchFilter';
 import { CampaignSearchProvider } from './_context/CampaignSearchContext';
 
-const CampaignsSearchPage = memo(function CampaignsSearchPage() {
+function CampaignsSearchPage() {
   const { t } = useTranslation();
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -25,13 +25,10 @@ const CampaignsSearchPage = memo(function CampaignsSearchPage() {
     };
   }, []);
 
-  const breadcrumbs: BreadcrumbItemProps[] = useMemo(
-    () => [
-      { label: t('Home'), path: '/', type: 'link' },
-      { label: t('Campaigns'), path: '/campaigns', type: 'page' },
-    ],
-    [t],
-  );
+  const breadcrumbs: BreadcrumbItemProps[] = [
+    { label: t('Home'), path: '/', type: 'link' },
+    { label: t('Campaigns'), path: '/campaigns', type: 'page' },
+  ];
 
   return (
     <CampaignSearchProvider>
@@ -58,6 +55,6 @@ const CampaignsSearchPage = memo(function CampaignsSearchPage() {
       </div>
     </CampaignSearchProvider>
   );
-});
+}
 
 export default CampaignsSearchPage;

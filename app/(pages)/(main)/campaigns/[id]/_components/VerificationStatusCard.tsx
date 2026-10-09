@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react';
+import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TbArrowRight } from 'react-icons/tb';
 
@@ -7,14 +7,10 @@ import { useCampaignVerification } from '@/apis/campaign/verification';
 import { CollapsibleCard } from '@/components/client/shared/CollapsibleCard';
 import { Pill } from '@/components/ui/Pill';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
 import { Link } from '@/libs/router';
-import {
-  CHECK_LEVEL_LABEL,
-  CHECK_LEVEL_TONE,
-  meetingPointLabel,
-  MeetingPointStatusPill,
-} from './ResultVerificationBadges';
+import { meetingPointLabel, MeetingPointStatusPill } from '@/modules/CampaignVerification';
+import { CHECK_LEVEL_LABEL, CHECK_LEVEL_TONE } from '@/constants/campaignVerification';
+import { useReportTitle } from '../_hooks/useReportTitle';
 
 /**
  * For the campaign's managers while it waits for completion: where result verification stands on
@@ -22,11 +18,10 @@ import {
  */
 export const VerificationStatusCard = memo(function VerificationStatusCard({ campaign }: { campaign: ICampaign }) {
   const { t } = useTranslation('common');
-  const { title: localizedTitle } = useLocalizedDisplay();
   const { data, isLoading } = useCampaignVerification(campaign.id, { enabled: Boolean(campaign.id), retry: false });
   const view = data?.data;
   const points = view?.meeting_points ?? [];
-  const reportById = useMemo(() => new Map((campaign.reports ?? []).map((r) => [r.id, r])), [campaign.reports]);
+  const reportTitle = useReportTitle(campaign.reports);
 
   const counts = points.reduce<Record<string, number>>((acc, p) => {
     acc[p.status] = (acc[p.status] ?? 0) + 1;
@@ -72,11 +67,8 @@ export const VerificationStatusCard = memo(function VerificationStatusCard({ cam
             <ul className="flex flex-col divide-y divide-[rgba(136,122,71,0.2)]">
               {points.map((p, i) => {
                 const index = (campaign.meeting_points ?? []).findIndex((m) => m.id === p.meeting_point_id);
-                const trashTitle = (id: string) => {
-                  const r = reportById.get(id);
-                  const tp = p.trash_points.find((x) => x.report_id === id);
-                  return (r && localizedTitle(r).trim()) || tp?.report?.title || t('Waste point');
-                };
+                const trashTitle = (id: string) =>
+                  reportTitle(id, p.trash_points.find((x) => x.report_id === id)?.report?.title);
                 return (
                   <li key={p.verification_id} className="flex flex-wrap items-center justify-between gap-2 py-2">
                     <Link

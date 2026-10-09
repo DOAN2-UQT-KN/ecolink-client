@@ -8,10 +8,19 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { Descendant, Element as SlateElement, Node, Text as SlateText } from 'slate';
+import type { Descendant, Element as SlateElement, Text as SlateText } from 'slate';
 import { parseRichTextValue } from '@/components/ui/richTextValue';
 
 type AlignType = 'left' | 'center' | 'right' | 'justify';
+
+// Same checks as slate's Text.isText / Node.string, inlined so read-only views don't load slate.
+function isText(node: unknown): node is SlateText {
+  return typeof node === 'object' && node !== null && typeof (node as { text?: unknown }).text === 'string';
+}
+
+function nodeText(node: Descendant): string {
+  return isText(node) ? node.text : node.children.map((child) => nodeText(child as Descendant)).join('');
+}
 
 function isAlignElement(el: SlateElement): el is SlateElement & { align?: AlignType } {
   return 'align' in el && el.align != null;
@@ -27,7 +36,7 @@ function renderTextLeaf(node: SlateText, key: string): React.ReactNode {
 }
 
 function renderDescendant(node: Descendant, keyPrefix: string): React.ReactNode {
-  if (SlateText.isText(node)) {
+  if (isText(node)) {
     return renderTextLeaf(node, keyPrefix);
   }
 
@@ -101,7 +110,7 @@ function renderDescendant(node: Descendant, keyPrefix: string): React.ReactNode 
 function isEmptyRichText(value: string | undefined | null): boolean {
   if (value == null || !value.trim()) return true;
   const nodes = parseRichTextValue(value);
-  return nodes.every((n) => Node.string(n) === '');
+  return nodes.every((n) => nodeText(n) === '');
 }
 
 export interface RichTextContentProps {

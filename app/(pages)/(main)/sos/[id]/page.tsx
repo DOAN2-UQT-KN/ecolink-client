@@ -21,7 +21,7 @@ import { useSos } from '@/apis/sos/getSosById';
 import { useUpdateSosLocation } from '@/apis/sos/manageSos';
 import type { ISosDetail, ISosDetailResponse } from '@/apis/sos/models/sos';
 import { useCancelRespond, useRespondSos } from '@/apis/sos/respondSos';
-import { AvatarList } from '@/app/(pages)/(main)/campaigns/[id]/_components/AvatarList';
+import { AvatarList } from '@/components/client/shared/AvatarList';
 import { Breadcrumbs, type BreadcrumbItemProps } from '@/components/client/shared/Breadcrumbs';
 import { Button } from '@/components/client/shared/Button';
 import { Call115Banner } from '@/components/sos/Call115Banner';

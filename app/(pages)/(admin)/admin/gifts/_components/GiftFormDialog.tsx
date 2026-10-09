@@ -27,7 +27,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useAdminLayout } from '@/app/(pages)/(admin)/_context/AdminLayoutContext';
 import { SingleImageFileField } from '@/components/client/shared/SingleImageFileField';
-import { uploadToCloudinary } from '@/app/(pages)/(main)/incidents/create/_services/upload.service';
+import { uploadToCloudinary } from '@/libs/cloudinary';
 import {
   DEFAULT_GIFT_FORM_VALUES,
   giftToFormValues,

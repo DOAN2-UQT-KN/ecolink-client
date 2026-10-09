@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import { useGetMembersByOrg } from '@/apis/organization/organizationById';
 import { isOwnerRole } from '@/apis/organization/models/organization';
 import type { IMember } from '@/apis/organization/models/organizationMembers';
-import { useGetCampaignManager } from '@/apis/campaign/campaignManager';
+import { useCampaignManagersList } from './useCampaignManagersList';
 
 /**
  * Who may lead a shift (spec 3.4): the campaign's team, i.e. its creator, its managers and the
@@ -14,20 +14,19 @@ export function useLeaderOptions(params: {
   organizationId?: string;
   campaignId?: string;
   createdBy?: string;
+  /** False defers both requests, e.g. until a dialog opens. */
+  enabled?: boolean;
 }): IMember[] {
-  const { organizationId, campaignId, createdBy } = params;
+  const { organizationId, campaignId, createdBy, enabled = true } = params;
   const { data: membersData } = useGetMembersByOrg(
     { organization_id: organizationId ?? '', page: 1, limit: 100 },
-    { enabled: Boolean(organizationId) },
+    { enabled: Boolean(organizationId) && enabled },
   );
-  const { data: managersData } = useGetCampaignManager(
-    { campaignId: campaignId ?? '', page: 1, limit: 100 },
-    { enabled: Boolean(campaignId) },
-  );
+  const { managers } = useCampaignManagersList(campaignId ?? '', { enabled });
   return useMemo(() => {
-    const managerIds = new Set((managersData?.data?.managers ?? []).map((m) => m.user_id));
+    const managerIds = new Set(managers.map((m) => m.id));
     return (membersData?.data?.members ?? []).filter(
       (m) => m.user_id === createdBy || managerIds.has(m.user_id) || isOwnerRole(m.role),
     );
-  }, [createdBy, managersData, membersData]);
+  }, [createdBy, managers, membersData]);
 }
