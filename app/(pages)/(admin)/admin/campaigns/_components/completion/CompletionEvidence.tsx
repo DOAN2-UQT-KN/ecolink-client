@@ -1,9 +1,7 @@
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import { TbAlertTriangle } from "react-icons/tb";
-import {
-  type ICompletionReview,
-} from "@/apis/campaign/processCampaign";
+import type { ICompletionReview } from "@/apis/campaign/models/processCampaign";
 import { ReviewSectionCard } from "@/components/ui/ReviewSection";
 import { cn } from "@/libs/utils";
 import { formattedDate } from "@/utils/formattedDate";

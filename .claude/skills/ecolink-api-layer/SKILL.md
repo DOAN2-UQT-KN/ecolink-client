@@ -26,7 +26,7 @@ Ngoại lệ đã có (đích không phải API của mình, hoặc cần stream
 | Upload Cloudinary (axios thô) | `libs/cloudinary.ts > uploadToCloudinary()` |
 | Upload file lên presigned URL (axios thô, cố ý bỏ interceptor) | `apis/organization-application/presignDocument.ts > uploadApplicationDocument()` |
 | SSE chat AI (`fetch`) | `components/client/ai-chat/aiChatClient.ts` |
-| Nominatim geocoding (`fetch`) | `ApplicationAddress`, `ProfileLocationSection`, `LeafletAddress` (→ `campaigns/create/_services/nominatim.service.ts`), `Address`, `AddressPickerCard` — cần địa chỉ thì **dùng lại các component này** |
+| Nominatim geocoding (`fetch`) | `ApplicationAddress`, `ProfileLocationSection`, `LeafletAddress` (→ `libs/nominatim.ts`), `Address`, `AddressPickerCard` — cần địa chỉ thì **dùng lại các component này** |
 
 ## Cấu trúc `apis/`
 
@@ -52,7 +52,7 @@ Endpoint **công khai, không cần đăng nhập**, nằm trong `PUBLIC_AUTH_PA
 
 Thêm endpoint công khai mới (mở từ email, không login) thì phải thêm prefix vào `PUBLIC_AUTH_PATHS`, nếu không 401 sẽ xoá phiên và đá người dùng đi.
 
-Endpoint chỉ dành cho admin (enforcement ở server): `apis/incident/verifyReport.ts`, `apis/incident/banReport.ts`, `apis/user/banUser.ts`, `apis/campaign/processCampaign.ts`, `apis/gift/adminGiftRedemptions.ts`, `apis/gift/createGift.ts`, `apis/gift/updateGift.ts`, `apis/admin-media/registerAdminMedia.ts`.
+Endpoint chỉ dành cho admin (enforcement ở server): `apis/incident/verifyReport.ts`, `apis/incident/banReport.ts`, `apis/user/banUser.ts`, `apis/campaign/reviewCampaignCompletion.ts`, `apis/gift/adminGiftRedemptions.ts`, `apis/gift/createGift.ts`, `apis/gift/updateGift.ts`, `apis/admin-media/registerAdminMedia.ts`.
 
 ## Template — file query
 

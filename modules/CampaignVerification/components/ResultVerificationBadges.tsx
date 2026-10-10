@@ -7,11 +7,8 @@ import type {
   IResultPhotoCheck,
   Layer1IssueCode,
   ResultCheckLevel,
-} from '@/apis/campaign/shiftResult';
-import type {
-  MeetingPointStatus,
-  VerificationTrashPointStatus,
-} from '@/apis/campaign/verification';
+} from '@/apis/campaign/models/shiftResult';
+import type { MeetingPointStatus, VerificationTrashPointStatus } from '@/apis/campaign/models/verification';
 import { Pill } from '@/components/ui/Pill';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/libs/utils';
@@ -36,7 +33,7 @@ const ISSUE_LABEL: Record<Layer1IssueCode, string> = {
 };
 
 /** The checks a photo did not pass, as sentences. */
-export function photoCheckProblems(check: IResultPhotoCheck | null | undefined, t: T): string[] {
+function photoCheckProblems(check: IResultPhotoCheck | null | undefined, t: T): string[] {
   if (!check) return [t('Saved before photos were checked')];
   const out: string[] = [];
   if (check.time_check === 'warn') out.push(t('No capture time in the photo'));
@@ -53,7 +50,7 @@ export function photoCheckProblems(check: IResultPhotoCheck | null | undefined, 
 /** Problems of a single photo, already told by its badge's tooltip. */
 const PHOTO_ISSUE_CODES = new Set<string>(['photo_fail', 'photo_warn', 'legacy_photo']);
 
-export function layer1IssueText(issue: ILayer1Issue, t: T): string {
+function layer1IssueText(issue: ILayer1Issue, t: T): string {
   const text = t(ISSUE_LABEL[issue.code] ?? issue.code);
   if (!issue.side) return text;
   return `${t(issue.side === 'before' ? 'Before' : 'After')} · ${text}`;

@@ -1,10 +1,8 @@
 import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  useCompletionReview,
-  useReviewCampaignCompletion,
-  type CompletionDecision,
-} from "@/apis/campaign/processCampaign";
+import { useCompletionReview } from "@/apis/campaign/getCompletionReview";
+import { useReviewCampaignCompletion } from "@/apis/campaign/reviewCampaignCompletion";
+import type { CompletionDecision } from "@/apis/campaign/models/processCampaign";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,

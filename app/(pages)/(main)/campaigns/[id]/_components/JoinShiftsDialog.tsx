@@ -1,11 +1,9 @@
-import { memo, useEffect, useMemo, useState } from 'react';
+import { memo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 
-import {
-  useGetRegistrationOptions,
-  useUpdateMyRegistrations,
-} from '@/apis/campaign/registration';
+import { useGetRegistrationOptions } from '@/apis/campaign/getRegistrationOptions';
+import { useUpdateMyRegistrations } from '@/apis/campaign/updateMyRegistrations';
 import type { IRegistrationOptionShift } from '@/apis/campaign/models/registration';
 import { Button } from '@/components/client/shared/Button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -24,6 +22,7 @@ import showMessage, { MessageLevel, MessageType } from '@/utils/showMessage';
 
 import { ShiftFillBar } from './ShiftFillBar';
 import { dayLabel, hhmm } from '@/utils/campaignLabels';
+import { refreshCampaign } from '../../_services/campaignCache.service';
 
 const overlaps = (a: IRegistrationOptionShift, b: IRegistrationOptionShift) =>
   new Date(a.start_at).getTime() < new Date(b.end_at).getTime() &&
@@ -67,18 +66,23 @@ export const JoinShiftsDialog = memo(function JoinShiftsDialog({
     enabled: open && Boolean(campaignId),
   });
   const options = data?.data;
-  const shifts = useMemo(() => options?.shifts ?? [], [options]);
-  const held = useMemo(() => shifts.filter((s) => s.registered_by_me).map((s) => s.id), [shifts]);
+  const shifts = options?.shifts ?? [];
+  const held = shifts.filter((s) => s.registered_by_me).map((s) => s.id);
   const isEditing = held.length > 0;
 
   const [ticked, setTicked] = useState<string[]>([]);
   const [accepted, setAccepted] = useState(false);
 
-  useEffect(() => {
-    if (!open || !options) return;
-    setTicked(held.length > 0 ? held : shifts.length === 1 ? [shifts[0].id] : []);
-    setAccepted(false);
-  }, [open, options, held, shifts]);
+  // Reset on open and on every new options payload while open (a refetch resets the ticks too).
+  const source = open ? options : undefined;
+  const [seen, setSeen] = useState<typeof source>(undefined);
+  if (source !== seen) {
+    setSeen(source);
+    if (source) {
+      setTicked(held.length > 0 ? held : shifts.length === 1 ? [shifts[0].id] : []);
+      setAccepted(false);
+    }
+  }
 
   const { mutate, isPending } = useUpdateMyRegistrations({
     onSuccess: (response) => {
@@ -93,7 +97,7 @@ export const JoinShiftsDialog = memo(function JoinShiftsDialog({
               ? t('Your shifts were updated')
               : t('You registered for {{n}} shift(s)', { n: result.shift_ids.length }),
       });
-      void queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });
+      refreshCampaign(campaignId);
       void queryClient.invalidateQueries({ queryKey: ['campaign-registrations', campaignId] });
       onOpenChange(false);
     },
@@ -105,14 +109,11 @@ export const JoinShiftsDialog = memo(function JoinShiftsDialog({
   const canConfirm =
     changed && (added.length === 0 || accepted) && (ticked.length > 0 || isEditing);
 
-  const days = useMemo(() => {
-    const byDay = new Map<string, IRegistrationOptionShift[]>();
-    for (const s of shifts) byDay.set(s.day_id, [...(byDay.get(s.day_id) ?? []), s]);
-    return (options?.days ?? [])
-      .map((day, index) => ({ day, index, shifts: byDay.get(day.id) ?? [] }))
-      .filter((d) => d.shifts.length > 0);
-  }, [options, shifts]);
-
+  const byDay = new Map<string, IRegistrationOptionShift[]>();
+  for (const s of shifts) byDay.set(s.day_id, [...(byDay.get(s.day_id) ?? []), s]);
+  const days = (options?.days ?? [])
+    .map((day, index) => ({ day, index, shifts: byDay.get(day.id) ?? [] }))
+    .filter((d) => d.shifts.length > 0);
 
   const toggle = (id: string, on: boolean) =>
     setTicked((current) => (on ? [...current, id] : current.filter((x) => x !== id)));
@@ -262,5 +263,3 @@ export const JoinShiftsDialog = memo(function JoinShiftsDialog({
     </Dialog>
   );
 });
-
-export default JoinShiftsDialog;

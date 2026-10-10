@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 
 import { Breadcrumbs, type BreadcrumbItemProps } from '@/components/client/shared/Breadcrumbs';
 import { cn } from '@/libs/utils';
@@ -10,7 +9,6 @@ import { SearchFilter } from './_components/SearchFilter';
 import { CampaignSearchProvider } from './_context/CampaignSearchContext';
 
 function CampaignsSearchPage() {
-  const { t } = useTranslation();
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -26,8 +24,8 @@ function CampaignsSearchPage() {
   }, []);
 
   const breadcrumbs: BreadcrumbItemProps[] = [
-    { label: t('Home'), path: '/', type: 'link' },
-    { label: t('Campaigns'), path: '/campaigns', type: 'page' },
+    { label: 'Home', path: '/', type: 'link' },
+    { label: 'Campaigns', path: '/campaigns', type: 'page' },
   ];
 
   return (

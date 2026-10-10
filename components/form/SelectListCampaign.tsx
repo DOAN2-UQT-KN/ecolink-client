@@ -1,7 +1,7 @@
 import { memo, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { useGetAllCampaigns } from '@/apis/campaign/getCampaigns';
+import { useGetAllCampaigns } from '@/apis/campaign/getAllCampaigns';
 import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
 import {
   Select,

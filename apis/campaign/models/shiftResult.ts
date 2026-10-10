@@ -1,11 +1,5 @@
-import requestApi from '@/utils/requestApi';
-import { IBaseResponse } from '@/types/BaseResponse';
-import { useGet, UseGetOptions, usePost, UsePostOptions } from '@/hooks/reactQuery';
-import { MessageType } from '@/utils/showMessage';
 import type { IOrganizationOwner } from '@/apis/organization/models/organization';
-import type { ShiftStatus } from '@/apis/campaign/models/lifecycle';
-
-const base = '/api/v1/campaigns';
+import type { ShiftParams, ShiftStatus } from './lifecycle';
 
 /** Shift results and status (spec 4.2). */
 
@@ -146,19 +140,6 @@ export interface IShiftOverview {
   };
 }
 
-type ShiftParams = { campaign_id: string; shift_id: string };
-const shiftUrl = ({ campaign_id, shift_id }: ShiftParams) => `${base}/${campaign_id}/shifts/${shift_id}`;
-
-export const useShiftResult = (
-  params: ShiftParams,
-  options?: Omit<UseGetOptions<IBaseResponse<IShiftResultView>>, 'queryKey' | 'queryFn'>,
-) =>
-  useGet({
-    queryKey: ['shift-result', params.shift_id],
-    queryFn: () => requestApi.get<IBaseResponse<IShiftResultView>>(`${shiftUrl(params)}/result`),
-    ...options,
-  });
-
 export type SaveShiftResultParams = ShiftParams & {
   description: string;
   waste_bags?: number | null;
@@ -166,17 +147,6 @@ export type SaveShiftResultParams = ShiftParams & {
   reports: IShiftResultReport[];
   media_ids: string[];
 };
-
-export const useSaveShiftResult = (
-  options?: UsePostOptions<IBaseResponse<IShiftResultView>, SaveShiftResultParams>,
-) =>
-  usePost({
-    mutationFn: ({ campaign_id, shift_id, ...body }: SaveShiftResultParams) =>
-      requestApi.put<IBaseResponse<IShiftResultView>>(`${shiftUrl({ campaign_id, shift_id })}/result`, body),
-    queryKey: ['shift-result'],
-    messageError: { type: MessageType.Toast },
-    ...options,
-  });
 
 export type UploadResultPhotoParams = ShiftParams & {
   file: File;
@@ -186,76 +156,4 @@ export type UploadResultPhotoParams = ShiftParams & {
   pin_lng: number;
 };
 
-/**
- * Uploads the original file of a trash point photo (no compression: the server reads its EXIF and
- * hash), with where the uploader pinned it. The PUT of the result accepts only URLs from here.
- */
-export const uploadResultPhoto = ({ campaign_id, shift_id, file, ...fields }: UploadResultPhotoParams) => {
-  const form = new FormData();
-  form.append('report_id', fields.report_id);
-  form.append('side', fields.side);
-  form.append('pin_lat', String(fields.pin_lat));
-  form.append('pin_lng', String(fields.pin_lng));
-  form.append('file', file);
-  return requestApi.post<IBaseResponse<{ url: string; check: IResultPhotoCheck }>>(
-    `${shiftUrl({ campaign_id, shift_id })}/result-photos`,
-    form,
-    { headers: { 'Content-Type': 'multipart/form-data' } },
-  );
-};
-
-export const useUploadResultPhoto = (
-  options?: UsePostOptions<IBaseResponse<{ url: string; check: IResultPhotoCheck }>, UploadResultPhotoParams>,
-) =>
-  usePost({
-    mutationFn: uploadResultPhoto,
-    messageError: { type: MessageType.Toast },
-    ...options,
-  });
-
-/** Ends a running shift now; it needs a result first. */
-export const useEndShiftEarly = (
-  options?: UsePostOptions<IBaseResponse<{ ended_at: string; checked_out: number }>, ShiftParams>,
-) =>
-  usePost({
-    mutationFn: (params: ShiftParams) =>
-      requestApi.post<IBaseResponse<{ ended_at: string; checked_out: number }>>(`${shiftUrl(params)}/end`, {}),
-    queryKey: ['shift-result'],
-    messageError: { type: MessageType.Toast },
-    ...options,
-  });
-
 export type AddShiftMediaParams = ShiftParams & { url: string; kind: 'image' | 'video' };
-
-export const useAddShiftMedia = (
-  options?: UsePostOptions<IBaseResponse<{ media: IShiftMedia }>, AddShiftMediaParams>,
-) =>
-  usePost({
-    mutationFn: ({ campaign_id, shift_id, ...body }: AddShiftMediaParams) =>
-      requestApi.post<IBaseResponse<{ media: IShiftMedia }>>(`${shiftUrl({ campaign_id, shift_id })}/media`, body),
-    queryKey: ['shift-result'],
-    messageError: { type: MessageType.Toast },
-    ...options,
-  });
-
-export const useRemoveShiftMedia = (
-  options?: UsePostOptions<IBaseResponse<unknown>, ShiftParams & { media_id: string }>,
-) =>
-  usePost({
-    mutationFn: ({ media_id, ...params }: ShiftParams & { media_id: string }) =>
-      requestApi.delete<IBaseResponse<unknown>>(`${shiftUrl(params)}/media/${media_id}`),
-    queryKey: ['shift-result'],
-    messageError: { type: MessageType.Toast },
-    ...options,
-  });
-
-/** Every shift's status and figures, with the campaign totals (managers and admins). */
-export const useShiftOverview = (
-  campaignId: string,
-  options?: Omit<UseGetOptions<IBaseResponse<IShiftOverview>>, 'queryKey' | 'queryFn'>,
-) =>
-  useGet({
-    queryKey: ['shift-overview', campaignId],
-    queryFn: () => requestApi.get<IBaseResponse<IShiftOverview>>(`${base}/${campaignId}/shift-overview`),
-    ...options,
-  });

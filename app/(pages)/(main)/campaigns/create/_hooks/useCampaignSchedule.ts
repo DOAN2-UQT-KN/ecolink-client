@@ -6,7 +6,7 @@ import {
   dropScheduleRow,
   fitSchedule,
   type CampaignFormValues,
-} from '../_services/campaign.service';
+} from '../_services/campaignForm.service';
 
 /**
  * Keeps the day × meeting point grid in step with the days and meeting points lists. Each runs

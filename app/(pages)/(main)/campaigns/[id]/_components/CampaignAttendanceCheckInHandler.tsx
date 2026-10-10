@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from '@/libs/router';
-import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 
-import { scanAttendance, type IScanResult } from '@/apis/campaign/campaignAttendance';
+import { scanAttendance } from '@/apis/campaign/scanAttendance';
+import type { IScanResult } from '@/apis/campaign/models/attendance';
 import { Button } from '@/components/client/shared/Button';
 import {
   Dialog,
@@ -18,6 +18,7 @@ import { apiErrorMessage } from '@/constants/apiErrorMessages';
 import { useCampaignDetail } from '../_hooks/useCampaignDetail';
 import { hhmm } from '@/utils/campaignLabels';
 import { getCurrentPosition } from '@/libs/geo';
+import { refreshCampaign } from '../../_services/campaignCache.service';
 
 type Outcome =
   | { kind: 'done'; result: IScanResult }
@@ -31,7 +32,6 @@ export function CampaignAttendanceCheckInHandler() {
   const { t } = useTranslation('common');
   const router = useRouter();
   const searchParams = useSearchParams();
-  const queryClient = useQueryClient();
   const { campaignId, campaign, isLoading, isError } = useCampaignDetail();
   const token = searchParams.get('attendance');
   const [outcome, setOutcome] = useState<Outcome | null>(null);
@@ -63,7 +63,7 @@ export function CampaignAttendanceCheckInHandler() {
           accuracy: position.accuracy ?? 0, // always set by getCurrentPosition
         });
         setOutcome({ kind: 'done', result: res.data });
-        void queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });
+        refreshCampaign(campaignId);
       } catch (err: unknown) {
         const e = err as { code?: string; message?: string; status?: number };
         if (e?.status === 401) return;
@@ -76,7 +76,7 @@ export function CampaignAttendanceCheckInHandler() {
         setBusy(false);
       }
     },
-    [campaignId, queryClient, t],
+    [campaignId, t],
   );
 
   useEffect(() => {

@@ -1,16 +1,12 @@
-import { useTranslation } from "react-i18next";
-
 import { Breadcrumbs, BreadcrumbItemProps } from "@/components/client/shared/Breadcrumbs";
 import { CampaignMeProvider } from "./_context/CampaignMeContext";
 import MyCampaignsTable from "./_components/MyCampaignsTable";
 
 /** Campaigns the viewer runs or joined. New campaigns start from the organization's page. */
 function MyCampaignsPage() {
-  const { t } = useTranslation();
-
   const breadcrumbs: BreadcrumbItemProps[] = [
-    { label: t("Home"), path: "/", type: "link" },
-    { label: t("My campaigns"), path: "/campaigns/me", type: "page" },
+    { label: "Home", path: "/", type: "link" },
+    { label: "My campaigns", path: "/campaigns/me", type: "page" },
   ];
 
   return (

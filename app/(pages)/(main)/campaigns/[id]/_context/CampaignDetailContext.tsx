@@ -1,12 +1,12 @@
 import React, { createContext, ReactNode, useMemo } from 'react';
 
-import { useGetCampaignById } from '@/apis/campaign/campaignById';
+import { useGetCampaignById } from '@/apis/campaign/getCampaignById';
 import type { ICampaign } from '@/apis/campaign/models/campaign';
 import { CAMPAIGN_REGISTRABLE_STATUSES } from '@/constants/campaignLifecycle';
 import { ADMIN_ROLE_ID } from '@/constants/roles';
 import useAuthStore from '@/stores/useAuthStore';
 
-export interface CampaignDetailContextType {
+interface CampaignDetailContextType {
   campaignId: string;
   campaign: ICampaign | undefined;
 

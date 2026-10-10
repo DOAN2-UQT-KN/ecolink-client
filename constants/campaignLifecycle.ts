@@ -91,12 +91,11 @@ export const CAMPAIGN_DAY_MAX = 7;
 export const CAMPAIGN_DAY_SPAN_DAYS = 14;
 export const CAMPAIGN_MEETING_POINT_MAX = 5;
 export const CAMPAIGN_MEETING_POINT_MAX_DISTANCE_KM = 5;
-export const CAMPAIGN_HIGH_DIFFICULTY_LEVEL = 3;
-export const CAMPAIGN_HIGH_DIFFICULTY_MIN_AGE = 18;
+const CAMPAIGN_HIGH_DIFFICULTY_LEVEL = 3;
+const CAMPAIGN_HIGH_DIFFICULTY_MIN_AGE = 18;
 /** Minimum age implied by the difficulty (volunteers must be adults on hard campaigns). */
 export const impliedMinAge = (difficulty: number): number | null =>
   difficulty >= CAMPAIGN_HIGH_DIFFICULTY_LEVEL ? CAMPAIGN_HIGH_DIFFICULTY_MIN_AGE : null;
-export const CAMPAIGN_REVISION_HOLD_DAYS = 7;
 
 /** Why the create button is disabled, as a translatable sentence. */
 export const CAMPAIGN_CREATE_BLOCK_REASON_LABEL: Record<string, string> = {

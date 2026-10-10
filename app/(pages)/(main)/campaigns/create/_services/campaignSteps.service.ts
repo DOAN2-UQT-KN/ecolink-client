@@ -1,7 +1,7 @@
 import type { Path } from 'react-hook-form';
 
 import type { ICampaignValidationIssue } from '@/apis/campaign/models/lifecycle';
-import type { CampaignFormValues } from './campaign.service';
+import type { CampaignFormValues } from './campaignForm.service';
 import { issueFieldToFormName } from './campaignIssues.service';
 
 /** Wizard steps, in order. The first Continue creates the draft, so step 1 holds its essentials. */
@@ -28,6 +28,7 @@ export function stepOfField(name: string): number {
 /** Dotted paths of every field that currently has an error. */
 export function errorPaths(errors: unknown, prefix = ''): string[] {
   if (!errors || typeof errors !== 'object') return [];
+  // cast: react-hook-form error trees are indexed by field name at runtime.
   const record = errors as Record<string, unknown>;
   if ('message' in record || 'type' in record) return prefix ? [prefix] : [];
   return Object.entries(record).flatMap(([key, value]) =>

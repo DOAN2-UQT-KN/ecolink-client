@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { useCompletionReview } from "@/apis/campaign/processCampaign";
+import { useCompletionReview } from "@/apis/campaign/getCompletionReview";
 import type { ICampaign } from "@/apis/campaign/models/campaign";
 import { ShiftProgressCard } from "@/modules/CampaignVerification";
 import { Skeleton } from "@/components/ui/skeleton";

@@ -1,11 +1,15 @@
-import { memo, useEffect, useMemo, useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AnimatePresence, motion } from 'motion/react';
 import { ChevronDown } from 'lucide-react';
 import { HiMapPin } from 'react-icons/hi2';
 import { TbThumbDown, TbThumbUp } from 'react-icons/tb';
 
-import type { IMeetingPointView, IVerificationTrashPoint, MeetingPointCannotVote } from '@/apis/campaign/verification';
+import type {
+  IMeetingPointView,
+  IVerificationTrashPoint,
+  MeetingPointCannotVote,
+} from '@/apis/campaign/models/verification';
 import { Button } from '@/components/client/shared/Button';
 import { sectionCardClass } from '@/components/client/shared/CollapsibleCard';
 import { InfoTooltip } from '@/components/ui/InfoTooltip';
@@ -59,9 +63,11 @@ export const MeetingPointCard = memo(function MeetingPointCard({
   );
   const [open, setOpen] = useState(true);
   // A deep link (?point= / ?report=) always lands on an open card.
-  useEffect(() => {
+  const [wasHighlighted, setWasHighlighted] = useState(highlighted);
+  if (highlighted !== wasHighlighted) {
+    setWasHighlighted(highlighted);
     if (highlighted) setOpen(true);
-  }, [highlighted]);
+  }
   const form = useMeetingPointVote(campaignId, point, cleaned);
   const { busy, selected, acting, downOpen } = form;
   const my = point.my_vote;

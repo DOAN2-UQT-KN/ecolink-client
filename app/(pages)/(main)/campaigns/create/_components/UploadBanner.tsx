@@ -18,7 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import { CampaignFormValues } from "../_services/campaign.service";
+import { CampaignFormValues } from "../_services/campaignForm.service";
 import { CAMPAIGN_BANNER_MAX_BYTES } from "@/constants/campaignLifecycle";
 import showMessage, { MessageLevel, MessageType } from "@/utils/showMessage";
 
@@ -181,7 +181,8 @@ const UploadBanner = memo(function UploadBanner() {
                 e.stopPropagation();
                 removeBanner();
               }}
-              className="absolute top-3 right-3 p-1.5 text-red-500 bg-red-100 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-md hover:bg-red-200 cursor-pointer z-10"
+              aria-label={t("Remove image")}
+              className="absolute top-3 right-3 p-1.5 text-red-500 bg-red-100 rounded-full opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity duration-200 shadow-md hover:bg-red-200 cursor-pointer z-10"
             >
               <BiTrash size={18} />
             </button>
@@ -219,6 +220,7 @@ const UploadBanner = memo(function UploadBanner() {
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-xs text-muted-foreground">{t("Zoom")}</span>
+                {/* kept: ui/slider (Radix) draws a different track and thumb than this accent-coloured native range. */}
                 <input
                   type="range"
                   min={1}

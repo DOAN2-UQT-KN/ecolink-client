@@ -2,7 +2,7 @@ import { memo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TbChartBar, TbChevronDown } from 'react-icons/tb';
 
-import type { IMeetingPointVote, MeetingPointVoteValue } from '@/apis/campaign/verification';
+import type { IMeetingPointVote, MeetingPointVoteValue } from '@/apis/campaign/models/verification';
 import Image from '@/components/ui/AppImage';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Pill } from '@/components/ui/Pill';

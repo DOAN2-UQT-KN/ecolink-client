@@ -26,6 +26,8 @@ export interface ICreateCampaignRequest {
 /** Body of PUT /api/v1/campaigns/:id; the status never changes here. */
 export type IUpdateCampaignRequest = Partial<Omit<ICreateCampaignRequest, "organization_id">>;
 
-export interface ICreateCampaignResponse extends IBaseResponse<{
+export type ICreateCampaignResponse = IBaseResponse<{
   campaign: ICampaign;
-}> {}
+}>;
+
+export type UpdateCampaignParams = { id: string; data: IUpdateCampaignRequest };

@@ -8,7 +8,7 @@ import useAuthStore from '@/stores/useAuthStore';
 import { useCampaign } from '../_context/CampaignContext';
 import { useDayLabel } from '../_hooks/useDayLabel';
 import { useLeaderOptions } from '../../_hooks/useLeaderOptions';
-import { fitSchedule, type CampaignFormValues } from '../_services/campaign.service';
+import { fitSchedule, type CampaignFormValues } from '../_services/campaignForm.service';
 import { daysBelowSuggestion } from '../_services/shiftSchedule.service';
 import { meetingPointName } from '@/utils/campaignLabels';
 import MinVolunteersReasonField from './MinVolunteersReasonField';
@@ -50,6 +50,7 @@ const StepShifts = memo(function StepShifts() {
   const currentUserId = useAuthStore((s) => s.user?.id) ?? '';
 
   // The grid always matches the days and meeting points, even for drafts saved before a change.
+  // An effect, because it writes to react-hook-form (an external store).
   useEffect(() => {
     const shaped =
       schedule.length === days.length && schedule.every((row) => row.length === points.length);
@@ -89,6 +90,7 @@ const StepShifts = memo(function StepShifts() {
     belowSuggestion,
     dayMessages,
     cellErrors: (d, p) =>
+      // cast: react-hook-form types nested array errors loosely.
       (scheduleErrors?.[d] as Record<number, Record<string, RHFFieldError>> | undefined)?.[p],
     dayLabel,
     pointName: (index) => meetingPointName(points[index], index, t),

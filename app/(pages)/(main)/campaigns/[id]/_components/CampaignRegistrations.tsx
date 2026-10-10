@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { Inbox } from 'lucide-react';
 
-import { useGetCampaignRegistrations, useInviteNearby } from '@/apis/campaign/registration';
+import { useGetCampaignRegistrations } from '@/apis/campaign/getCampaignRegistrations';
+import { useInviteNearby } from '@/apis/campaign/inviteNearby';
 import { Button } from '@/components/client/shared/Button';
 import { InfoTooltip } from '@/components/ui/InfoTooltip';
 import showMessage, { MessageLevel, MessageType } from '@/utils/showMessage';
@@ -266,5 +267,3 @@ export const CampaignRegistrations = memo(function CampaignRegistrations({
     </div>
   );
 });
-
-export default CampaignRegistrations;

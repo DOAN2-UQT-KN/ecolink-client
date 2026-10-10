@@ -1,4 +1,4 @@
-// Direct fetch is the allowed exception here: Nominatim is a third-party API, not ours.
+// Direct fetch is the allowed exception (constitution VII): Nominatim is a third-party API, not ours.
 import type { LatLngLiteral } from "leaflet";
 
 import { truncateDetailAddress } from "@/constants/address";

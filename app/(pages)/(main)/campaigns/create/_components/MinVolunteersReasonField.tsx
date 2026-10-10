@@ -6,9 +6,7 @@ import { InfoTooltip } from '@/components/ui/InfoTooltip';
 
 import { useCampaign } from '../_context/CampaignContext';
 import { useShiftRules } from '../_hooks/useShiftRules';
-
-const inputClassName =
-  'border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50';
+import { inputClassName } from '../_services/fieldStyles';
 
 /** Why a day has fewer volunteers than the difficulty suggests (shown only then). */
 export default function MinVolunteersReasonField() {
