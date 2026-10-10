@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import dynamic from '@/libs/dynamic';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/libs/utils';
-import { getAllCampaigns } from '@/apis/campaign/getCampaigns';
+import { getAllCampaigns } from '@/apis/campaign/getAllCampaigns';
 import { getAllReports } from '@/apis/incident/getReport';
 import { getSosList } from '@/apis/sos/getSos';
 import type { ISosSummary, SosType } from '@/apis/sos/models/sos';

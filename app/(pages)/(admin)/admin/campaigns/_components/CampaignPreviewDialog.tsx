@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { TbExternalLink } from "react-icons/tb";
-import { useGetCampaignById } from "@/apis/campaign/campaignById";
+import { useGetCampaignById } from "@/apis/campaign/getCampaignById";
 import { useGetCampaignHistory } from "@/apis/campaign/getCampaignHistory";
 import { CAMPAIGN_STATUS } from "@/constants/campaignLifecycle";
 import { useAdminLayout } from "@/app/(pages)/(admin)/_context/AdminLayoutContext";

@@ -14,24 +14,14 @@ import {
   reverseCacheKey,
   type ForwardGeocodingResult,
   type ReverseGeocodingAddress,
-} from "../_services/nominatim.service";
-
-const REVERSE_DEBOUNCE_MS = 400;
-// maximumAge: 0 matches the old raw navigator call (libs/geo defaults to 30s).
-const GPS_OPTIONS: PositionOptions = {
-  enableHighAccuracy: true,
-  timeout: 15_000,
-  maximumAge: 0,
-};
-
-type AddressChangeSource = "map" | "gps" | "user" | "hydrate";
-
-type AddressSnapshot = {
-  detailAddress: string;
-  latitude?: number;
-  longitude?: number;
-  position: LatLngLiteral | null;
-};
+} from "@/libs/nominatim";
+import {
+  GPS_OPTIONS,
+  toLatLng,
+  REVERSE_DEBOUNCE_MS,
+  type AddressChangeSource,
+  type AddressSnapshot,
+} from "../_services/address.service";
 
 /** Map + Nominatim state machine for one meeting point (`meeting_points.<index>`). */
 export function useAddressPicker(index: number) {
@@ -89,17 +79,11 @@ export function useAddressPicker(index: number) {
     if (initDoneRef.current) return;
     initDoneRef.current = true;
 
-    const lat = getValues(LAT);
-    const lng = getValues(LNG);
-    const hasCoords =
-      typeof lat === "number" &&
-      typeof lng === "number" &&
-      !Number.isNaN(lat) &&
-      !Number.isNaN(lng);
+    const saved = toLatLng(getValues(LAT), getValues(LNG));
 
-    if (hasCoords) {
+    if (saved) {
       const savedAddress = truncateDetailAddress(getValues(ADDRESS));
-      applyPosition({ lat, lng }, "hydrate");
+      applyPosition(saved, "hydrate");
       if (!savedAddress) {
         skipReverseRef.current = false;
       }

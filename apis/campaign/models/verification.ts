@@ -1,10 +1,5 @@
-import requestApi from '@/utils/requestApi';
 import { IBaseResponse } from '@/types/BaseResponse';
-import { useGet, UseGetOptions, usePost, UsePostOptions } from '@/hooks/reactQuery';
-import { MessageType } from '@/utils/showMessage';
 import type { ILayer1 } from './shiftResult';
-
-const base = '/api/v1/campaigns';
 
 /**
  * Result verification of a campaign marked done, per meeting point: each trash point declared
@@ -117,16 +112,6 @@ export interface ICampaignVerification {
   meeting_points: IMeetingPointView[];
 }
 
-export const useCampaignVerification = (
-  campaignId: string,
-  options?: Omit<UseGetOptions<IBaseResponse<ICampaignVerification>>, 'queryKey' | 'queryFn'>,
-) =>
-  useGet({
-    queryKey: ['campaign-verification', campaignId],
-    queryFn: () => requestApi.get<IBaseResponse<ICampaignVerification>>(`${base}/${campaignId}/verification`),
-    ...options,
-  });
-
 export type VoteMeetingPointParams = {
   campaign_id: string;
   meeting_point_id: string;
@@ -142,35 +127,9 @@ export type VoteMeetingPointParams = {
   accuracy?: number;
 };
 
-type MeetingPointDecisionResponse = IBaseResponse<{ meeting_point: IMeetingPointView; campaign_status: number }>;
-
-export const useVoteMeetingPoint = (
-  options?: UsePostOptions<MeetingPointDecisionResponse, VoteMeetingPointParams>,
-) =>
-  usePost({
-    mutationFn: ({ campaign_id, meeting_point_id, ...body }: VoteMeetingPointParams) =>
-      requestApi.put<MeetingPointDecisionResponse>(
-        `${base}/${campaign_id}/verification/${meeting_point_id}/vote`,
-        body,
-      ),
-    queryKey: ['campaign-verification'],
-    messageError: { type: MessageType.Toast },
-    ...options,
-  });
+export type MeetingPointDecisionResponse = IBaseResponse<{ meeting_point: IMeetingPointView; campaign_status: number }>;
 
 export type UnvoteMeetingPointParams = { campaign_id: string; meeting_point_id: string };
-
-/** Take one's vote back while the window is open. */
-export const useUnvoteMeetingPoint = (
-  options?: UsePostOptions<MeetingPointDecisionResponse, UnvoteMeetingPointParams>,
-) =>
-  usePost({
-    mutationFn: ({ campaign_id, meeting_point_id }: UnvoteMeetingPointParams) =>
-      requestApi.delete<MeetingPointDecisionResponse>(`${base}/${campaign_id}/verification/${meeting_point_id}/vote`),
-    queryKey: ['campaign-verification'],
-    messageError: { type: MessageType.Toast },
-    ...options,
-  });
 
 export type DecideMeetingPointParams = {
   campaign_id: string;
@@ -181,18 +140,3 @@ export type DecideMeetingPointParams = {
   /** …with the trash points that did not pass (at least one). */
   report_ids?: string[];
 };
-
-/** Admin: settles a flagged meeting point. */
-export const useDecideMeetingPoint = (
-  options?: UsePostOptions<MeetingPointDecisionResponse, DecideMeetingPointParams>,
-) =>
-  usePost({
-    mutationFn: ({ campaign_id, meeting_point_id, ...body }: DecideMeetingPointParams) =>
-      requestApi.put<MeetingPointDecisionResponse>(
-        `${base}/${campaign_id}/verification/${meeting_point_id}/decision`,
-        body,
-      ),
-    queryKey: ['completion-review'],
-    messageError: { type: MessageType.Toast },
-    ...options,
-  });

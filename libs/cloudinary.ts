@@ -33,8 +33,8 @@ export const uploadToCloudinary = async (
     );
 
     return response.data.secure_url;
-  } catch (error) {
-    console.error("Error uploading to Cloudinary:", error);
+  } catch {
+    // Callers show their own upload error.
     throw new Error("Failed to upload media to Cloudinary");
   }
 };

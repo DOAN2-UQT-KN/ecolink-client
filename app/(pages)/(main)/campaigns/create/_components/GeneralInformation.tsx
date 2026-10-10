@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo } from 'react';
+import { memo, useEffect } from 'react';
 import { Controller, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -9,7 +9,7 @@ import { cn } from '@/libs/utils';
 import Image from '@/components/ui/AppImage';
 
 import { useCampaign } from '../_context/CampaignContext';
-import { TITLE_MAX_LENGTH } from '../_services/campaign.service';
+import { TITLE_MAX_LENGTH } from '../_services/campaignForm.service';
 import {
   CAMPAIGN_DESCRIPTION_MIN_LENGTH,
   CAMPAIGN_TITLE_MIN_LENGTH,
@@ -25,6 +25,7 @@ import {
 import UploadBanner from './UploadBanner';
 import NeedsReviewTag from './NeedsReviewTag';
 import RichTextEditor from '@/components/ui/RichTextEditor';
+import { inputClassName } from '../_services/fieldStyles';
 
 const GeneralInformation = memo(function GeneralInformation() {
   const { t } = useTranslation();
@@ -50,17 +51,13 @@ const GeneralInformation = memo(function GeneralInformation() {
     });
   }, [register, t]);
 
-  // An unverified organization only gets the lowest difficulty.
+  // An unverified organization only gets the lowest difficulty. An effect, because it writes to
+  // react-hook-form (an external store) once server eligibility arrives.
   useEffect(() => {
     if (maxDifficulty != null && form.getValues('difficulty') > maxDifficulty) {
       form.setValue('difficulty', maxDifficulty);
     }
   }, [form, maxDifficulty]);
-  const inputClassName = useMemo(
-    () =>
-      'border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50',
-    [],
-  );
 
   return (
     <div className="w-full h-full flex flex-col gap-[30px] px-[30px] py-[35px] border-1 border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5">

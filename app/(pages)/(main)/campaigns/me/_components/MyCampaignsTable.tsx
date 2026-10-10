@@ -1,5 +1,5 @@
-import { memo, useCallback, useMemo } from 'react';
-import { useRouter } from '@/libs/router';
+import { useMemo } from 'react';
+import { Link, useRouter } from '@/libs/router';
 import { useTranslation } from 'react-i18next';
 import { Building2 } from 'lucide-react';
 
@@ -40,7 +40,7 @@ const COLUMN_KEYS = {
 } as const;
 
 /** Edit / send for review / delete, depending on the campaign's status and the viewer's rights. */
-const CampaignRowActions = memo(function CampaignRowActions({ campaign }: { campaign: ICampaign }) {
+function CampaignRowActions({ campaign }: { campaign: ICampaign }) {
   const { t } = useTranslation();
   const router = useRouter();
   const { mutate: submit, isPending: isSubmitting } = useSubmitCampaign();
@@ -98,9 +98,9 @@ const CampaignRowActions = memo(function CampaignRowActions({ campaign }: { camp
       )}
     </div>
   );
-});
+}
 
-export const MyCampaignsTable = memo(function MyCampaignsTable() {
+export function MyCampaignsTable() {
   const router = useRouter();
   const { t } = useTranslation();
   const { title: localizedTitle } = useLocalizedDisplay();
@@ -122,7 +122,14 @@ export const MyCampaignsTable = memo(function MyCampaignsTable() {
         key: COLUMN_KEYS.GENERAL_INFORMATION,
         title: t('General information'),
         render: (_, record) => (
-          <CampaignGeneralInfoCell campaign={record} title={localizedTitle(record)} />
+          // The row click is mouse-only; this link gives keyboard users the same target.
+          <Link
+            href={`/campaigns/${record.id}`}
+            onClick={(e) => e.stopPropagation()}
+            className="block rounded focus-visible:outline-2 focus-visible:outline-button-accent"
+          >
+            <CampaignGeneralInfoCell campaign={record} title={localizedTitle(record)} />
+          </Link>
         ),
         width: 360,
       },
@@ -211,19 +218,8 @@ export const MyCampaignsTable = memo(function MyCampaignsTable() {
     [pagination, t, localizedTitle],
   );
 
-  const handleTableChange = useCallback(
-    (page: { current: number; pageSize: number }) => {
-      setPagination(page);
-    },
-    [setPagination],
-  );
-
-  const handleRowClick = useCallback(
-    (record: ICampaign) => {
-      router.push(`/campaigns/${record.id}`);
-    },
-    [router],
-  );
+  const handleTableChange = (page: { current: number; pageSize: number }) => setPagination(page);
+  const handleRowClick = (record: ICampaign) => router.push(`/campaigns/${record.id}`);
 
   return (
     <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
@@ -240,6 +236,6 @@ export const MyCampaignsTable = memo(function MyCampaignsTable() {
       />
     </div>
   );
-});
+}
 
 export default MyCampaignsTable;

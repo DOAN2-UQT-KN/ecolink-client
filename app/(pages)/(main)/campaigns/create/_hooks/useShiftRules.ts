@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 
 import { useCampaign } from '../_context/CampaignContext';
-import type { CampaignFormValues } from '../_services/campaign.service';
+import type { CampaignFormValues } from '../_services/campaignForm.service';
 import {
   validateGatherTime,
   validateLeader,

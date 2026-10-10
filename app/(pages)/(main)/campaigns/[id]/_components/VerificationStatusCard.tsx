@@ -1,9 +1,8 @@
-import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TbArrowRight } from 'react-icons/tb';
 
 import type { ICampaign } from '@/apis/campaign/models/campaign';
-import { useCampaignVerification } from '@/apis/campaign/verification';
+import { useCampaignVerification } from '@/apis/campaign/getCampaignVerification';
 import { CollapsibleCard } from '@/components/client/shared/CollapsibleCard';
 import { Pill } from '@/components/ui/Pill';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -16,7 +15,7 @@ import { useReportTitle } from '../_hooks/useReportTitle';
  * For the campaign's managers while it waits for completion: where result verification stands on
  * each meeting point (status, photo check, votes and score; the waste points that did not pass).
  */
-export const VerificationStatusCard = memo(function VerificationStatusCard({ campaign }: { campaign: ICampaign }) {
+export function VerificationStatusCard({ campaign }: { campaign: ICampaign }) {
   const { t } = useTranslation('common');
   const { data, isLoading } = useCampaignVerification(campaign.id, { enabled: Boolean(campaign.id), retry: false });
   const view = data?.data;
@@ -107,6 +106,4 @@ export const VerificationStatusCard = memo(function VerificationStatusCard({ cam
       )}
     </CollapsibleCard>
   );
-});
-
-export default VerificationStatusCard;
+}

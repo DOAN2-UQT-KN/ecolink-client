@@ -1,11 +1,5 @@
-import { IBaseResponse } from '@/types/BaseResponse';
-import requestApi from '@/utils/requestApi';
-import { MessageType } from '@/utils/showMessage';
-import { useGet, UseGetOptions, usePost, UsePostOptions } from '@/hooks/reactQuery';
 import type { ILayer1, IShiftOverview } from './shiftResult';
 import type { AwaitingAdminReason, IMeetingPointView } from './verification';
-
-const url = '/api/v1/campaigns';
 
 /**
  * Result verification decides the campaign; the admin only cancels it, or approves it once
@@ -20,26 +14,6 @@ export type ICompletionReviewRequest = {
   reject_reason?: string;
   /** Approve: the settled difficulty (points follow it). */
   difficulty?: number;
-};
-
-export const reviewCampaignCompletion = async (
-  params: ICompletionReviewRequest,
-): Promise<IBaseResponse<unknown>> => {
-  const { id, ...body } = params;
-  return await requestApi.put<IBaseResponse<unknown>>(`${url}/${id}/completion-review`, body);
-};
-
-export const useReviewCampaignCompletion = (
-  options?: UsePostOptions<IBaseResponse<unknown>, ICompletionReviewRequest>,
-) => {
-  return usePost({
-    mutationFn: reviewCampaignCompletion,
-    queryKey: ['completion-review'],
-    messageError: {
-      type: MessageType.Toast,
-    },
-    ...options,
-  });
 };
 
 export type CompletionReportStatus = 'cleaned' | 'partial' | 'unhandled';
@@ -103,13 +77,3 @@ export interface ICompletionReview {
     meeting_points: IMeetingPointView[];
   };
 }
-
-export const useCompletionReview = (
-  campaignId: string,
-  options?: Omit<UseGetOptions<IBaseResponse<ICompletionReview>>, 'queryKey' | 'queryFn'>,
-) =>
-  useGet({
-    queryKey: ['completion-review', campaignId],
-    queryFn: () => requestApi.get<IBaseResponse<ICompletionReview>>(`${url}/${campaignId}/completion-review`),
-    ...options,
-  });

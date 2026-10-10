@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react';
+import { memo } from 'react';
 import { Controller, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -12,6 +12,7 @@ import { InfoTooltip } from '@/components/ui/InfoTooltip';
 
 import { useCampaign } from '../_context/CampaignContext';
 import { impliedMinAge } from '@/constants/campaignLifecycle';
+import { inputClassName } from '../_services/fieldStyles';
 
 /** 0xxxxxxxxx or +84xxxxxxxxx, spaces/dots/dashes allowed (same rule as the server). */
 const VN_PHONE_RE = /^(?:\+84|0)\d{9}$/;
@@ -27,11 +28,6 @@ const ContactAndSafety = memo(function ContactAndSafety() {
   const difficulty = useWatch({ control, name: 'difficulty' });
   const defaultMinAge = impliedMinAge(difficulty);
 
-  const inputClassName = useMemo(
-    () =>
-      'border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50',
-    [],
-  );
 
   return (
     <div className="w-full flex flex-col gap-6 px-[30px] py-[35px] border-1 border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5">

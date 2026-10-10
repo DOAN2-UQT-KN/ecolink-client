@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
 
@@ -49,7 +49,7 @@ const STEP_LABELS: Record<CampaignStep, string> = {
  * The create/edit wizard (same pattern as the organization application): stepper, the review
  * status banner, the current step, and Back / Save draft / Continue or Send for review.
  */
-const CampaignForm = memo(function CampaignForm() {
+function CampaignForm() {
   const { t } = useTranslation("common");
   const {
     campaign,
@@ -105,10 +105,7 @@ const CampaignForm = memo(function CampaignForm() {
     [campaign, organization],
   );
 
-  const stepItems = useMemo(
-    () => CAMPAIGN_STEPS.map((id) => ({ id, label: t(STEP_LABELS[id]) })),
-    [t],
-  );
+  const stepItems = CAMPAIGN_STEPS.map((id) => ({ id, label: t(STEP_LABELS[id]) }));
 
   const status = campaign?.status ?? CAMPAIGN_STATUS.DRAFT;
   const canSubmit = CAMPAIGN_SUBMITTABLE_STATUSES.includes(status);
@@ -260,6 +257,6 @@ const CampaignForm = memo(function CampaignForm() {
       </Dialog>
     </div>
   );
-});
+}
 
 export default CampaignForm;

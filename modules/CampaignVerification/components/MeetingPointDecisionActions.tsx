@@ -2,7 +2,7 @@ import { memo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 
-import { useDecideMeetingPoint } from '@/apis/campaign/verification';
+import { useDecideMeetingPoint } from '@/apis/campaign/decideMeetingPoint';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
@@ -150,5 +150,3 @@ export const MeetingPointDecisionActions = /* @__PURE__ */ memo(function Meeting
     </div>
   );
 });
-
-export default MeetingPointDecisionActions;

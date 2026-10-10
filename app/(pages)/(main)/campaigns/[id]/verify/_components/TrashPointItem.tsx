@@ -1,7 +1,7 @@
-import { memo, useMemo } from 'react';
+import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import type { IVerificationTrashPoint } from '@/apis/campaign/verification';
+import type { IVerificationTrashPoint } from '@/apis/campaign/models/verification';
 import { Pill } from '@/components/ui/Pill';
 import { Link } from '@/libs/router';
 import { cn } from '@/libs/utils';
@@ -19,7 +19,7 @@ export const TrashPointItem = memo(function TrashPointItem({
   failed: boolean;
 }) {
   const { t } = useTranslation('common');
-  const checks = useMemo(() => checksByUrl(trashPoint.layer1), [trashPoint.layer1]);
+  const checks = checksByUrl(trashPoint.layer1);
   const inRound = trashPoint.status === 'cleaned';
   return (
     <li

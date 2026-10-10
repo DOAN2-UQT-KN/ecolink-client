@@ -1,4 +1,3 @@
-import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { ICampaign } from '@/apis/campaign/models/campaign';
@@ -7,7 +6,7 @@ import { impliedMinAge } from '@/constants/campaignLifecycle';
 import { CollapsibleCard } from '@/components/client/shared/CollapsibleCard';
 
 /** Contact, safety notes and participation conditions; empty rows hidden, nothing when all are. */
-export const ParticipationInfoCard = memo(function ParticipationInfoCard({
+export function ParticipationInfoCard({
   campaign,
   className,
 }: {
@@ -55,6 +54,4 @@ export const ParticipationInfoCard = memo(function ParticipationInfoCard({
       </div>
     </CollapsibleCard>
   );
-});
-
-export default ParticipationInfoCard;
+}

@@ -1,11 +1,9 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { TbExternalLink, TbThumbDown, TbThumbUp } from "react-icons/tb";
-import {
-  type ICompletionReviewReport,
-} from "@/apis/campaign/processCampaign";
-import type { IResultPhotoCheck } from "@/apis/campaign/shiftResult";
-import type { IMeetingPointView } from "@/apis/campaign/verification";
+import type { ICompletionReviewReport } from "@/apis/campaign/models/processCampaign";
+import type { IResultPhotoCheck } from "@/apis/campaign/models/shiftResult";
+import type { IMeetingPointView } from "@/apis/campaign/models/verification";
 import { checksByUrl, meetingPointLabel, MeetingPointStatusPill, PhotoCheckBadge, MeetingPointDecisionActions, MeetingPointVotesList } from "@/modules/CampaignVerification";
 import { CHECK_LEVEL_LABEL, TRASH_POINT_RESULT_LABEL } from "@/constants/campaignVerification";
 import { ReviewSectionCard } from "@/components/ui/ReviewSection";

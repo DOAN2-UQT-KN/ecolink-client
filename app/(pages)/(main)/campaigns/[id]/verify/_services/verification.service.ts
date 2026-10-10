@@ -4,7 +4,7 @@ import type {
   MeetingPointCannotVote,
   MeetingPointDecisionCode,
   MeetingPointVoteValue,
-} from '@/apis/campaign/verification';
+} from '@/apis/campaign/models/verification';
 import type { GeoPoint } from '@/libs/geo';
 
 export const NOTE_MAX = 1000;

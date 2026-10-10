@@ -10,7 +10,7 @@ import { DETAIL_ADDRESS_MAX_LENGTH } from "@/constants/address";
 import { cn } from "@/libs/utils";
 import { useCampaign } from "../_context/CampaignContext";
 import { useAddressPicker } from "../_hooks/useAddressPicker";
-import type { CampaignFormValues } from "../_services/campaign.service";
+import type { CampaignFormValues } from "../_services/campaignForm.service";
 
 const LeafletAddressMap = dynamic(() => import("@/modules/LeafletAddressMap"), {
   ssr: false,

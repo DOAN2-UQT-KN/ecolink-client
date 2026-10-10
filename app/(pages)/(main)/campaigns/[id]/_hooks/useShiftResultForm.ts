@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type {
@@ -6,7 +6,7 @@ import type {
   IShiftResultView,
   ResultPhotoSide,
   SaveShiftResultParams,
-} from '@/apis/campaign/shiftResult';
+} from '@/apis/campaign/models/shiftResult';
 import {
   buildSavePayload,
   formFromView,
@@ -39,8 +39,12 @@ export function useShiftResultForm(view: IShiftResultView | undefined) {
     setFormError(null);
   };
   // Reset only when a result is (re)loaded, not on every pool change.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(resetForm, [savedAt, view?.shift_id]);
+  const loadKey = `${view?.shift_id}|${savedAt}`;
+  const [lastLoadKey, setLastLoadKey] = useState<string | null>(null);
+  if (loadKey !== lastLoadKey) {
+    setLastLoadKey(loadKey);
+    resetForm();
+  }
 
   const setDraft = (id: string, patch: Partial<ReportDraft>) =>
     setDrafts((prev) => ({

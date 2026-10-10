@@ -1,28 +1,15 @@
-import { memo, useEffect, useMemo, useState } from 'react';
+import { memo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { TbArrowBackUp, TbQrcode, TbUserPlus, TbUserX } from 'react-icons/tb';
+import { TbQrcode, TbUserPlus } from 'react-icons/tb';
 
-import {
-  useAddManualAttendance,
-  useAttendanceQr,
-  useCloseAttendance,
-  useExcludeAttendance,
-  useOpenAttendanceSession,
-  useRestoreAttendance,
-  useShiftAttendance,
-  type IShiftAttendanceRow,
-} from '@/apis/campaign/campaignAttendance';
+import { useAddManualAttendance } from '@/apis/campaign/addManualAttendance';
+import { useCloseAttendance } from '@/apis/campaign/closeAttendance';
+import { useExcludeAttendance } from '@/apis/campaign/excludeAttendance';
+import { useOpenAttendanceSession } from '@/apis/campaign/openAttendanceSession';
+import { useShiftAttendance } from '@/apis/campaign/getShiftAttendance';
+import type { IShiftAttendanceRow } from '@/apis/campaign/models/attendance';
 import type { IRegisteredVolunteer } from '@/apis/campaign/models/registration';
 import { Button } from '@/components/client/shared/Button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Pill } from '@/components/ui/Pill';
 import {
   Select,
   SelectContent,
@@ -30,77 +17,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { ConfirmPopoverModal } from '@/components/client/shared/ConfirmPopoverModal';
 import showMessage, { MessageLevel, MessageType } from '@/utils/showMessage';
-import { hhmm } from '@/utils/campaignLabels';
 
-
-/** The dynamic QR of the open session: a new code every period (spec 4.1). */
-const AttendanceQrDialog = memo(function AttendanceQrDialog({
-  campaignId,
-  shiftId,
-  open,
-  onOpenChange,
-}: {
-  campaignId: string;
-  shiftId: string;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) {
-  const { t } = useTranslation('common');
-  const { data, isError } = useAttendanceQr(
-    { campaign_id: campaignId, shift_id: shiftId },
-    {
-      enabled: open,
-      refetchInterval: (query) => (query.state.data?.data?.period_sec || 600) * 1000,
-      refetchIntervalInBackground: true,
-      gcTime: 0,
-    },
-  );
-  const qr = data?.data;
-  const periodSec = qr?.period_sec || 600;
-  const [image, setImage] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!qr?.token) return;
-    const url = `${window.location.origin}/campaigns/${campaignId}?attendance=${encodeURIComponent(qr.token)}`;
-    // qrcode is only needed while this dialog shows a code.
-    void import('qrcode').then(({ default: QRCode }) =>
-      QRCode.toDataURL(url, { width: 300, margin: 2 }).then(setImage),
-    );
-  }, [qr?.token, campaignId]);
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>{t('Attendance QR')}</DialogTitle>
-          <DialogDescription>
-            {t(
-              'Volunteers scan this code with their phone at the meeting point, with precise location on. The code changes every {{n}} minutes. Scans farther than 50 m are recorded but flagged for you to check.',
-              { n: Math.round(periodSec / 60) },
-            )}
-          </DialogDescription>
-        </DialogHeader>
-        <div className="flex flex-col items-center gap-3 py-2">
-          {isError ? (
-            <p className="text-sm text-destructive">{t('The session has ended; open attendance again.')}</p>
-          ) : image ? (
-            <img src={image} alt="" className="rounded-lg border border-border/60 bg-white p-2" width={300} height={300} />
-          ) : (
-            <p className="text-sm text-muted-foreground">{t('Loading')}…</p>
-          )}
-          {qr?.session_expires_at && (
-            <p className="text-xs text-muted-foreground">
-              {t('Session open until {{time}}', { time: hhmm(qr.session_expires_at, '—') })}
-            </p>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-});
+import { AttendanceQrDialog } from './AttendanceQrDialog';
+import { AttendanceTable } from './AttendanceTable';
+import { ReasonDialog } from './ReasonDialog';
 
 /**
  * Attendance of one shift for its leader and the campaign's managers (spec 4.1): open the QR
@@ -123,7 +45,6 @@ export const ShiftAttendancePanel = memo(function ShiftAttendancePanel({
   const [qrOpen, setQrOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
   const [manualUser, setManualUser] = useState<string | undefined>();
-  const [reason, setReason] = useState('');
 
   const { data, isError } = useShiftAttendance(params, { refetchInterval: qrOpen ? 10_000 : false });
   const view = data?.data;
@@ -141,22 +62,16 @@ export const ShiftAttendancePanel = memo(function ShiftAttendancePanel({
   const { mutate: addManual, isPending: isAdding } = useAddManualAttendance({
     onSuccess: () => {
       setManualOpen(false);
-      setReason('');
       setManualUser(undefined);
     },
   });
 
   const [excluding, setExcluding] = useState<IShiftAttendanceRow | null>(null);
-  const [excludeReason, setExcludeReason] = useState('');
   const { mutate: exclude, isPending: isExcluding } = useExcludeAttendance({
-    onSuccess: () => {
-      setExcluding(null);
-      setExcludeReason('');
-    },
+    onSuccess: () => setExcluding(null),
   });
-  const { mutate: restore, isPending: isRestoring } = useRestoreAttendance();
 
-  const presentIds = useMemo(() => new Set((view?.attendances ?? []).map((a) => a.user_id)), [view]);
+  const presentIds = new Set((view?.attendances ?? []).map((a) => a.user_id));
   const candidates = registered.filter((r) => !presentIds.has(r.user_id));
 
   if (isError || !view) return null;
@@ -228,169 +143,50 @@ export const ShiftAttendancePanel = memo(function ShiftAttendancePanel({
         )}
       </div>
 
-      {view.attendances.length === 0 ? (
-        <p className="text-sm text-foreground-tertiary">{t('Nobody has checked in yet')}</p>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="text-left text-xs text-foreground-tertiary">
-              <tr>
-                <th className="py-2 pr-3 font-medium">{t('Volunteer')}</th>
-                <th className="py-2 pr-3 font-medium">{t('In')}</th>
-                <th className="py-2 pr-3 font-medium">{t('Out')}</th>
-                <th className="py-2 pr-3 font-medium" />
-                {view.can_run && <th className="py-2 font-medium" />}
-              </tr>
-            </thead>
-            <tbody>
-              {view.attendances.map((a) => (
-                <tr key={a.user_id} className="border-t border-[rgba(136,122,71,0.2)]">
-                  <td className="py-2 pr-3">{a.volunteer?.name || t('Unnamed volunteer')}</td>
-                  <td className="py-2 pr-3 tabular-nums">{hhmm(a.check_in_at, '—')}</td>
-                  <td className="py-2 pr-3 tabular-nums">{hhmm(a.check_out_at, '—')}</td>
-                  <td className="py-2 pr-3">
-                    <div className="flex flex-wrap gap-1">
-                      {a.excluded && (
-                        <Pill tone="red" title={a.exclude_reason ?? undefined}>
-                          {t('Excluded')}
-                        </Pill>
-                      )}
-                      {a.out_of_area && (
-                        <Pill tone="amber">
-                          {t('Out of area ({{m}} m)', {
-                            m: Math.max(a.check_in_distance_m ?? 0, a.check_out_distance_m ?? 0),
-                          })}
-                        </Pill>
-                      )}
-                      {a.low_accuracy && <Pill tone="amber">{t('Imprecise GPS')}</Pill>}
-                      {a.eligible ? (
-                        <Pill tone="green">{t('Counts for points')}</Pill>
-                      ) : a.check_out_at ? (
-                        <Pill tone="red">{t('Under 60%')}</Pill>
-                      ) : null}
-                      {a.manual && <Pill tone="amber">{t('Manual')}</Pill>}
-                      {!a.pre_registered && <Pill tone="neutral">{t('Not registered')}</Pill>}
-                      {a.offline && <Pill tone="neutral">{t('Synced later')}</Pill>}
-                    </div>
-                  </td>
-                  {view.can_run && (
-                    <td className="py-2 text-right">
-                      {a.excluded ? (
-                        <Button
-                          type="button"
-                          variant="outlined-brown"
-                          size="medium"
-                          aria-label={t('Restore')}
-                          title={t('Restore')}
-                          isDisabled={isRestoring}
-                          onClick={() => restore({ ...params, user_id: a.user_id })}
-                        >
-                          <TbArrowBackUp className="size-5" aria-hidden />
-                        </Button>
-                      ) : (
-                        <Button
-                          type="button"
-                          variant="outlined-brown"
-                          size="medium"
-                          aria-label={t('Exclude')}
-                          title={t('Exclude')}
-                          onClick={() => {
-                            setExcludeReason('');
-                            setExcluding(a);
-                          }}
-                        >
-                          <TbUserX className="size-5" aria-hidden />
-                        </Button>
-                      )}
-                    </td>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <AttendanceTable view={view} params={params} onExclude={setExcluding} />
 
       <AttendanceQrDialog campaignId={campaignId} shiftId={shiftId} open={qrOpen} onOpenChange={setQrOpen} />
 
-      <Dialog open={Boolean(excluding)} onOpenChange={(open) => !open && setExcluding(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t('Exclude this attendance?')}</DialogTitle>
-            <DialogDescription>
-              {t(
-                '{{name}} will not get points for this shift. You can restore it later. A reason is required.',
-                { name: excluding?.volunteer?.name || t('Unnamed volunteer') },
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          <Textarea
-            value={excludeReason}
-            maxLength={500}
-            placeholder={t('Reason (e.g. was not at the meeting point)')}
-            onChange={(e) => setExcludeReason(e.target.value)}
-          />
-          <DialogFooter>
-            <Button variant="outlined-brown" onClick={() => setExcluding(null)}>
-              {t('Cancel')}
-            </Button>
-            <Button
-              variant="brown"
-              isDisabled={!excludeReason.trim() || isExcluding}
-              onClick={() =>
-                excluding && exclude({ ...params, user_id: excluding.user_id, reason: excludeReason.trim() })
-              }
-            >
-              {t('Exclude')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ReasonDialog
+        open={Boolean(excluding)}
+        onOpenChange={(open) => !open && setExcluding(null)}
+        title={t('Exclude this attendance?')}
+        description={t(
+          '{{name}} will not get points for this shift. You can restore it later. A reason is required.',
+          { name: excluding?.volunteer?.name || t('Unnamed volunteer') },
+        )}
+        confirmLabel={t('Exclude')}
+        placeholder={t('Reason (e.g. was not at the meeting point)')}
+        pending={isExcluding}
+        onConfirm={(reason) => excluding && exclude({ ...params, user_id: excluding.user_id, reason })}
+      />
 
-      <Dialog open={manualOpen} onOpenChange={setManualOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t('Add attendance manually')}</DialogTitle>
-            <DialogDescription>
-              {t(
-                'For someone whose phone failed. A reason is required; at most 20% of the people present may be added by hand.',
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          <Select value={manualUser} onValueChange={setManualUser}>
-            <SelectTrigger className="!h-[44px] w-full">
-              <SelectValue placeholder={t('Choose a registered volunteer')} />
-            </SelectTrigger>
-            <SelectContent>
-              {candidates.map((c) => (
-                <SelectItem key={c.user_id} value={c.user_id}>
-                  {c.volunteer?.name || c.user_id}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Textarea
-            value={reason}
-            maxLength={500}
-            placeholder={t('Reason (e.g. phone out of battery)')}
-            onChange={(e) => setReason(e.target.value)}
-          />
-          <DialogFooter>
-            <Button variant="outlined-brown" onClick={() => setManualOpen(false)}>
-              {t('Cancel')}
-            </Button>
-            <Button
-              variant="brown"
-              isDisabled={!manualUser || !reason.trim() || isAdding}
-              onClick={() => manualUser && addManual({ ...params, user_id: manualUser, reason: reason.trim() })}
-            >
-              {t('Add')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ReasonDialog
+        open={manualOpen}
+        onOpenChange={setManualOpen}
+        title={t('Add attendance manually')}
+        description={t(
+          'For someone whose phone failed. A reason is required; at most 20% of the people present may be added by hand.',
+        )}
+        confirmLabel={t('Add')}
+        placeholder={t('Reason (e.g. phone out of battery)')}
+        // A volunteer must be picked too.
+        pending={!manualUser || isAdding}
+        onConfirm={(reason) => manualUser && addManual({ ...params, user_id: manualUser, reason })}
+      >
+        <Select value={manualUser} onValueChange={setManualUser}>
+          <SelectTrigger className="!h-[44px] w-full">
+            <SelectValue placeholder={t('Choose a registered volunteer')} />
+          </SelectTrigger>
+          <SelectContent>
+            {candidates.map((c) => (
+              <SelectItem key={c.user_id} value={c.user_id}>
+                {c.volunteer?.name || c.user_id}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </ReasonDialog>
     </div>
   );
 });
-
-export default ShiftAttendancePanel;

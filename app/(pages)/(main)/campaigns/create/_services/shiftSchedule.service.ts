@@ -2,14 +2,14 @@ import type {
   CampaignDayFormValues,
   CampaignFormValues,
   ShiftFormValues,
-} from './campaign.service';
+} from './campaignForm.service';
 
 /** "HH:mm" → minutes since midnight, or null when not a time. */
 export const minutesOf = (time?: string): number | null => {
   const m = time?.match(/^(\d{2}):(\d{2})$/);
   return m ? Number(m[1]) * 60 + Number(m[2]) : null;
 };
-export const timeOf = (minutes: number): string => {
+const timeOf = (minutes: number): string => {
   const clamped = Math.min(Math.max(minutes, 0), 23 * 60 + 59);
   return `${`${Math.floor(clamped / 60)}`.padStart(2, '0')}:${`${clamped % 60}`.padStart(2, '0')}`;
 };

@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 
-import type { CampaignFormValues } from '../_services/campaign.service';
+import type { CampaignFormValues } from '../_services/campaignForm.service';
 import { parseApiDate } from '../_components/ScheduleFields';
 
 /** "Day 1 · Oct 5" */

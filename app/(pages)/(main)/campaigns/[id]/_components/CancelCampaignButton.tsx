@@ -1,4 +1,4 @@
-import { memo, useState } from 'react';
+import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { TbCalendarX } from 'react-icons/tb';
@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import showMessage, { MessageLevel, MessageType } from '@/utils/showMessage';
+import { refreshRegistrationOptions } from '../../_services/campaignCache.service';
 
 const REASON_MAX = 5000;
 
@@ -23,7 +24,7 @@ const REASON_MAX = 5000;
  * The creator or an owner cancels the campaign, with a reason (spec 3.6). Its waste points go
  * back to the waiting list, every registered volunteer is told, nobody gets points.
  */
-export const CancelCampaignButton = memo(function CancelCampaignButton({
+export function CancelCampaignButton({
   campaign,
 }: {
   campaign: ICampaign;
@@ -40,7 +41,7 @@ export const CancelCampaignButton = memo(function CancelCampaignButton({
         title: t('Campaign cancelled'),
       });
       void queryClient.invalidateQueries({ queryKey: ['my-campaigns'] });
-      void queryClient.invalidateQueries({ queryKey: ['campaign-registration-options'] });
+      refreshRegistrationOptions();
       setOpen(false);
     },
   });
@@ -105,6 +106,4 @@ export const CancelCampaignButton = memo(function CancelCampaignButton({
       </Dialog>
     </>
   );
-});
-
-export default CancelCampaignButton;
+}

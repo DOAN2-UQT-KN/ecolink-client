@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 
-import type { IResultPhotoCheck, IShiftResultReport, ResultPhotoSide } from '@/apis/campaign/shiftResult';
+import type { IResultPhotoCheck, IShiftResultReport, ResultPhotoSide } from '@/apis/campaign/models/shiftResult';
 import type { IIncident } from '@/apis/incident/models/incident';
 import { Pill } from '@/components/ui/Pill';
 import { CHECK_LEVEL_LABEL, CHECK_LEVEL_TONE, REPORT_LABEL } from '@/constants/campaignVerification';
@@ -48,6 +48,7 @@ export function ShiftResultReportEditor({
     <div className="rounded-lg border border-[rgba(136,122,71,0.3)] bg-white/70 p-3">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <span className="font-medium">{title}</span>
+        {/* kept: ui/radio-group renders circle radios; these pills already expose radiogroup/radio ARIA. */}
         <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label={title}>
           {(['cleaned', 'partial', 'none'] as const).map((choice) => (
             <button

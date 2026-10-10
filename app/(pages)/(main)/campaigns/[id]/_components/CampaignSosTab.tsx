@@ -1,4 +1,4 @@
-import { memo, useMemo, useState } from 'react';
+import { memo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TbChevronRight, TbClock, TbPhone, TbSos, TbUser, TbUsers } from 'react-icons/tb';
 
@@ -117,24 +117,17 @@ export const CampaignSosTab = memo(function CampaignSosTab({ enabled }: { enable
   const { campaignId } = useCampaignDetail();
   const [chip, setChip] = useState<SosChip>('open');
 
-  const params = useMemo(
-    () => ({ campaign_id: campaignId, states: 'all', limit: SOS_LIST_LIMIT }),
-    [campaignId],
-  );
-  const { data, isLoading, isError } = useSosList(params, {
+  const { data, isLoading, isError } = useSosList({ campaign_id: campaignId, states: 'all', limit: SOS_LIST_LIMIT }, {
     enabled: enabled && Boolean(campaignId),
   });
-  const items = useMemo(() => data?.data?.items ?? [], [data?.data?.items]);
+  const items = data?.data?.items ?? [];
 
-  const counts = useMemo(
-    () => ({
-      open: items.filter((s) => matchesChip(s, 'open')).length,
-      closed: items.filter((s) => matchesChip(s, 'closed')).length,
-      all: items.length,
-    }),
-    [items],
-  );
-  const visible = useMemo(() => items.filter((s) => matchesChip(s, chip)), [items, chip]);
+  const counts = {
+    open: items.filter((s) => matchesChip(s, 'open')).length,
+    closed: items.filter((s) => matchesChip(s, 'closed')).length,
+    all: items.length,
+  };
+  const visible = items.filter((s) => matchesChip(s, chip));
 
   return (
     <div className="rounded-xl border border-[rgba(136,122,71,0.35)] bg-white/60 p-4 sm:p-5 shadow-sm">

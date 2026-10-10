@@ -1,4 +1,4 @@
-import { memo, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TbZoom, TbZoomReset } from 'react-icons/tb';
 
@@ -55,7 +55,7 @@ const RESET_BUTTON_CLASS = cn(
   FILTER_CONTROL_H,
 );
 
-export const SearchFilter = memo(function SearchFilter() {
+export function SearchFilter() {
   const { t } = useTranslation();
   const { filters, setFilters, resetFilters } = useCampaignSearch();
 
@@ -188,4 +188,4 @@ export const SearchFilter = memo(function SearchFilter() {
         </Button>
     </aside>
   );
-});
+}

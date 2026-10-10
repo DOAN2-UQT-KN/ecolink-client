@@ -5,7 +5,7 @@ import type {
   IShiftResultView,
   ResultCheckLevel,
   SaveShiftResultParams,
-} from '@/apis/campaign/shiftResult';
+} from '@/apis/campaign/models/shiftResult';
 import type { IIncident } from '@/apis/incident/models/incident';
 import type { ReportChoice } from '@/constants/campaignVerification';
 
@@ -39,7 +39,7 @@ export function defaultPinOf(incident: IIncident | undefined) {
     : null;
 }
 
-export type ShiftResultFormState = {
+type ShiftResultFormState = {
   drafts: Record<string, ReportDraft>;
   checks: PhotoChecks;
   picked: Set<string>;

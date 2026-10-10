@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { TbPencil } from "react-icons/tb";
 
-import { useGetCampaignById } from "@/apis/campaign/campaignById";
+import { useGetCampaignById } from "@/apis/campaign/getCampaignById";
 import { BreadcrumbItemProps } from "@/components/client/shared/Breadcrumbs";
 import { Button } from "@/components/client/shared/Button";
 import { CampaignStatusTag } from "@/components/ui/CampaignStatusTag";
