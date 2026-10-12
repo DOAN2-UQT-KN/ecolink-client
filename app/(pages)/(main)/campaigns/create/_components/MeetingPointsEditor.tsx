@@ -14,13 +14,11 @@ import {
 
 import { useCampaign } from '../_context/CampaignContext';
 import { useMeetingPointWarnings } from '../_hooks/useMeetingPointWarnings';
-import { emptyMeetingPoint } from '../_services/campaign.service';
+import { emptyMeetingPoint } from '../_services/campaignForm.service';
 import LeafletAddress from './LeafletAddress';
 import IncidentList from './IncidentList';
 import NeedsReviewTag from './NeedsReviewTag';
-
-const inputClassName =
-  'border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50';
+import { inputClassName } from '../_services/fieldStyles';
 
 /**
  * 1–5 meeting points, each with its location and its own waste points. Slots, gathering time

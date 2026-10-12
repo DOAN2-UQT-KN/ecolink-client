@@ -4,7 +4,7 @@ import { useWatch } from 'react-hook-form';
 
 import { useCampaign } from '../_context/CampaignContext';
 import { CAMPAIGN_STEPS } from '../_services/campaignSteps.service';
-import type { CampaignFormValues } from '../_services/campaign.service';
+import type { CampaignFormValues } from '../_services/campaignForm.service';
 import { CampaignSummary } from './CampaignSummary';
 
 /** Last step: everything the admin will see, with a way back to each step. */
@@ -12,6 +12,7 @@ const StepReview = memo(function StepReview() {
   const { t } = useTranslation();
   const { form, organization, suggestedMinPerDay, goToStep } = useCampaign();
   // useWatch, not form.watch(): watch() would re-render the whole wizard provider on every keystroke.
+  // cast: useWatch returns a deep-partial type; the form always holds full defaults.
   const values = useWatch({ control: form.control }) as CampaignFormValues;
 
   return (

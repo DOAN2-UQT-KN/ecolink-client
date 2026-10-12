@@ -1,13 +1,11 @@
 import requestApi from "@/utils/requestApi";
-import type { IUpdateCampaignRequest } from "./models/createCampaign";
+import type { UpdateCampaignParams } from "./models/createCampaign";
 import type { ICampaignMutationResponse } from "./models/lifecycle";
 import { usePost, UsePostOptions } from "@/hooks/reactQuery";
 import { useTranslation } from "react-i18next";
 import { MessageType } from "@/utils/showMessage";
 
 const url = "/api/v1/campaigns";
-
-export type UpdateCampaignParams = { id: string; data: IUpdateCampaignRequest };
 
 export const updateCampaign = async ({
   id,

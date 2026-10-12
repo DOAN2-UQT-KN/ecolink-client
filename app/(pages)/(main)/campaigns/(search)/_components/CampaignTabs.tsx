@@ -1,11 +1,10 @@
-import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { useCampaignSearch } from '../_context/CampaignSearchContext';
 
-export const CampaignTabs = memo(function CampaignTabs() {
+export function CampaignTabs() {
   const { t } = useTranslation();
   const { viewMode, setViewMode } = useCampaignSearch();
 
@@ -29,4 +28,4 @@ export const CampaignTabs = memo(function CampaignTabs() {
       </TabsList>
     </Tabs>
   );
-});
+}

@@ -1,4 +1,3 @@
-import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Progress } from '@/components/ui/progress';
@@ -9,7 +8,7 @@ import { cn } from '@/libs/utils';
  * none), with a tick at the minimum. Drawn in the theme accent; only "over the expected number"
  * is called out in red.
  */
-export const ShiftFillBar = memo(function ShiftFillBar({
+export function ShiftFillBar({
   registered,
   min,
   max,
@@ -61,6 +60,4 @@ export const ShiftFillBar = memo(function ShiftFillBar({
       </div>
     </div>
   );
-});
-
-export default ShiftFillBar;
+}

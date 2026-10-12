@@ -12,9 +12,7 @@ import {
 import { useCampaign } from '../_context/CampaignContext';
 import { useShiftRules } from '../_hooks/useShiftRules';
 import type { IMember } from '@/apis/organization/models/organizationMembers';
-
-const inputClassName =
-  'border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50';
+import { inputClassName } from '../_services/fieldStyles';
 
 /** Who leads shift `d`.`p`; only the campaign's team may (spec 3.4). */
 export default function ShiftLeaderSelect({

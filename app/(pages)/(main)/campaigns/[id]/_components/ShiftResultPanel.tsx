@@ -1,14 +1,12 @@
-import { memo, useMemo, useState } from 'react';
+import { memo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 
-import {
-  useAddShiftMedia,
-  useEndShiftEarly,
-  useRemoveShiftMedia,
-  useSaveShiftResult,
-  useShiftResult,
-} from '@/apis/campaign/shiftResult';
+import { useAddShiftMedia } from '@/apis/campaign/addShiftMedia';
+import { useEndShiftEarly } from '@/apis/campaign/endShiftEarly';
+import { useRemoveShiftMedia } from '@/apis/campaign/removeShiftMedia';
+import { useSaveShiftResult } from '@/apis/campaign/saveShiftResult';
+import { useShiftResult } from '@/apis/campaign/getShiftResult';
 import type { IIncident } from '@/apis/incident/models/incident';
 import { Button } from '@/components/client/shared/Button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +18,7 @@ import { useShiftResultForm } from '../_hooks/useShiftResultForm';
 import { ShiftMediaPool } from './ShiftMediaPool';
 import { ShiftResultHeader } from './ShiftResultHeader';
 import { ShiftResultReportEditor } from './ShiftResultReportEditor';
+import { refreshCampaign, refreshShiftOverview } from '../../_services/campaignCache.service';
 
 /**
  * The result of one shift (spec 4.2). Its leader or a campaign manager fills it once the shift
@@ -48,20 +47,20 @@ export const ShiftResultPanel = memo(function ShiftResultPanel({
   // Everyone sees the result read-only; whoever may edit opens the form with "Edit".
   const [editing, setEditing] = useState(false);
 
-  const refreshCampaign = () => {
-    void queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });
-    void queryClient.invalidateQueries({ queryKey: ['shift-overview', campaignId] });
+  const refreshAfterChange = () => {
+    refreshCampaign(campaignId);
+    refreshShiftOverview(campaignId);
   };
   const { mutate: save, isPending: isSaving } = useSaveShiftResult({
     onSuccess: () => {
-      refreshCampaign();
+      refreshAfterChange();
       setEditing(false);
       showMessage({ type: MessageType.Toast, level: MessageLevel.Success, title: t('Shift result saved') });
     },
   });
   const { mutateAsync: endEarly, isPending: isEnding } = useEndShiftEarly({
     onSuccess: (res) => {
-      refreshCampaign();
+      refreshAfterChange();
       void queryClient.invalidateQueries({ queryKey: ['shift-attendance'] });
       showMessage({
         type: MessageType.Toast,
@@ -75,7 +74,7 @@ export const ShiftResultPanel = memo(function ShiftResultPanel({
 
   const form = useShiftResultForm(view);
 
-  const reportById = useMemo(() => new Map(reports.map((r) => [r.id, r])), [reports]);
+  const reportById = new Map(reports.map((r) => [r.id, r]));
   const reportTitle = useReportTitle(reports);
 
   if (isLoading) return <div className={className}>{t('Loading')}…</div>;

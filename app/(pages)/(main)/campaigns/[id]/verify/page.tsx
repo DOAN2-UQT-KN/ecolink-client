@@ -1,15 +1,10 @@
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Inbox } from 'lucide-react';
 import { TbArrowLeft } from 'react-icons/tb';
 
-import {
-  useCampaignVerification,
-  type IMeetingPointView,
-  type IVerificationTrashPoint,
-} from '@/apis/campaign/verification';
-import { Breadcrumbs, type BreadcrumbItemProps } from '@/components/client/shared/Breadcrumbs';
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
+import { useCampaignVerification } from '@/apis/campaign/getCampaignVerification';
+import type { IMeetingPointView, IVerificationTrashPoint } from '@/apis/campaign/models/verification';
+import { Breadcrumbs } from '@/components/client/shared/Breadcrumbs';
 import { InfoTooltip } from '@/components/ui/InfoTooltip';
 import { Skeleton } from '@/components/ui/skeleton';
 import { apiErrorMessage } from '@/constants/apiErrorMessages';
@@ -25,6 +20,8 @@ import { MeetingPointCard } from './_components/MeetingPointCard';
 import { useNow } from './_hooks/useCountdown';
 import { useVerifyFocus } from './_hooks/useVerifyFocus';
 import { CANNOT_VOTE_LABEL } from './_services/verification.service';
+import { CampaignNotFound } from '../_components/CampaignNotFound';
+import { campaignCrumbs } from '../_services/breadcrumbs';
 
 /**
  * Result verification of a campaign marked done (Layers 2 and 3), per meeting point: its waste
@@ -60,12 +57,11 @@ function VerifyBody() {
   const focusPoint = useVerifyFocus(focusPointParam, focusReport, view?.meeting_points);
 
   const campaignTitle = campaign ? localizedTitle(campaign).trim() || t('Campaign') : t('Campaign');
-  const breadcrumbs: BreadcrumbItemProps[] = [
-    { label: t('Home'), path: '/', type: 'link' },
-    { label: t('Campaigns'), path: '/campaigns', type: 'link' },
-    { label: campaignTitle, path: `/campaigns/${campaignId}`, type: 'link' },
-    { label: t('Verify the result'), path: `/campaigns/${campaignId}/verify`, type: 'page' },
-  ];
+  const breadcrumbs = campaignCrumbs(campaignId, campaignTitle, {
+    label: 'Verify the result',
+    path: `/campaigns/${campaignId}/verify`,
+    type: 'page',
+  });
 
   const completed = view?.campaign_status === CAMPAIGN_STATUS.COMPLETED;
 
@@ -103,18 +99,13 @@ function VerifyBody() {
           </div>
         ) : isError || !view ? (
           <div className="flex justify-center pt-10">
-            <Empty>
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <Inbox className="h-12 w-12 text-muted-foreground" />
-                </EmptyMedia>
-                <EmptyTitle>{t('Result verification is not open for this campaign')}</EmptyTitle>
-                <EmptyDescription>
-                  {(error && apiErrorMessage(error, t)) ||
-                    t('It opens once the campaign is marked done, and stays visible after it is completed.')}
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
+            <CampaignNotFound
+              title={t('Result verification is not open for this campaign')}
+              description={
+                (error && apiErrorMessage(error, t)) ||
+                t('It opens once the campaign is marked done, and stays visible after it is completed.')
+              }
+            />
           </div>
         ) : (
           <>

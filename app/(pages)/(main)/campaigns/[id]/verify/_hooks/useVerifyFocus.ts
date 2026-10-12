@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react';
 
-import type { IMeetingPointView } from '@/apis/campaign/verification';
+import type { IMeetingPointView } from '@/apis/campaign/models/verification';
 import { findFocusPoint } from '../_services/verification.service';
 
 /** The meeting point a notification pointed at (`?point=` / `?report=`), scrolled to once the list is there. */

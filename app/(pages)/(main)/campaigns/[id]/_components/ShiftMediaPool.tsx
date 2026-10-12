@@ -2,7 +2,7 @@ import type { Dispatch, SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TbVideo } from 'react-icons/tb';
 
-import type { IShiftMedia, IShiftResultView } from '@/apis/campaign/shiftResult';
+import type { IShiftMedia, IShiftResultView } from '@/apis/campaign/models/shiftResult';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Pill } from '@/components/ui/Pill';
 import { cn } from '@/libs/utils';

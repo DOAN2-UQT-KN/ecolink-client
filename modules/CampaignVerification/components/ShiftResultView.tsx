@@ -2,12 +2,7 @@ import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TbTrash } from 'react-icons/tb';
 
-import type {
-  IResultPhotoCheck,
-  IShiftMedia,
-  IShiftResult,
-  IShiftResultReport,
-} from '@/apis/campaign/shiftResult';
+import type { IResultPhotoCheck, IShiftMedia, IShiftResult, IShiftResultReport } from '@/apis/campaign/models/shiftResult';
 import { Pill } from '@/components/ui/Pill';
 import { cn } from '@/libs/utils';
 import { REPORT_LABEL, REPORT_TONE, type ReportChoice } from '@/constants/campaignVerification';

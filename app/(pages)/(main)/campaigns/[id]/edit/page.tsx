@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 
 import { useParams, useSearchParams } from "@/libs/router";
-import { useGetCampaignById } from "@/apis/campaign/campaignById";
+import { useGetCampaignById } from "@/apis/campaign/getCampaignById";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CAMPAIGN_EDITABLE_STATUSES } from "@/constants/campaignLifecycle";
 
@@ -20,6 +20,7 @@ export default function EditCampaignPage() {
   const { t } = useTranslation();
   const { id = "" } = useParams();
   const step = useSearchParams().get("step");
+  // cast: `includes` on a readonly tuple only accepts its own members.
   const initialStep = CAMPAIGN_STEPS.includes(step as CampaignStep)
     ? (step as CampaignStep)
     : undefined;

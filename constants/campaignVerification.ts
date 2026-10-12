@@ -1,11 +1,11 @@
 /** Tones and English labels (translate with `t()`) for campaign result verification. */
 import type { ShiftStatus } from '@/apis/campaign/models/lifecycle';
-import type { ResultCheckLevel, ShiftResultReportStatus } from '@/apis/campaign/shiftResult';
+import type { ResultCheckLevel, ShiftResultReportStatus } from '@/apis/campaign/models/shiftResult';
 import type {
   MeetingPointStatus,
   MeetingPointWeightReason,
   VerificationTrashPointStatus,
-} from '@/apis/campaign/verification';
+} from '@/apis/campaign/models/verification';
 import type { PillTone } from '@/components/ui/Pill';
 
 export const SHIFT_STATUS_TONE: Record<ShiftStatus, PillTone> = {

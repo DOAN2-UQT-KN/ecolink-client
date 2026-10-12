@@ -1,12 +1,12 @@
-import { memo, useState } from 'react';
+import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { TbFlagCheck } from 'react-icons/tb';
 
-import { useMarkDoneCampaign } from '@/apis/campaign/campaignById';
+import { useMarkDoneCampaign } from '@/apis/campaign/markDoneCampaign';
 import type { ICampaign } from '@/apis/campaign/models/campaign';
-import { useCompletionReview } from '@/apis/campaign/processCampaign';
-import { useShiftOverview } from '@/apis/campaign/shiftResult';
+import { useCompletionReview } from '@/apis/campaign/getCompletionReview';
+import { useShiftOverview } from '@/apis/campaign/getShiftOverview';
 import { Button } from '@/components/client/shared/Button';
 import {
   Dialog,
@@ -22,6 +22,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { Layer1Summary } from '@/modules/CampaignVerification';
 import { meetingPointName } from '@/utils/campaignLabels';
 import { useReportTitle } from '../_hooks/useReportTitle';
+import { refreshShiftOverview } from '../../_services/campaignCache.service';
 
 /** Reason for a waste point no shift handled (server: 1–500 characters). */
 const REASON_MAX = 500;
@@ -41,7 +42,7 @@ function Stat({ label, value }: { label: string; value: string }) {
  * points whose photos did not pass Layer 1 (a warning only) and asks a reason for each waste point
  * no shift handled. Result verification then opens on every point declared cleaned.
  */
-export const SubmitCompletionDialog = memo(function SubmitCompletionDialog({
+export function SubmitCompletionDialog({
   campaign,
 }: {
   campaign: ICampaign;
@@ -59,7 +60,7 @@ export const SubmitCompletionDialog = memo(function SubmitCompletionDialog({
 
   const { mutate, isPending } = useMarkDoneCampaign({
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['shift-overview', campaign.id] });
+      refreshShiftOverview(campaign.id);
       void queryClient.invalidateQueries({ queryKey: ['completion-review', campaign.id] });
       setOpen(false);
     },
@@ -230,6 +231,4 @@ export const SubmitCompletionDialog = memo(function SubmitCompletionDialog({
       </Dialog>
     </>
   );
-});
-
-export default SubmitCompletionDialog;
+}

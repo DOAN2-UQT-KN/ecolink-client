@@ -3,7 +3,8 @@ import { keepPreviousData } from "@tanstack/react-query";
 import { usePathname, useRouter, useSearchParams } from "@/libs/router";
 
 import type { ICampaign } from "@/apis/campaign/models/campaign";
-import { useGetCampaigns, useGetMyCampaigns } from "@/apis/campaign/getCampaigns";
+import { useGetCampaigns } from "@/apis/campaign/getCampaigns";
+import { useGetMyCampaigns } from "@/apis/campaign/getMyCampaigns";
 import useGetParam from "@/hooks/useGetParam";
 import type { IGetCampaignsRequest } from "@/apis/campaign/models/getCampaigns";
 
@@ -136,7 +137,7 @@ export const CampaignSearchProvider = ({ children }: { children: ReactNode }) =>
 
   const queryResult = viewMode === "mine" ? myQuery : exploreQuery;
   const rawCampaigns = useMemo<ICampaign[]>(
-    () => (queryResult.data?.data?.campaigns as ICampaign[] | undefined) ?? [],
+    () => queryResult.data?.data?.campaigns ?? [],
     [queryResult.data],
   );
 

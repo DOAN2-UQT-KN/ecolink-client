@@ -59,6 +59,9 @@ export interface ICampaignShift {
   registered_count?: number;
 }
 
+/** Identifies one shift of a campaign in shift-scoped endpoints. */
+export type ShiftParams = { campaign_id: string; shift_id: string };
+
 /** Request body forms: days and shifts by position. */
 export interface ICampaignDayInput {
   /** An existing day; edits of an approved campaign match days by id (spec 3.5). */
@@ -117,6 +120,11 @@ export interface IReviewCampaignRequest {
   id: string;
   decision: CampaignReviewDecision;
   reason?: string | null;
+}
+
+export interface ICancelCampaignRequest {
+  id: string;
+  reason: string;
 }
 
 export type ICampaignMutationResponse = IBaseResponse<{ campaign: ICampaign }>;

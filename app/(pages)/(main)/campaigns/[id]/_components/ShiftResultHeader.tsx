@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { TbFlagCheck, TbPencil } from 'react-icons/tb';
 
-import type { IShiftResultView } from '@/apis/campaign/shiftResult';
+import type { IShiftResultView } from '@/apis/campaign/models/shiftResult';
 import { Button } from '@/components/client/shared/Button';
 import { ConfirmPopoverModal } from '@/components/client/shared/ConfirmPopoverModal';
 import { ShiftReopenedNotice, ShiftReopenedPill, ShiftStatusPill } from '@/modules/CampaignVerification';

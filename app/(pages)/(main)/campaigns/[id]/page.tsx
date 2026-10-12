@@ -1,16 +1,8 @@
-import { Suspense, useMemo } from 'react';
+import { Suspense } from 'react';
 import { useParams } from '@/libs/router';
 import { useTranslation } from 'react-i18next';
-import { Inbox } from 'lucide-react';
 
-import { Breadcrumbs, BreadcrumbItemProps } from '@/components/client/shared/Breadcrumbs';
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from '@/components/ui/empty';
+import { Breadcrumbs } from '@/components/client/shared/Breadcrumbs';
 import { Skeleton } from '@/components/ui/skeleton';
 
 import { CampaignTabs } from './_components/CampaignTabs';
@@ -21,7 +13,6 @@ import { Button } from '@/components/client/shared/Button';
 import { STATUS } from '@/constants/status';
 import { CAMPAIGN_REGISTRABLE_STATUSES, CAMPAIGN_STATUS } from '@/constants/campaignLifecycle';
 import { ConfirmPopoverModal } from '@/components/client/shared/ConfirmPopoverModal';
-import { useQueryClient } from '@tanstack/react-query';
 import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
 
 import { CampaignAttendanceCheckInHandler } from './_components/CampaignAttendanceCheckInHandler';
@@ -29,13 +20,16 @@ import { JoinShiftsCta } from './_components/JoinShiftsCta';
 import { CancelCampaignButton } from './_components/CancelCampaignButton';
 import { SubmitCompletionDialog } from './_components/SubmitCompletionDialog';
 import { VerificationStatusCard } from './_components/VerificationStatusCard';
-import { useUpdateMyRegistrations } from '@/apis/campaign/registration';
+import { useUpdateMyRegistrations } from '@/apis/campaign/updateMyRegistrations';
 import showMessage, { MessageLevel, MessageType } from '@/utils/showMessage';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import useAuthStore from '@/stores/useAuthStore';
 import { useRouter } from '@/libs/router';
 import { SosButton } from '@/components/sos/SosButton';
 import { shiftLabel } from '@/utils/campaignLabels';
+import { refreshCampaign } from '../_services/campaignCache.service';
+import { CampaignNotFound } from './_components/CampaignNotFound';
+import { campaignCrumbs } from './_services/breadcrumbs';
 
 function CampaignDetailBody() {
   const { t } = useTranslation('common');
@@ -55,7 +49,7 @@ function CampaignDetailBody() {
   const { mutateAsync: updateMyShifts, isPending: isLeaving } = useUpdateMyRegistrations({
     onSuccess: () => {
       showMessage({ type: MessageType.Toast, level: MessageLevel.Success, title: t('You left the campaign') });
-      void queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });
+      refreshCampaign(campaignId);
     },
   });
   const handleLeave = async () => {
@@ -91,25 +85,9 @@ function CampaignDetailBody() {
     Boolean(campaign?.completion_submitted_at) &&
     (campaign?.status === STATUS.WAITING_CONFIRMED || campaign?.status === STATUS.COMPLETED);
 
-  const queryClient = useQueryClient();
-
-  const breadcrumbs: BreadcrumbItemProps[] = useMemo(
-    () => [
-      { label: t('Home'), path: '/', type: 'link' },
-      {
-        label: t('Campaigns'),
-        path: '/campaigns',
-        type: 'link',
-      },
-      {
-        label: campaign
-          ? localizedTitle(campaign).trim() || t('Campaign')
-          : t('Campaign'),
-        path: `/campaigns/${campaignId}`,
-        type: 'page',
-      },
-    ],
-    [t, campaign, campaignId, localizedTitle],
+  const breadcrumbs = campaignCrumbs(
+    campaignId,
+    campaign ? localizedTitle(campaign).trim() || 'Campaign' : 'Campaign',
   );
 
   if (isLoading) {
@@ -146,17 +124,10 @@ function CampaignDetailBody() {
       <div className="max-w-7xl mx-auto w-full px-4 lg:px-8 pb-10">
         <Breadcrumbs breadcrumbs={breadcrumbs} />
         <div className="flex justify-center pt-16">
-          <Empty>
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <Inbox className="h-12 w-12 text-muted-foreground" />
-              </EmptyMedia>
-              <EmptyTitle>{t('Campaign not found')}</EmptyTitle>
-              <EmptyDescription>
-                {t("We couldn't find the campaign you were looking for.")}
-              </EmptyDescription>
-            </EmptyHeader>
-          </Empty>
+          <CampaignNotFound
+            title={t('Campaign not found')}
+            description={t("We couldn't find the campaign you were looking for.")}
+          />
         </div>
       </div>
     );

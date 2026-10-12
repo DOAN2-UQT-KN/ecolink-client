@@ -35,3 +35,10 @@ export interface IRemoveCampaignManagerRequest {
 
 export type IAddCampaignManagersResponse = IBaseResponse<unknown>;
 export type IRemoveCampaignManagerResponse = IBaseResponse<unknown>;
+
+export interface ISetShiftLeaderRequest {
+  campaign_id: string;
+  shift_id: string;
+  leader_user_id: string;
+}
+export type ISetShiftLeaderResponse = IBaseResponse<{ shift_id: string; leader_user_id: string }>;

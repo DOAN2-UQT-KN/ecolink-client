@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 
 import type { LatLngLiteral } from 'leaflet';
 
-import { useUploadResultPhoto, type IResultPhotoCheck, type ResultPhotoSide } from '@/apis/campaign/shiftResult';
+import { useUploadResultPhoto } from '@/apis/campaign/uploadResultPhoto';
+import type { IResultPhotoCheck, ResultPhotoSide } from '@/apis/campaign/models/shiftResult';
 import showMessage, { MessageLevel, MessageType } from '@/utils/showMessage';
 import { isImageFile, MAX_RESULT_PHOTO_BYTES } from '../_services/shiftResult.service';
 import { ResultPhotoPinDialog } from './ResultPhotoPinDialog';

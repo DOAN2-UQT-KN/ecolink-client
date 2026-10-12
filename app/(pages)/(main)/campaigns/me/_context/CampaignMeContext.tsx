@@ -1,7 +1,7 @@
 import React, { createContext, ReactNode, useCallback, useContext, useMemo, useState } from 'react';
 import { keepPreviousData } from '@tanstack/react-query';
 
-import { useGetMyCampaigns } from '@/apis/campaign/getCampaigns';
+import { useGetMyCampaigns } from '@/apis/campaign/getMyCampaigns';
 import { ICampaign } from '@/apis/campaign/models/campaign';
 import { IGetCampaignsRequest } from '@/apis/campaign/models/getCampaigns';
 import { ALL_ORGANIZATIONS_VALUE } from '@/components/form/SelectListOrganization';
@@ -11,7 +11,7 @@ import useOrgContextStore from '@/stores/useOrgContextStore';
 
 type CampaignMeFilters = Pick<IGetCampaignsRequest, 'search' | 'status' | 'organizationId'>;
 
-export interface CampaignMeContextType {
+interface CampaignMeContextType {
   campaigns: ICampaign[];
   isLoading: boolean;
   total: number;

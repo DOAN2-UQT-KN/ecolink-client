@@ -1,18 +1,18 @@
 import { useState, type ChangeEvent } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 
-import {
-  useUnvoteMeetingPoint,
-  useVoteMeetingPoint,
-  type IMeetingPointView,
-  type IVerificationTrashPoint,
-  type MeetingPointVoteValue,
-} from '@/apis/campaign/verification';
+import { useUnvoteMeetingPoint } from '@/apis/campaign/unvoteMeetingPoint';
+import { useVoteMeetingPoint } from '@/apis/campaign/voteMeetingPoint';
+import type {
+  IMeetingPointView,
+  IVerificationTrashPoint,
+  MeetingPointVoteValue,
+} from '@/apis/campaign/models/verification';
 import { uploadToCloudinary } from '@/libs/cloudinary';
 import { getCurrentPosition } from '@/libs/geo';
 import showMessage, { MessageLevel, MessageType } from '@/utils/showMessage';
 import { buildVotePayload, downVoteError, initialFlagged } from '../_services/verification.service';
+import { refreshCampaign } from '../../../_services/campaignCache.service';
 
 /** The viewer's "clean" / "not clean" vote on one meeting point, and the "not clean" form. */
 export function useMeetingPointVote(
@@ -21,7 +21,6 @@ export function useMeetingPointVote(
   cleaned: IVerificationTrashPoint[],
 ) {
   const { t } = useTranslation('common');
-  const queryClient = useQueryClient();
   const [downOpen, setDownOpen] = useState(false);
   const [note, setNote] = useState('');
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
@@ -35,7 +34,7 @@ export function useMeetingPointVote(
   // Votes also refetch the campaign: the server may decide the campaign (status change) after a vote.
   const { mutate: unvoteMutate, isPending: unvoting } = useUnvoteMeetingPoint({
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });
+      refreshCampaign(campaignId);
       cancelDown();
       showMessage({ type: MessageType.Toast, level: MessageLevel.Success, title: t('Your vote was removed') });
     },
@@ -45,7 +44,7 @@ export function useMeetingPointVote(
   const { mutate, isPending } = useVoteMeetingPoint({
     onSettled: () => setActing(null),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });
+      refreshCampaign(campaignId);
       setDownOpen(false);
       setFormError('');
       showMessage({ type: MessageType.Toast, level: MessageLevel.Success, title: t('Your vote was saved') });

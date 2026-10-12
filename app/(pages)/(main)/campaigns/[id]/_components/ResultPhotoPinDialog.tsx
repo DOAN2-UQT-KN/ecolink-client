@@ -102,5 +102,3 @@ export const ResultPhotoPinDialog = memo(function ResultPhotoPinDialog({
     </Dialog>
   );
 });
-
-export default ResultPhotoPinDialog;

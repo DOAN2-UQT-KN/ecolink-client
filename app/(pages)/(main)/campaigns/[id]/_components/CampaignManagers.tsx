@@ -1,189 +1,19 @@
-import { memo, useMemo, useState } from 'react';
+import { memo, useMemo } from 'react';
 import { CollapsibleCard } from '@/components/client/shared/CollapsibleCard';
 import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
-import { TbUserMinus, TbUserPlus } from 'react-icons/tb';
 
-import {
-  useAddCampaignManagers,
-  useRemoveCampaignManager,
-} from '@/apis/campaign/campaignManager';
-import { Button } from '@/components/client/shared/Button';
-import {
-  AutoCompleteUser,
-  type AutoCompleteUserValue,
-} from '@/components/form/AutoCompleteUser';
 import { useGetMembersByOrg } from '@/apis/organization/organizationById';
 import { isOwnerRole } from '@/apis/organization/models/organization';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { Pill } from '@/components/ui/Pill';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Link } from '@/libs/router';
 
 import { useCampaignDetail } from '../_hooks/useCampaignDetail';
 import { useCampaignManagersList } from '../../_hooks/useCampaignManagersList';
-import { AvatarList, type AvatarListItem } from '@/components/client/shared/AvatarList';
+import { AvatarList } from '@/components/client/shared/AvatarList';
 import { meetingPointName } from '@/utils/campaignLabels';
-
-/** Manager picker: only active members of the campaign's organization who aren't managers yet. */
-const AddManagerDialog = memo(function AddManagerDialog({
-  campaignId,
-  organizationId,
-  managerIds,
-}: {
-  campaignId: string;
-  organizationId: string;
-  managerIds: Set<string>;
-}) {
-  const { t } = useTranslation('common');
-  const [open, setOpen] = useState(false);
-  const [picked, setPicked] = useState<AutoCompleteUserValue | null>(null);
-
-  const { mutate: addManagers, isPending } = useAddCampaignManagers({
-    onSuccess: () => {
-      setOpen(false);
-      setPicked(null);
-    },
-  });
-
-  return (
-    <>
-      <Button
-        variant="outlined-brown"
-        size="medium"
-        iconLeft={<TbUserPlus className="size-4" />}
-        onClick={() => setOpen(true)}
-      >
-        {t('Add manager')}
-      </Button>
-      <Dialog
-        open={open}
-        onOpenChange={(next) => {
-          setOpen(next);
-          if (!next) setPicked(null);
-        }}
-      >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t('Add a campaign manager')}</DialogTitle>
-            <DialogDescription>
-              {t('Only active members of the organization can manage this campaign.')}
-            </DialogDescription>
-          </DialogHeader>
-          <AutoCompleteUser
-            organizationId={organizationId}
-            value={picked}
-            onChange={setPicked}
-            isUserDisabled={(u) => !u.is_member || managerIds.has(u.id)}
-          />
-          {picked && !picked.userId ? (
-            <p className="text-sm text-destructive">
-              {t('Pick an existing member of the organization.')}
-            </p>
-          ) : null}
-          <DialogFooter>
-            <Button variant="outlined-brown" onClick={() => setOpen(false)}>
-              {t('Cancel')}
-            </Button>
-            <Button
-              variant="brown"
-              isDisabled={!picked?.userId || isPending}
-              onClick={() =>
-                picked?.userId && addManagers({ campaignId, user_ids: [picked.userId] })
-              }
-            >
-              {t('Add manager')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
-  );
-});
-
-const RemoveManagerAction = memo(function RemoveManagerAction({
-  campaignId,
-  manager,
-  ledShifts,
-}: {
-  campaignId: string;
-  manager: AvatarListItem;
-  /** Shifts still to come that they lead; they are reassigned first (spec 3.4). */
-  ledShifts: { id: string; label: string }[];
-}) {
-  const { t } = useTranslation('common');
-  const [open, setOpen] = useState(false);
-  const { mutate: removeManager, isPending } = useRemoveCampaignManager({
-    onSuccess: () => setOpen(false),
-  });
-  const name = manager.name || '—';
-
-  return (
-    <div className="flex items-center sm:ml-auto">
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button
-            type="button"
-            aria-label={t('Remove manager')}
-            onClick={() => setOpen(true)}
-            className="flex size-9 items-center cursor-pointer justify-center rounded-md border border-[rgba(136,122,71,0.45)] text-button-accent transition-colors hover:bg-red-50 hover:text-red-700 hover:border-red-200"
-          >
-            <TbUserMinus className="size-5" />
-          </button>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>{t('Remove manager')}</p>
-        </TooltipContent>
-      </Tooltip>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t('Remove {{name}} as manager?', { name })}</DialogTitle>
-            <DialogDescription>
-              {ledShifts.length > 0
-                ? t('{{name}} still leads these shifts. Assign another person in charge first.', {
-                    name,
-                  })
-                : t('They will no longer be able to manage this campaign.')}
-            </DialogDescription>
-          </DialogHeader>
-          {ledShifts.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {ledShifts.map((sh) => (
-                <Link
-                  key={sh.id}
-                  href={`/campaigns/${campaignId}/shifts/${sh.id}`}
-                  className="rounded-full border border-[rgba(136,122,71,0.4)] px-2 py-0.5 text-xs text-button-accent hover:bg-[#887A47]/10"
-                >
-                  {sh.label}
-                </Link>
-              ))}
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outlined-brown" onClick={() => setOpen(false)}>
-              {t('Cancel')}
-            </Button>
-            <Button
-              variant="brown"
-              isDisabled={isPending || ledShifts.length > 0}
-              onClick={() => removeManager({ campaignId, user_id: manager.id })}
-            >
-              {t('Remove manager')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-});
+import { AddManagerDialog } from './AddManagerDialog';
+import { RemoveManagerAction } from './RemoveManagerAction';
+import { ShiftChip } from './ShiftChip';
 
 /** "Managers" tab: the campaign's managers, each with the shifts they are in charge of. */
 export const CampaignManagers = memo(function CampaignManagers() {
@@ -269,13 +99,7 @@ export const CampaignManagers = memo(function CampaignManagers() {
                 <div className="flex flex-wrap items-center gap-1.5">
                   <span className="text-xs text-foreground-tertiary">{t('Shifts in charge')}:</span>
                   {led.map((sh) => (
-                    <Link
-                      key={sh.id}
-                      href={`/campaigns/${campaignId}/shifts/${sh.id}`}
-                      className="rounded-full border border-[rgba(136,122,71,0.4)] px-2 py-0.5 text-xs text-button-accent hover:bg-[#887A47]/10"
-                    >
-                      {sh.label}
-                    </Link>
+                    <ShiftChip key={sh.id} campaignId={campaignId} shift={sh} />
                   ))}
                 </div>
               )}
@@ -302,5 +126,3 @@ export const CampaignManagers = memo(function CampaignManagers() {
     </CollapsibleCard>
   );
 });
-
-export default CampaignManagers;

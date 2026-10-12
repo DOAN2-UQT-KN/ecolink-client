@@ -1,14 +1,16 @@
-import { createContext, memo, ReactNode, useContext, useMemo } from 'react';
+import { createContext, ReactNode, useContext, useMemo } from 'react';
 import { FormProvider, useForm, UseFormReturn } from 'react-hook-form';
 
 import {
-  CampaignFormValues,
-  DEFAULT_CAMPAIGN_FORM_VALUES,
   campaignToFormValues,
-  emptyShift,
   organizationOfCampaign,
   type CampaignOrganization,
 } from '../_services/campaign.service';
+import {
+  CampaignFormValues,
+  DEFAULT_CAMPAIGN_FORM_VALUES,
+  emptyShift,
+} from '../_services/campaignForm.service';
 import { errorStepIdsOf, type CampaignStep } from '../_services/campaignSteps.service';
 import { useGetCreateEligibility } from '@/apis/campaign/getCreateEligibility';
 import type { ICampaign } from '@/apis/campaign/models/campaign';
@@ -77,7 +79,7 @@ export const useCampaign = () => {
   return context;
 };
 
-export const CampaignProvider = memo(function CampaignProvider({
+export function CampaignProvider({
   children,
   organizationId,
   organization: organizationProp,
@@ -203,4 +205,4 @@ export const CampaignProvider = memo(function CampaignProvider({
       <FormProvider {...form}>{children}</FormProvider>
     </CampaignContext.Provider>
   );
-});
+}

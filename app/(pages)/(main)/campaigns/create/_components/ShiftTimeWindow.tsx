@@ -6,10 +6,8 @@ import { cn } from '@/libs/utils';
 
 import { useCampaign } from '../_context/CampaignContext';
 import { useShiftRules } from '../_hooks/useShiftRules';
-import type { CampaignDayFormValues } from '../_services/campaign.service';
-
-const inputClassName =
-  'border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50';
+import type { CampaignDayFormValues } from '../_services/campaignForm.service';
+import { inputClassName } from '../_services/fieldStyles';
 
 /**
  * Start – end of shift `d`.`p`; empty means the day's hour, which is what the input shows.

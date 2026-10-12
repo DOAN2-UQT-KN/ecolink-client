@@ -12,7 +12,7 @@ import { useMeetingPointWarnings } from '../_hooks/useMeetingPointWarnings';
 import { ShiftSlotsTable } from '@/components/client/shared/ShiftSlotsTable';
 import { useDayLabel } from '../_hooks/useDayLabel';
 import type { CampaignStep } from '../_services/campaignSteps.service';
-import { type CampaignFormValues } from '../_services/campaign.service';
+import { type CampaignFormValues } from '../_services/campaignForm.service';
 import { impliedMinAge } from '@/constants/campaignLifecycle';
 import { meetingPointName } from '@/utils/campaignLabels';
 
@@ -183,5 +183,3 @@ export const CampaignSummary = memo(function CampaignSummary({
     </div>
   );
 });
-
-export default CampaignSummary;

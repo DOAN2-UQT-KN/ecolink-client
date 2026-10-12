@@ -5,7 +5,7 @@ import {
   CAMPAIGN_MEETING_POINT_MAX_DISTANCE_KM,
   haversineKm,
 } from '@/constants/campaignLifecycle';
-import type { MeetingPointFormValues } from '../_services/campaign.service';
+import type { MeetingPointFormValues } from '../_services/campaignForm.service';
 
 /** Client-side hint for meeting points too far apart to share a campaign. */
 export function useMeetingPointWarnings(points: MeetingPointFormValues[]): string[] {

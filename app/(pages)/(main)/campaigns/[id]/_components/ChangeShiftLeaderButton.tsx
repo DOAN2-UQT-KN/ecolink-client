@@ -2,7 +2,7 @@ import { memo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TbUserEdit } from 'react-icons/tb';
 
-import { useSetShiftLeader } from '@/apis/campaign/campaignManager';
+import { useSetShiftLeader } from '@/apis/campaign/setShiftLeader';
 import { Button } from '@/components/client/shared/Button';
 import {
   Dialog,
@@ -100,5 +100,3 @@ export const ChangeShiftLeaderButton = memo(function ChangeShiftLeaderButton({
     </>
   );
 });
-
-export default ChangeShiftLeaderButton;

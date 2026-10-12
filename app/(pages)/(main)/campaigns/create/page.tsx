@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 import CampaignForm from "./_components/CampaignForm";
@@ -19,11 +19,10 @@ export default function CreateCampaignPage() {
   const organizationId = searchParams.get("organizationId") ?? "";
   const { organizations, isLoading } = useCampaignCreatorOrganizations();
 
-  const organization = useMemo(
-    () => organizations.find((org) => org.id === organizationId),
-    [organizationId, organizations],
-  );
+  // `find` returns the same element while the list is unchanged, so the effect below stays stable.
+  const organization = organizations.find((org) => org.id === organizationId);
 
+  // Redirect is a navigation side effect, so it stays in an effect.
   useEffect(() => {
     if (isLoading || organization) return;
     showMessage({

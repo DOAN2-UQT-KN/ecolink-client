@@ -1,17 +1,9 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
-import { Inbox } from 'lucide-react';
 
-import { useGetCampaignRegistrations } from '@/apis/campaign/registration';
-import { Breadcrumbs, type BreadcrumbItemProps } from '@/components/client/shared/Breadcrumbs';
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from '@/components/ui/empty';
+import { useGetCampaignRegistrations } from '@/apis/campaign/getCampaignRegistrations';
+import { Breadcrumbs } from '@/components/client/shared/Breadcrumbs';
 import { Pill } from '@/components/ui/Pill';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -30,6 +22,8 @@ import { useCampaignDetail } from '../../_hooks/useCampaignDetail';
 import { cardClass, ShiftInfoTab } from './_components/ShiftInfoTab';
 import { ShiftMembersTab } from './_components/ShiftMembersTab';
 import { dayLabel, hhmm, meetingPointName } from '@/utils/campaignLabels';
+import { CampaignNotFound } from '../../_components/CampaignNotFound';
+import { campaignCrumbs } from '../../_services/breadcrumbs';
 
 
 /** One shift of a campaign: its details and who is in charge (tab 1), who registered (tab 2). */
@@ -74,17 +68,12 @@ function ShiftDetailBody({ shiftId }: { shiftId: string }) {
     return (campaign?.reports ?? []).filter((r) => ids.has(r.id));
   }, [campaign?.reports, point?.report_ids]);
 
-  const campaignTitle = campaign ? localizedTitle(campaign).trim() || t('Campaign') : t('Campaign');
-  const breadcrumbs: BreadcrumbItemProps[] = [
-    { label: t('Home'), path: '/', type: 'link' },
-    { label: t('Campaigns'), path: '/campaigns', type: 'link' },
-    { label: campaignTitle, path: `/campaigns/${campaignId}`, type: 'link' },
-    {
-      label: shift ? `${pointName} · ${format(new Date(shift.start_at), 'dd/MM')}` : t('Shift'),
-      path: `/campaigns/${campaignId}/shifts/${shiftId}`,
-      type: 'page',
-    },
-  ];
+  const campaignTitle = campaign ? localizedTitle(campaign).trim() || 'Campaign' : 'Campaign';
+  const breadcrumbs = campaignCrumbs(campaignId, campaignTitle, {
+    label: shift ? `${pointName} · ${format(new Date(shift.start_at), 'dd/MM')}` : 'Shift',
+    path: `/campaigns/${campaignId}/shifts/${shiftId}`,
+    type: 'page',
+  });
 
   if (isLoading) {
     return (
@@ -101,17 +90,10 @@ function ShiftDetailBody({ shiftId }: { shiftId: string }) {
       <div className="max-w-7xl mx-auto w-full px-4 lg:px-8 pb-10">
         <Breadcrumbs breadcrumbs={breadcrumbs} />
         <div className="flex justify-center pt-16">
-          <Empty>
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <Inbox className="h-12 w-12 text-muted-foreground" />
-              </EmptyMedia>
-              <EmptyTitle>{t('Shift not found')}</EmptyTitle>
-              <EmptyDescription>
-                {t("We couldn't find the shift you were looking for.")}
-              </EmptyDescription>
-            </EmptyHeader>
-          </Empty>
+          <CampaignNotFound
+            title={t('Shift not found')}
+            description={t("We couldn't find the shift you were looking for.")}
+          />
         </div>
       </div>
     );

@@ -15,12 +15,8 @@ import type { ICampaignValidationIssue } from '@/apis/campaign/models/lifecycle'
 import { CAMPAIGN_ISSUE_MESSAGES, isApprovedEdit } from '@/constants/campaignLifecycle';
 import { uploadToCloudinary } from '@/libs/cloudinary';
 
-import {
-  CampaignFormValues,
-  fitSchedule,
-  majorFieldsFingerprint,
-  transformToApiData,
-} from '../_services/campaign.service';
+import { majorFieldsFingerprint, transformToApiData } from '../_services/campaign.service';
+import { CampaignFormValues, fitSchedule } from '../_services/campaignForm.service';
 import { issueFieldToFormName } from '../_services/campaignIssues.service';
 import {
   CAMPAIGN_STEPS,
@@ -29,6 +25,7 @@ import {
   stepOfField,
   type CampaignStep,
 } from '../_services/campaignSteps.service';
+import { refreshCampaign } from '../../_services/campaignCache.service';
 
 type CampaignApiError = QueryError & {
   details?: ICampaignValidationIssue[];
@@ -95,6 +92,7 @@ export function useCampaignPersist({
       for (const issue of details) {
         const name = issueFieldToFormName(issue.field, issue.code);
         if (name) {
+          // cast: server field names are mapped to form paths by issueFieldToFormName.
           form.setError(name as Path<CampaignFormValues>, {
             type: 'server',
             message: t(issue.message),
@@ -160,6 +158,7 @@ export function useCampaignPersist({
       if (id) setCampaignId(id);
       return id;
     } catch (error) {
+      // cast: usePost rejects with the API error body, not an Error.
       applyServerErrors(error as CampaignApiError);
       return undefined;
     }
@@ -184,7 +183,7 @@ export function useCampaignPersist({
     setSavedMajor(majorFieldsFingerprint(form.getValues(), currentUserId));
     queryClient.invalidateQueries({ queryKey: ['my-campaigns'] });
     // Not setQueryData: the update response lacks the viewer/locale fields GET /campaigns/:id adds.
-    queryClient.invalidateQueries({ queryKey: ['campaign', id] });
+    refreshCampaign(id);
     return id;
   }, [currentUserId, form, persist]);
 
@@ -213,9 +212,10 @@ export function useCampaignPersist({
     if (!id) return;
     try {
       await submitAsync(id);
-      queryClient.invalidateQueries({ queryKey: ['campaign', id] });
+      refreshCampaign(id);
       router.push('/campaigns/me');
     } catch (error) {
+      // cast: usePost rejects with the API error body, not an Error.
       applyServerErrors(error as CampaignApiError);
     }
   }, [applyServerErrors, form, persist, router, showStep, submitAsync]);

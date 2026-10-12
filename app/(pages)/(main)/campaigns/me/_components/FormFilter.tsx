@@ -1,4 +1,4 @@
-import { memo, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search } from 'lucide-react';
 
@@ -27,7 +27,7 @@ const CAMPAIGN_STATUS_OPTIONS = [
   { labelKey: 'Cancelled', value: String(CAMPAIGN_STATUS.CANCELLED) },
 ] as const;
 
-export const FormFilter = memo(function FormFilter() {
+export function FormFilter() {
   const { t } = useTranslation();
   const { filters, setFilters } = useCampaignMeContext();
 
@@ -100,6 +100,6 @@ export const FormFilter = memo(function FormFilter() {
       </div>
     </div>
   );
-});
+}
 
 export default FormFilter;

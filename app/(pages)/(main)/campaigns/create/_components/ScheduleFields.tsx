@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useState } from 'react';
 import { useFieldArray, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { addDays, format } from 'date-fns';
@@ -6,6 +6,7 @@ import { CalendarIcon } from 'lucide-react';
 import { BiTrash } from 'react-icons/bi';
 
 import { Calendar } from '@/components/ui/calendar';
+// kept: the date trigger needs the outline input look; the shared client Button is the brand pill.
 import { Button as UiButton } from '@/components/ui/button';
 import { Button } from '@/components/client/shared/Button';
 import { Input } from '@/components/ui/input';
@@ -20,12 +21,11 @@ import {
 } from '@/constants/campaignLifecycle';
 
 import { useCampaign } from '../_context/CampaignContext';
-import { combineDateTime, emptyDay, type CampaignDayFormValues } from '../_services/campaign.service';
+import { combineDateTime } from '../_services/campaign.service';
+import { emptyDay, type CampaignDayFormValues } from '../_services/campaignForm.service';
 import { minutesOf } from '../_services/shiftSchedule.service';
 import NeedsReviewTag from './NeedsReviewTag';
-
-const inputClassName =
-  'border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50';
+import { inputClassName } from '../_services/fieldStyles';
 
 const formatDateToApi = (date?: Date): string | undefined => {
   if (!date) return undefined;
@@ -112,7 +112,7 @@ const ScheduleFields = memo(function ScheduleFields() {
     );
   }, [fields, isUntouched, register, t]);
 
-  const minDay = useMemo(() => new Date(Date.now() + CAMPAIGN_MIN_LEAD_HOURS * 3_600_000), []);
+  const [minDay] = useState(() => new Date(Date.now() + CAMPAIGN_MIN_LEAD_HOURS * 3_600_000));
   const dayErrors = errors.days;
 
   return (
@@ -172,6 +172,7 @@ const ScheduleFields = memo(function ScheduleFields() {
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {value?.date ? (
+                      // cast: `date` is written by the picker below, so it always parses.
                       format(parseApiDate(value.date) as Date, 'PPP')
                     ) : (
                       <span>{t('Pick the campaign day')}</span>

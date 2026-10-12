@@ -31,7 +31,7 @@ export function parseViewMode(tabValue: string | undefined): CampaignSearchViewM
   return tabValue === "mine" ? "mine" : "explore";
 }
 
-export function parseStatuses(
+function parseStatuses(
   value: number[] | string | undefined,
 ): number[] | undefined {
   if (value == null) return undefined;
@@ -70,7 +70,7 @@ export function isDefaultCampaignStatuses(statuses: number[] | undefined): boole
   return DEFAULT_CAMPAIGN_SEARCH_STATUSES.every((status) => statuses.includes(status));
 }
 
-export function parseGreenPoints(value: string | undefined): number | undefined {
+function parseGreenPoints(value: string | undefined): number | undefined {
   if (!value) return undefined;
 
   const parsed = Number(value);

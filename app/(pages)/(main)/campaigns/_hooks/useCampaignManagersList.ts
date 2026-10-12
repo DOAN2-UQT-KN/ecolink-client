@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { useGetCampaignManager } from '@/apis/campaign/campaignManager';
+import { useGetCampaignManager } from '@/apis/campaign/getCampaignManager';
 
 /**
  * The campaign's managers in assignment order. Every campaign screen uses these exact params so

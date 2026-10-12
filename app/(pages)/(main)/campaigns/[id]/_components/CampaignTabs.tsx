@@ -18,7 +18,7 @@ const ALL_CAMPAIGN_TAB_ITEMS = [
   { value: 'sos', labelKey: 'SOS' },
 ] as const;
 
-export type CampaignTabValue = (typeof ALL_CAMPAIGN_TAB_ITEMS)[number]['value'];
+type CampaignTabValue = (typeof ALL_CAMPAIGN_TAB_ITEMS)[number]['value'];
 
 
 export const CampaignTabs = memo(function CampaignTabs() {
@@ -42,6 +42,7 @@ export const CampaignTabs = memo(function CampaignTabs() {
   const activeTab: CampaignTabValue =
     (tab === 'progress' && !canSeeProgress) || (tab === 'sos' && !isAuthenticated) ? 'detail' : tab;
 
+  // cast: Radix passes the string `value` of one of the triggers below.
   return (
     <Tabs value={activeTab} onValueChange={(v) => setTab(v as CampaignTabValue)}>
       <TabsList className="w-full sm:w-auto border border-[rgba(136,122,71,0.5)] rounded-[8px] bg-background-primary/10 mb-4">

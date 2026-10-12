@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 
-import type { IVerificationTrashPoint } from '@/apis/campaign/verification';
+import type { IVerificationTrashPoint } from '@/apis/campaign/models/verification';
 import { Button } from '@/components/client/shared/Button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';

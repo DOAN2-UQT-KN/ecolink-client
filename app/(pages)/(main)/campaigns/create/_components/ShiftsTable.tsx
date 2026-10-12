@@ -13,9 +13,8 @@ import { copyFirstDayToAll, dayHours, dayMinTotal } from '../_services/shiftSche
 import ShiftTimeWindow from './ShiftTimeWindow';
 import ShiftLeaderSelect from './ShiftLeaderSelect';
 import type { ShiftsViewProps } from './StepShifts';
+import { inputClassName } from '../_services/fieldStyles';
 
-const inputClassName =
-  'border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50';
 const cellClass = 'border border-[rgba(136,122,71,0.3)] px-3 py-2 align-top';
 
 /** The day × meeting point grid: one row per shift. */

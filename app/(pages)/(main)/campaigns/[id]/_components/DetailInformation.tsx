@@ -1,4 +1,3 @@
-import { memo, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TbCalendarClock } from 'react-icons/tb';
 
@@ -24,29 +23,15 @@ import { meetingPointName } from '@/utils/campaignLabels';
 
 const DEFAULT_BANNER = '/banner-default.jpg';
 
-export const DetailInformation = memo(function DetailInformation() {
+export function DetailInformation() {
   const { t } = useTranslation('common');
   const { campaign } = useCampaignDetail();
   const { title: localizedTitle, description: localizedDescription } =
     useLocalizedDisplay();
 
-  const bannerUrl = useMemo(
-    () => (campaign?.banner?.trim() ? campaign.banner : DEFAULT_BANNER),
-    [campaign?.banner],
-  );
-
-  const displayTitle = useMemo(() => {
-    if (!campaign) {
-      return t('Campaign');
-    }
-    const picked = localizedTitle(campaign).trim();
-    return picked || t('Campaign');
-  }, [campaign, localizedTitle, t]);
-
-  const displayDescription = useMemo(
-    () => (campaign ? localizedDescription(campaign) : ''),
-    [campaign, localizedDescription],
-  );
+  const bannerUrl = campaign?.banner?.trim() ? campaign.banner : DEFAULT_BANNER;
+  const displayTitle = (campaign && localizedTitle(campaign).trim()) || t('Campaign');
+  const displayDescription = campaign ? localizedDescription(campaign) : '';
 
   if (!campaign) {
     return null;
@@ -180,4 +165,4 @@ export const DetailInformation = memo(function DetailInformation() {
       </CollapsibleCard>
     </div>
   );
-});
+}

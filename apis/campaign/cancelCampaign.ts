@@ -1,14 +1,9 @@
 import requestApi from "@/utils/requestApi";
-import type { ICampaignMutationResponse } from "./models/lifecycle";
+import type { ICampaignMutationResponse, ICancelCampaignRequest } from "./models/lifecycle";
 import { usePost, UsePostOptions } from "@/hooks/reactQuery";
 import { MessageType } from "@/utils/showMessage";
 
 const url = "/api/v1/campaigns";
-
-export interface ICancelCampaignRequest {
-  id: string;
-  reason: string;
-}
 
 /** Creator or owner: cancel an upcoming, running or approved-and-under-review campaign (spec 3.6). */
 export const cancelCampaign = async ({

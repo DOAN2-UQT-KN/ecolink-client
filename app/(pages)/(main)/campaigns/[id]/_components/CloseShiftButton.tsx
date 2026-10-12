@@ -1,12 +1,12 @@
 import { memo } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { TbCalendarOff } from 'react-icons/tb';
 
-import { useCloseShift } from '@/apis/campaign/registration';
+import { useCloseShift } from '@/apis/campaign/closeShift';
 import { Button } from '@/components/client/shared/Button';
 import { ConfirmPopoverModal } from '@/components/client/shared/ConfirmPopoverModal';
 import showMessage, { MessageLevel, MessageType } from '@/utils/showMessage';
+import { refreshCampaign, refreshRegistrationOptions } from '../../_services/campaignCache.service';
 
 /**
  * Managers turn a shift off before it starts (spec 3.2); its volunteers are told to pick another
@@ -24,7 +24,6 @@ export const CloseShiftButton = memo(function CloseShiftButton({
   onClosed?: () => void;
 }) {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
   const { mutateAsync, isPending } = useCloseShift({
     onSuccess: (response) => {
       showMessage({
@@ -32,8 +31,8 @@ export const CloseShiftButton = memo(function CloseShiftButton({
         level: MessageLevel.Success,
         title: t('Shift turned off; {{n}} volunteer(s) notified', { n: response.data.notified }),
       });
-      void queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });
-      void queryClient.invalidateQueries({ queryKey: ['campaign-registration-options'] });
+      refreshCampaign(campaignId);
+      refreshRegistrationOptions();
       onClosed?.();
     },
   });
@@ -64,5 +63,3 @@ export const CloseShiftButton = memo(function CloseShiftButton({
     />
   );
 });
-
-export default CloseShiftButton;
