@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { LatLngLiteral } from "leaflet";
 import { useTranslation } from "react-i18next";
 
 import { truncateDetailAddress } from "@/constants/address";
@@ -13,8 +12,9 @@ import {
   normalizeAddressQuery,
   reverseCacheKey,
   type ForwardGeocodingResult,
+  type LatLng,
   type ReverseGeocodingAddress,
-} from "@/libs/nominatim";
+} from "@/libs/geocoding";
 import {
   GPS_OPTIONS,
   toLatLng,
@@ -23,7 +23,7 @@ import {
   type AddressSnapshot,
 } from "../_services/address.service";
 
-/** Map + Nominatim state machine for one meeting point (`meeting_points.<index>`). */
+/** Map + geocoding state machine for one meeting point (`meeting_points.<index>`). */
 export function useAddressPicker(index: number) {
   const { t } = useTranslation();
   const { form } = useCampaign();
@@ -32,7 +32,7 @@ export function useAddressPicker(index: number) {
   const LNG = `meeting_points.${index}.longitude` as const;
   const ADDRESS = `meeting_points.${index}.detail_address` as const;
 
-  const [position, setPosition] = useState<LatLngLiteral | null>(null);
+  const [position, setPosition] = useState<LatLng | null>(null);
   const [forwardWarning, setForwardWarning] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [canConfirm, setCanConfirm] = useState(false);
@@ -51,7 +51,7 @@ export function useAddressPicker(index: number) {
   isEditingRef.current = isEditing;
 
   const applyPosition = useCallback(
-    (newPos: LatLngLiteral, source: AddressChangeSource) => {
+    (newPos: LatLng, source: AddressChangeSource) => {
       if (source === "user" || source === "hydrate") {
         skipReverseRef.current = true;
       }
@@ -266,7 +266,7 @@ export function useAddressPicker(index: number) {
 
   // Memoized: the map is a memo component.
   const handleMapPosition = useCallback(
-    (pos: LatLngLiteral) => {
+    (pos: LatLng) => {
       if (isEditingRef.current) return;
       applyPosition(pos, "map");
     },

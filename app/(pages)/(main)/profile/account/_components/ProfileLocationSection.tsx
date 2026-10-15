@@ -1,6 +1,15 @@
 import dynamic from '@/libs/dynamic';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { LatLngLiteral } from 'leaflet';
+import {
+  getAddressFromLatLng,
+  getLatLngFromAddress,
+  isSamePosition,
+  normalizeAddressQuery,
+  reverseCacheKey,
+  type ForwardGeocodingResult,
+  type LatLng,
+  type ReverseGeocodingAddress,
+} from '@/libs/geocoding';
 import { useTranslation } from 'react-i18next';
 import { IoIosSearch } from 'react-icons/io';
 import { toast } from 'sonner';
@@ -16,14 +25,13 @@ import {
   truncateDetailAddress,
 } from '@/constants/address';
 
-const LeafletAddressMap = dynamic(() => import('@/modules/LeafletAddressMap'), {
+const AddressMap = dynamic(() => import('@/modules/AddressMap'), {
   ssr: false,
   loading: () => (
     <div className="h-[280px] w-full rounded-xl bg-background/40 animate-pulse" />
   ),
 });
 
-const NOMINATIM_HEADERS = { Accept: 'application/json' } as const;
 const REVERSE_DEBOUNCE_MS = 400;
 const GPS_OPTIONS: PositionOptions = {
   enableHighAccuracy: true,
@@ -32,33 +40,12 @@ const GPS_OPTIONS: PositionOptions = {
 
 type AddressChangeSource = 'map' | 'gps' | 'user' | 'hydrate';
 
-type ReverseGeocodingAddress = {
-  detailAddress?: string;
-};
-
-type ForwardGeocodingResult =
-  | { ok: true; lat: number; lng: number; displayName: string }
-  | { ok: false; reason: 'not_found' | 'error' };
-
 type AddressSnapshot = {
   detailAddress: string;
-  position: LatLngLiteral | null;
+  position: LatLng | null;
 };
 
-function reverseCacheKey(lat: number, lng: number) {
-  return `${lat.toFixed(4)},${lng.toFixed(4)}`;
-}
-
-function normalizeAddressQuery(value: string) {
-  return value.trim().toLowerCase().replace(/\s+/g, ' ');
-}
-
-function isSamePosition(a: LatLngLiteral | null, b: LatLngLiteral) {
-  if (!a) return false;
-  return a.lat.toFixed(4) === b.lat.toFixed(4) && a.lng.toFixed(4) === b.lng.toFixed(4);
-}
-
-function coordsFromUser(user: IUser | undefined): LatLngLiteral | null {
+function coordsFromUser(user: IUser | undefined): LatLng | null {
   if (!user) return null;
   const lat = user.latitude;
   const lng = user.longitude;
@@ -85,7 +72,7 @@ export function ProfileLocationSection() {
   const { t } = useTranslation();
   const { user, setUser } = useAuthStore();
 
-  const [position, setPosition] = useState<LatLngLiteral | null>(null);
+  const [position, setPosition] = useState<LatLng | null>(null);
   const [detailAddress, setDetailAddress] = useState('');
   const [saving, setSaving] = useState(false);
   const [forwardWarning, setForwardWarning] = useState<string | null>(null);
@@ -106,7 +93,7 @@ export function ProfileLocationSection() {
 
   isEditingRef.current = isEditing;
 
-  const applyPosition = useCallback((newPos: LatLngLiteral, source: AddressChangeSource) => {
+  const applyPosition = useCallback((newPos: LatLng, source: AddressChangeSource) => {
     if (source === 'user' || source === 'hydrate') {
       skipReverseRef.current = true;
     }
@@ -117,89 +104,6 @@ export function ProfileLocationSection() {
     if (isEditingRef.current) return;
     setForwardWarning(null);
     setDetailAddress(truncateDetailAddress(text));
-  }, []);
-
-  const parseAddress = useCallback(
-    (data: {
-      display_name?: string;
-      address?: Record<string, string | undefined>;
-    }): ReverseGeocodingAddress => {
-      const address = data.address ?? {};
-      const parsedCity =
-        address.city ??
-        address.town ??
-        address.state ??
-        address.province ??
-        address.municipality;
-      const parsedDistrict =
-        address.county ??
-        address.city_district ??
-        address.district ??
-        address.suburb ??
-        address.quarter;
-      const parsedDetail =
-        data.display_name ??
-        [address.road, address.house_number, parsedDistrict, parsedCity]
-          .filter(Boolean)
-          .join(', ');
-
-      return {
-        detailAddress: truncateDetailAddress(parsedDetail) || undefined,
-      };
-    },
-    [],
-  );
-
-  const getAddressFromLatLng = useCallback(
-    async (lat: number, lng: number) => {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
-        { headers: NOMINATIM_HEADERS },
-      );
-
-      if (!response.ok) {
-        throw new Error('Reverse geocoding failed');
-      }
-
-      const data = (await response.json()) as {
-        display_name?: string;
-        address?: Record<string, string | undefined>;
-      };
-
-      return parseAddress(data);
-    },
-    [parseAddress],
-  );
-
-  const getLatLngFromAddress = useCallback(async (query: string): Promise<ForwardGeocodingResult> => {
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`,
-        { headers: NOMINATIM_HEADERS },
-      );
-
-      if (!response.ok) {
-        return { ok: false, reason: 'error' };
-      }
-
-      const data = (await response.json()) as Array<{
-        lat?: string;
-        lon?: string;
-        display_name?: string;
-      }>;
-      const first = data[0];
-      const lat = first?.lat != null ? Number(first.lat) : NaN;
-      const lng = first?.lon != null ? Number(first.lon) : NaN;
-      const displayName = first?.display_name?.trim() ?? '';
-
-      if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-        return { ok: false, reason: 'not_found' };
-      }
-
-      return { ok: true, lat, lng, displayName };
-    } catch {
-      return { ok: false, reason: 'error' };
-    }
   }, []);
 
   // Hydrate from saved user location (skip reverse when address already stored).
@@ -282,7 +186,7 @@ export function ProfileLocationSection() {
         clearTimeout(reverseTimerRef.current);
       }
     };
-  }, [getAddressFromLatLng, position, writeDetailAddressFromReverse]);
+  }, [position, writeDetailAddressFromReverse]);
 
   const useCurrentLocation = useCallback(() => {
     if (!navigator.geolocation) {
@@ -302,7 +206,7 @@ export function ProfileLocationSection() {
   }, [applyPosition, t]);
 
   const handleMapPosition = useCallback(
-    (pos: LatLngLiteral) => {
+    (pos: LatLng) => {
       setCanConfirm(false);
       applyPosition(pos, 'map');
     },
@@ -374,7 +278,7 @@ export function ProfileLocationSection() {
       applyPosition(nextPos, 'user');
     }
     setCanConfirm(true);
-  }, [applyPosition, getLatLngFromAddress, position, searchQuery, t]);
+  }, [applyPosition, position, searchQuery, t]);
 
   const handleConfirm = useCallback(async () => {
     if (!user?.id) {
@@ -555,7 +459,7 @@ export function ProfileLocationSection() {
       </Field>
 
       <div className="mt-4 h-[280px] overflow-hidden rounded-xl border border-[rgba(136,122,71,0.35)]">
-        <LeafletAddressMap
+        <AddressMap
           position={position}
           setPosition={handleMapPosition}
           popupText={detailAddress || t('Selected location')}

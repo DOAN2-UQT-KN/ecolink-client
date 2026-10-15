@@ -26,7 +26,7 @@ Ngoại lệ đã có (đích không phải API của mình, hoặc cần stream
 | Upload Cloudinary (axios thô) | `libs/cloudinary.ts > uploadToCloudinary()` |
 | Upload file lên presigned URL (axios thô, cố ý bỏ interceptor) | `apis/organization-application/presignDocument.ts > uploadApplicationDocument()` |
 | SSE chat AI (`fetch`) | `components/client/ai-chat/aiChatClient.ts` |
-| Nominatim geocoding (`fetch`) | `ApplicationAddress`, `ProfileLocationSection`, `LeafletAddress` (→ `libs/nominatim.ts`), `Address`, `AddressPickerCard` — cần địa chỉ thì **dùng lại các component này** |
+| Goong geocoding (`fetch`) | Chỉ trong `libs/geocoding.ts` (key ở `libs/goong.ts`); `MeetingPointAddress`, `Address`, `ApplicationAddress`, `ProfileLocationSection`, `AddressPickerCard` đều gọi lib này — cần địa chỉ thì **dùng lại các component này** |
 
 ## Cấu trúc `apis/`
 

@@ -29,7 +29,7 @@ modules/ReportGeneralInformation/
   duplicateReasonLabel.ts
 
 modules/ReportSummaryCard/index.tsx
-modules/LeafletAddressMap.tsx        # 1 file → nằm thẳng ở modules/
+modules/AddressMap.tsx               # 1 file → nằm thẳng ở modules/
 ```
 
 ### Lớn hơn → chia thư mục con, file entry trùng tên thư mục
@@ -171,7 +171,7 @@ const imageShield = { onClick: stop, onPointerDown: stop };
 | `ReportSummaryCard/` | Tile sự cố rút gọn cho danh sách |
 | `ReportGeneralInformation/` | Khối thông tin sự cố + UI phát hiện trùng lặp — dùng trong bảng admin |
 | `OrganizationCard/` | Card tổ chức có sửa tại chỗ |
-| `LeafletAddressMap.tsx` | Chọn địa chỉ trên bản đồ, dùng ở nhiều form |
+| `AddressMap.tsx` | Chọn địa chỉ trên bản đồ Goong, dùng ở nhiều form |
 
 ## Checklist tách module mới
 

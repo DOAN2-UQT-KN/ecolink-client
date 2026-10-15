@@ -15,7 +15,7 @@ import {
 import { useCampaign } from '../_context/CampaignContext';
 import { useMeetingPointWarnings } from '../_hooks/useMeetingPointWarnings';
 import { emptyMeetingPoint } from '../_services/campaignForm.service';
-import LeafletAddress from './LeafletAddress';
+import MeetingPointAddress from './MeetingPointAddress';
 import IncidentList from './IncidentList';
 import NeedsReviewTag from './NeedsReviewTag';
 import { inputClassName } from '../_services/fieldStyles';
@@ -124,7 +124,7 @@ const MeetingPointsEditor = memo(function MeetingPointsEditor() {
 
             <div className="flex flex-col md:flex-row gap-[20px] w-full md:items-start">
               <div className="w-full md:w-1/2">
-                <LeafletAddress index={index} title={t('Location')} />
+                <MeetingPointAddress index={index} title={t('Location')} />
                 <FieldError errors={[errors?.latitude]} />
               </div>
               <div className="w-full md:w-1/2">

@@ -34,7 +34,7 @@ Repo được migrate từ Next.js và **giữ lại quy ước thư mục** cho
 | UI kit | shadcn/Radix (`components/ui/`), antd v6 dùng hạn chế | `components.json` |
 | CSS | Tailwind v4, **không có file config** | `app/globals.css`, `app/_styles/` |
 | i18n | i18next + react-i18next, `en` / `vi` | `i18n/index.ts` |
-| Map | Leaflet + react-leaflet | `modules/LeafletAddressMap.tsx` |
+| Map | MapLibre GL + react-map-gl (style + REST Goong) | `modules/AddressMap.tsx`, `libs/geocoding.ts`, `libs/goong.ts` |
 | Toast | sonner, bọc trong `showMessage()` | `utils/showMessage.ts` |
 | Test | **Không có** | — |
 
@@ -66,7 +66,6 @@ src/                 # App.tsx, main.tsx, routes/index.tsx, layouts/, pages/NotF
 stores/              # useAuthStore.ts, useOrgContextStore.ts
 types/               # BaseResponse.ts, PaginationResponse.ts
 utils/               # requestApi, showMessage, logout, formattedDate, ...
-vite/                # reverseGeocode.ts — middleware dev-only /api/reverse-geocode
 ```
 
 ## Shim Next.js — bắt buộc dùng
@@ -158,7 +157,7 @@ Hệ quả: trang nào gọi API cần đăng nhập ngay khi load (`/maps`, `/i
 
 ## Deploy & môi trường
 
-- Bản build là **SPA thuần** (nginx `try_files ... /index.html`, `vercel.json` rewrite về `/index.html`). Middleware `vite/reverseGeocode.ts` (`/api/reverse-geocode`) **chỉ chạy ở `vite dev`/`preview`** — trên prod path đó trả `index.html`. Đừng thêm tính năng dựa vào middleware Vite.
+- Bản build là **SPA thuần** (nginx `try_files ... /index.html`, `vercel.json` rewrite về `/index.html`). Middleware Vite chỉ chạy ở `vite dev`/`preview` — trên prod mọi path trả `index.html`. Đừng thêm tính năng dựa vào middleware Vite.
 - `VITE_*` được inline **lúc build** (build-arg trong `Dockerfile`), đổi env phải build lại.
 - Link chết đã biết (không có route → NotFound): `/about`, `/mission`, `/partnership`, `/support` trong menu Header; `/gifts/:id` trong `gifts/_context/GiftContext.tsx > onViewMore()`. Đừng link thêm vào các path này.
 

@@ -12,7 +12,7 @@ import { useCampaign } from "../_context/CampaignContext";
 import { useAddressPicker } from "../_hooks/useAddressPicker";
 import type { CampaignFormValues } from "../_services/campaignForm.service";
 
-const LeafletAddressMap = dynamic(() => import("@/modules/LeafletAddressMap"), {
+const AddressMap = dynamic(() => import("@/modules/AddressMap"), {
   ssr: false,
   loading: () => (
     <div className="h-full w-full rounded-xl bg-slate-100 animate-pulse" />
@@ -20,7 +20,7 @@ const LeafletAddressMap = dynamic(() => import("@/modules/LeafletAddressMap"), {
 });
 
 /** Location picker for one meeting point (`meeting_points.<index>`). */
-const LeafletAddress = memo(function LeafletAddress({
+const MeetingPointAddress = memo(function MeetingPointAddress({
   index,
   title,
 }: {
@@ -164,7 +164,7 @@ const LeafletAddress = memo(function LeafletAddress({
       </Field>
 
       <div className="relative z-0 w-full h-[380px] rounded-xl overflow-hidden border border-[rgba(136,122,71,0.5)]">
-        <LeafletAddressMap
+        <AddressMap
           position={position}
           setPosition={handleMapPosition}
           popupText={detailAddress || t("Selected location")}
@@ -174,4 +174,4 @@ const LeafletAddress = memo(function LeafletAddress({
   );
 });
 
-export default LeafletAddress;
+export default MeetingPointAddress;

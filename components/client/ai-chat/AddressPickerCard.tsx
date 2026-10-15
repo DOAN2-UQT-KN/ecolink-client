@@ -1,12 +1,17 @@
 import dynamic from "@/libs/dynamic"
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
-import type { LatLngLiteral } from "leaflet"
+import {
+    getAddressFromLatLng,
+    reverseCacheKey,
+    type LatLng,
+    type ReverseGeocodingAddress,
+} from "@/libs/geocoding"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/libs/utils"
 import { useTranslation } from "react-i18next"
 
-const LeafletAddressMap = dynamic(() => import("@/modules/LeafletAddressMap"), {
+const AddressMap = dynamic(() => import("@/modules/AddressMap"), {
     ssr: false,
     loading: () => (
         <div className="h-[220px] w-full animate-pulse rounded-xl bg-slate-100" />
@@ -22,51 +27,9 @@ type Props = {
     }) => void
 }
 
-type ReverseGeocodingAddress = {
-    detailAddress?: string
-}
-
-function parseReverseGeocode(data: {
-    display_name?: string
-    address?: Record<string, string | undefined>
-}): ReverseGeocodingAddress {
-    const address = data.address ?? {}
-    const parsedCity =
-        address.city ??
-        address.town ??
-        address.state ??
-        address.province ??
-        address.municipality
-    const parsedDistrict =
-        address.county ??
-        address.city_district ??
-        address.district ??
-        address.suburb ??
-        address.quarter
-    const parsedDetail =
-        data.display_name ??
-        [address.road, address.house_number, parsedDistrict, parsedCity]
-            .filter(Boolean)
-            .join(", ")
-    return { detailAddress: parsedDetail }
-}
-
-async function reverseGeocode(lat: number, lng: number): Promise<ReverseGeocodingAddress> {
-    const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
-        { headers: { Accept: "application/json" } }
-    )
-    if (!response.ok) return {}
-    const data = (await response.json()) as {
-        display_name?: string
-        address?: Record<string, string | undefined>
-    }
-    return parseReverseGeocode(data)
-}
-
 const AddressPickerCard = memo(function AddressPickerCard({ disabled, onSubmit }: Props) {
     const { t } = useTranslation()
-    const [position, setPosition] = useState<LatLngLiteral | null>(null)
+    const [position, setPosition] = useState<LatLng | null>(null)
     const [detailAddress, setDetailAddress] = useState("")
     const [loadingAddr, setLoadingAddr] = useState(false)
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -86,7 +49,7 @@ const AddressPickerCard = memo(function AddressPickerCard({ disabled, onSubmit }
 
     useEffect(() => {
         if (!position) return
-        const key = `${position.lat.toFixed(4)},${position.lng.toFixed(4)}`
+        const key = reverseCacheKey(position.lat, position.lng)
         const cached = cacheRef.current.get(key)
         if (cached?.detailAddress) {
             setDetailAddress((prev) => prev || cached.detailAddress || "")
@@ -96,11 +59,13 @@ const AddressPickerCard = memo(function AddressPickerCard({ disabled, onSubmit }
         debounceRef.current = setTimeout(async () => {
             setLoadingAddr(true)
             try {
-                const parsed = await reverseGeocode(position.lat, position.lng)
+                const parsed = await getAddressFromLatLng(position.lat, position.lng)
                 cacheRef.current.set(key, parsed)
                 if (parsed.detailAddress) {
                     setDetailAddress((prev) => prev || parsed.detailAddress || "")
                 }
+            } catch {
+                // Lookup failed: keep whatever the user typed.
             } finally {
                 setLoadingAddr(false)
             }
@@ -134,7 +99,7 @@ const AddressPickerCard = memo(function AddressPickerCard({ disabled, onSubmit }
             </div>
 
             <div className="mb-2 h-[220px] w-full overflow-hidden rounded-xl border border-border">
-                <LeafletAddressMap
+                <AddressMap
                     position={position}
                     setPosition={setPosition}
                     popupText={detailAddress || t("Selected location")}

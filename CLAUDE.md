@@ -19,7 +19,7 @@ npm run lint     # eslint . --fix
 1. **Không `import ... from "next/..."`.** Navigation dùng `@/libs/router` (`<Link href>`, `useRouter()`, `usePathname()`, `useSearchParams()` trả về `URLSearchParams` trực tiếp). Ảnh dùng `@/components/ui/AppImage`. Lazy dùng `@/libs/dynamic`.
 2. **Không thêm `"use client"`.** Vô nghĩa ở đây.
 3. **Tạo `page.tsx` phải đăng ký route trong `src/routes/index.tsx`** bằng helper `lazyPage`. Quên = route không tồn tại.
-4. **Mọi lời gọi API đi qua `utils/requestApi` + `hooks/reactQuery` (`useGet`/`usePost`)**, khai báo trong `apis/<domain>/<verb><Noun>.ts`. Không gọi `axios` trực tiếp (ngoại lệ: upload Cloudinary, upload lên presigned `upload_url`, SSE chat, Nominatim — xem skill `ecolink-api-layer`). Toast qua `utils/showMessage`, không gọi `toast()` của sonner.
+4. **Mọi lời gọi API đi qua `utils/requestApi` + `hooks/reactQuery` (`useGet`/`usePost`)**, khai báo trong `apis/<domain>/<verb><Noun>.ts`. Không gọi `axios` trực tiếp (ngoại lệ: upload Cloudinary, upload lên presigned `upload_url`, SSE chat, geocoding Goong qua `libs/geocoding.ts` — xem skill `ecolink-api-layer`). Toast qua `utils/showMessage`, không gọi `toast()` của sonner.
 5. **Mọi chuỗi hiển thị qua `t()`**, key chính là câu tiếng Anh, và phải thêm vào **cả** `i18n/locales/en/common.json` lẫn `vi/common.json`.
 
 Thêm 2 điểm hay sai: `cn()` nằm ở **`@/libs/utils`** (không phải `@/lib/utils` như `components.json` ghi), và Prettier **không được enforce** — bám style của file đang sửa, đừng reformat hàng loạt.

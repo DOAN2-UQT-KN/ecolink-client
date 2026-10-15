@@ -51,7 +51,7 @@ Tiêu thụ: `import { SeverityCell } from '@/modules/ReportGeneralInformation';
 
 ## Module hiện có
 
-`ReportDetailCard/` (card sự cố đầy đủ + vote) · `ReportSummaryCard/` (tile rút gọn) · `ReportGeneralInformation/` (thông tin sự cố + UI trùng lặp, dùng trong bảng admin) · `OrganizationCard/` (card tổ chức, sửa tại chỗ) · `LeafletAddressMap.tsx` (chọn địa chỉ trên bản đồ).
+`ReportDetailCard/` (card sự cố đầy đủ + vote) · `ReportSummaryCard/` (tile rút gọn) · `ReportGeneralInformation/` (thông tin sự cố + UI trùng lặp, dùng trong bảng admin) · `OrganizationCard/` (card tổ chức, sửa tại chỗ) · `AddressMap.tsx` (chọn địa chỉ trên bản đồ Goong).
 
 ⚠️ `ReportGeneralInformation/DuplicateReportModal.tsx` còn sót dòng `"use client"` — đó là rác từ thời Next.js, **đừng bắt chước**.
 

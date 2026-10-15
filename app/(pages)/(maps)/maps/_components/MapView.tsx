@@ -1,16 +1,17 @@
-import { memo, useEffect, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import { memo, useEffect, useMemo, useState } from 'react';
+import MapGL, { Marker, NavigationControl, Popup } from 'react-map-gl/maplibre';
+import 'maplibre-gl/dist/maplibre-gl.css';
 import { useTranslation } from 'react-i18next';
 import type { MapMarker } from './MapPage';
 import { Pill } from '@/components/ui/Pill';
 import type { SosType } from '@/apis/sos/models/sos';
 import { SOS_TYPE_META } from '@/constants/sos';
 import { SosTypeBadge } from '@/components/sos/SosTypeBadge';
+import { GOONG_STYLE_URL } from '@/libs/goong';
+import { MapUnavailable } from '@/modules/AddressMap';
 
 // Vietnam geographic center
-const DEFAULT_CENTER: [number, number] = [16.047, 108.206];
+const DEFAULT_CENTER = { latitude: 16.047, longitude: 108.206 };
 const DEFAULT_ZOOM = 6;
 
 // ─── SOS pulse keyframe (injected once) ───────────────────────────────────────
@@ -43,8 +44,10 @@ function injectSOSStyle() {
   document.head.appendChild(el);
 }
 
-// ─── custom SVG pin icons ──────────────────────────────────────────────────────
-function buildPinIcon(fill: string): L.DivIcon {
+// ─── custom SVG pin icons (static internal markup, no user data) ───────────────
+type PinIcon = { html: string; popupOffset: number };
+
+function buildPinIcon(fill: string): PinIcon {
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 44" width="32" height="44">
       <filter id="shadow-${fill.replace('#', '')}" x="-20%" y="-20%" width="140%" height="140%">
@@ -58,17 +61,11 @@ function buildPinIcon(fill: string): L.DivIcon {
       <circle cx="16" cy="16" r="7" fill="white" opacity="0.95"/>
     </svg>`.trim();
 
-  return L.divIcon({
-    className: '',
-    html: svg,
-    iconSize: [32, 44],
-    iconAnchor: [16, 44],
-    popupAnchor: [0, -46],
-  });
+  return { html: svg, popupOffset: 46 };
 }
 
 /** One pin per SOS type, in the type's colour token, with a pulsing ring. */
-function buildSOSIcon(type: SosType): L.DivIcon {
+function buildSOSIcon(type: SosType): PinIcon {
   const color = SOS_TYPE_META[type].color;
   const glyph = type === 'medical' ? '+' : type === 'hazard' ? '!' : '?';
   const svg = `
@@ -89,13 +86,7 @@ function buildSOSIcon(type: SosType): L.DivIcon {
     </div>
   `.trim();
 
-  return L.divIcon({
-    className: '',
-    html,
-    iconSize: [48, 60],
-    iconAnchor: [24, 60],
-    popupAnchor: [0, -62],
-  });
+  return { html, popupOffset: 62 };
 }
 
 /** Medical always on top, then hazard, then manpower, then the other layers. */
@@ -104,6 +95,7 @@ const SOS_Z_INDEX: Record<SosType, number> = { medical: 3000, hazard: 2000, manp
 // ─── marker list (memoised) ────────────────────────────────────────────────────
 const MarkerList = memo(function MarkerList({ markers }: { markers: MapMarker[] }) {
   const { t } = useTranslation();
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
 
   const icons = useMemo(
     () => ({
@@ -116,22 +108,45 @@ const MarkerList = memo(function MarkerList({ markers }: { markers: MapMarker[] 
     [],
   );
 
+  const iconOf = (m: MapMarker) =>
+    m.type === 'SOS' ? icons[`SOS_${m.sosType ?? 'manpower'}`] : icons[m.type];
+  const selected = markers.find((m) => `${m.type}-${m.id}` === selectedKey);
+
   return (
     <>
       {markers.map((m) => (
         <Marker
           key={`${m.type}-${m.id}`}
-          position={[m.lat, m.lng]}
-          icon={m.type === 'SOS' ? icons[`SOS_${m.sosType ?? 'manpower'}`] : icons[m.type]}
-          zIndexOffset={m.type === 'SOS' ? SOS_Z_INDEX[m.sosType ?? 'manpower'] : 0}
+          latitude={m.lat}
+          longitude={m.lng}
+          anchor="bottom"
+          style={{ zIndex: m.type === 'SOS' ? SOS_Z_INDEX[m.sosType ?? 'manpower'] : 0 }}
+          onClick={(e) => {
+            e.originalEvent.stopPropagation();
+            setSelectedKey(`${m.type}-${m.id}`);
+          }}
         >
-          <Popup minWidth={200} maxWidth={280} className="map-popup">
-            {m.type === 'SOS' ? (
+          <div className="cursor-pointer" dangerouslySetInnerHTML={{ __html: iconOf(m).html }} />
+        </Marker>
+      ))}
+
+      {selected && (
+        <Popup
+          latitude={selected.lat}
+          longitude={selected.lng}
+          anchor="bottom"
+          offset={iconOf(selected).popupOffset}
+          maxWidth="280px"
+          className="map-popup"
+          onClose={() => setSelectedKey(null)}
+        >
+          <div className="min-w-[200px]">
+            {selected.type === 'SOS' ? (
               // Public map: type and a link only, no reporter or medical details.
               <div className="py-1 space-y-2">
-                <SosTypeBadge type={m.sosType ?? 'manpower'} />
+                <SosTypeBadge type={selected.sosType ?? 'manpower'} />
                 <div className="flex justify-end">
-                  <a href={`/sos/${m.id}`} className="text-xs text-blue-700 underline text-right">
+                  <a href={`/sos/${selected.id}`} className="text-xs text-blue-700 underline text-right">
                     {t('View details')}
                   </a>
                 </div>
@@ -139,22 +154,22 @@ const MarkerList = memo(function MarkerList({ markers }: { markers: MapMarker[] 
             ) : (
             <div className="py-1 space-y-1.5">
               {/* Badge */}
-              <Pill tone={m.type === 'CAMPAIGN' ? 'blue' : 'amber'}>
-                {m.type === 'CAMPAIGN' ? t('Campaign') : t('Incident')}
+              <Pill tone={selected.type === 'CAMPAIGN' ? 'blue' : 'amber'}>
+                {selected.type === 'CAMPAIGN' ? t('Campaign') : t('Incident')}
               </Pill>
 
-              <p className="font-semibold text-gray-900 text-sm leading-snug">{m.title}</p>
+              <p className="font-semibold text-gray-900 text-sm leading-snug">{selected.title}</p>
 
-              {m.wasteType && <p className="text-xs text-gray-500 capitalize">{m.wasteType}</p>}
+              {selected.wasteType && <p className="text-xs text-gray-500 capitalize">{selected.wasteType}</p>}
 
-              {m.address && (
-                <p className="text-xs text-gray-400 leading-snug line-clamp-2">📍 {m.address}</p>
+              {selected.address && (
+                <p className="text-xs text-gray-400 leading-snug line-clamp-2">📍 {selected.address}</p>
               )}
 
-              {m.type == 'CAMPAIGN' && (
+              {selected.type == 'CAMPAIGN' && (
                 <div className="flex justify-end">
                   <a
-                    href={`/campaigns/${m.id}`}
+                    href={`/campaigns/${selected.id}`}
                     className="text-xs text-blue-700 underline text-right"
                     target="_blank"
                   >
@@ -164,9 +179,9 @@ const MarkerList = memo(function MarkerList({ markers }: { markers: MapMarker[] 
               )}
             </div>
             )}
-          </Popup>
-        </Marker>
-      ))}
+          </div>
+        </Popup>
+      )}
     </>
   );
 });
@@ -208,18 +223,18 @@ const MapView = memo(function MapView({ markers, loading }: MapViewProps) {
       {loading && <LoadingToast />}
       {!loading && markers.length === 0 && <EmptyState />}
 
-      <MapContainer
-        center={DEFAULT_CENTER}
-        zoom={DEFAULT_ZOOM}
-        className="h-full w-full z-0"
-        zoomControl
-      >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        <MarkerList markers={markers} />
-      </MapContainer>
+      {GOONG_STYLE_URL ? (
+        <MapGL
+          mapStyle={GOONG_STYLE_URL}
+          initialViewState={{ ...DEFAULT_CENTER, zoom: DEFAULT_ZOOM }}
+          style={{ width: '100%', height: '100%' }}
+        >
+          <NavigationControl showCompass={false} />
+          <MarkerList markers={markers} />
+        </MapGL>
+      ) : (
+        <MapUnavailable />
+      )}
     </div>
   );
 });

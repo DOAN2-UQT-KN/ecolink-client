@@ -73,7 +73,7 @@ This repository contains **only the frontend**. It communicates with a separate 
 
 ### 🗺️ Maps
 
-- Full-screen map experience at `/maps` (Leaflet-based)
+- Full-screen map experience at `/maps` (Goong maps)
 
 ### 🛡️ Admin console
 
@@ -86,7 +86,7 @@ This repository contains **only the frontend**. It communicates with a separate 
 - **Internationalization** — English (`en`) and Vietnamese (`vi`) via i18next
 - **Notifications** — in-app notification menu
 - **AI chat widget** — assistant connected to backend chat API
-- **Reverse geocoding** — `/api/reverse-geocode` (Vite dev/preview middleware)
+- **Geocoding** — Goong REST API (address ↔ coordinates) via `libs/geocoding.ts`
 
 ---
 
@@ -107,7 +107,7 @@ This repository contains **only the frontend**. It communicates with a separate 
 | Zustand                            | Client state (e.g. auth)                    |
 | react-hook-form                    | Form handling                               |
 | react-i18next + i18next            | Internationalization                        |
-| Leaflet + react-leaflet            | Maps                                        |
+| MapLibre GL + react-map-gl         | Maps (Goong vector style)                   |
 | Axios                              | HTTP client                                 |
 | GSAP, Motion, AOS                  | Animations                                  |
 
@@ -151,7 +151,7 @@ This repository contains **only the frontend**. It communicates with a separate 
 | ESLint + typescript-eslint | Linting                                                 |
 | Prettier                   | Code formatting                                         |
 | Cloudinary                 | Client-side media uploads (incidents and related flows) |
-| OpenStreetMap Nominatim    | Reverse geocoding (proxied in dev/preview)              |
+| Goong                      | Map tiles and geocoding                                 |
 | Slate                      | Rich text editing                                       |
 | Sonner                     | Toast notifications                                     |
 | QRCode                     | QR generation (campaign attendance)                     |
@@ -206,7 +206,6 @@ ecolink-client/
 ├── stores/                   # Zustand stores (e.g. auth)
 ├── types/                    # Shared TypeScript types
 ├── utils/                    # Helpers (requestApi, logout, etc.)
-├── vite/                     # Vite plugins (reverse-geocode middleware)
 ├── index.html                # HTML shell
 ├── vite.config.ts            # Vite configuration
 ├── package.json
@@ -260,6 +259,8 @@ Create a `.env` file in the project root (or copy from an existing template if y
 VITE_API_URL=https://api.ecolink.id.vn/
 VITE_CLOUDINARY_CLOUD_NAME=your_cloud_name
 VITE_CLOUDINARY_UPLOAD_PRESET=your_upload_preset
+VITE_GOONG_MAPTILES_KEY=your_goong_maptiles_key
+VITE_GOONG_API_KEY=your_goong_api_key
 ```
 
 See [Environment Variables](#environment-variables) for details.
@@ -274,8 +275,6 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-The dev server also exposes `GET /api/reverse-geocode?lat=&lon=` via a Vite middleware plugin for address lookup during development.
-
 ---
 
 ## 🌍 Environment Variables
@@ -285,8 +284,17 @@ The dev server also exposes `GET /api/reverse-geocode?lat=&lon=` via a Vite midd
 | `VITE_API_URL`                  | Base URL for backend REST API calls (Axios and AI chat client). If omitted, the client falls back to `window.location.origin` in the browser. | `https://api.ecolink.id.vn/` |
 | `VITE_CLOUDINARY_CLOUD_NAME`    | Cloudinary cloud name for media uploads. Defaults to `"example"` in code when unset.                                                          | `dnh9aufsa`                  |
 | `VITE_CLOUDINARY_UPLOAD_PRESET` | Unsigned Cloudinary upload preset. Defaults to `"example"` in code when unset.                                                                | `ml_default`                 |
+| `VITE_GOONG_MAPTILES_KEY`       | Goong **Maptiles** key for map display. Without it every map shows "Map unavailable".                                                      | —                            |
+| `VITE_GOONG_API_KEY`            | Goong **API** (REST) key for geocoding. Without it address lookups fail and users type addresses by hand.                                    | —                            |
 
 All Vite environment variables must be prefixed with `VITE_` to be exposed to client code via `import.meta.env`.
+
+### 🗺️ Maps (Goong)
+
+1. Sign in at [account.goong.io](https://account.goong.io) and create two keys: a **Maptiles key** and an **API key**.
+2. Put them in `.env` as `VITE_GOONG_MAPTILES_KEY` and `VITE_GOONG_API_KEY`, then restart `npm run dev` (env is read at build time).
+3. Both keys ship to the browser. For deployed sites, restrict them to your domain in the Goong console.
+4. Free tier is roughly 1,000 REST calls/day (5/s) and 1,000 map loads/month — upgrade before production traffic.
 
 ---
 
@@ -337,16 +345,8 @@ Feature-oriented modules call the backend through the shared Axios instance in `
 | ----------------------- | ----------------------------------------------------------------------------- |
 | Backend REST API        | All `apis/` modules via `VITE_API_URL`                                        |
 | Cloudinary              | Direct browser uploads for incident and related media                         |
-| OpenStreetMap Nominatim | Reverse geocoding via `/api/reverse-geocode` (Vite middleware in dev/preview) |
+| Goong                   | Map style/tiles and geocoding, called from the browser (`libs/goong.ts`)       |
 | Google OAuth            | OAuth callback handling (backend-driven flow)                                 |
-
-### 🧪 Local development endpoint
-
-| Endpoint               | Method | Description                                                                                                   |
-| ---------------------- | ------ | ------------------------------------------------------------------------------------------------------------- |
-| `/api/reverse-geocode` | `GET`  | Proxies to Nominatim with required `lat` and `lon` query parameters. Implemented in `vite/reverseGeocode.ts`. |
-
-> **Note:** In a static production deployment, `/api/reverse-geocode` must be proxied by your web server or API gateway unless you route geocoding through the backend.
 
 ---
 

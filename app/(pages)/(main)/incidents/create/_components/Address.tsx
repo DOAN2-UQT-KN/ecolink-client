@@ -1,5 +1,14 @@
 import { memo, useCallback, useEffect, useRef, useState } from "react";
-import type { LatLngLiteral } from "leaflet";
+import {
+  getAddressFromLatLng,
+  getLatLngFromAddress,
+  isSamePosition,
+  normalizeAddressQuery,
+  reverseCacheKey,
+  type ForwardGeocodingResult,
+  type LatLng,
+  type ReverseGeocodingAddress,
+} from "@/libs/geocoding";
 import { useFormState, useWatch } from "react-hook-form";
 import dynamic from "@/libs/dynamic";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
@@ -11,12 +20,11 @@ import { IoIosSearch } from "react-icons/io";
 import { toast } from "sonner";
 import type { IncidentFormValues } from "../_services/incident.service";
 
-const LeafletAddressMap = dynamic(() => import("@/modules/LeafletAddressMap"), {
+const AddressMap = dynamic(() => import("@/modules/AddressMap"), {
   ssr: false,
   loading: () => <div className="h-full w-full bg-slate-100 animate-pulse rounded-xl" />,
 });
 
-const NOMINATIM_HEADERS = { Accept: "application/json" } as const;
 const REVERSE_DEBOUNCE_MS = 400;
 const GPS_OPTIONS: PositionOptions = {
   enableHighAccuracy: true,
@@ -25,33 +33,12 @@ const GPS_OPTIONS: PositionOptions = {
 
 type AddressChangeSource = "map" | "gps" | "user" | "hydrate";
 
-type ReverseGeocodingAddress = {
-  detailAddress?: string;
-};
-
-type ForwardGeocodingResult =
-  | { ok: true; lat: number; lng: number; displayName: string }
-  | { ok: false; reason: "not_found" | "error" };
-
 type AddressSnapshot = {
   detailAddress: string;
   latitude?: number;
   longitude?: number;
-  position: LatLngLiteral | null;
+  position: LatLng | null;
 };
-
-function reverseCacheKey(lat: number, lng: number) {
-  return `${lat.toFixed(4)},${lng.toFixed(4)}`;
-}
-
-function normalizeAddressQuery(value: string) {
-  return value.trim().toLowerCase().replace(/\s+/g, " ");
-}
-
-function isSamePosition(a: LatLngLiteral | null, b: LatLngLiteral) {
-  if (!a) return false;
-  return a.lat.toFixed(4) === b.lat.toFixed(4) && a.lng.toFixed(4) === b.lng.toFixed(4);
-}
 
 const Address = memo(function Address() {
   const { t } = useTranslation();
@@ -62,7 +49,7 @@ const Address = memo(function Address() {
     control,
     name: ["detailAddress", "latitude", "longitude"],
   });
-  const [position, setPosition] = useState<LatLngLiteral | null>(null);
+  const [position, setPosition] = useState<LatLng | null>(null);
   const [forwardWarning, setForwardWarning] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [canConfirm, setCanConfirm] = useState(false);
@@ -81,7 +68,7 @@ const Address = memo(function Address() {
   isEditingRef.current = isEditing;
 
   const applyPosition = useCallback(
-    (newPos: LatLngLiteral, source: AddressChangeSource) => {
+    (newPos: LatLng, source: AddressChangeSource) => {
       if (source === "user" || source === "hydrate") {
         skipReverseRef.current = true;
       }
@@ -116,83 +103,6 @@ const Address = memo(function Address() {
         t("Please select a location on the map"),
     });
   }, [register, t]);
-
-  const parseAddress = useCallback((data: {
-    display_name?: string;
-    address?: Record<string, string | undefined>;
-  }): ReverseGeocodingAddress => {
-    const address = data.address ?? {};
-    const parsedCity =
-      address.city ??
-      address.town ??
-      address.state ??
-      address.province ??
-      address.municipality;
-    const parsedDistrict =
-      address.county ??
-      address.city_district ??
-      address.district ??
-      address.suburb ??
-      address.quarter;
-    const parsedDetail =
-      data.display_name ??
-      [address.road, address.house_number, parsedDistrict, parsedCity]
-        .filter(Boolean)
-        .join(", ");
-
-    return {
-      detailAddress: parsedDetail,
-    };
-  }, []);
-
-  const getAddressFromLatLng = useCallback(async (lat: number, lng: number) => {
-    const response = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
-      { headers: NOMINATIM_HEADERS },
-    );
-
-    if (!response.ok) {
-      throw new Error("Reverse geocoding failed");
-    }
-
-    const data = (await response.json()) as {
-      display_name?: string;
-      address?: Record<string, string | undefined>;
-    };
-
-    return parseAddress(data);
-  }, [parseAddress]);
-
-  const getLatLngFromAddress = useCallback(async (query: string): Promise<ForwardGeocodingResult> => {
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`,
-        { headers: NOMINATIM_HEADERS },
-      );
-
-      if (!response.ok) {
-        return { ok: false, reason: "error" };
-      }
-
-      const data = (await response.json()) as Array<{
-        lat?: string;
-        lon?: string;
-        display_name?: string;
-      }>;
-      const first = data[0];
-      const lat = first?.lat != null ? Number(first.lat) : NaN;
-      const lng = first?.lon != null ? Number(first.lon) : NaN;
-      const displayName = first?.display_name?.trim() ?? "";
-
-      if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-        return { ok: false, reason: "not_found" };
-      }
-
-      return { ok: true, lat, lng, displayName };
-    } catch {
-      return { ok: false, reason: "error" };
-    }
-  }, []);
 
   // Hydrate from existing form coords (skip reverse when address already set); else auto GPS once.
   useEffect(() => {
@@ -269,7 +179,7 @@ const Address = memo(function Address() {
         clearTimeout(reverseTimerRef.current);
       }
     };
-  }, [getAddressFromLatLng, position, writeDetailAddressFromReverse]);
+  }, [position, writeDetailAddressFromReverse]);
 
   const useCurrentLocation = useCallback(() => {
     if (!navigator.geolocation) {
@@ -354,7 +264,7 @@ const Address = memo(function Address() {
       applyPosition(nextPos, "user");
     }
     setCanConfirm(true);
-  }, [applyPosition, getLatLngFromAddress, position, searchQuery, t]);
+  }, [applyPosition, position, searchQuery, t]);
 
   const handleConfirm = useCallback(() => {
     if (!canConfirm) return;
@@ -387,7 +297,7 @@ const Address = memo(function Address() {
   }, [exitEditing, setValue]);
 
   const handleMapPosition = useCallback(
-    (pos: LatLngLiteral) => {
+    (pos: LatLng) => {
       if (isEditingRef.current) return;
       applyPosition(pos, "map");
     },
@@ -512,7 +422,7 @@ const Address = memo(function Address() {
             hasLocationError && "border-destructive ring-2 ring-destructive/30",
           )}
         >
-          <LeafletAddressMap
+          <AddressMap
             position={position}
             setPosition={handleMapPosition}
             popupText={detailAddress || t("Selected location")}

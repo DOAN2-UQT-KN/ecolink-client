@@ -1,71 +1,32 @@
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-
-interface AddressParts {
-  road?: string;
-  suburb?: string;
-  city_district?: string;
-  district?: string;
-  city?: string;
-  town?: string;
-  village?: string;
-  municipality?: string;
-}
-
-interface GeocodeResponse {
-  address?: AddressParts;
-  display_name?: string;
-  error?: string;
-}
+import { getAddressFromLatLng, type ReverseGeocodingAddress } from "@/libs/geocoding";
 
 export const useReverseGeocode = (
   latitude: number | null,
   longitude: number | null,
 ) => {
   const { t } = useTranslation();
-  const { data, isLoading, error } = useQuery<GeocodeResponse>({
+  const { data, isLoading, error } = useQuery<ReverseGeocodingAddress>({
     queryKey: ["reverse-geocode", latitude, longitude],
-    queryFn: async () => {
-      if (latitude === null || longitude === null) return {};
-
-      const response = await fetch(
-        `/api/reverse-geocode?lat=${latitude}&lon=${longitude}`,
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to fetch address");
-      }
-
-      return response.json();
-    },
+    queryFn: () =>
+      latitude === null || longitude === null
+        ? Promise.resolve({})
+        : getAddressFromLatLng(latitude, longitude),
     enabled: latitude !== null && longitude !== null,
     staleTime: 1000 * 60 * 60, // 1 hour cache
     gcTime: 1000 * 60 * 60 * 24, // Keep in garbage collection for 24 hours
     retry: 1,
   });
 
-  const formatAddress = (result: GeocodeResponse): string => {
-    if (!result || result.error) return t("Location Unavailable");
-    
-    const addr = result.address || {};
-    const parts = [
-      addr.road,
-      addr.suburb || addr.city_district || addr.district,
-      addr.city || addr.town || addr.village || addr.municipality,
-    ].filter(Boolean);
+  const address = data
+    ? data.detailAddress || t("Unknown Location")
+    : isLoading
+      ? t("Fetching address...")
+      : null;
 
-    if (parts.length > 0) {
-      return parts.join(", ");
-    }
-
-    return result.display_name?.split(",")[0] || t("Unknown Location");
-  };
-
-  const address = data ? formatAddress(data) : (isLoading ? t("Fetching address...") : null);
-
-  return { 
-    address: error ? t("Location Unavailable") : address, 
-    isLoading 
+  return {
+    address: error ? t("Location Unavailable") : address,
+    isLoading,
   };
 };

@@ -460,6 +460,7 @@
   "Map updated at {{time}}": "Cập nhật lúc {{time}}",
   "Refreshing map…": "Đang làm mới bản đồ…",
   "No markers found on map.": "Không tìm thấy điểm đánh dấu nào trên bản đồ.",
+  "Map unavailable": "Không tải được bản đồ",
   "Untitled Campaign": "Chiến dịch chưa đặt tên",
   "SOS": "SOS",
   "Create SOS Alert": "Tạo cảnh báo SOS",

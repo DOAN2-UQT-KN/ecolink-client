@@ -31,7 +31,7 @@ Frontend (Next.js/React) → API Gateway → 5 Microservices
 ```
 
 **Hỗ trợ đa ngôn ngữ:** Tiếng Việt và Tiếng Anh (tự động dịch qua background worker)
-**Hỗ trợ bản đồ:** Leaflet + OpenStreetMap — hiển thị báo cáo và chiến dịch trên bản đồ tương tác
+**Hỗ trợ bản đồ:** Goong Maps (MapLibre GL) — hiển thị báo cáo và chiến dịch trên bản đồ tương tác
 
 ---
 
@@ -1070,7 +1070,7 @@ SOS là cơ chế kêu gọi hỗ trợ khẩn cấp trong chiến dịch đang 
 
 ## Hiển thị trên bản đồ (`/maps`)
 
-- SOS đang active hiển thị như điểm cảnh báo nổi bật trên bản đồ Leaflet
+- SOS đang active hiển thị như điểm cảnh báo nổi bật trên bản đồ Goong
 - Người dùng click vào điểm SOS → xem: tên chiến dịch, nội dung khẩn cấp, số điện thoại liên lạc, địa chỉ chính xác
 - Lọc: `status` (chỉ hiện active), `campaign_id` (lọc theo chiến dịch cụ thể)
 
@@ -1470,7 +1470,7 @@ Ví dụ: Badge "Top Volunteer" có `discountBps = 500` (5% giảm giá) — ng�
 
 ## Tổng quan
 
-Trang `/maps` là màn hình bản đồ toàn màn hình sử dụng **Leaflet** + **OpenStreetMap**. Đây là giao diện không-sidebar duy nhất (MapsLayout) — chiếm toàn bộ viewport.
+Trang `/maps` là màn hình bản đồ toàn màn hình sử dụng **Goong Maps** (MapLibre GL + react-map-gl). Đây là giao diện không-sidebar duy nhất (MapsLayout) — chiếm toàn bộ viewport.
 
 ---
 
@@ -1486,7 +1486,7 @@ Trang `/maps` là màn hình bản đồ toàn màn hình sử dụng **Leaflet*
 
 ## Kỹ thuật render
 
-- **Dynamic import** (`ssr: false`) — Leaflet không hỗ trợ server-side rendering, chỉ load trong browser
+- **Dynamic import** (`ssr: false`) — thư viện bản đồ (WebGL) chỉ load trong browser
 - **Loading skeleton** khi chưa load xong bản đồ
 - MapsLayout bỏ header/footer để bản đồ chiếm full viewport
 - Layout `-mt-[92px] -mb-[92px]` để bù trừ header height từ MainLayout
@@ -1498,7 +1498,7 @@ Trang `/maps` là màn hình bản đồ toàn màn hình sử dụng **Leaflet*
 - **Click vào điểm báo cáo:** Xem thông tin tóm tắt, link đến trang chi tiết báo cáo
 - **Click vào điểm chiến dịch:** Xem thông tin chiến dịch, link đến trang chi tiết
 - **Click vào điểm SOS:** Xem nội dung khẩn cấp: tên chiến dịch, mô tả tình huống, số điện thoại, địa chỉ
-- **Zoom in/out:** Điều hướng bình thường của Leaflet
+- **Zoom in/out:** Nút +/− và cuộn chuột như bản đồ thông thường
 
 ---
 
@@ -2118,7 +2118,7 @@ Click icon chat. Gõ: _"Tôi vừa tạo báo cáo về bãi rác, tôi cần l�
 | 18  | `/profile/badges`                        | Huy hiệu                    | ProfileLayout | Đăng nhập   | ⚠️ Sơ lược             | Summary stats + lưới badge + filter                    |
 | 19  | `/profile/points`                        | Lịch sử điểm                | ProfileLayout | Đăng nhập   | ❌ Chưa có             | CRP/VRP/SP hiện có + transaction history               |
 | 20  | `/profile/orders`                        | Đơn hàng đổi quà            | ProfileLayout | Đăng nhập   | ⚠️ Sơ lược             | Danh sách đơn đổi quà, trạng thái giao hàng            |
-| 21  | `/maps`                                  | Bản đồ tương tác            | MapsLayout    | Tất cả      | ✅ Có (Bước 14)        | Leaflet, báo cáo + chiến dịch + SOS                    |
+| 21  | `/maps`                                  | Bản đồ tương tác            | MapsLayout    | Tất cả      | ✅ Có (Bước 14)        | Goong, báo cáo + chiến dịch + SOS                      |
 | 22  | `/sign-in`                               | Đăng nhập                   | AuthLayout    | Khách       | ✅ Có (Bước 2)         | Email/password + Google OAuth                          |
 | 23  | `/sign-up`                               | Đăng ký                     | AuthLayout    | Khách       | ✅ Có (Bước 2)         | Email + xác thực                                       |
 | 24  | `/authenticate`                          | Xác thực email              | AuthLayout    | Khách       | ❌ Chưa có             | Xác nhận email sau đăng ký                             |

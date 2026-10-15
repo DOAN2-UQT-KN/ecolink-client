@@ -1,7 +1,7 @@
 import { useState, type ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import type { LatLngLiteral } from 'leaflet';
+import type { LatLng } from '@/libs/geocoding';
 
 import { useUploadResultPhoto } from '@/apis/campaign/uploadResultPhoto';
 import type { IResultPhotoCheck, ResultPhotoSide } from '@/apis/campaign/models/shiftResult';
@@ -29,7 +29,7 @@ export function ResultPhotoButton({
   reportId: string;
   side: ResultPhotoSide;
   remaining: number;
-  defaultPin: LatLngLiteral | null;
+  defaultPin: LatLng | null;
   pointTitle: string;
   onUploaded: (items: Array<{ url: string; check: IResultPhotoCheck }>) => void;
 }) {
@@ -65,7 +65,7 @@ export function ResultPhotoButton({
     setPending(ok.slice(0, remaining));
   };
 
-  const onPin = async (pin: LatLngLiteral) => {
+  const onPin = async (pin: LatLng) => {
     const files = pending;
     setPending([]);
     setBusy(true);

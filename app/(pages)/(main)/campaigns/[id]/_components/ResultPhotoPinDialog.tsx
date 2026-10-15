@@ -1,5 +1,5 @@
 import { memo, useState } from 'react';
-import type { LatLngLiteral } from 'leaflet';
+import type { LatLng } from '@/libs/geocoding';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/client/shared/Button';
@@ -15,7 +15,7 @@ import dynamic from '@/libs/dynamic';
 import showMessage, { MessageLevel, MessageType } from '@/utils/showMessage';
 import { getCurrentPosition, hasGeolocation } from '@/libs/geo';
 
-const LeafletAddressMap = dynamic(() => import('@/modules/LeafletAddressMap'), {
+const AddressMap = dynamic(() => import('@/modules/AddressMap'), {
   ssr: false,
   loading: () => <div className="h-full w-full animate-pulse rounded-xl bg-slate-100" />,
 });
@@ -37,13 +37,13 @@ export const ResultPhotoPinDialog = memo(function ResultPhotoPinDialog({
   /** Photos waiting for the pin. */
   count: number;
   /** The waste point's location, when it has one. */
-  defaultPin: LatLngLiteral | null;
+  defaultPin: LatLng | null;
   pointTitle: string;
   onCancel: () => void;
-  onConfirm: (pin: LatLngLiteral) => void;
+  onConfirm: (pin: LatLng) => void;
 }) {
   const { t } = useTranslation('common');
-  const [position, setPosition] = useState<LatLngLiteral | null>(defaultPin);
+  const [position, setPosition] = useState<LatLng | null>(defaultPin);
 
   // Start from the waste point every time the dialog opens.
   const [wasOpen, setWasOpen] = useState(open);
@@ -77,7 +77,7 @@ export const ResultPhotoPinDialog = memo(function ResultPhotoPinDialog({
         <p className="text-sm font-medium">{pointTitle}</p>
         <div className="relative z-0 h-[360px] w-full overflow-hidden rounded-xl border">
           {open && (
-            <LeafletAddressMap position={position} setPosition={setPosition} popupText={t('Where the photos were taken')} />
+            <AddressMap position={position} setPosition={setPosition} popupText={t('Where the photos were taken')} />
           )}
         </div>
         {!defaultPin && <p className="text-xs text-amber-700">{t('This waste point has no location; pin where you were.')}</p>}

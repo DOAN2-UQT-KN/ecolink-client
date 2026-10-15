@@ -1,4 +1,4 @@
-import type { LatLngLiteral } from "leaflet";
+import type { LatLng } from "@/libs/geocoding";
 
 export const REVERSE_DEBOUNCE_MS = 400;
 // maximumAge: 0 matches the old raw navigator call (libs/geo defaults to 30s).
@@ -14,11 +14,11 @@ export type AddressSnapshot = {
   detailAddress: string;
   latitude?: number;
   longitude?: number;
-  position: LatLngLiteral | null;
+  position: LatLng | null;
 };
 
 /** Saved form coordinates as a position, or null when either is missing or NaN. */
-export const toLatLng = (lat: unknown, lng: unknown): LatLngLiteral | null =>
+export const toLatLng = (lat: unknown, lng: unknown): LatLng | null =>
   typeof lat === "number" && typeof lng === "number" && !Number.isNaN(lat) && !Number.isNaN(lng)
     ? { lat, lng }
     : null;
