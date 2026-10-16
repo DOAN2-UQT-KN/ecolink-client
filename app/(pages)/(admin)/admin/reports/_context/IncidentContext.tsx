@@ -41,6 +41,28 @@ type IncidentContextType = {
 
 const IncidentContext = createContext<IncidentContextType | undefined>(undefined);
 
+/**
+ * The moderation filters (specs/008) share the Status select: `moderation:REVIEW|REJECT`.
+ * On the URL they are `moderation=…` (no `status`), so old queue links map straight onto them.
+ */
+export const MODERATION_STATUS_PREFIX = "moderation:";
+
+export function moderationOf(status: string): "REVIEW" | "REJECT" | undefined {
+  const value = status.startsWith(MODERATION_STATUS_PREFIX) ? status.slice(MODERATION_STATUS_PREFIX.length) : "";
+  return value === "REVIEW" || value === "REJECT" ? value : undefined;
+}
+
+function statusFromUrl(status: string | undefined, moderation: string | undefined): string {
+  return moderation === "REVIEW" || moderation === "REJECT" ? `${MODERATION_STATUS_PREFIX}${moderation}` : status ?? "all";
+}
+
+/** URL params for a status filter value: either `status` or `moderation`, never both. */
+function statusParams(status: string): { status?: string; moderation?: string } {
+  const moderation = moderationOf(status);
+  if (moderation) return { status: undefined, moderation };
+  return { status: status === "all" ? undefined : status, moderation: undefined };
+}
+
 function parseSortBy(value: string | undefined): SortBy {
   if (value === "updated_at" || value === "name" || value === "created_at") {
     return value;
@@ -73,6 +95,7 @@ export function IncidentProvider({ children }: { children: React.ReactNode }) {
 
   const urlSearch = useGetParam<string>("search", "string", "");
   const urlStatus = useGetParam<string>("status", "string", "all");
+  const urlModeration = useGetParam<string>("moderation", "string", "");
   const urlSortBy = useGetParam<string>("sort_by", "string", "created_at");
   const urlSortOrder = useGetParam<string>("sort_order", "string", "desc");
   const urlPage = useGetParam<number>("page", "number", 1);
@@ -80,7 +103,7 @@ export function IncidentProvider({ children }: { children: React.ReactNode }) {
 
   const [filters, setFilters] = useState<IncidentFormFilterValues>({
     search: urlSearch ?? "",
-    status: urlStatus ?? "all",
+    status: statusFromUrl(urlStatus, urlModeration),
     sortBy: parseSortBy(urlSortBy),
     sortOrder: parseSortOrder(urlSortOrder),
   });
@@ -93,7 +116,7 @@ export function IncidentProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const nextFilters: IncidentFormFilterValues = {
       search: urlSearch ?? "",
-      status: urlStatus ?? "all",
+      status: statusFromUrl(urlStatus, urlModeration),
       sortBy: parseSortBy(urlSortBy),
       sortOrder: parseSortOrder(urlSortOrder),
     };
@@ -119,7 +142,7 @@ export function IncidentProvider({ children }: { children: React.ReactNode }) {
       }
       return nextPagination;
     });
-  }, [urlLimit, urlPage, urlSearch, urlSortBy, urlSortOrder, urlStatus]);
+  }, [urlLimit, urlModeration, urlPage, urlSearch, urlSortBy, urlSortOrder, urlStatus]);
 
   const setParams = useCallback(
     (updates: Record<string, string | undefined>) => {
@@ -138,15 +161,18 @@ export function IncidentProvider({ children }: { children: React.ReactNode }) {
     [pathname, router],
   );
 
-  const request: IGetReportsRequest = useMemo(
-    () => ({
-      page: pagination.current,
-      limit: pagination.pageSize,
-      search: filters.search.trim() || undefined,
+  const request: IGetReportsRequest = useMemo(() => {
+    const base = { page: pagination.current, limit: pagination.pageSize, search: filters.search.trim() || undefined };
+    const moderation = moderationOf(filters.status);
+    // The server sorts the moderation filters by risk; status and sort do not apply.
+    if (moderation) return { ...base, moderation };
+    return {
+      ...base,
       sort_by: filters.sortBy,
       sort_order: filters.sortOrder,
       status: filters.status === "all" ? undefined : Number(filters.status),
-    }),
+    };
+  },
     [filters.search, filters.sortBy, filters.sortOrder, filters.status, pagination],
   );
 
@@ -163,7 +189,7 @@ export function IncidentProvider({ children }: { children: React.ReactNode }) {
         setPagination((prevPagination) => ({ ...prevPagination, current: 1 }));
         setParams({
           search: search || undefined,
-          status: merged.status === "all" ? undefined : merged.status,
+          ...statusParams(merged.status),
           sort_by: merged.sortBy,
           sort_order: merged.sortOrder,
           page: "1",
@@ -186,6 +212,7 @@ export function IncidentProvider({ children }: { children: React.ReactNode }) {
     setParams({
       search: undefined,
       status: undefined,
+      moderation: undefined,
       sort_by: undefined,
       sort_order: undefined,
       page: undefined,

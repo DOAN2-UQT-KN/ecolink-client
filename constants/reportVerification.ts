@@ -180,6 +180,8 @@ export const VERIFICATION_POLL_MS = 3000;
 export const VERIFICATION_POLL_MAX_MS = 10 * 60 * 1000;
 
 export type VerificationOutcome = "checking" | "review" | "accepted" | "rejected";
+/** Admin views also tell engine auto-rejections apart from moderator rejections. */
+export type AdminVerificationOutcome = VerificationOutcome | "auto_rejected";
 
 /** Outcome a report status stands for, or null for statuses outside verification (22, 24, …). */
 export function reportOutcomeOf(status: number | null | undefined): VerificationOutcome | null {
@@ -215,4 +217,24 @@ export function verificationStep(
   const outcome =
     reportOutcomeOf(reportStatus) ?? (verification?.status === "RUNNING" ? "checking" : null);
   return outcome ? { step: STEP_BY_OUTCOME[outcome], outcome } : null;
+}
+
+type ModerationView = {
+  status: number | null;
+  latest_verification?: unknown;
+  moderation_reason_code?: string | null;
+};
+
+/** Rejected by the engine (no moderator reason) rather than by an admin; needs a verification. */
+const isAutoRejected = (r: ModerationView) =>
+  r.status === STATUS.INACTIVE && !!r.latest_verification && !r.moderation_reason_code;
+
+/** Outcome shown in the admin report list and detail header (specs/008 FR-003). */
+export function reportVerificationOutcome(report: ModerationView): AdminVerificationOutcome | null {
+  return isAutoRejected(report) ? "auto_rejected" : reportOutcomeOf(report.status);
+}
+
+/** Whether a moderator can still accept or reject the report (specs/008 FR-012). */
+export function canModerate(report: ModerationView): boolean {
+  return report.status === STATUS.INREVIEW || isAutoRejected(report);
 }

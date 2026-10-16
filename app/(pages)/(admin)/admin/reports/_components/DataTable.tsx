@@ -10,18 +10,19 @@ import {
   DataTable as SharedDataTable,
   type DataTableColumn,
 } from '@/components/admin/shared/DataTable';
-import { PreviewIncidentPopover } from './PreviewIncidentPopover';
 import { StatusTag } from '@/components/ui/StatusTag';
 import { RichTextContent } from '@/components/ui/RichTextContent';
 import { cn } from '@/libs/utils';
-import { useIncidentContext } from '../_context/IncidentContext';
-import { VerifyIncidentConfirm } from './VerifyIncidentConfirm';
-import { TbScanEye } from 'react-icons/tb';
+import { moderationOf, useIncidentContext } from '../_context/IncidentContext';
+import { TbFileDescription } from 'react-icons/tb';
 import { User } from 'lucide-react';
 import { formattedDate } from '@/utils/formattedDate';
 import defaultAvatar from '@/public/default-avatar.png';
 import { STATUS } from '@/constants/status';
-import { reportCategoryLabel } from '@/constants/reportVerification';
+import { reportCategoryLabel, reportVerificationOutcome } from '@/constants/reportVerification';
+import { REPORT_OUTCOME_LABEL, REPORT_OUTCOME_TONE } from '@/constants/statusTone';
+import { Pill } from '@/components/ui/Pill';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Link } from '@/libs/router';
 import {
   ConditionCell,
@@ -39,6 +40,7 @@ const COLUMN_KEYS = {
   OWNER: 'owner',
   AI_ANALYSIS: 'ai_analysis',
   STATUS: 'status',
+  RISK: 'risk',
   REJECT_REASON: 'reject_reason',
   HANDLED_BY: 'handledBy',
   ACTION: 'action',
@@ -51,8 +53,9 @@ function toUserLabel(userId?: string | null) {
 
 export function DataTable() {
   const { t } = useTranslation();
-  const { incidents, loading, pagination, total, onPageChange, onPageSizeChange } =
+  const { incidents, loading, pagination, total, filters, onPageChange, onPageSizeChange } =
     useIncidentContext();
+  const moderation = moderationOf(filters.status);
   const { theme } = useAdminLayout();
   const isDark = theme === 'dark';
 
@@ -241,21 +244,38 @@ export function DataTable() {
         key: COLUMN_KEYS.STATUS,
         title: t('Status'),
         className: 'min-w-[120px]',
-        render: (_, record) => (
-          <StatusTag
-            status={record.status}
-            isDark={isDark}
-            label={
-              record.status === STATUS.INACTIVE
-                ? t('Banned')
-                : record.status === STATUS.PENDING
-                  ? t('Checking')
-                  : record.status === STATUS.INREVIEW
-                    ? t('Awaiting review')
-                    : undefined
-            }
-          />
-        ),
+        render: (_, record) => {
+          const outcome = reportVerificationOutcome(record);
+          // Legacy reports (no verification) keep their status tag; a ban without one is still "Banned".
+          if (outcome && (record.latest_verification || outcome !== 'rejected')) {
+            return (
+              <Pill tone={REPORT_OUTCOME_TONE[outcome]} isDark={isDark}>
+                {t(REPORT_OUTCOME_LABEL[outcome])}
+              </Pill>
+            );
+          }
+          return (
+            <StatusTag
+              status={record.status}
+              isDark={isDark}
+              label={record.status === STATUS.INACTIVE ? t('Banned') : undefined}
+            />
+          );
+        },
+      },
+      {
+        key: COLUMN_KEYS.RISK,
+        title: t('Risk'),
+        className: 'min-w-[80px]',
+        render: (_, record) => {
+          const risk = record.latest_verification?.risk_score;
+          if (risk == null) return <span className={isDark ? 'text-zinc-500' : 'text-muted-foreground'}>—</span>;
+          return (
+            <span className={cn('font-mono text-sm font-semibold', isDark ? 'text-zinc-200' : 'text-foreground')}>
+              {risk.toFixed(2)}
+            </span>
+          );
+        },
       },
       {
         key: COLUMN_KEYS.REJECT_REASON,
@@ -308,18 +328,10 @@ export function DataTable() {
       {
         key: COLUMN_KEYS.ACTION,
         title: t('Action'),
-        className: 'min-w-[160px]',
+        className: 'min-w-[72px]',
         sticky: 'right',
         render: (_, record) => {
-          const theme = isDark ? 'dark' : 'light';
-          const isInactive = record.status === STATUS.INACTIVE;
-          // Engine auto-rejections (no moderator reason) are reviewable in the moderation queue too.
-          const moderationFlag =
-            record.status === STATUS.INREVIEW
-              ? 'REVIEW'
-              : isInactive && record.latest_verification && !record.moderation_reason_code
-                ? 'REJECT'
-                : null;
+          const detailHref = `/admin/reports/${record.id}${moderation ? `?from=${moderation}&page=${pagination.current}&limit=${pagination.pageSize}` : ''}`;
 
           return (
             <div
@@ -328,47 +340,29 @@ export function DataTable() {
               onPointerDown={(e) => e.stopPropagation()}
               role="presentation"
             >
-              {moderationFlag && (
-                <Link
-                  href={`/admin/moderation?id=${record.id}${moderationFlag === 'REJECT' ? '&flag=REJECT' : ''}`}
-                  className={cn('text-xs font-medium underline', isDark ? 'text-blue-300' : 'text-blue-700')}
-                >
-                  {t('Open in moderation')}
-                </Link>
-              )}
-              {isInactive ? null : (
-                <>
-                  <PreviewIncidentPopover
-                    incident={record}
-                    theme={theme}
-                    trigger={
-                      <button
-                        type="button"
-                        className={cn(
-                          'cursor-pointer rounded-md border px-1.5 py-1.5 text-xs font-medium transition-colors duration-200',
-                          isDark
-                            ? 'border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-blue-300'
-                            : 'border-zinc-300 text-zinc-700 hover:bg-zinc-100 hover:text-blue-700',
-                        )}
-                      >
-                        <TbScanEye className="size-5" />
-                      </button>
-                    }
-                  />
-                  <VerifyIncidentConfirm
-                    mode={record.status === STATUS.PENDING ? 'verify' : 'ban'}
-                    incidentId={record.id}
-                    incidentTitle={record.title || t('Untitled Incident')}
-                    theme={theme}
-                  />
-                </>
-              )}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link
+                    href={detailHref}
+                    aria-label={t('View detail')}
+                    className={cn(
+                      'cursor-pointer rounded-md border px-1.5 py-1.5 text-xs font-medium transition-colors duration-200',
+                      isDark
+                        ? 'border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-blue-300'
+                        : 'border-zinc-300 text-zinc-700 hover:bg-zinc-100 hover:text-blue-700',
+                    )}
+                  >
+                    <TbFileDescription className="size-5" aria-hidden />
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent>{t('View detail')}</TooltipContent>
+              </Tooltip>
             </div>
           );
         },
       },
     ],
-    [isDark, pagination.current, pagination.pageSize, t],
+    [isDark, moderation, pagination.current, pagination.pageSize, t],
   );
 
   return (

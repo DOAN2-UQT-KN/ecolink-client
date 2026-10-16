@@ -5,7 +5,7 @@ import { TbCopy, TbMapPin, TbPhoto } from "react-icons/tb";
 import type { CheckName, ICheckResult } from "@/apis/incident/models/verification";
 import { Pill, PILL_TONE } from "@/components/ui/Pill";
 import { CHECK_NAMES, isAdminOnlyReason, reasonCopy } from "@/constants/reportVerification";
-import { CHECK_STATUS_LABEL, CHECK_STATUS_TONE, riskTone, signalTone } from "@/constants/statusTone";
+import { CHECK_STATUS_LABEL, CHECK_STATUS_TONE, signalTone } from "@/constants/statusTone";
 import { cn } from "@/libs/utils";
 
 const CHECK_ICON: Record<CheckName, IconType> = {
@@ -42,7 +42,6 @@ export function CheckCard({
   const label = t(CHECK_NAMES.find((c) => c.value === name)?.label ?? name);
   const Icon = CHECK_ICON[name];
   const scored = check?.status === "COMPLETED" && check.risk != null;
-  const tone = riskTone(scored ? check.risk : null);
   const reasons = check?.reasons ?? [];
   const muted = isDark ? "text-zinc-400" : "text-muted-foreground";
 
@@ -57,7 +56,7 @@ export function CheckCard({
         <span
           className={cn(
             "flex size-9 shrink-0 items-center justify-center rounded-md border",
-            isDark ? PILL_TONE[tone].dark : PILL_TONE[tone].light,
+            isDark ? PILL_TONE.neutral.dark : PILL_TONE.neutral.light,
           )}
         >
           <Icon className="size-5" aria-hidden />
@@ -95,20 +94,13 @@ export function CheckCard({
 
       {!!check?.signals.length && (
         <ul className="flex flex-wrap gap-2" aria-label={t("Signals")}>
-          {check.signals.map((signal) => {
-            const chip = signalTone(signal);
-            return (
-              <li key={signal.name}>
-                <Pill
-                  tone={chip.tone}
-                  isDark={isDark}
-                  className={cn("rounded-md font-mono", chip.dashed && "border-dashed opacity-80")}
-                >
-                  {signal.name}: {signal.status === "COMPLETED" ? (signal.raw ?? signal.risk ?? "—") : signal.status}
-                </Pill>
-              </li>
-            );
-          })}
+          {check.signals.map((signal) => (
+            <li key={signal.name}>
+              <Pill tone={signalTone(signal)} isDark={isDark} className="rounded-md font-mono">
+                {signal.name}: {signal.status === "COMPLETED" ? (signal.raw ?? signal.risk ?? "—") : signal.status}
+              </Pill>
+            </li>
+          ))}
         </ul>
       )}
       {check?.error && (

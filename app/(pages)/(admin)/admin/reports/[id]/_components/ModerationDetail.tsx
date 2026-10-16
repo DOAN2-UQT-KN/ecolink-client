@@ -1,20 +1,15 @@
 import { useTranslation } from "react-i18next";
 import { useAdminLayout } from "@/app/(pages)/(admin)/_context/AdminLayoutContext";
-import { useGetReportDetail } from "@/apis/incident/getReportDetail";
 import {
   isNotFoundError,
   useGetReportVerification,
 } from "@/apis/incident/getReportVerification";
 import { isAdminVerification } from "@/apis/incident/models/verification";
+import type { IIncident } from "@/apis/incident/models/incident";
 import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
-import { Pill } from "@/components/ui/Pill";
 import { Skeleton } from "@/components/ui/skeleton";
-import { reportCategoryLabel, reportOutcomeOf } from "@/constants/reportVerification";
-import { REPORT_OUTCOME_LABEL, REPORT_OUTCOME_TONE } from "@/constants/statusTone";
-import { STATUS } from "@/constants/status";
-import { formattedDate } from "@/utils/formattedDate";
+import { canModerate, reportCategoryLabel } from "@/constants/reportVerification";
 import { cn } from "@/libs/utils";
-import { useModerationContext } from "../_context/ModerationContext";
 import { readContextEvidence, readDuplicateMatch, readTrustEvidence } from "../_services/evidence.service";
 import { CheckCard, type EvidenceRow } from "./CheckCard";
 import { DuplicateEvidence } from "./DuplicateEvidence";
@@ -24,24 +19,22 @@ import { VerificationHistory } from "./VerificationHistory";
 
 const isRow = <T extends EvidenceRow>(row: T | false): row is T => row !== false;
 
-export function ModerationDetail({ reportId }: { reportId: string }) {
+/** Moderation tab of the admin report detail (specs/008 US3): scores, checks, history, decision. */
+export function ModerationDetail({ report, onDecided }: { report: IIncident; onDecided: () => void }) {
   const { t } = useTranslation();
   const { theme } = useAdminLayout();
   const isDark = theme === "dark";
-  const { flag } = useModerationContext();
-  const verificationQuery = useGetReportVerification(reportId);
-  const detailQuery = useGetReportDetail(reportId);
+  const verificationQuery = useGetReportVerification(report.id);
 
   const muted = isDark ? "text-zinc-400" : "text-muted-foreground";
   const card = cn("flex flex-col gap-4 rounded-[10px] border p-5", isDark ? "border-zinc-700 bg-zinc-900" : "border-border bg-card");
 
-  if (verificationQuery.isLoading || detailQuery.isLoading) {
+  if (verificationQuery.isLoading) {
     return <Skeleton className="h-96 w-full rounded-[10px]" />;
   }
 
   const raw = verificationQuery.data?.data?.verification;
-  const report = detailQuery.data?.data?.report;
-  if (!raw || !isAdminVerification(raw) || !report) {
+  if (!raw || !isAdminVerification(raw)) {
     return (
       <Empty className={card}>
         <EmptyHeader>
@@ -61,8 +54,7 @@ export function ModerationDetail({ reportId }: { reportId: string }) {
   const context = readContextEvidence(v.checks.context?.evidence);
   const categoryCode = context.category ?? report.category ?? "OTHER";
   const category = t(reportCategoryLabel(categoryCode) ?? "Other");
-  const canDecide = report.status === STATUS.INREVIEW || (flag === "REJECT" && report.status === STATUS.INACTIVE);
-  const outcome = reportOutcomeOf(report.status);
+  const canDecide = canModerate(report);
 
   const contextSummary =
     v.checks.context?.status !== "COMPLETED"
@@ -122,37 +114,14 @@ export function ModerationDetail({ reportId }: { reportId: string }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <article className={card} aria-labelledby="moderation-report-title">
-        <header className="flex flex-col gap-2">
-          <h2 id="moderation-report-title" className={cn("font-display-5 font-semibold", isDark ? "text-zinc-100" : "text-foreground")}>
-            {report.title || t("Untitled report")}
-          </h2>
-          <p className={cn("text-sm", muted)}>
-            {[
-              t("Submitted by {{name}} at {{time}}", {
-                name: report.user?.name ?? t("Unknown user"),
-                time: formattedDate(report.created_at, true),
-              }),
-              report.detail_address,
-            ]
-              .filter(Boolean)
-              .join(", ")}
-          </p>
-          <div className="flex flex-wrap items-center gap-2">
-            {outcome && (
-              <Pill tone={REPORT_OUTCOME_TONE[outcome]} isDark={isDark}>
-                {t(REPORT_OUTCOME_LABEL[outcome])}
-              </Pill>
-            )}
-            <span className={cn("text-xs", muted)}>
-              {t("Attempt {{n}} · engine {{engine}} · pipeline {{pipeline}}", {
-                n: v.attempt,
-                engine: v.versions.engine ?? "—",
-                pipeline: v.versions.pipeline,
-              })}
-            </span>
-          </div>
-        </header>
+      <article className={card} aria-label={t("Moderation")}>
+        <p className={cn("text-xs", muted)}>
+          {t("Attempt {{n}} · engine {{engine}} · pipeline {{pipeline}}", {
+            n: v.attempt,
+            engine: v.versions.engine ?? "—",
+            pipeline: v.versions.pipeline,
+          })}
+        </p>
 
         <RiskSummary verification={v} contextSummary={contextSummary} isDark={isDark} />
 
@@ -164,7 +133,7 @@ export function ModerationDetail({ reportId }: { reportId: string }) {
           <CheckCard name="context" check={v.checks.context} isDark={isDark} rows={contextRows} />
         </div>
 
-        {canDecide && <ModerationDecision reportId={report.id} isDark={isDark} />}
+        {canDecide && <ModerationDecision reportId={report.id} isDark={isDark} onDecided={onDecided} />}
       </article>
       <VerificationHistory reportId={report.id} isDark={isDark} />
     </div>

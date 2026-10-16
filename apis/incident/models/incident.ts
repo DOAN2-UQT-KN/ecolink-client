@@ -51,7 +51,12 @@ export interface IIncident {
   waste_type: string | null;
   category?: ReportCategory;
   waste_types?: WasteType[];
-  latest_verification?: { status: VerificationStatus; flag: VerificationFlag | null } | null;
+  /** `risk_score` is only sent to admins (search list and detail, specs/008). */
+  latest_verification?: {
+    status: VerificationStatus;
+    flag: VerificationFlag | null;
+    risk_score?: number | null;
+  } | null;
   moderation_reason_code?: ModerationReasonCode | null;
   condition?: string | null;
   severity_level: number | null;

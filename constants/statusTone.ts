@@ -1,6 +1,6 @@
 import type { GiftRedemptionStatus } from "@/apis/gift/models/gift";
 import type { CheckStatus, ISignal, VerificationFlag } from "@/apis/incident/models/verification";
-import { RISK_THRESHOLDS, type VerificationOutcome } from "@/constants/reportVerification";
+import { RISK_THRESHOLDS, type AdminVerificationOutcome } from "@/constants/reportVerification";
 import type { PillTone } from "@/components/ui/Pill";
 import { PRIORITY } from "@/constants/priority";
 import { STATUS } from "@/constants/status";
@@ -95,18 +95,20 @@ export const GIFT_REDEEM_TONE: Record<GiftRedemptionStatus, PillTone> = {
 };
 
 /** Report verification outcome (specs/007); "accepted" is green even though STATUS.TODO is neutral. */
-export const REPORT_OUTCOME_TONE: Record<VerificationOutcome, PillTone> = {
+export const REPORT_OUTCOME_TONE: Record<AdminVerificationOutcome, PillTone> = {
   checking: "neutral",
   review: "orange",
   accepted: "green",
   rejected: "red",
+  auto_rejected: "red",
 };
 
-export const REPORT_OUTCOME_LABEL: Record<VerificationOutcome, string> = {
+export const REPORT_OUTCOME_LABEL: Record<AdminVerificationOutcome, string> = {
   checking: "Checking",
   review: "Awaiting review",
   accepted: "Accepted",
   rejected: "Not accepted",
+  auto_rejected: "Auto-rejected",
 };
 
 export const RISK_FLAG_TONE: Record<VerificationFlag, PillTone> = {
@@ -136,9 +138,8 @@ export function riskTone(risk: number | null | undefined): PillTone {
   return risk < RISK_THRESHOLDS.reject ? "amber" : "red";
 }
 
-/** A signal chip: amber when it fired, dashed when it never ran, red when it broke. */
-export function signalTone(signal: Pick<ISignal, "status" | "risk">): { tone: PillTone; dashed: boolean } {
-  if (signal.status === "FAILED") return { tone: "red", dashed: false };
-  if (signal.status !== "COMPLETED") return { tone: "neutral", dashed: true };
-  return { tone: (signal.risk ?? 0) > 0 ? "amber" : "neutral", dashed: false };
+/** A signal chip: amber when it fired, red when it broke, neutral otherwise (the chip text says SKIPPED). */
+export function signalTone(signal: Pick<ISignal, "status" | "risk">): PillTone {
+  if (signal.status === "FAILED") return "red";
+  return signal.status === "COMPLETED" && (signal.risk ?? 0) > 0 ? "amber" : "neutral";
 }

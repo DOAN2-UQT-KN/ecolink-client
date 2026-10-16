@@ -27,6 +27,8 @@ export function RiskSummary({
   const { t } = useTranslation();
   const score = verification.risk_score;
   const { terms, score: computed } = riskBreakdown(verification.checks);
+  // The band the score falls in is shown at full strength, the other two stay faint.
+  const activeTone = score != null ? riskTone(score) : null;
   const muted = isDark ? "text-zinc-400" : "text-muted-foreground";
 
   const formula = (
@@ -84,13 +86,13 @@ export function RiskSummary({
           {BANDS.map((band) => (
             <span
               key={band.tone}
-              className={cn("h-full opacity-30", PILL_DOT[band.tone])}
+              className={cn("h-full", band.tone === activeTone ? "opacity-100" : "opacity-30", PILL_DOT[band.tone])}
               style={{ width: `${(band.to - band.from) * 100}%` }}
             />
           ))}
           {score != null && (
             <span
-              className={cn("absolute top-0 h-full w-0.5", isDark ? "bg-zinc-100" : "bg-foreground")}
+              className={cn("absolute top-0 h-full w-0.5 ring-1", isDark ? "bg-zinc-100 ring-zinc-900" : "bg-foreground ring-white")}
               style={{ left: `calc(${Math.min(1, Math.max(0, score)) * 100}% - 1px)` }}
             />
           )}

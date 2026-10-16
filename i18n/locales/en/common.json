@@ -2136,5 +2136,17 @@
   "How the total risk is calculated": "How the total risk is calculated",
   "{{check}} risk": "{{check}} risk",
   "risk {{risk}}": "risk {{risk}}",
-  "Conclusion": "Conclusion"
+  "Conclusion": "Conclusion",
+  "Risk": "Risk",
+  "View detail": "View detail",
+  "Sorted by risk score, highest first": "Sorted by risk score, highest first",
+  "Report detail": "Report detail",
+  "Back to list": "Back to list",
+  "Report not found": "Report not found",
+  "Next report": "Next report",
+  "Moderation": "Moderation",
+  "Submitted at": "Submitted at",
+  "Report photo {{n}}": "Report photo {{n}}",
+  "No photos": "No photos",
+  "AI recommendation": "AI recommendation"
 }

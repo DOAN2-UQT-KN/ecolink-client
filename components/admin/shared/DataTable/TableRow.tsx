@@ -112,7 +112,8 @@ export function DataTableRow<T>({
               column.sticky === "right" && "sticky right-0 z-10",
               column.sticky && !selected && "bg-card",
               column.sticky && selected && "bg-muted",
-              column.sticky && !selected && "group-hover:bg-muted/50",
+              // Opaque twin of the row's hover:bg-muted/50; a translucent bg lets scrolled cells show through.
+              column.sticky && !selected && "group-hover:bg-[color-mix(in_oklab,var(--color-muted)_50%,var(--color-card))]",
               column.className,
             )}
             onDoubleClick={(event) => {

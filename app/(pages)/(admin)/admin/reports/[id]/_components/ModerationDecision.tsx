@@ -13,13 +13,22 @@ import { apiErrorMessage } from "@/constants/apiErrorMessages";
 import { MODERATION_REASONS } from "@/constants/reportVerification";
 import showMessage, { MessageLevel, MessageType } from "@/utils/showMessage";
 import { cn } from "@/libs/utils";
-import { useModerationContext } from "../_context/ModerationContext";
 
-/** Accept / reject the selected report; a lost race (409) refreshes the queue (specs/007 FR-022, FR-023). */
-export function ModerationDecision({ reportId, isDark }: { reportId: string; isDark: boolean }) {
+/**
+ * Accept / reject a report (specs/007 FR-022, FR-023). The page stays on the report and refreshes
+ * through `onDecided`, also when another moderator won the race (409).
+ */
+export function ModerationDecision({
+  reportId,
+  isDark,
+  onDecided,
+}: {
+  reportId: string;
+  isDark: boolean;
+  onDecided: () => void;
+}) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const { selectNext, onSelect } = useModerationContext();
   const [reason, setReason] = useState<ModerationReasonCode | "">("");
   const [note, setNote] = useState("");
   const theme = isDark ? "dark" : "light";
@@ -33,11 +42,10 @@ export function ModerationDecision({ reportId, isDark }: { reportId: string; isD
         data: decision === "REJECT" ? { decision, reason_code: reason || undefined, note: note.trim() || undefined } : { decision },
       });
       queryClient.invalidateQueries({ queryKey: ["reports", "verification", reportId] });
-      queryClient.invalidateQueries({ queryKey: ["report-detail", reportId] });
-      queryClient.invalidateQueries({ queryKey: ["all-reports"] });
+      queryClient.invalidateQueries({ queryKey: ["incidents"] });
       setReason("");
       setNote("");
-      selectNext();
+      onDecided();
       return true;
     } catch (error) {
       const e = error as QueryError;
@@ -48,7 +56,9 @@ export function ModerationDecision({ reportId, isDark }: { reportId: string; isD
       });
       if (e.code === "REPORT_ALREADY_MODERATED") {
         queryClient.invalidateQueries({ queryKey: ["reports", "moderation"] });
-        onSelect(null);
+        queryClient.invalidateQueries({ queryKey: ["reports", "verification", reportId] });
+        queryClient.invalidateQueries({ queryKey: ["incidents"] });
+        onDecided();
         return true;
       }
       return false;
@@ -56,7 +66,7 @@ export function ModerationDecision({ reportId, isDark }: { reportId: string; isD
   };
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap justify-end gap-2">
       <ConfirmPopover
         theme={theme}
         trigger={<Button disabled={isPending}>{t("Accept")}</Button>}

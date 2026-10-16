@@ -2136,5 +2136,17 @@
   "How the total risk is calculated": "Cách tính risk tổng",
   "{{check}} risk": "Risk {{check}}",
   "risk {{risk}}": "risk {{risk}}",
-  "Conclusion": "Kết luận"
+  "Conclusion": "Kết luận",
+  "Risk": "Rủi ro",
+  "View detail": "Xem chi tiết",
+  "Sorted by risk score, highest first": "Sắp theo điểm rủi ro, cao nhất trước",
+  "Report detail": "Chi tiết báo cáo",
+  "Back to list": "Quay lại danh sách",
+  "Report not found": "Không tìm thấy báo cáo",
+  "Next report": "Báo cáo kế tiếp",
+  "Moderation": "Kiểm duyệt",
+  "Submitted at": "Thời điểm gửi",
+  "Report photo {{n}}": "Ảnh báo cáo {{n}}",
+  "No photos": "Không có ảnh",
+  "AI recommendation": "Gợi ý của AI"
 }
