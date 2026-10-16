@@ -19,7 +19,7 @@ import { User } from 'lucide-react';
 import { formattedDate } from '@/utils/formattedDate';
 import defaultAvatar from '@/public/default-avatar.png';
 import { STATUS } from '@/constants/status';
-import { reportCategoryLabel, reportVerificationOutcome } from '@/constants/reportVerification';
+import { reportCategoryLabel, reportOutcomeOf } from '@/constants/reportVerification';
 import { REPORT_OUTCOME_LABEL, REPORT_OUTCOME_TONE } from '@/constants/statusTone';
 import { Pill } from '@/components/ui/Pill';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -245,7 +245,7 @@ export function DataTable() {
         title: t('Status'),
         className: 'min-w-[120px]',
         render: (_, record) => {
-          const outcome = reportVerificationOutcome(record);
+          const outcome = reportOutcomeOf(record.status);
           // Legacy reports (no verification) keep their status tag; a ban without one is still "Banned".
           if (outcome && (record.latest_verification || outcome !== 'rejected')) {
             return (

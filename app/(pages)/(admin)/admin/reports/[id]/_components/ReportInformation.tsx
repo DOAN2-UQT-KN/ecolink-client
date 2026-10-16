@@ -10,7 +10,7 @@ import AppImage from "@/components/ui/AppImage";
 import { Pill } from "@/components/ui/Pill";
 import { RichTextContent } from "@/components/ui/RichTextContent";
 import { StatusTag } from "@/components/ui/StatusTag";
-import { reportCategoryLabel, reportVerificationOutcome } from "@/constants/reportVerification";
+import { reportCategoryLabel, reportOutcomeOf } from "@/constants/reportVerification";
 import { getSeverityLevel } from "@/constants/severity";
 import { REPORT_OUTCOME_LABEL, REPORT_OUTCOME_TONE } from "@/constants/statusTone";
 import { formattedDate } from "@/utils/formattedDate";
@@ -37,7 +37,7 @@ export function ReportInformation({ report, isDark }: { report: IIncident; isDar
   const category = reportCategoryLabel(report.category);
   const wasteTypes = getWasteTypeLabels(report.waste_type, t);
   const severity = getSeverityLevel(report.severity_level);
-  const outcome = reportVerificationOutcome(report);
+  const outcome = reportOutcomeOf(report.status);
 
   const items: Item[] = [
     { label: t("Report type"), value: category ? t(category) : dash },

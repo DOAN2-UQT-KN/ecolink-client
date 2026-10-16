@@ -13,7 +13,7 @@ import { Pill } from "@/components/ui/Pill";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusTag } from "@/components/ui/StatusTag";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { reportVerificationOutcome, shortReportCode } from "@/constants/reportVerification";
+import { reportOutcomeOf, shortReportCode } from "@/constants/reportVerification";
 import { REPORT_OUTCOME_LABEL, REPORT_OUTCOME_TONE } from "@/constants/statusTone";
 import { Link, useParams, usePathname, useRouter, useSearchParams } from "@/libs/router";
 import { cn } from "@/libs/utils";
@@ -130,7 +130,7 @@ export default function AdminReportDetailPage() {
     );
   }
 
-  const outcome = reportVerificationOutcome(report);
+  const outcome = reportOutcomeOf(report.status);
 
   return (
     <div className="space-y-2">
