@@ -2149,5 +2149,6 @@
   "Report photo {{n}}": "Report photo {{n}}",
   "No photos": "No photos",
   "AI recommendation": "AI recommendation",
-  "{{count}} photos, open to view all": "{{count}} photos, open to view all"
+  "{{count}} photos, open to view all": "{{count}} photos, open to view all",
+  "You have reached the report limit for the last 24 hours": "You have reached the report limit for the last 24 hours"
 }

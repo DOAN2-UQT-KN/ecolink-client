@@ -2149,5 +2149,6 @@
   "Report photo {{n}}": "Ảnh báo cáo {{n}}",
   "No photos": "Không có ảnh",
   "AI recommendation": "Gợi ý của AI",
-  "{{count}} photos, open to view all": "{{count}} ảnh, mở để xem tất cả"
+  "{{count}} photos, open to view all": "{{count}} ảnh, mở để xem tất cả",
+  "You have reached the report limit for the last 24 hours": "Bạn đã đạt giới hạn gửi báo cáo trong 24 giờ qua"
 }
