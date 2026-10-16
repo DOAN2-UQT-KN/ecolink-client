@@ -11,7 +11,7 @@ const WASTE_TYPE_LABELS: Record<string, string> = {
   hazardous: 'Hazardous waste',
 };
 
-const CONDITION_LABELS: Record<string, string> = {
+export const CONDITION_LABELS: Record<string, string> = {
   'newly-appeared': 'Newly-appeared',
   'long-standing': 'Long-standing',
   reappeared: 'Previously cleaned but reappeared',

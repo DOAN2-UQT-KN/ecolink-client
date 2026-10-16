@@ -117,7 +117,14 @@ export default function AdminReportDetailPage() {
               {!error || isNotFoundError(error) ? t("Report not found") : t("Could not load this report")}
             </EmptyTitle>
           </EmptyHeader>
-          <EmptyContent>{back}</EmptyContent>
+          <EmptyContent>
+            <Button variant="ghost" className="w-fit" asChild>
+              <Link href={backHref}>
+                <TbArrowLeft aria-hidden />
+                {t("Back to list")}
+              </Link>
+            </Button>
+          </EmptyContent>
         </Empty>
       </div>
     );

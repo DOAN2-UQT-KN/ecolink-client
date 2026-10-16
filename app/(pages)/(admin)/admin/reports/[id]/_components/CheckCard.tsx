@@ -27,14 +27,12 @@ export function CheckCard({
   name,
   check,
   isDark,
-  summary,
   rows = [],
   children,
 }: {
   name: CheckName;
   check?: ICheckResult;
   isDark: boolean;
-  summary?: string | null;
   rows?: EvidenceRow[];
   children?: ReactNode;
 }) {
@@ -48,7 +46,9 @@ export function CheckCard({
   return (
     <section
       className={cn(
-        "flex h-full flex-col gap-4 rounded-[10px] border p-4",
+        // From lg the card spans the parent's 3 rows (header / body / conclusion) through subgrid,
+        // so the three cards line their conclusions up whatever the content height.
+        "flex flex-col gap-4 rounded-[10px] border p-4 lg:row-span-3 lg:grid lg:grid-rows-subgrid",
         isDark ? "border-zinc-700 bg-zinc-800" : "border-border bg-card",
       )}
     >
@@ -75,60 +75,61 @@ export function CheckCard({
               </Pill>
             )}
           </div>
-          {summary && <p className={cn("text-sm", muted)}>{summary}</p>}
         </div>
       </header>
 
-      {children}
+      <div className="flex min-w-0 flex-col gap-4">
+        {children}
 
-      {rows.length > 0 && (
-        <dl className="grid grid-cols-[minmax(0,auto)_minmax(0,1fr)] gap-x-6 gap-y-1.5 text-sm">
-          {rows.map((row) => (
-            <div key={row.label} className="contents">
-              <dt className={muted}>{row.label}</dt>
-              <dd className={cn("font-semibold", isDark ? "text-zinc-100" : "text-foreground")}>{row.value}</dd>
-            </div>
-          ))}
-        </dl>
-      )}
+        {rows.length > 0 && (
+          <dl className="grid grid-cols-[minmax(0,auto)_minmax(0,1fr)] gap-x-6 gap-y-1.5 text-sm">
+            {rows.map((row) => (
+              <div key={row.label} className="contents">
+                <dt className={muted}>{row.label}</dt>
+                <dd className={cn("font-semibold", isDark ? "text-zinc-100" : "text-foreground")}>{row.value}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
 
-      {!!check?.signals.length && (
-        <ul className="flex flex-wrap gap-2" aria-label={t("Signals")}>
-          {check.signals.map((signal) => (
-            <li key={signal.name}>
-              <Pill tone={signalTone(signal)} isDark={isDark} className="rounded-md font-mono">
-                {signal.name}: {signal.status === "COMPLETED" ? (signal.raw ?? signal.risk ?? "—") : signal.status}
-              </Pill>
-            </li>
-          ))}
-        </ul>
-      )}
-      {check?.error && (
-        <p className="font-mono text-xs text-red-500">
-          {check.error.code}: {check.error.message}
-        </p>
-      )}
+        {!!check?.signals.length && (
+          <ul className="flex flex-wrap gap-2" aria-label={t("Signals")}>
+            {check.signals.map((signal) => (
+              <li key={signal.name}>
+                <Pill tone={signalTone(signal)} isDark={isDark} className="rounded-md font-mono">
+                  {signal.name}: {signal.status === "COMPLETED" ? (signal.raw ?? signal.risk ?? "—") : signal.status}
+                </Pill>
+              </li>
+            ))}
+          </ul>
+        )}
+        {check?.error && (
+          <p className="font-mono text-xs text-red-500">
+            {check.error.code}: {check.error.message}
+          </p>
+        )}
+      </div>
 
-      {check?.status === "COMPLETED" && (
-        <div className={cn("mt-auto flex flex-col gap-1.5 border-t pt-3", isDark ? "border-zinc-700" : "border-border")}>
-          <span className={cn("text-xs font-medium uppercase tracking-wide", muted)}>{t("Conclusion")}</span>
-          {reasons.length === 0 ? (
-            <p className="text-sm">{t("No issue found")}</p>
-          ) : (
-            <ul className="flex flex-col gap-1.5">
-              {reasons.map((code) => (
-                <li key={code} className="flex flex-wrap items-center gap-2 text-sm">
-                  <span className={cn("font-medium", isDark ? "text-zinc-100" : "text-foreground")}>
-                    {t(reasonCopy(code).title)}
-                  </span>
-                  {isAdminOnlyReason(code) && <Pill isDark={isDark}>{t("Admin only")}</Pill>}
-                  <span className={cn("font-mono text-xs", muted)}>{code}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
+      <div className={cn("flex flex-col gap-1.5 border-t pt-3", isDark ? "border-zinc-700" : "border-border")}>
+        <span className={cn("text-xs font-medium uppercase tracking-wide", muted)}>{t("Conclusion")}</span>
+        {check?.status !== "COMPLETED" ? (
+          <p className={cn("text-sm", muted)}>—</p>
+        ) : reasons.length === 0 ? (
+          <p className="text-sm">{t("No issue found")}</p>
+        ) : (
+          <ul className="flex flex-col gap-1.5">
+            {reasons.map((code) => (
+              <li key={code} className="flex flex-wrap items-center gap-2 text-sm">
+                <span className={cn("font-medium", isDark ? "text-zinc-100" : "text-foreground")}>
+                  {t(reasonCopy(code).title)}
+                </span>
+                {isAdminOnlyReason(code) && <Pill isDark={isDark}>{t("Admin only")}</Pill>}
+                <span className={cn("font-mono text-xs", muted)}>{code}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </section>
   );
 }

@@ -4,19 +4,28 @@ import { useTranslation } from "react-i18next";
 import ReactMarkdown from "react-markdown";
 import rehypeSanitize from "rehype-sanitize";
 import remarkGfm from "remark-gfm";
-import { TbExternalLink } from "react-icons/tb";
+import { TbExternalLink, TbPhotoOff } from "react-icons/tb";
 import type { IIncident } from "@/apis/incident/models/incident";
 import AppImage from "@/components/ui/AppImage";
+import { Pill } from "@/components/ui/Pill";
 import { RichTextContent } from "@/components/ui/RichTextContent";
-import { reportCategoryLabel } from "@/constants/reportVerification";
+import { StatusTag } from "@/components/ui/StatusTag";
+import { reportCategoryLabel, reportVerificationOutcome } from "@/constants/reportVerification";
+import { getSeverityLevel } from "@/constants/severity";
+import { REPORT_OUTCOME_LABEL, REPORT_OUTCOME_TONE } from "@/constants/statusTone";
 import { formattedDate } from "@/utils/formattedDate";
-import { ConditionCell, SeverityCell, WasteTypeCell } from "@/modules/ReportGeneralInformation";
+import { CONDITION_LABELS, getWasteTypeLabels } from "@/modules/ReportGeneralInformation";
 import { cn } from "@/libs/utils";
 import defaultAvatar from "@/public/default-avatar.png";
 
 const imagesOf = (report: IIncident) => report.image_urls || report.media_files?.map((m) => m.url) || [];
 
-/** Everything the reporter sent, plus who handles it (specs/008 US2, FR-009). Empty fields read "—". */
+type Item = { label: string; value: ReactNode; wide?: boolean };
+
+/**
+ * Everything the reporter sent, plus who handles it (specs/008 US2, FR-009): photos on the left,
+ * a compact grid of facts on the right, one text size for every value. Empty fields read "—".
+ */
 export function ReportInformation({ report, isDark }: { report: IIncident; isDark: boolean }) {
   const { t } = useTranslation();
   const muted = isDark ? "text-zinc-400" : "text-muted-foreground";
@@ -24,24 +33,57 @@ export function ReportInformation({ report, isDark }: { report: IIncident; isDar
   const dash = <span className={muted}>—</span>;
   const images = imagesOf(report);
   const hasPoint = report.latitude != null && report.longitude != null;
-  const category = reportCategoryLabel(report.category);
 
-  const rows: { label: string; value: ReactNode }[] = [
+  const category = reportCategoryLabel(report.category);
+  const wasteTypes = getWasteTypeLabels(report.waste_type, t);
+  const severity = getSeverityLevel(report.severity_level);
+  const outcome = reportVerificationOutcome(report);
+
+  const items: Item[] = [
+    { label: t("Report type"), value: category ? t(category) : dash },
+    { label: t("Waste Type"), value: wasteTypes.length ? wasteTypes.join(", ") : dash },
     {
-      label: t("Description"),
-      value: report.description ? (
-        <RichTextContent value={report.description} className={cn("text-sm", strong)} />
+      label: t("Severity"),
+      value: severity ? <span className={cn("font-medium", severity.textClass)}>{t(severity.label)}</span> : dash,
+    },
+    {
+      label: t("Condition"),
+      value: report.condition ? t(CONDITION_LABELS[report.condition] ?? report.condition) : dash,
+    },
+    {
+      label: t("Status"),
+      value:
+        outcome && (report.latest_verification || outcome !== "rejected") ? (
+          <Pill tone={REPORT_OUTCOME_TONE[outcome]} isDark={isDark}>
+            {t(REPORT_OUTCOME_LABEL[outcome])}
+          </Pill>
+        ) : (
+          <StatusTag status={report.status} isDark={isDark} />
+        ),
+    },
+    { label: t("Handled by"), value: report.handled_by?.name || dash },
+    {
+      label: t("Submitted by"),
+      value: report.user ? (
+        <span className="flex min-w-0 items-center gap-2">
+          <span className="relative size-6 shrink-0 overflow-hidden rounded-full">
+            <AppImage src={report.user.avatar || defaultAvatar} alt="" fill sizes="24px" className="object-cover" />
+          </span>
+          <span className="truncate">{report.user.name}</span>
+        </span>
       ) : (
         dash
       ),
     },
+    { label: t("Submitted at"), value: formattedDate(report.created_at, true) || dash },
     {
       label: t("Address"),
+      wide: true,
       value: (
-        <div className="flex flex-col gap-0.5">
+        <span className="flex flex-col gap-0.5">
           <span>{report.detail_address || "—"}</span>
           {hasPoint && (
-            <span className={cn("flex flex-wrap items-center gap-2 text-xs", muted)}>
+            <span className={cn("flex flex-wrap items-center gap-2", muted)}>
               <span className="font-mono">
                 {report.latitude?.toFixed(5)}, {report.longitude?.toFixed(5)}
               </span>
@@ -56,61 +98,70 @@ export function ReportInformation({ report, isDark }: { report: IIncident; isDar
               </a>
             </span>
           )}
-        </div>
+        </span>
       ),
     },
     {
-      label: t("Submitted by"),
-      value: report.user ? (
-        <span className="flex items-center gap-2">
-          <span className="relative size-7 shrink-0 overflow-hidden rounded-full">
-            <AppImage src={report.user.avatar || defaultAvatar} alt="" fill sizes="28px" className="object-cover" />
-          </span>
-          {report.user.name}
-        </span>
-      ) : (
-        dash
-      ),
+      label: t("Description"),
+      wide: true,
+      value: report.description ? <RichTextContent value={report.description} className="text-sm" /> : dash,
     },
-    { label: t("Submitted at"), value: formattedDate(report.created_at, true) || "—" },
-    { label: t("Report type"), value: category ? t(category) : dash },
-    { label: t("Waste Type"), value: <WasteTypeCell value={report.waste_type} isDark={isDark} /> },
-    { label: t("Severity"), value: <SeverityCell value={report.severity_level} isDark={isDark} /> },
-    { label: t("Condition"), value: <ConditionCell value={report.condition} isDark={isDark} /> },
-    { label: t("Reject Reason"), value: report.reject_reason || dash },
-    { label: t("Handled by"), value: report.handled_by?.name || dash },
+    ...(report.reject_reason ? [{ label: t("Reject Reason"), wide: true, value: report.reject_reason }] : []),
   ];
 
   return (
     <section
       aria-label={t("Information")}
-      className={cn("flex flex-col gap-5 rounded-[10px] border p-5", isDark ? "border-zinc-700 bg-zinc-900" : "border-border bg-card")}
+      className={cn("flex flex-col gap-6 rounded-[10px] border p-5", isDark ? "border-zinc-700 bg-zinc-900" : "border-border bg-card")}
     >
-      {images.length > 0 ? (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <AntdImage.PreviewGroup>
-            {images.map((url, i) => (
-              <AntdImage
-                key={url + i}
-                src={url}
-                alt={t("Report photo {{n}}", { n: i + 1 })}
-                className="aspect-square w-full rounded-md object-cover"
-              />
-            ))}
-          </AntdImage.PreviewGroup>
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
+        {/* Photos are equally important: one tile, "+N" for the rest, all in one preview. */}
+        <div className="flex flex-col gap-2">
+          {images.length > 0 ? (
+            <AntdImage.PreviewGroup items={images}>
+              <div className="relative">
+                <AntdImage
+                  src={images[0]}
+                  alt={
+                    images.length > 1
+                      ? t("{{count}} photos, open to view all", { count: images.length })
+                      : t("Report photo {{n}}", { n: 1 })
+                  }
+                  rootClassName="block w-full"
+                  className="aspect-[4/3] w-full rounded-md object-cover"
+                />
+                {images.length > 1 && (
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-md bg-black/50 text-2xl font-semibold text-white"
+                  >
+                    +{images.length - 1}
+                  </span>
+                )}
+              </div>
+            </AntdImage.PreviewGroup>
+          ) : (
+            <div
+              className={cn(
+                "flex aspect-[4/3] w-full flex-col items-center justify-center gap-2 rounded-md text-sm",
+                isDark ? "bg-zinc-800 text-zinc-400" : "bg-muted text-muted-foreground",
+              )}
+            >
+              <TbPhotoOff className="size-6" aria-hidden />
+              {t("No photos")}
+            </div>
+          )}
         </div>
-      ) : (
-        <p className={cn("text-sm", muted)}>{t("No photos")}</p>
-      )}
 
-      <dl className="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-[minmax(0,160px)_minmax(0,1fr)]">
-        {rows.map((row) => (
-          <div key={row.label} className="contents">
-            <dt className={muted}>{row.label}</dt>
-            <dd className={cn("min-w-0 break-words", strong)}>{row.value}</dd>
-          </div>
-        ))}
-      </dl>
+        <dl className="grid content-start gap-x-6 gap-y-4 sm:grid-cols-2 xl:grid-cols-3">
+          {items.map((item) => (
+            <div key={item.label} className={cn("flex min-w-0 flex-col gap-1", item.wide && "sm:col-span-2 xl:col-span-3")}>
+              <dt className={cn("text-xs font-medium uppercase tracking-wide", muted)}>{item.label}</dt>
+              <dd className={cn("min-w-0 break-words text-sm", strong)}>{item.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
 
       <div className={cn("flex flex-col gap-2 border-t pt-4", isDark ? "border-zinc-700" : "border-border")}>
         <h3 className={cn("font-display-3 font-semibold", strong)}>{t("AI recommendation")}</h3>

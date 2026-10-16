@@ -75,18 +75,9 @@ export function ModerationDetail({ report, onDecided }: { report: IIncident; onD
         match.inliers != null && { label: t("ORB inliers"), value: match.inliers },
         match.distanceM != null && { label: t("Distance"), value: `${Math.round(match.distanceM)} m` },
         match.timeDeltaHours != null && { label: t("Time apart"), value: t("{{count}} h", { count: Math.round(match.timeDeltaHours) }) },
+        match.sameUser != null && { label: t("Submitter"), value: match.sameUser ? t("Same submitter") : t("Different submitter") },
       ].filter(isRow)
     : [];
-  const duplicateSummary = match
-    ? [
-        match.sameUser != null && (match.sameUser ? t("Same submitter") : t("Different submitter")),
-        match.distanceM != null && t("{{distance}} m away", { distance: Math.round(match.distanceM) }),
-        match.timeDeltaHours != null && t("sent {{count}} h apart", { count: Math.round(match.timeDeltaHours) }),
-      ]
-        .filter(Boolean)
-        .join(", ") + "."
-    : null;
-
   const trustTotal = trust.live != null && trust.gallery != null ? trust.live + trust.gallery : null;
   const trustRows = [
     trust.gallery != null && trustTotal != null && {
@@ -125,8 +116,8 @@ export function ModerationDetail({ report, onDecided }: { report: IIncident; onD
 
         <RiskSummary verification={v} contextSummary={contextSummary} isDark={isDark} />
 
-        <div className="grid gap-4 lg:grid-cols-3">
-          <CheckCard name="duplicate" check={v.checks.duplicate} isDark={isDark} summary={duplicateSummary} rows={duplicateRows}>
+        <div className="grid gap-4 lg:grid-cols-[repeat(3,minmax(0,1fr))] lg:grid-rows-[auto_1fr_auto]">
+          <CheckCard name="duplicate" check={v.checks.duplicate} isDark={isDark} rows={duplicateRows}>
             {match && <DuplicateEvidence report={report} match={match} isDark={isDark} />}
           </CheckCard>
           <CheckCard name="trust" check={v.checks.trust} isDark={isDark} rows={trustRows} />
