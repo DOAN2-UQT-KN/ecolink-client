@@ -9,14 +9,23 @@ import { MessageType } from "@/utils/showMessage";
 
 const url = "/api/v1/reports";
 
-export const createReport = async (
-  req: ICreateReportRequest,
-): Promise<ICreateReportResponse> => {
-  return await requestApi.post<ICreateReportResponse>(url, req);
+export type CreateReportVariables = {
+  data: ICreateReportRequest;
+  /** Same key on every retry of one form fill, so the server creates one report. */
+  idempotencyKey: string;
+};
+
+export const createReport = async ({
+  data,
+  idempotencyKey,
+}: CreateReportVariables): Promise<ICreateReportResponse> => {
+  return await requestApi.post<ICreateReportResponse>(url, data, {
+    headers: { "Idempotency-Key": idempotencyKey },
+  });
 };
 
 export const useCreateReport = (
-  options: UsePostOptions<ICreateReportResponse, ICreateReportRequest>,
+  options: UsePostOptions<ICreateReportResponse, CreateReportVariables>,
 ) => {
   const { t } = useTranslation();
   return usePost({

@@ -2,11 +2,16 @@ import { Button } from "@/components/client/shared/Button";
 import { useTranslation } from "react-i18next";
 import { IoDocumentAttachOutline } from "react-icons/io5";
 import { BiTrash, BiPlus } from "react-icons/bi";
+import { TbCamera } from "react-icons/tb";
 import { useFormContext } from "react-hook-form";
-import { IncidentFormValues } from "../_services/incident.service";
+import {
+  IncidentFormValues,
+  IncidentImage,
+  MAX_INCIDENT_IMAGES,
+} from "../_services/incident.service";
 import { Image as AntdImage } from "antd";
 import { memo, useRef, useState, useCallback, useEffect } from "react";
-import { toast } from "sonner";
+import showMessage, { MessageLevel, MessageType } from "@/utils/showMessage";
 import { FaEye } from "react-icons/fa";
 import {
   Tooltip,
@@ -16,16 +21,22 @@ import {
 import { FieldError } from "@/components/ui/field";
 import { compressImage } from "@/libs/compressImage";
 import { cn } from "@/libs/utils";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
+import { Pill } from "@/components/ui/Pill";
+import { useCreateCapture } from "@/apis/incident/createCapture";
 
 const ImagePreviewItem = memo(function ImagePreviewItem({
   image,
   index,
+  live,
   onRemove,
 }: {
   image: string | File | Blob;
   index: number;
+  live: boolean;
   onRemove: (index: number) => void;
 }) {
+  const { t } = useTranslation();
   const [previewUrl, setPreviewUrl] = useState<string>("");
 
   useEffect(() => {
@@ -66,8 +77,14 @@ const ImagePreviewItem = memo(function ImagePreviewItem({
           ),
         }}
       />
+      {live && (
+        <Pill tone="green" className="absolute bottom-2 left-2 z-10">
+          {t("Live capture")}
+        </Pill>
+      )}
       <button
         type="button"
+        aria-label={t("Remove image")}
         onClick={(e) => {
           e.stopPropagation();
           onRemove(index);
@@ -83,12 +100,31 @@ const ImagePreviewItem = memo(function ImagePreviewItem({
 const FileUpload = memo(function FileUpload() {
   const { t } = useTranslation();
   const { watch, setValue, register, formState: { errors } } = useFormContext<IncidentFormValues>();
-  const imageStrings = watch("imageStrings") || [];
+  const images = watch("images") || [];
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const [compressing, setCompressing] = useState(false);
+  const { mutateAsync: createCapture } = useCreateCapture();
+  // Session requested when "Take photo" is pressed, used by the photo that comes back.
+  const capturePromiseRef = useRef<Promise<IncidentImage["capture"] | undefined> | null>(null);
+  const hasLibraryImage = images.some((image) => !image.capture);
+
+  const openCamera = useCallback(() => {
+    capturePromiseRef.current = createCapture()
+      .then((res) => ({ id: res.data.capture_id, expiresAt: res.data.expires_at, upload: res.data.upload }))
+      .catch(() => {
+        showMessage({
+          type: MessageType.Toast,
+          level: MessageLevel.Info,
+          title: t("Live capture is unavailable, the photo will be added as a library photo"),
+        });
+        return undefined;
+      });
+    cameraInputRef.current?.click();
+  }, [createCapture, t]);
 
   useEffect(() => {
-    register("imageStrings", {
+    register("images", {
       validate: (value) =>
         (Array.isArray(value) && value.length > 0) ||
         t("At least one image is required"),
@@ -100,19 +136,21 @@ const FileUpload = memo(function FileUpload() {
       const files = e.target.files;
       if (!files || files.length === 0) return;
 
-      const remainingSlots = 10 - imageStrings.length;
+      const remainingSlots = MAX_INCIDENT_IMAGES - images.length;
       if (remainingSlots <= 0) {
-        toast.error(t("Maximum 10 images allowed."));
+        showMessage({ type: MessageType.Toast, level: MessageLevel.Error, title: t("Maximum 10 images allowed.") });
         return;
       }
 
       const filesToProcess = Array.from(files).slice(0, remainingSlots);
       if (files.length > remainingSlots) {
-        toast.warning(
-          t("Only {{count}} images were added because of the limit.", {
+        showMessage({
+          type: MessageType.Toast,
+          level: MessageLevel.Warning,
+          title: t("Only {{count}} images were added because of the limit.", {
             count: remainingSlots,
           }),
-        );
+        });
       }
 
       setCompressing(true);
@@ -121,37 +159,42 @@ const FileUpload = memo(function FileUpload() {
       );
 
       try {
-        const newImages = await Promise.all(compressionPromises);
-        setValue("imageStrings", [...imageStrings, ...newImages], {
+        const compressed = await Promise.all(compressionPromises);
+        // A session is single-use: only the first photo from the camera input gets it.
+        const fromCamera = e.target === cameraInputRef.current;
+        const capture = fromCamera ? await capturePromiseRef.current : undefined;
+        capturePromiseRef.current = null;
+        const newImages: IncidentImage[] = compressed.map((source, i) =>
+          i === 0 && capture ? { source, capture } : { source },
+        );
+        setValue("images", [...images, ...newImages], {
           shouldDirty: true,
           shouldValidate: true,
         });
       } catch (error) {
         console.error("Error compressing files:", error);
-        toast.error(t("Failed to compress some images."));
+        showMessage({ type: MessageType.Toast, level: MessageLevel.Error, title: t("Failed to compress some images.") });
       } finally {
         setCompressing(false);
-        if (fileInputRef.current) {
-          fileInputRef.current.value = "";
-        }
+        e.target.value = "";
       }
     },
-    [imageStrings, setValue, t],
+    [images, setValue, t],
   );
 
   const removeImage = useCallback(
     (index: number) => {
-      const updatedImages = imageStrings.filter((_, i) => i !== index);
-      setValue("imageStrings", updatedImages, {
+      const updatedImages = images.filter((_, i) => i !== index);
+      setValue("images", updatedImages, {
         shouldDirty: true,
         shouldValidate: true,
       });
     },
-    [imageStrings, setValue],
+    [images, setValue],
   );
 
   const clearAll = useCallback(() => {
-    setValue("imageStrings", [], { shouldDirty: true, shouldValidate: true });
+    setValue("images", [], { shouldDirty: true, shouldValidate: true });
   }, [setValue]);
 
   return (
@@ -159,7 +202,7 @@ const FileUpload = memo(function FileUpload() {
       id="incident-images"
       className={cn(
         "w-full h-full flex flex-col gap-[30px] px-[30px] py-[35px] border-1 rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5 overflow-y-auto scrollbar-hide",
-        errors.imageStrings
+        errors.images
           ? "border-destructive ring-2 ring-destructive/20"
           : "border-[rgba(136,122,71,0.5)]",
       )}
@@ -172,12 +215,22 @@ const FileUpload = memo(function FileUpload() {
         accept="image/*"
         className="hidden"
       />
+      {/* Opens the rear camera on phones; browsers without capture support fall back to a file picker. */}
+      <input
+        type="file"
+        ref={cameraInputRef}
+        onChange={handleFileChange}
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+      />
 
-      {imageStrings.length === 0 && (
+      {images.length === 0 && (
         <>
           <div className="flex flex-col gap-[8px]">
-            <span className="font-display-5 font-semibold text-button-accent">
+            <span className="flex items-center gap-2 font-display-5 font-semibold text-button-accent">
               {t("Upload file")} <span className="text-destructive">*</span>
+              <InfoTooltip content={t("Live photos help your report get reviewed faster")} />
             </span>
             <span className="font-display-2 text-button-accent-hover">
               {t("Choose a image and upload securely to proceed.")}
@@ -197,18 +250,30 @@ const FileUpload = memo(function FileUpload() {
                 {t("JPEG, PNG, and WEBP formats, up to 50MB")}
               </span>
             </div>
-            <Button
-              variant="outlined-brown"
-              type="button"
-              disabled={compressing}
-            >
-              {compressing ? t("Compressing...") : t("Select files")}
-            </Button>
+            <div className="flex flex-wrap justify-center gap-3" onClick={(e) => e.stopPropagation()}>
+              <Button
+                variant="outlined-brown"
+                type="button"
+                disabled={compressing}
+                iconLeft={<TbCamera aria-hidden />}
+                onClick={openCamera}
+              >
+                {t("Take photo")}
+              </Button>
+              <Button
+                variant="outlined-brown"
+                type="button"
+                disabled={compressing}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {compressing ? t("Compressing...") : t("Choose from library")}
+              </Button>
+            </div>
           </div>
         </>
       )}
 
-      {imageStrings.length > 0 && (
+      {images.length > 0 && (
         <div className="flex flex-col gap-5">
           <div className="flex items-center justify-between">
             <span className="font-display-3 font-semibold text-button-accent">
@@ -228,16 +293,34 @@ const FileUpload = memo(function FileUpload() {
           </div>
           <div className="flex flex-wrap gap-4">
             <AntdImage.PreviewGroup>
-              {imageStrings.map((image, index) => (
+              {images.map((image, index) => (
                 <ImagePreviewItem
                   key={index}
-                  image={image}
+                  image={image.source}
+                  live={!!image.capture}
                   index={index}
                   onRemove={removeImage}
                 />
               ))}
             </AntdImage.PreviewGroup>
-            {imageStrings.length < 10 && (
+            {images.length < MAX_INCIDENT_IMAGES && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={openCamera}
+                    aria-label={t("Take photo")}
+                    className="w-[150px] h-[150px] border-2 border-dashed border-button-accent-hover rounded-[15px] flex items-center justify-center cursor-pointer hover:bg-button-accent/5 transition-colors group"
+                  >
+                    <TbCamera size={40} className="text-button-accent group-hover:scale-110 transition-transform" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{t("Take photo")}</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
+            {images.length < MAX_INCIDENT_IMAGES && (
               <Tooltip>
                 <TooltipTrigger>
                   <div
@@ -258,11 +341,14 @@ const FileUpload = memo(function FileUpload() {
             )}
           </div>
           <span className="text-sm text-button-accent-hover font-medium">
-            {imageStrings.length}/10
+            {images.length}/{MAX_INCIDENT_IMAGES}
           </span>
+          {hasLibraryImage && (
+            <span className="text-sm text-amber-700">{t("Live photos help your report get reviewed faster")}</span>
+          )}
         </div>
       )}
-      <FieldError errors={[errors.imageStrings]} />
+      <FieldError errors={[errors.images as { message?: string } | undefined]} />
     </div>
   );
 });

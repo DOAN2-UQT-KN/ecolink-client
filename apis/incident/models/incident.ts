@@ -1,4 +1,11 @@
 import { IUser } from "@/apis/auth/models/user";
+import type {
+  ModerationReasonCode,
+  ReportCategory,
+  VerificationFlag,
+  VerificationStatus,
+  WasteType,
+} from "./verification";
 
 export enum SortOrder {
   ASC = "asc",
@@ -40,7 +47,12 @@ export interface IIncident {
   description: string | null;
   description_vi?: string | null;
   description_en?: string | null;
+  /** Legacy CSV; read-only. New reports use `waste_types`. */
   waste_type: string | null;
+  category?: ReportCategory;
+  waste_types?: WasteType[];
+  latest_verification?: { status: VerificationStatus; flag: VerificationFlag | null } | null;
+  moderation_reason_code?: ModerationReasonCode | null;
   condition?: string | null;
   severity_level: number | null;
   latitude: number | null;

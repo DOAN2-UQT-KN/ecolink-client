@@ -96,6 +96,7 @@ export const router = createBrowserRouter([
           { index: true, element: lazyPage(() => import("@/app/(pages)/(admin)/admin/page"), "admin") },
           { path: "campaigns", element: lazyPage(() => import("@/app/(pages)/(admin)/admin/campaigns/page"), "admin-campaigns") },
           { path: "incidents", element: lazyPage(() => import("@/app/(pages)/(admin)/admin/incidents/page"), "admin-incidents") },
+          { path: "moderation", element: lazyPage(() => import("@/app/(pages)/(admin)/admin/moderation/page"), "admin-moderation") },
           { path: "organizations", element: lazyPage(() => import("@/app/(pages)/(admin)/admin/organizations/page"), "admin-organizations") },
           { path: "organization-applications", element: lazyPage(() => import("@/app/(pages)/(admin)/admin/organization-applications/page"), "admin-organization-applications") },
           { path: "users", element: lazyPage(() => import("@/app/(pages)/(admin)/admin/users/page"), "admin-users") },

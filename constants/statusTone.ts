@@ -1,4 +1,6 @@
 import type { GiftRedemptionStatus } from "@/apis/gift/models/gift";
+import type { CheckStatus, VerificationFlag } from "@/apis/incident/models/verification";
+import type { VerificationOutcome } from "@/constants/reportVerification";
 import type { PillTone } from "@/components/ui/Pill";
 import { PRIORITY } from "@/constants/priority";
 import { STATUS } from "@/constants/status";
@@ -90,4 +92,39 @@ export const GIFT_REDEEM_TONE: Record<GiftRedemptionStatus, PillTone> = {
   SHIPPED: "blue",
   DELIVERED: "green",
   CANCELLED: "red",
+};
+
+/** Report verification outcome (specs/007); "accepted" is green even though STATUS.TODO is neutral. */
+export const REPORT_OUTCOME_TONE: Record<VerificationOutcome, PillTone> = {
+  checking: "neutral",
+  review: "orange",
+  accepted: "green",
+  rejected: "red",
+};
+
+export const REPORT_OUTCOME_LABEL: Record<VerificationOutcome, string> = {
+  checking: "Checking",
+  review: "Awaiting review",
+  accepted: "Accepted",
+  rejected: "Not accepted",
+};
+
+export const RISK_FLAG_TONE: Record<VerificationFlag, PillTone> = {
+  ACCEPT: "green",
+  REVIEW: "orange",
+  REJECT: "red",
+};
+
+export const CHECK_STATUS_TONE: Record<CheckStatus, PillTone> = {
+  COMPLETED: "blue",
+  SKIPPED: "neutral",
+  FAILED: "red",
+  NOT_AVAILABLE: "neutral",
+};
+
+export const CHECK_STATUS_LABEL: Record<CheckStatus, string> = {
+  COMPLETED: "Completed",
+  SKIPPED: "Skipped",
+  FAILED: "Failed",
+  NOT_AVAILABLE: "Not available",
 };

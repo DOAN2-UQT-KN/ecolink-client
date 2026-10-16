@@ -12,6 +12,7 @@ import {
 import { useFormState, useWatch } from "react-hook-form";
 import dynamic from "@/libs/dynamic";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { ErrorCode } from "./FormServerError";
 import { Button } from "@/components/client/shared/Button";
 import { useIncident } from "../_hooks/useIncident";
 import { useTranslation } from "react-i18next";
@@ -429,6 +430,12 @@ const Address = memo(function Address() {
           />
         </div>
         <FieldError errors={[errors.latitude, errors.longitude]} />
+        {errors.latitude?.type === "REPORT_OUT_OF_SERVICE_AREA" && (
+          <div className="flex flex-col gap-1">
+            <span className="text-sm text-foreground-secondary">{t("Check the pinned location")}</span>
+            <ErrorCode code={errors.latitude.type} />
+          </div>
+        )}
       </Field>
     </div>
   );

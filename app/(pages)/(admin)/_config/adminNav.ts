@@ -8,6 +8,7 @@ import {
   TbUser,
   TbFileCheck,
   TbUrgent,
+  TbShieldCheck,
 } from 'react-icons/tb';
 import { IconType } from 'react-icons';
 
@@ -17,6 +18,8 @@ export type AdminNavLinkItem = {
   /** i18n key in common.json */
   labelKey: string;
   icon: IconType;
+  /** Live count shown next to the label. */
+  badge?: 'moderation';
 };
 
 export type AdminNavGroupItem = {
@@ -42,6 +45,13 @@ export const adminNavItems: AdminNavItem[] = [
     href: '/admin/incidents',
     labelKey: 'Incidents',
     icon: TbMessageReport,
+  },
+  {
+    kind: 'link',
+    href: '/admin/moderation',
+    labelKey: 'Report moderation',
+    icon: TbShieldCheck,
+    badge: 'moderation',
   },
   {
     kind: 'link',

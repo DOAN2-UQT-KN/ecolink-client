@@ -22,7 +22,9 @@ import { StatusTag } from "@/components/ui/StatusTag";
 import { RichTextContent } from "@/components/ui/RichTextContent";
 import FormFilter from "./FormFilter";
 import { formattedDate } from "@/utils/formattedDate";
-import { STATUS } from "@/constants/status";
+import { Pill } from "@/components/ui/Pill";
+import { reportOutcomeOf } from "@/constants/reportVerification";
+import { REPORT_OUTCOME_LABEL, REPORT_OUTCOME_TONE } from "@/constants/statusTone";
 import {
   ConditionCell,
   SeverityCell,
@@ -170,13 +172,14 @@ const DataTableComponent = memo(function DataTableComponent() {
         title: t("Status"),
         dataIndex: "status",
         key: "status",
-        render: (status) => (
-          <StatusTag
-            status={status}
-           
-            label={status === STATUS.INACTIVE ? t("Banned") : undefined}
-          />
-        ),
+        render: (status) => {
+          const outcome = reportOutcomeOf(status);
+          return outcome ? (
+            <Pill tone={REPORT_OUTCOME_TONE[outcome]}>{t(REPORT_OUTCOME_LABEL[outcome])}</Pill>
+          ) : (
+            <StatusTag status={status} />
+          );
+        },
         width: 120,
         align: "center",
       },
@@ -275,7 +278,6 @@ const DataTableComponent = memo(function DataTableComponent() {
 
   const handleRowClick = useCallback(
     (record: IIncident) => {
-      if (record.status === STATUS.INACTIVE) return;
       router.push(`/incidents/${record.id}`);
     },
     [router],

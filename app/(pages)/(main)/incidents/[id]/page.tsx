@@ -8,13 +8,15 @@ import {
 } from "@/components/client/shared/Breadcrumbs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from "react-i18next";
-import { STATUS } from "@/constants/status";
+import useAuthStore from "@/stores/useAuthStore";
+import VerificationPanel from "./_components/VerificationPanel";
 import NotFound from "@/src/pages/NotFound";
 
 const IncidentDetailPage = () => {
   const { id } = useParams() as { id: string };
   const { t } = useTranslation();
   const { data, isLoading, isError } = useGetReportDetail(id);
+  const currentUserId = useAuthStore((s) => s.user?.id);
 
   const incident = data?.data?.report;
 
@@ -60,7 +62,8 @@ const IncidentDetailPage = () => {
     );
   }
 
-  if (isError || !incident || incident.status === STATUS.INACTIVE) {
+  // Rejected reports (status 2) come back only to their owner and admins (BR-103); others get 404.
+  if (isError || !incident) {
     return <NotFound />;
   }
 
@@ -68,7 +71,10 @@ const IncidentDetailPage = () => {
     <div className="">
       <Breadcrumbs breadcrumbs={breadcrumbs} />
 
-      <div className="flex justify-center pt-3 animate-in fade-in zoom-in-95 duration-500">
+      <div className="flex flex-col items-center gap-6 pt-3 animate-in fade-in zoom-in-95 duration-500">
+        {!!currentUserId && incident.user_id === currentUserId && (
+          <VerificationPanel incident={incident} />
+        )}
         <ReportDetailCard incident={incident} />
       </div>
     </div>

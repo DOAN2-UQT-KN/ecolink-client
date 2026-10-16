@@ -4,11 +4,29 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@/libs/utils';
+import { Badge } from '@/components/ui/badge';
+import { useGetModerationQueue } from '@/apis/incident/getModerationQueue';
 import {
   adminNavItems,
   type AdminNavGroupItem,
   type AdminNavItem,
 } from '@/app/(pages)/(admin)/_config/adminNav';
+
+/** Reports waiting for review; its own component so only this nav item runs the query. */
+function ModerationNavBadge({ collapsed }: { collapsed: boolean }) {
+  const { t } = useTranslation();
+  const { data } = useGetModerationQueue({ flag: 'REVIEW', page: 1, limit: 1 }, { silentError: true });
+  const count = data?.data?.counts?.review ?? 0;
+  if (count === 0) return null;
+  return (
+    <Badge
+      aria-label={t('{{count}} reports to review', { count })}
+      className={cn('ml-auto shrink-0 px-1.5', collapsed && 'absolute -top-1 -right-1 ml-0 h-4 min-w-4 px-1 text-[10px]')}
+    >
+      {count}
+    </Badge>
+  );
+}
 
 function navLinkActive(pathname: string, href: string) {
   if (href === '/admin') {
@@ -66,7 +84,7 @@ export function AdminNavLinks({
           href={item.href}
           onClick={onNavigate}
           title={collapsed ? t(item.labelKey) : undefined}
-          className={linkClass(active)}
+          className={cn(linkClass(active), item.badge && 'relative')}
         >
           <Icon className="size-5 shrink-0 opacity-90" aria-hidden />
           <span
@@ -77,6 +95,7 @@ export function AdminNavLinks({
           >
             {t(item.labelKey)}
           </span>
+          {item.badge === 'moderation' && <ModerationNavBadge collapsed={!!collapsed} />}
         </Link>
       );
     }

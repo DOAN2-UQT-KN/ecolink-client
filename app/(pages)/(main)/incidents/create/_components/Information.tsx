@@ -6,8 +6,13 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Field, FieldLabel, FieldError } from '@/components/ui/field';
 import { MultiSelect } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import { Controller } from 'react-hook-form';
+import { Controller, useWatch } from 'react-hook-form';
 import { cn } from '@/libs/utils';
+import { REPORT_CATEGORIES, WASTE_TYPES } from '@/constants/reportVerification';
+import { useDebounce } from '@/hooks/useDebounce';
+import { useGetReportContext } from '@/apis/incident/getReportContext';
+import { contextPointKey, orderCategories } from '../_services/category.service';
+import CategorySelect from './CategorySelect';
 import RichTextEditor from '@/components/ui/RichTextEditor';
 import {
   SEVERITY_LEVEL,
@@ -15,13 +20,6 @@ import {
   SEVERITY_MIN,
   getSeverityLevel,
 } from '@/constants/severity';
-
-const wasteTypeOptions = [
-  { label: 'Household waste', value: 'household' },
-  { label: 'Construction waste', value: 'construction' },
-  { label: 'Industrial waste', value: 'industrial' },
-  { label: 'Hazardous waste', value: 'hazardous' },
-];
 
 const conditionOptions = [
   { label: 'Newly-appeared', value: 'newly-appeared' },
@@ -39,12 +37,34 @@ const Information = memo(function Information() {
     formState: { errors },
   } = form;
 
+  // Suggestions only reorder the list and never pick a category for the user (specs/007 US5).
+  const [latitude, longitude] = useWatch({ control, name: ['latitude', 'longitude'] });
+  const pointKey = useDebounce(contextPointKey(latitude, longitude), 500);
+  const [lat, lng] = pointKey ? pointKey.split(',').map(Number) : [];
+  const { data: contextData } = useGetReportContext(pointKey ? { lat, lng } : null);
+  const categoryOptions = useMemo(
+    () =>
+      orderCategories(REPORT_CATEGORIES, contextData?.data?.suggestions).map((c) => ({
+        value: c.value,
+        label: c.label,
+        hint: c.hint
+          ? c.hint.distanceM != null
+            ? t('Suitable for this location · {{name}}, {{distance}} m', {
+                name: c.hint.name,
+                distance: Math.round(c.hint.distanceM),
+              })
+            : t('Suitable for this location · {{name}}', { name: c.hint.name })
+          : undefined,
+      })),
+    [contextData, t],
+  );
+
   const inputClassName =
     'border-1 border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-[rgba(136,122,71,0.5)]/50';
 
   const translatedWasteTypeOptions = useMemo(
     () =>
-      wasteTypeOptions.map((o) => ({
+      WASTE_TYPES.map((o) => ({
         ...o,
         label: t(o.label),
       })),
@@ -113,15 +133,18 @@ const Information = memo(function Information() {
           {t('Detail Information')}
         </span>
 
+        <CategorySelect options={categoryOptions} triggerClassName={inputClassName} />
+
         {/* Waste Type — multi-select */}
         <Field>
           <FieldLabel className="text-foreground-tertiary font-display-3">
-            {t('Waste type')}
+            {t('Waste type')} <span className="text-destructive">*</span>
           </FieldLabel>
           <Controller
             name="wasteTypes"
             control={control}
             defaultValue={[]}
+            rules={{ validate: (v) => v.length > 0 || t('Choose at least one waste type') }}
             render={({ field }) => (
               <MultiSelect
                 options={translatedWasteTypeOptions}
@@ -132,6 +155,7 @@ const Information = memo(function Information() {
               />
             )}
           />
+          <FieldError errors={[errors.wasteTypes]} />
         </Field>
 
         {/* Condition — single-select radio */}
@@ -224,7 +248,7 @@ const Information = memo(function Information() {
         </Field>
       </div>
     ),
-    [control, t, translatedConditionOptions, translatedWasteTypeOptions],
+    [categoryOptions, control, errors.wasteTypes, inputClassName, t, translatedConditionOptions, translatedWasteTypeOptions],
   );
 
   return (

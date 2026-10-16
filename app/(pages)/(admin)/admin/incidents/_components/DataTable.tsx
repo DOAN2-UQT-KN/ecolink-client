@@ -21,6 +21,8 @@ import { User } from 'lucide-react';
 import { formattedDate } from '@/utils/formattedDate';
 import defaultAvatar from '@/public/default-avatar.png';
 import { STATUS } from '@/constants/status';
+import { reportCategoryLabel } from '@/constants/reportVerification';
+import { Link } from '@/libs/router';
 import {
   ConditionCell,
   SeverityCell,
@@ -32,6 +34,7 @@ const COLUMN_KEYS = {
   INCIDENT: 'incident',
   SEVERITY: 'severity_level',
   CONDITION: 'condition',
+  CATEGORY: 'category',
   WASTE_TYPE: 'waste_type',
   OWNER: 'owner',
   AI_ANALYSIS: 'ai_analysis',
@@ -147,6 +150,19 @@ export function DataTable() {
         ),
       },
       {
+        key: COLUMN_KEYS.CATEGORY,
+        title: t('Report type'),
+        className: 'min-w-[180px]',
+        render: (_, record) => {
+          const label = reportCategoryLabel(record.category);
+          return (
+            <span className={cn('text-sm', isDark ? 'text-zinc-300' : 'text-foreground-secondary')}>
+              {label ? t(label) : '—'}
+            </span>
+          );
+        },
+      },
+      {
         key: COLUMN_KEYS.WASTE_TYPE,
         title: t('Waste Type'),
         className: 'min-w-[200px]',
@@ -229,7 +245,15 @@ export function DataTable() {
           <StatusTag
             status={record.status}
             isDark={isDark}
-            label={record.status === STATUS.INACTIVE ? t('Banned') : undefined}
+            label={
+              record.status === STATUS.INACTIVE
+                ? t('Banned')
+                : record.status === STATUS.PENDING
+                  ? t('Checking')
+                  : record.status === STATUS.INREVIEW
+                    ? t('Awaiting review')
+                    : undefined
+            }
           />
         ),
       },
@@ -289,6 +313,13 @@ export function DataTable() {
         render: (_, record) => {
           const theme = isDark ? 'dark' : 'light';
           const isInactive = record.status === STATUS.INACTIVE;
+          // Engine auto-rejections (no moderator reason) are reviewable in the moderation queue too.
+          const moderationFlag =
+            record.status === STATUS.INREVIEW
+              ? 'REVIEW'
+              : isInactive && record.latest_verification && !record.moderation_reason_code
+                ? 'REJECT'
+                : null;
 
           return (
             <div
@@ -297,6 +328,14 @@ export function DataTable() {
               onPointerDown={(e) => e.stopPropagation()}
               role="presentation"
             >
+              {moderationFlag && (
+                <Link
+                  href={`/admin/moderation?id=${record.id}${moderationFlag === 'REJECT' ? '&flag=REJECT' : ''}`}
+                  className={cn('text-xs font-medium underline', isDark ? 'text-blue-300' : 'text-blue-700')}
+                >
+                  {t('Open in moderation')}
+                </Link>
+              )}
               {isInactive ? null : (
                 <>
                   <PreviewIncidentPopover
