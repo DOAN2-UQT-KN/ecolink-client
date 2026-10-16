@@ -17,12 +17,18 @@ export function VerificationHistory({ reportId, isDark }: { reportId: string; is
   const attempts = data?.data?.verifications ?? [];
 
   return (
-    <Collapsible open={open} onOpenChange={setOpen}>
-      <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium">
-        {t("Verification history")}
-        <TbChevronDown className={cn("transition-transform", open && "rotate-180")} aria-hidden />
-      </CollapsibleTrigger>
-      <CollapsibleContent className="pt-2">
+    <Collapsible
+      open={open}
+      onOpenChange={setOpen}
+      className={cn("rounded-[10px] border p-5", isDark ? "border-zinc-700 bg-zinc-900" : "border-border bg-card")}
+    >
+      <h3 className={cn("font-display-3 font-semibold", isDark ? "text-zinc-100" : "text-foreground")}>
+        <CollapsibleTrigger className="flex w-full items-center justify-between gap-2 text-left">
+          {t("Verification history")}
+          <TbChevronDown className={cn("size-5 transition-transform", open && "rotate-180")} aria-hidden />
+        </CollapsibleTrigger>
+      </h3>
+      <CollapsibleContent className="pt-3">
         {isLoading ? (
           <Skeleton className="h-16 w-full" />
         ) : attempts.length === 0 ? (

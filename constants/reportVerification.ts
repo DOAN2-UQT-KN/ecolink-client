@@ -155,6 +155,27 @@ export const CHECK_NAMES: { value: CheckName; label: string; weight: number }[] 
   { value: "context", label: "Context", weight: 0.1 },
 ];
 
+/** Engine flag thresholds (risk-engine v1 seed): below `review` accept, from `reject` reject. */
+export const RISK_THRESHOLDS = { review: 0.3, reject: 0.7 } as const;
+
+/**
+ * The server's layer-1 score (`risk-engine.ts > assess()`): weighted mean over COMPLETED checks,
+ * re-normalised by their total weight, so a missing check does not lower the score.
+ * shortcut: weights come from the v1 seed because the admin view does not return them; return
+ * `weights` / `thresholds` in the admin view when the engine config changes.
+ */
+export function riskBreakdown(
+  checks: Partial<Record<CheckName, { status: string; risk: number | null }>>,
+): { terms: { name: CheckName; weight: number; risk: number }[]; score: number | null } {
+  const terms = CHECK_NAMES.flatMap(({ value, weight }) => {
+    const c = checks[value];
+    return c && c.status === "COMPLETED" && c.risk != null ? [{ name: value, weight, risk: c.risk }] : [];
+  });
+  const totalWeight = terms.reduce((sum, t) => sum + t.weight, 0);
+  const score = totalWeight > 0 ? terms.reduce((sum, t) => sum + t.weight * t.risk, 0) / totalWeight : null;
+  return { terms, score };
+}
+
 export const VERIFICATION_POLL_MS = 3000;
 export const VERIFICATION_POLL_MAX_MS = 10 * 60 * 1000;
 

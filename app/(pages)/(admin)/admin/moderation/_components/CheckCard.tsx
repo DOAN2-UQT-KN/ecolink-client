@@ -1,82 +1,142 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import type { IconType } from "react-icons";
+import { TbCopy, TbMapPin, TbPhoto } from "react-icons/tb";
 import type { CheckName, ICheckResult } from "@/apis/incident/models/verification";
-import { InfoTooltip } from "@/components/ui/InfoTooltip";
-import { Pill } from "@/components/ui/Pill";
-import { Progress } from "@/components/ui/progress";
+import { Pill, PILL_TONE } from "@/components/ui/Pill";
 import { CHECK_NAMES, isAdminOnlyReason, reasonCopy } from "@/constants/reportVerification";
-import { CHECK_STATUS_LABEL, CHECK_STATUS_TONE } from "@/constants/statusTone";
+import { CHECK_STATUS_LABEL, CHECK_STATUS_TONE, riskTone, signalTone } from "@/constants/statusTone";
 import { cn } from "@/libs/utils";
 
-/** One check of the admin view: score or status label (never 0 for a check that did not run), signals, reasons. */
+const CHECK_ICON: Record<CheckName, IconType> = {
+  duplicate: TbCopy,
+  trust: TbPhoto,
+  context: TbMapPin,
+};
+
+export interface EvidenceRow {
+  label: string;
+  value: ReactNode;
+}
+
+/**
+ * One check of the admin view (mockup card): main reason as the title, a one-line summary,
+ * evidence as label/value rows, and a chip per signal so the moderator sees where the check stopped.
+ */
 export function CheckCard({
   name,
   check,
   isDark,
+  summary,
+  rows = [],
   children,
 }: {
   name: CheckName;
   check?: ICheckResult;
   isDark: boolean;
+  summary?: string | null;
+  rows?: EvidenceRow[];
   children?: ReactNode;
 }) {
   const { t } = useTranslation();
-  const meta = CHECK_NAMES.find((c) => c.value === name);
+  const label = t(CHECK_NAMES.find((c) => c.value === name)?.label ?? name);
+  const Icon = CHECK_ICON[name];
+  const scored = check?.status === "COMPLETED" && check.risk != null;
+  const tone = riskTone(scored ? check.risk : null);
+  const reasons = check?.reasons ?? [];
   const muted = isDark ? "text-zinc-400" : "text-muted-foreground";
 
   return (
     <section
       className={cn(
-        "flex flex-col gap-3 rounded-[10px] border p-4",
+        "flex h-full flex-col gap-4 rounded-[10px] border p-4",
         isDark ? "border-zinc-700 bg-zinc-800" : "border-border bg-card",
       )}
     >
-      <div className="flex items-center justify-between gap-2">
-        <h3 className={cn("flex items-center gap-2 font-display-3 font-semibold", isDark ? "text-zinc-100" : "text-foreground")}>
-          {t(meta?.label ?? name)}
-          <InfoTooltip content={t("Weight {{weight}} in the total score", { weight: meta?.weight ?? 0 })} />
-        </h3>
-        {!check ? (
-          <Pill isDark={isDark}>{t("Not run")}</Pill>
-        ) : check.status === "COMPLETED" && check.risk != null ? (
-          <span className="font-mono text-sm">{check.risk.toFixed(2)}</span>
-        ) : (
-          <Pill tone={CHECK_STATUS_TONE[check.status]} isDark={isDark}>
-            {t(CHECK_STATUS_LABEL[check.status])}
-          </Pill>
-        )}
-      </div>
+      <header className="flex items-start gap-3">
+        <span
+          className={cn(
+            "flex size-9 shrink-0 items-center justify-center rounded-md border",
+            isDark ? PILL_TONE[tone].dark : PILL_TONE[tone].light,
+          )}
+        >
+          <Icon className="size-5" aria-hidden />
+          <span className="sr-only">{label}</span>
+        </span>
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 className={cn("font-display-3 font-semibold", isDark ? "text-zinc-100" : "text-foreground")}>{label}</h3>
+            {scored ? (
+              <span className="font-mono text-sm font-semibold">
+                {t("risk {{risk}}", { risk: (check.risk as number).toFixed(2) })}
+              </span>
+            ) : (
+              <Pill tone={check ? CHECK_STATUS_TONE[check.status] : "neutral"} isDark={isDark}>
+                {t(check ? CHECK_STATUS_LABEL[check.status] : "Not run")}
+              </Pill>
+            )}
+          </div>
+          {summary && <p className={cn("text-sm", muted)}>{summary}</p>}
+        </div>
+      </header>
 
-      {check?.status === "COMPLETED" && check.risk != null && (
-        <Progress value={Math.round(check.risk * 100)} aria-label={t("Risk score")} />
+      {children}
+
+      {rows.length > 0 && (
+        <dl className="grid grid-cols-[minmax(0,auto)_minmax(0,1fr)] gap-x-6 gap-y-1.5 text-sm">
+          {rows.map((row) => (
+            <div key={row.label} className="contents">
+              <dt className={muted}>{row.label}</dt>
+              <dd className={cn("font-semibold", isDark ? "text-zinc-100" : "text-foreground")}>{row.value}</dd>
+            </div>
+          ))}
+        </dl>
       )}
-      {check?.error && <p className="text-xs text-red-500">{check.error}</p>}
 
       {!!check?.signals.length && (
-        <p className={cn("text-xs", muted)}>
-          {check.signals
-            .map((s) =>
-              `${s.name}: ${s.status === "COMPLETED" ? (s.raw ?? s.risk?.toFixed(2) ?? "—") : t(CHECK_STATUS_LABEL[s.status])}`,
-            )
-            .join(", ")}
+        <ul className="flex flex-wrap gap-2" aria-label={t("Signals")}>
+          {check.signals.map((signal) => {
+            const chip = signalTone(signal);
+            return (
+              <li key={signal.name}>
+                <Pill
+                  tone={chip.tone}
+                  isDark={isDark}
+                  className={cn("rounded-md font-mono", chip.dashed && "border-dashed opacity-80")}
+                >
+                  {signal.name}: {signal.status === "COMPLETED" ? (signal.raw ?? signal.risk ?? "—") : signal.status}
+                </Pill>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      {check?.error && (
+        <p className="font-mono text-xs text-red-500">
+          {check.error.code}: {check.error.message}
         </p>
       )}
 
-      {!!check?.reasons.length && (
-        <ul className="flex flex-col gap-1">
-          {check.reasons.map((code) => (
-            <li key={code} className="flex flex-wrap items-center gap-2 text-sm">
-              <span>{t(reasonCopy(code).title)}</span>
-              {isAdminOnlyReason(code) && (
-                <Pill isDark={isDark}>{t("Admin only")}</Pill>
-              )}
-              <span className={cn("text-xs", muted)}>{code}</span>
-            </li>
-          ))}
-        </ul>
+      {check?.status === "COMPLETED" && (
+        <div className={cn("mt-auto flex flex-col gap-1.5 border-t pt-3", isDark ? "border-zinc-700" : "border-border")}>
+          <span className={cn("text-xs font-medium uppercase tracking-wide", muted)}>{t("Conclusion")}</span>
+          {reasons.length === 0 ? (
+            <p className="text-sm">{t("No issue found")}</p>
+          ) : (
+            <ul className="flex flex-col gap-1.5">
+              {reasons.map((code) => (
+                <li key={code} className="flex flex-wrap items-center gap-2 text-sm">
+                  <span className={cn("font-medium", isDark ? "text-zinc-100" : "text-foreground")}>
+                    {t(reasonCopy(code).title)}
+                  </span>
+                  {isAdminOnlyReason(code) && <Pill isDark={isDark}>{t("Admin only")}</Pill>}
+                  <span className={cn("font-mono text-xs", muted)}>{code}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       )}
-
-      {children}
     </section>
   );
 }

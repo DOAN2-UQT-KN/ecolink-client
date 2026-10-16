@@ -62,7 +62,7 @@ export interface ICheckResult {
   evidence: Record<string, unknown>;
   duration_ms: number | null;
   version: string;
-  error: string | null;
+  error: { code: string; message: string } | null;
 }
 
 export interface IAdminVerification {

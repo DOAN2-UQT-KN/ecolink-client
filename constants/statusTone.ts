@@ -1,6 +1,6 @@
 import type { GiftRedemptionStatus } from "@/apis/gift/models/gift";
-import type { CheckStatus, VerificationFlag } from "@/apis/incident/models/verification";
-import type { VerificationOutcome } from "@/constants/reportVerification";
+import type { CheckStatus, ISignal, VerificationFlag } from "@/apis/incident/models/verification";
+import { RISK_THRESHOLDS, type VerificationOutcome } from "@/constants/reportVerification";
 import type { PillTone } from "@/components/ui/Pill";
 import { PRIORITY } from "@/constants/priority";
 import { STATUS } from "@/constants/status";
@@ -128,3 +128,17 @@ export const CHECK_STATUS_LABEL: Record<CheckStatus, string> = {
   FAILED: "Failed",
   NOT_AVAILABLE: "Not available",
 };
+
+/** Risk of one check or of the total, by the engine thresholds; null = not scored. */
+export function riskTone(risk: number | null | undefined): PillTone {
+  if (risk == null) return "neutral";
+  if (risk < RISK_THRESHOLDS.review) return "green";
+  return risk < RISK_THRESHOLDS.reject ? "amber" : "red";
+}
+
+/** A signal chip: amber when it fired, dashed when it never ran, red when it broke. */
+export function signalTone(signal: Pick<ISignal, "status" | "risk">): { tone: PillTone; dashed: boolean } {
+  if (signal.status === "FAILED") return { tone: "red", dashed: false };
+  if (signal.status !== "COMPLETED") return { tone: "neutral", dashed: true };
+  return { tone: (signal.risk ?? 0) > 0 ? "amber" : "neutral", dashed: false };
+}
