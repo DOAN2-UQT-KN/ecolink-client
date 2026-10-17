@@ -15,7 +15,7 @@ import { uploadWithCapture } from "@/libs/cloudinary";
 import { useRouter } from "@/libs/router";
 import showMessage, { MessageLevel, MessageType } from "@/utils/showMessage";
 
-/** Next steps for the owner, by outcome and issue (specs/007 US3, data-model §4). */
+/** Next steps for the owner, by outcome and issue (specs/007 US3). "View similar report" lives in its IssueCard (specs/010). */
 export default function VerificationActions({
   incident,
   outcome,
@@ -46,8 +46,6 @@ export default function VerificationActions({
     },
   });
 
-  const similarId = issues.find((i) => i.code.startsWith("DUP_") && i.evidence?.similar_report_id)?.evidence
-    .similar_report_id;
   const notLive = issues.some((i) => i.code === "TRUST_NOT_LIVE_CAPTURE");
   // The server refuses edits on rejected reports; withdrawing a report a campaign already took is not offered.
   const canEdit = outcome !== "rejected";
@@ -83,19 +81,15 @@ export default function VerificationActions({
 
   const primary =
     outcome === "rejected" ? (
-      <Button variant="green" onClick={() => router.push("/incidents/create")}>
+      <Button variant="brown" onClick={() => router.push("/incidents/create")}>
         {t("Create a new report")}
-      </Button>
-    ) : similarId ? (
-      <Button variant="green" onClick={() => router.push(`/incidents/${similarId}`)}>
-        {t("View similar report")}
       </Button>
     ) : null;
 
   const retakeButton =
     canEdit && notLive ? (
       <Button
-        variant={primary ? "outlined-brown" : "green"}
+        variant={primary ? "outlined-brown" : "brown"}
         iconLeft={<TbCamera aria-hidden />}
         isLoading={uploading || adding}
         onClick={retake}

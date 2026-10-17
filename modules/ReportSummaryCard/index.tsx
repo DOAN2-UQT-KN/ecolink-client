@@ -1,28 +1,16 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { HiMapPin } from 'react-icons/hi2';
-import {
-  PiSkullLight,
-  PiTrash,
-  PiClock,
-} from "react-icons/pi";
 import { TbStarFilled } from "react-icons/tb";
 
 import { IIncident } from '@/apis/incident/models/incident';
-import ReportDetailCard from '@/modules/ReportDetailCard/ReportDetailCard';
+import { openReportOnCardClick } from '@/modules/ReportDetailCard/reportCardNavigation';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Link } from '@/libs/router';
 import { cn } from '@/libs/utils';
 import RichTextContent from '@/components/ui/RichTextContent';
 import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
-import { getSeverityLevel } from '@/constants/severity';
-import { getWasteTypeLabels } from '@/modules/ReportGeneralInformation';
-
-const CONDITION_LABELS: Record<string, string> = {
-  'newly-appeared': 'Newly-appeared',
-  'long-standing': 'Long-standing',
-  reappeared: 'Previously cleaned but reappeared',
-};
+import { ReportFacts } from '@/modules/ReportDetailCard/components/ReportFacts';
 
 interface ReportSummaryCardProps {
   incident: IIncident;
@@ -40,7 +28,6 @@ const ReportSummaryCard = memo(function ReportSummaryCard({
   const { t } = useTranslation();
   const { title: localizedTitle, description: localizedDescription } =
     useLocalizedDisplay();
-  const [isOpen, setIsOpen] = useState(false);
 
   const isChecked = useMemo(
     () => selectedReports.some((report) => report.id === incident.id),
@@ -52,45 +39,6 @@ const ReportSummaryCard = memo(function ReportSummaryCard({
     [incident.votes?.downvote_count, incident.votes?.upvote_count],
   );
 
-  const footerItems = useMemo(
-    () => {
-      const severity = getSeverityLevel(incident.severity_level);
-      const wasteTypeLabels = getWasteTypeLabels(incident.waste_type, t);
-      return [
-      {
-        icon: <PiTrash size={18} />,
-        label: t('Waste Type'),
-        value:
-          wasteTypeLabels.length > 0 ? (
-            <span className="flex flex-col">
-              {wasteTypeLabels.map((label) => (
-                <span key={label}>{label}</span>
-              ))}
-            </span>
-          ) : (
-            t('N/A')
-          ),
-        valueClassName: undefined as string | undefined,
-      },
-      {
-        icon: <PiClock size={18} />,
-        label: t('Condition'),
-        value: incident.condition
-          ? t(CONDITION_LABELS[incident.condition] || incident.condition)
-          : t('N/A'),
-        valueClassName: undefined as string | undefined,
-      },
-      {
-        icon: <PiSkullLight size={18} />,
-        label: t('Severity'),
-        value: severity ? t(severity.label) : t('N/A'),
-        valueClassName: severity?.textClass,
-      },
-    ];
-    },
-    [incident.condition, incident.severity_level, incident.waste_type, t],
-  );
-
   const toggleSelected = useCallback(() => {
     if (isChecked) {
       setSelectedReports(selectedReports.filter((report) => report.id !== incident.id));
@@ -99,14 +47,21 @@ const ReportSummaryCard = memo(function ReportSummaryCard({
     setSelectedReports([...selectedReports, incident]);
   }, [incident, isChecked, selectedReports, setSelectedReports]);
 
-  const stopOpenDialog = useCallback((e: React.SyntheticEvent<HTMLDivElement>) => {
+  const stopCardClick = useCallback((e: React.SyntheticEvent<HTMLDivElement>) => {
     e.stopPropagation();
   }, []);
 
+  // Campaign pages open the report in a new tab so the campaign (and its selection) stays put (specs/009).
+  const href = `/incidents/${incident.id}`;
+  const onCardClick = useCallback(
+    (e: React.MouseEvent) => openReportOnCardClick(e, href, () => undefined, true),
+    [href],
+  );
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
         <div
+          onClick={onCardClick}
+          onAuxClick={onCardClick}
           className={cn(
             'relative w-full border rounded-[10px] bg-white/90 transition-colors cursor-pointer',
             'border-[rgba(136,122,71,0.4)] p-4',
@@ -116,8 +71,8 @@ const ReportSummaryCard = memo(function ReportSummaryCard({
           {enabledCheckbox && (
             <div
               className="absolute left-3 top-3 z-10"
-              onClick={stopOpenDialog}
-              onPointerDown={stopOpenDialog}
+              onClick={stopCardClick}
+              onPointerDown={stopCardClick}
             >
               <Checkbox checked={isChecked} onCheckedChange={toggleSelected} />
             </div>
@@ -125,7 +80,14 @@ const ReportSummaryCard = memo(function ReportSummaryCard({
           <div className="pl-5 flex flex-col gap-3">
             <div className="space-y-1">
               <h4 className="font-semibold text-black leading-tight line-clamp-2">
-                {localizedTitle(incident) || t('Untitled report')}
+                <Link
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:underline focus-visible:underline"
+                >
+                  {localizedTitle(incident) || t('Untitled report')}
+                </Link>
               </h4>
               {incident.detail_address && (
                 <div className="flex items-center gap-2 font-display-1 text-foreground-tertiary overflow-hidden">
@@ -145,41 +107,15 @@ const ReportSummaryCard = memo(function ReportSummaryCard({
             {/* <p className="font-display-1 text-foreground-secondary leading-relaxed line-clamp-2 h-[40px] overflow-y-auto scrollbar-hide">
               {incident.description || t('No description provided.')}
             </p> */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 py-2 border-y border-border/50">
-              {footerItems.map((item) => (
-                <div key={item.label} className="flex items-center gap-1 ">
-                  <div className="p-2 rounded-lg">{item.icon}</div>
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-[10px] uppercase tracking-wider font-bold text-foreground-tertiary">
-                      {item.label}
-                    </span>
-                    <span
-                      className={`font-display-1 whitespace-normal ${
-                        item.valueClassName || 'text-foreground-secondary'
-                      }`}
-                    >
-                      {item.value}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center h-10 px-2 bg-muted/60 dark:bg-accent/30 rounded-full transition-all">
-                {/* <span className="font-display-1 text-foreground-secondary">{t("Vote point")}</span> */}
-                <span className="mx-2 font-display-1 font-semibold text-foreground min-w-[10px] text-center">
-                  {votePoint}
-                </span>
-                <TbStarFilled size={16} className="text-yellow-500" />
-              </div>
+            <ReportFacts incident={incident} compact />
+            <div>
+              <span className="flex items-center gap-1.5 text-sm text-foreground-secondary">
+                <TbStarFilled aria-hidden className="size-4 text-foreground-tertiary" />
+                <span className="font-medium text-foreground-primary">{votePoint}</span>
+              </span>
             </div>
           </div>
         </div>
-      </DialogTrigger>
-      <DialogContent className="max-w-[95vw] md:max-w-5xl w-full h-[90vh] md:h-[85vh] p-0 overflow-hidden border-none bg-white/95 backdrop-blur-md">
-        <ReportDetailCard incident={incident} isExpanded showAction />
-      </DialogContent>
-    </Dialog>
   );
 });
 

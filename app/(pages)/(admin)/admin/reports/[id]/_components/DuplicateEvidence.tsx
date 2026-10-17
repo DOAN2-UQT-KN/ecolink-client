@@ -1,5 +1,6 @@
 import { Image as AntdImage } from "antd";
 import { useTranslation } from "react-i18next";
+import { TbChevronRight } from "react-icons/tb";
 import { useGetReportDetail } from "@/apis/incident/getReportDetail";
 import type { IIncident } from "@/apis/incident/models/incident";
 import { Link } from "@/libs/router";
@@ -57,8 +58,17 @@ export function DuplicateEvidence({
           {tile(theirs, t("Matched report {{code}}", { code }), statusLabel ? `${code}, ${t(statusLabel).toLowerCase()}` : code)}
         </AntdImage.PreviewGroup>
       </div>
-      <Link href={`/incidents/${match.reportId}`} className="w-fit text-xs font-medium text-button-accent underline">
+      <Link
+        href={`/incidents/${match.reportId}`}
+        className={cn(
+          "flex w-full items-center justify-between gap-2 rounded-lg px-4 py-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2",
+          isDark
+            ? "bg-zinc-800 text-zinc-100 hover:bg-zinc-700 focus-visible:ring-zinc-400"
+            : "bg-muted text-foreground hover:bg-accent focus-visible:ring-ring",
+        )}
+      >
         {t("Open matched report")}
+        <TbChevronRight aria-hidden className="size-4 shrink-0" />
       </Link>
     </div>
   );

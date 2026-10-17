@@ -10,7 +10,7 @@ import {
   type IUserVerification,
 } from "@/apis/incident/models/verification";
 import type { IIncident } from "@/apis/incident/models/incident";
-import { Pill } from "@/components/ui/Pill";
+import { Button } from "@/components/client/shared/Button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { STATUS } from "@/constants/status";
 import {
@@ -20,10 +20,17 @@ import {
   verificationStep,
   type VerificationOutcome,
 } from "@/constants/reportVerification";
-import { REPORT_OUTCOME_LABEL, REPORT_OUTCOME_TONE } from "@/constants/statusTone";
+import StatusBanner from "./StatusBanner";
 import VerificationStepper from "./VerificationStepper";
 import IssueCard from "./IssueCard";
 import VerificationActions from "./VerificationActions";
+
+const MESSAGE: Record<VerificationOutcome, string> = {
+  checking: "The system is checking your report. This usually takes a few seconds.",
+  review: "A moderator will review your report.",
+  accepted: "Your report is public and can be supported by others.",
+  rejected: "Your report was not accepted. See the issues below.",
+};
 
 const TITLE: Record<VerificationOutcome, string> = {
   checking: "The system is checking your report",
@@ -38,7 +45,7 @@ export default function VerificationPanel({ incident }: { incident: IIncident })
   const queryClient = useQueryClient();
   const [mountedAt] = useState(() => Date.now());
 
-  const { data, error, isLoading } = useGetReportVerification(incident.id, {
+  const { data, error, isLoading, refetch } = useGetReportVerification(incident.id, {
     // shortcut: stops polling after 10 min (the legacy flow never creates an attempt); drop when
     // REPORT_VERIFICATION_ENABLED is on everywhere.
     refetchInterval: (query) => {
@@ -64,9 +71,18 @@ export default function VerificationPanel({ incident }: { incident: IIncident })
   }, [verification?.flag, incident.id, queryClient]);
 
   if (isLoading) {
-    return <Skeleton className="h-40 w-full max-w-2xl rounded-[10px]" />;
+    return <Skeleton className="h-40 w-full rounded-[10px]" />;
   }
-  if (error && !isNotFoundError(error)) return null;
+  if (error && !isNotFoundError(error)) {
+    return (
+      <section className="flex w-full flex-col items-start gap-3 rounded-[10px] border border-button-accent-hover/40 bg-white/80 p-5">
+        <p className="text-sm text-foreground-secondary">{t("Could not load verification")}</p>
+        <Button variant="outlined-brown" onClick={() => refetch()}>
+          {t("Try again")}
+        </Button>
+      </section>
+    );
+  }
 
   const progress = verificationStep(incident.status, verification);
   if (!progress) return null; // legacy report without verification
@@ -76,32 +92,31 @@ export default function VerificationPanel({ incident }: { incident: IIncident })
       ? (verification?.issues ?? []).filter((i) => !isAdminOnlyReason(i.code))
       : [];
 
+  const sortedIssues = [...issues].sort((a, b) => Number(b.primary) - Number(a.primary));
+
   return (
     <section
       aria-labelledby="verification-title"
-      className="flex w-full max-w-2xl flex-col gap-4 rounded-[10px] border border-button-accent-hover/40 bg-white/80 p-5 pb-24 sm:pb-5"
+      className="flex w-full flex-col gap-4 rounded-[10px] border border-button-accent-hover/40 bg-white/80 p-5 pb-24 sm:pb-5"
     >
-      <VerificationStepper step={progress.step} />
-      <div className="flex flex-wrap items-center gap-2" aria-live="polite">
-        <h2 id="verification-title" className="font-display-5 font-semibold text-button-accent">
-          {t(TITLE[progress.outcome])}
-        </h2>
-        <Pill tone={REPORT_OUTCOME_TONE[progress.outcome]}>
-          {t(REPORT_OUTCOME_LABEL[progress.outcome])}
-        </Pill>
-      </div>
-      {progress.outcome === "review" && issues.length > 0 && (
-        <p className="text-sm text-foreground-secondary">
-          {t(
-            "The system found {{count}} issue(s), so a moderator will review it. The report is not public in the meantime.",
-            { count: issues.length },
-          )}
-        </p>
-      )}
-      {issues.length > 0 && (
+      <StatusBanner
+        outcome={progress.outcome}
+        title={t(TITLE[progress.outcome])}
+        message={
+          progress.outcome === "review" && issues.length > 0
+            ? t(
+                "The system found {{count}} issue(s), so a moderator will review it. The report is not public in the meantime.",
+                { count: issues.length },
+              )
+            : t(MESSAGE[progress.outcome])
+        }
+      />
+      <VerificationStepper step={progress.step} outcome={progress.outcome} />
+      {sortedIssues.length > 0 && (
         <div className="flex flex-col gap-3">
-          {issues.map((issue) => (
-            <IssueCard key={issue.code} issue={issue} />
+          <h3 className="font-display-4 font-semibold text-foreground-primary">{t("Detected issues")}</h3>
+          {sortedIssues.map((issue) => (
+            <IssueCard key={issue.code} issue={issue} incident={incident} />
           ))}
         </div>
       )}

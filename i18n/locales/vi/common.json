@@ -2150,5 +2150,15 @@
   "No photos": "Không có ảnh",
   "AI recommendation": "Gợi ý của AI",
   "{{count}} photos, open to view all": "{{count}} ảnh, mở để xem tất cả",
-  "You have reached the report limit for the last 24 hours": "Bạn đã đạt giới hạn gửi báo cáo trong 24 giờ qua"
+  "You have reached the report limit for the last 24 hours": "Bạn đã đạt giới hạn gửi báo cáo trong 24 giờ qua",
+  "Could not load verification": "Không tải được kết quả xác minh",
+  "Detected issues": "Vấn đề phát hiện",
+  "Your report": "Báo cáo của bạn",
+  "Could not view the similar report": "Không xem được báo cáo tương tự",
+  "No photo": "Không có ảnh",
+  "A similar report ({{facts}}) uses an almost identical photo.": "Có một báo cáo tương tự ({{facts}}) dùng ảnh gần như giống hệt.",
+  "The system is checking your report. This usually takes a few seconds.": "Hệ thống đang kiểm tra báo cáo của bạn, thường mất vài giây.",
+  "A moderator will review your report.": "Người kiểm duyệt sẽ xem lại báo cáo của bạn.",
+  "Your report is public and can be supported by others.": "Báo cáo đã công khai và mọi người có thể ủng hộ.",
+  "Your report was not accepted. See the issues below.": "Báo cáo không được chấp nhận. Xem các vấn đề bên dưới."
 }

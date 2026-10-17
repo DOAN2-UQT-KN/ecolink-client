@@ -1,51 +1,39 @@
-import React, { memo, useCallback, useMemo } from "react";
+import React, { memo, useCallback } from "react";
 import { Image as AntdImage } from "antd";
 import { HiMapPin } from "react-icons/hi2";
 import { useTranslation } from "react-i18next";
 import { RichTextContent } from "@/components/ui/RichTextContent";
+import { Link } from "@/libs/router";
 import { cn } from "@/libs/utils";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 interface ReportContentProps {
   title: string | null;
+  /** Report detail page; when set the title is a link to it. */
+  href?: string;
   address: string | null;
   description: string | null;
   /** AI recommendation in markdown. */
   aiRecommendation?: string | null;
   images?: string[];
   isExpanded?: boolean;
-  /** Fired when Ant Design image preview opens or closes (true = preview visible). */
-  onPreviewOpenChange?: (open: boolean) => void;
 }
 
 export const ReportContent = memo(function ReportContent({
   title,
+  href,
   address,
   description,
   aiRecommendation,
   images = [],
   isExpanded = false,
-  onPreviewOpenChange,
 }: ReportContentProps) {
   const { t } = useTranslation();
-  /** Explicit z-index when expanded: preview portals to body and must sit above Radix Dialog (z-50); otherwise next/prev clicks hit the dialog. */
-  const previewProps = useMemo(() => {
-    const base =
-      onPreviewOpenChange != null
-        ? {
-            onOpenChange: (visible: boolean) => onPreviewOpenChange(visible),
-          }
-        : true;
-    if (!isExpanded) return base;
-    if (typeof base === "object") {
-      return { ...base, zIndex: 2000 };
-    }
-    return { zIndex: 2000 };
-  }, [isExpanded, onPreviewOpenChange]);
+  const previewProps = true;
   /**
-   * Stops Radix Dialog/Popover triggers on ancestors. Use bubble phase only — capture
-   * stopPropagation on a parent blocks events from reaching Ant Design Image (preview breaks).
+   * Keeps image clicks from reaching the card's own click (it opens the report page). Use bubble
+   * phase only — capture stopPropagation on a parent blocks events from reaching Ant Design Image.
    */
   const stopDialogTrigger = useCallback((e: React.SyntheticEvent) => {
     e.stopPropagation();
@@ -59,166 +47,61 @@ export const ReportContent = memo(function ReportContent({
 
   const renderImageGrid = useCallback(() => {
     if (images.length === 0) return null;
-
-    if (isExpanded) {
-      return (
-        <AntdImage.PreviewGroup preview={previewProps}>
-          <div
-            className={cn(
-              "grid grid-cols-2 gap-1 w-full overflow-hidden rounded-lg",
-              images.length <= 2
-                ? "aspect-[16/10]"
-                : "grid-rows-2 aspect-square",
-            )}
-            {...imageInteractionShieldProps}
-          >
-            {images.slice(0, 4).map((img, idx) => (
-              <div
-                key={idx}
-                className="relative h-full overflow-hidden bg-muted group cursor-pointer"
-                {...imageInteractionShieldProps}
-              >
-                <AntdImage
-                  src={img}
-                  alt={title || ""}
-                  className="object-cover transition-transform duration-300 group-hover:scale-105 w-full h-full"
-                  width="100%"
-                  height="100%"
-                  preview={previewProps}
-                />
-                {idx === 3 && images.length > 4 && (
-                  <>
-                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center backdrop-blur-[2px] pointer-events-none z-10 transition-opacity group-hover:opacity-0">
-                      <span className="text-white font-display-7">
-                        +{images.length - 4}
-                      </span>
-                    </div>
-                    <div className="hidden">
-                      {images.slice(4).map((hiddenImg, hIdx) => (
-                        <AntdImage
-                          key={hIdx}
-                          src={hiddenImg}
-                          preview={previewProps}
-                        />
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
-        </AntdImage.PreviewGroup>
-      );
-    }
+    // 3 columns, at most 2 rows; past 6 photos the last tile shows "+N" (the rest stay in the preview).
+    const shown = images.slice(0, 6);
+    const extra = images.length - shown.length;
 
     return (
       <AntdImage.PreviewGroup preview={previewProps}>
-        {images.length === 1 && (
-          <div
-            className="relative aspect-video w-full overflow-hidden bg-muted group cursor-pointer"
-            {...imageInteractionShieldProps}
-          >
-            <AntdImage
-              src={images[0]}
-              alt={title || ""}
-              className="object-cover transition-transform duration-300 group-hover:scale-105 w-full h-full"
-              width="100%"
-              height="100%"
-              preview={previewProps}
-            />
-          </div>
-        )}
-
-        {(images.length === 2 || images.length === 3) && (
-          <div
-            className="grid grid-cols-2 gap-2 aspect-[16/10] w-full overflow-hidden "
-            {...imageInteractionShieldProps}
-          >
+        <div
+          className="grid w-full max-w-3xl grid-cols-3 gap-1 overflow-hidden rounded-lg"
+          {...imageInteractionShieldProps}
+        >
+          {shown.map((img, idx) => (
             <div
-              className="relative h-full overflow-hidden bg-muted group cursor-pointer"
+              key={idx}
+              className="group relative aspect-square cursor-pointer overflow-hidden bg-muted"
               {...imageInteractionShieldProps}
             >
               <AntdImage
-                src={images[0]}
+                src={img}
                 alt={title || ""}
-                className="object-cover transition-transform duration-300 group-hover:scale-105 w-full h-full"
+                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                 width="100%"
                 height="100%"
                 preview={previewProps}
               />
-            </div>
-            <div className="relative h-full overflow-hidden bg-muted group cursor-pointer">
-              <AntdImage
-                src={images[1]}
-                alt={title || ""}
-                className="object-cover transition-transform duration-300 group-hover:scale-105 w-full h-full"
-                width="100%"
-                height="100%"
-                preview={previewProps}
-              />
-              {images.length === 3 && (
+              {idx === shown.length - 1 && extra > 0 && (
                 <>
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[2px] pointer-events-none z-10 transition-opacity group-hover:opacity-0">
-                    <span className="text-white font-display-7">+1</span>
+                  <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-black/50 backdrop-blur-[2px] transition-opacity group-hover:opacity-0">
+                    <span className="font-display-7 text-white">+{extra}</span>
                   </div>
-                  {/* Hidden image to be included in preview group */}
                   <div className="hidden">
-                    <AntdImage src={images[2]} preview={previewProps} />
+                    {images.slice(shown.length).map((hiddenImg, hIdx) => (
+                      <AntdImage key={hIdx} src={hiddenImg} preview={previewProps} />
+                    ))}
                   </div>
                 </>
               )}
             </div>
-          </div>
-        )}
-
-        {images.length >= 4 && (
-          <div
-            className="grid grid-cols-2 grid-rows-2 gap-2 aspect-square w-full overflow-hidden "
-            {...imageInteractionShieldProps}
-          >
-            {images.slice(0, 4).map((img, idx) => (
-              <div
-                key={idx}
-                className="relative h-full overflow-hidden bg-muted group cursor-pointer"
-                {...imageInteractionShieldProps}
-              >
-                <AntdImage
-                  src={img}
-                  alt={title || ""}
-                  className="object-cover transition-transform duration-300 group-hover:scale-105 w-full h-full"
-                  width="100%"
-                  height="100%"
-                  preview={previewProps}
-                />
-                {idx === 3 && images.length > 4 && (
-                  <>
-                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center backdrop-blur-[2px] pointer-events-none z-10 transition-opacity group-hover:opacity-0">
-                      <span className="text-white font-display-7">
-                        +{images.length - 4}
-                      </span>
-                    </div>
-                    {/* Remaining hidden images for preview group */}
-                    <div className="hidden">
-                      {images.slice(4).map((hiddenImg, hIdx) => (
-                        <AntdImage key={hIdx} src={hiddenImg} preview={previewProps} />
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+          ))}
+        </div>
       </AntdImage.PreviewGroup>
     );
-  }, [images, isExpanded, previewProps, stopDialogTrigger, title]);
+  }, [images, stopDialogTrigger, title]);
 
 
   return (
-    <div className={cn("flex flex-col gap-4", isExpanded && "gap-6")}>
+    <div className={cn("flex flex-col gap-4")}>
       <div className="space-y-1">
         <h2 className="font-display-4 font-semibold text-black leading-tight">
-          {title}
+          {href ? (
+            <Link href={href} className="hover:underline focus-visible:underline">
+              {title}
+            </Link>
+          ) : (
+            title
+          )}
         </h2>
         {address && (
           <div className="flex items-center gap-2 font-display-1 text-foreground-tertiary">

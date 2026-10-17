@@ -68,6 +68,7 @@ export const SearchSidebar = memo(function SearchSidebar() {
       } else {
         params.delete(key);
       }
+      params.delete('page'); // a new filter starts again from page 1
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     },
     [pathname, router, searchParams],

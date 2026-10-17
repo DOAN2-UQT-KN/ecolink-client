@@ -1,6 +1,7 @@
 import React, { memo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useIncidentSearch } from "../_context/IncidentSearchContext";
+import { usePathname, useRouter, useSearchParams } from "@/libs/router";
 import ReportDetailCard from "@/modules/ReportDetailCard/ReportDetailCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -22,13 +23,21 @@ export const IncidentList = memo(function IncidentList() {
     pagination,
     setPagination,
   } = useIncidentSearch();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const handlePageChange = useCallback(
     (newPage: number) => {
       setPagination({ ...pagination, current: newPage });
+      const params = new URLSearchParams(searchParams.toString());
+      if (newPage > 1) params.set("page", String(newPage));
+      else params.delete("page");
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
       window.scrollTo({ top: 0, behavior: "smooth" });
     },
-    [pagination, setPagination],
+    [pagination, pathname, router, searchParams, setPagination],
   );
 
   const totalPages = Math.ceil(total / pagination.pageSize);

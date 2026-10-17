@@ -2150,5 +2150,15 @@
   "No photos": "No photos",
   "AI recommendation": "AI recommendation",
   "{{count}} photos, open to view all": "{{count}} photos, open to view all",
-  "You have reached the report limit for the last 24 hours": "You have reached the report limit for the last 24 hours"
+  "You have reached the report limit for the last 24 hours": "You have reached the report limit for the last 24 hours",
+  "Could not load verification": "Could not load verification",
+  "Detected issues": "Detected issues",
+  "Your report": "Your report",
+  "Could not view the similar report": "Could not view the similar report",
+  "No photo": "No photo",
+  "A similar report ({{facts}}) uses an almost identical photo.": "A similar report ({{facts}}) uses an almost identical photo.",
+  "The system is checking your report. This usually takes a few seconds.": "The system is checking your report. This usually takes a few seconds.",
+  "A moderator will review your report.": "A moderator will review your report.",
+  "Your report is public and can be supported by others.": "Your report is public and can be supported by others.",
+  "Your report was not accepted. See the issues below.": "Your report was not accepted. See the issues below."
 }

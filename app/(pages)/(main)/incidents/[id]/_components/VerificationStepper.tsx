@@ -1,10 +1,19 @@
 import { useTranslation } from "react-i18next";
+import { PILL_DOT } from "@/components/ui/Pill";
+import type { VerificationOutcome } from "@/constants/reportVerification";
+import { REPORT_OUTCOME_TONE } from "@/constants/statusTone";
 import { cn } from "@/libs/utils";
 
 const STEPS = ["Submitted", "System check", "Awaiting review", "Result"] as const;
 
-/** 4-step progress (specs/007 FR-009). Every step carries text, so colour is never the only signal. */
-export default function VerificationStepper({ step }: { step: 1 | 2 | 3 | 4 }) {
+/** 4-bar progress (specs/010 FR-010). Every step carries text, so colour is never the only signal. */
+export default function VerificationStepper({
+  step,
+  outcome,
+}: {
+  step: 1 | 2 | 3 | 4;
+  outcome: VerificationOutcome;
+}) {
   const { t } = useTranslation();
 
   return (
@@ -16,22 +25,23 @@ export default function VerificationStepper({ step }: { step: 1 | 2 | 3 | 4 }) {
           <li
             key={label}
             aria-current={state === "current" ? "step" : undefined}
-            className="flex min-w-0 flex-col items-center gap-1 text-center"
+            className="flex min-w-0 flex-col gap-2"
           >
             <span
+              aria-hidden
               className={cn(
-                "flex size-7 items-center justify-center rounded-full border text-xs font-semibold",
-                state === "current" && "border-button-accent bg-button-accent text-white",
-                state === "done" && "border-button-accent text-button-accent",
-                state === "todo" && "border-border text-foreground-tertiary",
+                "h-1 rounded-full",
+                state === "done" && "bg-button-accent",
+                state === "current" && PILL_DOT[REPORT_OUTCOME_TONE[outcome]],
+                state === "todo" && "bg-border",
               )}
-            >
-              {n}
-            </span>
+            />
             <span
               className={cn(
-                "text-xs leading-tight break-words",
-                state === "todo" ? "text-foreground-tertiary" : "text-button-accent font-medium",
+                "text-sm leading-tight break-words",
+                state === "current" && "font-semibold text-foreground-primary",
+                state === "done" && "text-foreground-secondary",
+                state === "todo" && "text-foreground-tertiary",
               )}
             >
               {t(label)}
