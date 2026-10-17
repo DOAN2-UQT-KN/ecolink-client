@@ -79,10 +79,11 @@ export function DataTable() {
       {
         key: COLUMN_KEYS.INCIDENT,
         title: t('Incident'),
-        className: ' min-w-[280px]',
+        className: 'w-[300px] min-w-[300px] max-w-[300px]',
         sticky: 'left',
         render: (_, record) => (
-          <div className="flex items-center gap-3 py-1">
+          // Fixed box: the table lays out automatically, so only this keeps a long address from widening the column.
+          <div className="flex w-[276px] items-center gap-3 py-1">
             <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-border/50 bg-muted">
               {record.media_files?.[0]?.url ? (
                 <Image
@@ -104,7 +105,7 @@ export function DataTable() {
               >
                 {record.title || t('Untitled Incident')}
               </span>
-              <div className="mb-0.5 min-w-0 w-[210px]">
+              <div className="mb-0.5 min-w-0 w-full">
                 <RichTextContent
                   value={record.description}
                   className={cn('text-xs', isDark ? 'text-zinc-400' : 'text-muted-foreground')}
@@ -159,7 +160,7 @@ export function DataTable() {
         render: (_, record) => {
           const label = reportCategoryLabel(record.category);
           return (
-            <span className={cn('text-sm', isDark ? 'text-zinc-300' : 'text-foreground-secondary')}>
+            <span className={cn('font-display-1', isDark ? 'text-zinc-200' : 'text-foreground')}>
               {label ? t(label) : '—'}
             </span>
           );
@@ -187,10 +188,10 @@ export function DataTable() {
               className="rounded-full"
             />
             <div className="flex flex-col">
-              <span className={cn('font-medium', isDark ? 'text-zinc-100' : 'text-zinc-900')}>
+              <span className={cn('font-display-1', isDark ? 'text-zinc-200' : 'text-foreground')}>
                 {record?.user?.name}
               </span>
-              <p className={cn('font-display-1', isDark ? 'text-zinc-500' : 'text-zinc-600')}>
+              <p className={cn('font-display-1', isDark ? 'text-zinc-400' : 'text-muted-foreground')}>
                 {formattedDate(record.created_at ?? undefined)}
               </p>
             </div>
@@ -284,11 +285,11 @@ export function DataTable() {
         render: (_, record) => (
           <RichTextContent
             value={record.reject_reason?.trim() ?? ''}
-            className="text-sm text-foreground whitespace-pre-wrap break-words !font-display-1"
+            className={cn('font-display-1 whitespace-pre-wrap break-words', isDark ? 'text-zinc-400' : 'text-muted-foreground')}
             maxLines={2}
             showMoreLabel={t('See more')}
             showLessLabel={t('See less')}
-            emptyFallback={<span className="text-foreground-secondary">—</span>}
+            emptyFallback={<span className={isDark ? 'text-zinc-400' : 'text-muted-foreground'}>—</span>}
           />
         ),
       },
@@ -314,10 +315,10 @@ export function DataTable() {
                 )}
               </div>
               <div className="flex flex-col">
-                <span className="text-xs font-semibold uppercase">
+                <span className={cn('font-display-1', isDark ? 'text-zinc-200' : 'text-foreground')}>
                   {handledBy?.name || '—'}
                 </span>
-                <span className="text-[10px] text-muted-foreground">
+                <span className={cn('text-xs', isDark ? 'text-zinc-400' : 'text-muted-foreground')}>
                   {handledBy ? t('Admin Organization') : '—'}
                 </span>
               </div>

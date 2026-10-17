@@ -45,7 +45,7 @@ export const SeverityCell = memo(function SeverityCell({
       text={severity ? t(severity.label) : t('N/A')}
       maxLength={CELL_MAX_LENGTH}
       className={cn(
-        'text-xs font-medium',
+        'font-display-1',
         severity?.textClass || (isDark ? 'text-zinc-200' : 'text-foreground'),
       )}
     />
@@ -63,7 +63,7 @@ export const ConditionCell = memo(function ConditionCell({
       text={label}
       maxLength={CELL_MAX_LENGTH}
       className={cn(
-        'text-xs font-medium',
+        'font-display-1',
         isDark ? 'text-zinc-200' : 'text-foreground',
       )}
     />
@@ -77,7 +77,7 @@ export const WasteTypeCell = memo(function WasteTypeCell({
   const { t } = useTranslation();
   const labels = useMemo(() => getWasteTypeLabels(value, t), [t, value]);
   const textClass = cn(
-    'text-xs font-medium',
+    'font-display-1',
     isDark ? 'text-zinc-200' : 'text-foreground',
   );
 

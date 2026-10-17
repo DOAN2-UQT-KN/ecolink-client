@@ -121,7 +121,7 @@ export default function VerificationPanel({ incident }: { incident: IIncident })
         </div>
       )}
       {(progress.outcome === "review" || progress.outcome === "rejected") && (
-        <VerificationActions incident={incident} outcome={progress.outcome} issues={issues} />
+        <VerificationActions incident={incident} outcome={progress.outcome} />
       )}
     </section>
   );

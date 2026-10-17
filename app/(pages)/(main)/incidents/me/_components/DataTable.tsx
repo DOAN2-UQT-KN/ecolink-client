@@ -109,7 +109,7 @@ const DataTableComponent = memo(function DataTableComponent() {
         key: "waste_type",
         render: (_, record) => <WasteTypeCell value={record.waste_type} />,
         width: 250,
-        className: "whitespace-normal align-top",
+        className: "whitespace-normal",
       },
       {
         title: t("Created At"),
@@ -117,7 +117,7 @@ const DataTableComponent = memo(function DataTableComponent() {
         key: "created_at",
         render: (created_at) => {
           return (
-            <span className="text-xs text-muted-foreground/80 font-medium whitespace-nowrap">
+            <span className="font-display-1 text-muted-foreground whitespace-nowrap">
               {formattedDate(created_at as string | undefined)}
             </span>
           );
@@ -204,10 +204,10 @@ const DataTableComponent = memo(function DataTableComponent() {
                 )}
               </div>
               <div className="flex flex-col">
-                <span className="text-xs font-semibold uppercase">
+                <span className="font-display-1">
                   {handledBy?.name || "—"}
                 </span>
-                <span className="text-[10px] text-muted-foreground">
+                <span className="text-xs text-muted-foreground">
                   {handledBy ? t("Admin Organization") : "—"}
                 </span>
               </div>
@@ -222,7 +222,7 @@ const DataTableComponent = memo(function DataTableComponent() {
         render: (_, record) => {
           const reason = record.reject_reason?.trim();
           return (
-            <span className="text-xs text-muted-foreground whitespace-pre-wrap break-words line-clamp-3">
+            <span className="font-display-1 text-muted-foreground whitespace-pre-wrap break-words line-clamp-3">
               {reason || "—"}
             </span>
           );
