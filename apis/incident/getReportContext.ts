@@ -7,12 +7,12 @@ import { useGet, UseGetOptions } from "@/hooks/reactQuery";
 
 const url = "/api/v1/reports/context";
 
-/** A hint only: the form drops it after 2 s instead of waiting. */
+/** A hint only. The server answers within ~2 s (`suggestTimeoutMs`); 3 s leaves room for the gateway. */
 export const getReportContext = async (
   req: IGetReportContextRequest,
 ): Promise<IGetReportContextResponse> => {
   return await requestApi.get<IGetReportContextResponse>(url, req, {
-    timeout: 2000,
+    timeout: 3000,
   });
 };
 
