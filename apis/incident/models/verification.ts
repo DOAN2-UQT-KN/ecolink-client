@@ -33,6 +33,11 @@ export interface IVerificationIssue {
     distance_m?: number | null;
     time_delta_hours?: number | null;
     nearest?: { name: string | null; distance_m: number | null } | null;
+    /** DUP_WEB_IMAGE_MATCH: the web image and the page it was found on (https only). */
+    image_index?: number | null;
+    source_url?: string | null;
+    page_url?: string | null;
+    page_title?: string | null;
   };
 }
 

@@ -8,7 +8,7 @@ import { reportOutcomeOf, shortReportCode } from "@/constants/reportVerification
 import { REPORT_OUTCOME_LABEL, STATUS_LABEL } from "@/constants/statusTone";
 import type { STATUS } from "@/constants/status";
 import { cn } from "@/libs/utils";
-import type { DuplicateMatch } from "../_services/evidence.service";
+import type { ReportMatch } from "../_services/evidence.service";
 
 const imagesOf = (report?: IIncident) => report?.image_urls || report?.media_files?.map((m) => m.url) || [];
 
@@ -19,7 +19,7 @@ export function DuplicateEvidence({
   isDark,
 }: {
   report: IIncident;
-  match: DuplicateMatch;
+  match: ReportMatch;
   isDark: boolean;
 }) {
   const { t } = useTranslation();

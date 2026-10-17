@@ -10,12 +10,18 @@ import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import { canModerate, reportCategoryLabel } from "@/constants/reportVerification";
 import { cn } from "@/libs/utils";
-import { readContextEvidence, readDuplicateMatch, readTrustEvidence } from "../_services/evidence.service";
+import {
+  readContextEvidence,
+  readDuplicateMatch,
+  readTrustEvidence,
+  readWebCandidates,
+} from "../_services/evidence.service";
 import { CheckCard, type EvidenceRow } from "./CheckCard";
 import { DuplicateEvidence } from "./DuplicateEvidence";
 import { ModerationDecision } from "./ModerationDecision";
 import { RiskSummary } from "./RiskSummary";
 import { VerificationHistory } from "./VerificationHistory";
+import { WebCandidateList, WebMatchEvidence } from "./WebMatchEvidence";
 
 const isRow = <T extends EvidenceRow>(row: T | false): row is T => row !== false;
 
@@ -69,7 +75,21 @@ export function ModerationDetail({ report, onDecided }: { report: IIncident; onD
           : t("Context: {{category}} fits the location.", { category: categoryCode })
         : t("Context: {{category}} does not fit the location.", { category: categoryCode });
 
-  const duplicateRows = match
+  const webFailed = v.checks.duplicate?.signals.find((s) => s.name === "internet")?.status === "FAILED";
+  const webCandidates = webFailed ? readWebCandidates(v.checks.duplicate?.evidence) : [];
+
+  const duplicateRows = match?.kind === "web"
+    ? [
+        match.matchType != null && {
+          label: t("Match type"),
+          value: match.matchType === "FULL" ? t("Full match") : t("Partial match"),
+        },
+        match.verifiedBy != null && { label: t("Verified by"), value: match.verifiedBy === "phash" ? "pHash" : "ORB" },
+        match.phashDistance != null && { label: t("pHash distance"), value: t("{{n}} / 64 bit", { n: match.phashDistance }) },
+        match.inliers != null && { label: t("ORB inliers"), value: match.inliers },
+        match.flipped != null && { label: t("Mirroring"), value: match.flipped ? t("Mirrored copy") : t("Not mirrored") },
+      ].filter(isRow)
+    : match
     ? [
         match.phashDistance != null && { label: t("pHash distance"), value: t("{{n}} / 64 bit", { n: match.phashDistance }) },
         match.inliers != null && { label: t("ORB inliers"), value: match.inliers },
@@ -118,7 +138,9 @@ export function ModerationDetail({ report, onDecided }: { report: IIncident; onD
 
         <div className="grid gap-4 lg:grid-cols-[repeat(3,minmax(0,1fr))] lg:grid-rows-[auto_1fr_auto]">
           <CheckCard name="duplicate" check={v.checks.duplicate} isDark={isDark} rows={duplicateRows}>
-            {match && <DuplicateEvidence report={report} match={match} isDark={isDark} />}
+            {match?.kind === "report" && <DuplicateEvidence report={report} match={match} isDark={isDark} />}
+            {match?.kind === "web" && <WebMatchEvidence report={report} match={match} isDark={isDark} />}
+            {webCandidates.length > 0 && <WebCandidateList candidates={webCandidates} isDark={isDark} />}
           </CheckCard>
           <CheckCard name="trust" check={v.checks.trust} isDark={isDark} rows={trustRows} />
           <CheckCard name="context" check={v.checks.context} isDark={isDark} rows={contextRows} />

@@ -193,6 +193,9 @@ const FileUpload = memo(function FileUpload() {
     [images, setValue],
   );
 
+  // specs/011 FR-024: library photos may be sent to an external reverse image search.
+  const libraryNote = t("Library photos may be checked against an external image search service. Use the in-app camera when you can.");
+
   const clearAll = useCallback(() => {
     setValue("images", [], { shouldDirty: true, shouldValidate: true });
   }, [setValue]);
@@ -230,7 +233,14 @@ const FileUpload = memo(function FileUpload() {
           <div className="flex flex-col gap-[8px]">
             <span className="flex items-center gap-2 font-display-5 font-semibold text-button-accent">
               {t("Upload file")} <span className="text-destructive">*</span>
-              <InfoTooltip content={t("Live photos help your report get reviewed faster")} />
+              <InfoTooltip
+                label={t("About photos")}
+                content={
+                  <>
+                    {t("Live photos help your report get reviewed faster")}. {libraryNote}
+                  </>
+                }
+              />
             </span>
             <span className="font-display-2 text-button-accent-hover">
               {t("Choose a image and upload securely to proceed.")}
@@ -276,8 +286,9 @@ const FileUpload = memo(function FileUpload() {
       {images.length > 0 && (
         <div className="flex flex-col gap-5">
           <div className="flex items-center justify-between">
-            <span className="font-display-3 font-semibold text-button-accent">
+            <span className="flex items-center gap-2 font-display-3 font-semibold text-button-accent">
               {t("Uploaded Images")}
+              <InfoTooltip content={libraryNote} />
             </span>
 
             {/* </div> */}

@@ -1,12 +1,23 @@
 import { useTranslation } from "react-i18next";
 import type { IconType } from "react-icons";
-import { TbAlertTriangle, TbChevronRight, TbCopy, TbMapPin, TbPhoto } from "react-icons/tb";
+import { TbAlertTriangle, TbChevronRight, TbCopy, TbExternalLink, TbMapPin, TbPhoto } from "react-icons/tb";
 import { useGetReportDetail } from "@/apis/incident/getReportDetail";
 import type { IIncident } from "@/apis/incident/models/incident";
 import type { IVerificationIssue } from "@/apis/incident/models/verification";
 import { reasonCopy, shortReportCode } from "@/constants/reportVerification";
 import { Link } from "@/libs/router";
-import DuplicatePhotos from "./DuplicatePhotos";
+import DuplicatePhotos, { WebPhotos } from "./DuplicatePhotos";
+
+const httpsOrNull = (v?: string | null) => (v?.startsWith("https://") ? v : null);
+const hostOf = (url: string) => {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return url;
+  }
+};
+const rowButton =
+  "flex w-full items-center justify-between gap-2 rounded-lg border border-border bg-white px-4 py-3 font-semibold text-foreground-primary transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-button-accent";
 
 const iconFor = (code: string): IconType =>
   code.startsWith("DUP_")
@@ -19,12 +30,15 @@ const iconFor = (code: string): IconType =>
 
 /**
  * One problem found by verification (specs/010 FR-012). A duplicate shows both photos and links to
- * the similar report; never names that report's sender (FR-019).
+ * the similar report, never naming its sender (FR-019); a web match shows the web image and its page.
  */
 export default function IssueCard({ issue, incident }: { issue: IVerificationIssue; incident: IIncident }) {
   const { t } = useTranslation();
   const copy = reasonCopy(issue.code);
-  const { similar_report_id, distance_m, time_delta_hours, nearest } = issue.evidence ?? {};
+  const { similar_report_id, distance_m, time_delta_hours, nearest, image_index, source_url, page_url, page_title } =
+    issue.evidence ?? {};
+  const webSource = issue.code === "DUP_WEB_IMAGE_MATCH" ? httpsOrNull(source_url) : null;
+  const webPage = webSource ? httpsOrNull(page_url) : null;
   const similarId = issue.code.startsWith("DUP_") && similar_report_id ? similar_report_id : null;
   const similarQuery = useGetReportDetail(similarId ?? "", {
     enabled: !!similarId,
@@ -78,13 +92,29 @@ export default function IssueCard({ issue, incident }: { issue: IVerificationIss
               isError={similarQuery.isError || (!similarQuery.isLoading && !similar)}
             />
             {similar && (
-              <Link
-                href={`/incidents/${similarId}`}
-                className="flex w-full items-center justify-between gap-2 rounded-lg border border-border bg-white px-4 py-3 font-semibold text-foreground-primary transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-button-accent"
-              >
+              <Link href={`/incidents/${similarId}`} className={rowButton}>
                 {t("View similar report")}
                 <TbChevronRight aria-hidden className="size-4 shrink-0" />
               </Link>
+            )}
+          </>
+        )}
+        {webSource && (
+          <>
+            <WebPhotos
+              own={incident}
+              imageIndex={image_index ?? 0}
+              sourceUrl={webSource}
+              caption={page_title || hostOf(webPage ?? webSource)}
+            />
+            {webPage && (
+              <a href={webPage} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer" className={rowButton}>
+                <span className="flex min-w-0 items-baseline gap-2">
+                  {t("Open source page")}
+                  <span className="truncate text-xs font-normal text-foreground-tertiary">{hostOf(webPage)}</span>
+                </span>
+                <TbExternalLink aria-hidden className="size-4 shrink-0" />
+              </a>
             )}
           </>
         )}

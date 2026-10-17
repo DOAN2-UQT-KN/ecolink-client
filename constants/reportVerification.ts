@@ -48,8 +48,9 @@ export interface ReasonCopy {
   short?: string;
 }
 
+// A report that has a verdict cannot be re-shot (specs/011 FR-023a): fixes are advice for the next report.
 const DUPLICATE_FIX =
-  "Support the existing report; if this is a different incident, take a new photo on site";
+  "Support the existing report. If this is a different incident, send a new report with a photo taken on site.";
 
 export const REASON_COPY: Record<string, ReasonCopy> = {
   DUP_NEAR_IMAGE_MATCH: {
@@ -67,13 +68,13 @@ export const REASON_COPY: Record<string, ReasonCopy> = {
   DUP_WEB_IMAGE_MATCH: {
     title: "The photo already appears on the internet",
     description: "Photos found online cannot confirm the incident happened here.",
-    fix: "Take a new photo on site with the in-app camera",
+    fix: "Next time, take the photo on site with the in-app camera.",
     audience: "user",
   },
   TRUST_NOT_LIVE_CAPTURE: {
     title: "The photo was uploaded from the library",
     description: "Photos taken with the in-app camera are easier to verify.",
-    fix: "Take the photo with the in-app camera",
+    fix: "Next time, take the photo with the in-app camera.",
     audience: "user",
   },
   CTX_CATEGORY_LOCATION_MISMATCH: {
