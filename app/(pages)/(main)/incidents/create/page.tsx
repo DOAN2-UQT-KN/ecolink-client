@@ -1,6 +1,7 @@
 import Address from "./_components/Address";
 import FileUpload from "./_components/FileUpload";
 import Information from "./_components/Information";
+import FormServerError from "./_components/FormServerError";
 
 import { IncidentProvider } from "./_context/IncidentContext";
 import { useIncident } from "./_hooks/useIncident";
@@ -13,7 +14,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { useCallback, useEffect, useState } from "react";
 import { cn } from "@/libs/utils";
-import { toast } from "sonner";
+import showMessage, { MessageLevel, MessageType } from "@/utils/showMessage";
 
 const breadcrumbs: BreadcrumbItemProps[] = [
   { label: "Home", path: "/", type: "link" },
@@ -36,15 +37,17 @@ function CreateIncidentContent() {
 
   const handleCreate = useCallback(() => {
     form.handleSubmit(onSubmit, (validationErrors) => {
-      toast.error(t("Please complete the required fields"));
+      showMessage({ type: MessageType.Toast, level: MessageLevel.Error, title: t("Please complete the required fields") });
       const targetId =
         validationErrors.detailAddress ||
         validationErrors.latitude ||
         validationErrors.longitude
           ? "incident-address"
-          : validationErrors.imageStrings
-            ? "incident-images"
-            : undefined;
+          : validationErrors.category || validationErrors.wasteTypes
+            ? "report-category"
+            : validationErrors.images
+              ? "incident-images"
+              : undefined;
       if (targetId) {
         document.getElementById(targetId)?.scrollIntoView({
           behavior: "smooth",
@@ -79,7 +82,8 @@ function CreateIncidentContent() {
         </div>
       </div>
 
-      <div className="flex justify-end pt-5">
+      <div className="flex flex-col items-end gap-3 pt-5">
+        <FormServerError />
         <Button
           variant="brown"
           onClick={handleCreate}

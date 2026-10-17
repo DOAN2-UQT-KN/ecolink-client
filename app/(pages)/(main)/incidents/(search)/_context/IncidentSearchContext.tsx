@@ -69,10 +69,15 @@ export const IncidentSearchContext = createContext<
 >(undefined);
 
 export const IncidentSearchProvider = ({ children }: { children: ReactNode }) => {
+  // The page lives in the URL so Back from a report's page lands on the same page (specs/009 R4).
+  const urlPage = Math.max(1, Math.floor(useGetParam<number>("page", "number", 1) || 1));
   const [pagination, setPagination] = useState({
-    current: 1,
+    current: urlPage,
     pageSize: 10,
   });
+  useEffect(() => {
+    setPagination((prev) => ({ ...prev, current: urlPage }));
+  }, [urlPage]);
 
   const urlSearch = useGetParam<string>("search", "string", "");
   const urlStatus = useGetParam<string>("status", "string", undefined);

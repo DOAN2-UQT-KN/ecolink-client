@@ -1,7 +1,8 @@
 import { IBaseResponse } from "@/types/BaseResponse";
+import { ICreateReportImage } from "./createReport";
 
 export interface IAddReportMediaRequest {
-  image_urls: string[];
+  images: ICreateReportImage[];
 }
 
 export type IAddReportMediaResponse = IBaseResponse<unknown>;

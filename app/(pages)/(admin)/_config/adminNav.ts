@@ -17,6 +17,8 @@ export type AdminNavLinkItem = {
   /** i18n key in common.json */
   labelKey: string;
   icon: IconType;
+  /** Live count shown next to the label. */
+  badge?: 'moderation';
 };
 
 export type AdminNavGroupItem = {
@@ -39,9 +41,10 @@ export const adminNavItems: AdminNavItem[] = [
   },
   {
     kind: 'link',
-    href: '/admin/incidents',
-    labelKey: 'Incidents',
+    href: '/admin/reports',
+    labelKey: 'Reports',
     icon: TbMessageReport,
+    badge: 'moderation',
   },
   {
     kind: 'link',

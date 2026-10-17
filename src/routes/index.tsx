@@ -1,5 +1,6 @@
 import { lazy, Suspense, type ComponentType, type LazyExoticComponent } from "react";
 import { createBrowserRouter, Navigate } from "react-router-dom";
+import { IncidentsRedirect, ModerationRedirect } from "./LegacyAdminRedirect";
 
 import RootLayout from "@/src/layouts/RootLayout";
 import MainLayout from "@/src/layouts/MainLayout";
@@ -95,7 +96,10 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: lazyPage(() => import("@/app/(pages)/(admin)/admin/page"), "admin") },
           { path: "campaigns", element: lazyPage(() => import("@/app/(pages)/(admin)/admin/campaigns/page"), "admin-campaigns") },
-          { path: "incidents", element: lazyPage(() => import("@/app/(pages)/(admin)/admin/incidents/page"), "admin-incidents") },
+          { path: "reports", element: lazyPage(() => import("@/app/(pages)/(admin)/admin/reports/page"), "admin-reports") },
+          { path: "reports/:id", element: lazyPage(() => import("@/app/(pages)/(admin)/admin/reports/[id]/page"), "admin-report-detail") },
+          { path: "incidents", element: <IncidentsRedirect /> },
+          { path: "moderation", element: <ModerationRedirect /> },
           { path: "organizations", element: lazyPage(() => import("@/app/(pages)/(admin)/admin/organizations/page"), "admin-organizations") },
           { path: "organization-applications", element: lazyPage(() => import("@/app/(pages)/(admin)/admin/organization-applications/page"), "admin-organization-applications") },
           { path: "users", element: lazyPage(() => import("@/app/(pages)/(admin)/admin/users/page"), "admin-users") },

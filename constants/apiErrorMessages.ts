@@ -112,6 +112,9 @@ const API_ERROR_MESSAGES: Record<string, string> = {
     "The legal representative must be replaced: pick someone to take the role over",
   ORGANIZATION_APPLICATION_NOT_EDITABLE: "This application can no longer be edited.",
   TRACKING_TOKEN_INVALID: "This tracking link is invalid or has expired.",
+  REPORT_OUT_OF_SERVICE_AREA: "This location is outside the area Ecolink supports",
+  REPORT_RATE_LIMITED: "You have reached the report limit for the last 24 hours",
+  REPORT_ALREADY_MODERATED: "This report was already handled by another moderator",
   ACCOUNT_PENDING_ACTIVATION:
     "This account has not been activated yet. Use the activation link sent to your email, or request a new one.",
 };

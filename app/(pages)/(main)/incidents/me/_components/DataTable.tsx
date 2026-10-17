@@ -22,7 +22,9 @@ import { StatusTag } from "@/components/ui/StatusTag";
 import { RichTextContent } from "@/components/ui/RichTextContent";
 import FormFilter from "./FormFilter";
 import { formattedDate } from "@/utils/formattedDate";
-import { STATUS } from "@/constants/status";
+import { Pill } from "@/components/ui/Pill";
+import { reportOutcomeOf } from "@/constants/reportVerification";
+import { REPORT_OUTCOME_LABEL, REPORT_OUTCOME_TONE } from "@/constants/statusTone";
 import {
   ConditionCell,
   SeverityCell,
@@ -107,7 +109,7 @@ const DataTableComponent = memo(function DataTableComponent() {
         key: "waste_type",
         render: (_, record) => <WasteTypeCell value={record.waste_type} />,
         width: 250,
-        className: "whitespace-normal align-top",
+        className: "whitespace-normal",
       },
       {
         title: t("Created At"),
@@ -115,7 +117,7 @@ const DataTableComponent = memo(function DataTableComponent() {
         key: "created_at",
         render: (created_at) => {
           return (
-            <span className="text-xs text-muted-foreground/80 font-medium whitespace-nowrap">
+            <span className="font-display-1 text-muted-foreground whitespace-nowrap">
               {formattedDate(created_at as string | undefined)}
             </span>
           );
@@ -170,13 +172,14 @@ const DataTableComponent = memo(function DataTableComponent() {
         title: t("Status"),
         dataIndex: "status",
         key: "status",
-        render: (status) => (
-          <StatusTag
-            status={status}
-           
-            label={status === STATUS.INACTIVE ? t("Banned") : undefined}
-          />
-        ),
+        render: (status) => {
+          const outcome = reportOutcomeOf(status);
+          return outcome ? (
+            <Pill tone={REPORT_OUTCOME_TONE[outcome]}>{t(REPORT_OUTCOME_LABEL[outcome])}</Pill>
+          ) : (
+            <StatusTag status={status} />
+          );
+        },
         width: 120,
         align: "center",
       },
@@ -201,10 +204,10 @@ const DataTableComponent = memo(function DataTableComponent() {
                 )}
               </div>
               <div className="flex flex-col">
-                <span className="text-xs font-semibold uppercase">
+                <span className="font-display-1">
                   {handledBy?.name || "—"}
                 </span>
-                <span className="text-[10px] text-muted-foreground">
+                <span className="text-xs text-muted-foreground">
                   {handledBy ? t("Admin Organization") : "—"}
                 </span>
               </div>
@@ -219,7 +222,7 @@ const DataTableComponent = memo(function DataTableComponent() {
         render: (_, record) => {
           const reason = record.reject_reason?.trim();
           return (
-            <span className="text-xs text-muted-foreground whitespace-pre-wrap break-words line-clamp-3">
+            <span className="font-display-1 text-muted-foreground whitespace-pre-wrap break-words line-clamp-3">
               {reason || "—"}
             </span>
           );
@@ -275,7 +278,6 @@ const DataTableComponent = memo(function DataTableComponent() {
 
   const handleRowClick = useCallback(
     (record: IIncident) => {
-      if (record.status === STATUS.INACTIVE) return;
       router.push(`/incidents/${record.id}`);
     },
     [router],

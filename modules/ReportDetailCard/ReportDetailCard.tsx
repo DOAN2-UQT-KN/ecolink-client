@@ -1,21 +1,23 @@
-import React, { memo, useMemo, useState } from "react";
+import React, { memo, useMemo } from "react";
 import { IIncident } from "@/apis/incident/models/incident";
 import { ReportHeader } from "./components/ReportHeader";
 import { ReportContent } from "./components/ReportContent";
-import { ReportFooter } from "./components/ReportFooter";
+import { ReportFacts } from "./components/ReportFacts";
 import { ReportActions } from "./components/ReportActions";
 import { cn } from "@/libs/utils";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { useLocalizedDisplay } from "@/hooks/useLocalizedDisplay";
+import { useRouter } from "@/libs/router";
+import { openReportOnCardClick } from "./reportCardNavigation";
 
 interface ReportDetailCardProps {
   incident: IIncident;
   className?: string;
+  /** Full description and the AI recommendation (the report detail page). */
   isExpanded?: boolean;
   /** When false, omits vote/share footer and hides the save control in the header. */
   showAction?: boolean;
-  /** When the card is expanded inside a dialog, parent passes this so preview state syncs with the dialog shell. */
-  onPreviewOpenChange?: (open: boolean) => void;
+  /** Clicking the card opens the report detail page (specs/009 FR-017). Off on that page itself. */
+  linkToDetail?: boolean;
 }
 
 const ReportDetailCard = memo(function ReportDetailCard({
@@ -23,11 +25,9 @@ const ReportDetailCard = memo(function ReportDetailCard({
   className,
   isExpanded = false,
   showAction = true,
-  onPreviewOpenChange,
+  linkToDetail = true,
 }: ReportDetailCardProps) {
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [open, setOpen] = useState(false);
-  const handlePreviewOpenChange = onPreviewOpenChange ?? setIsPreviewOpen;
+  const router = useRouter();
   const { title: localizedTitle, description: localizedDescription } =
     useLocalizedDisplay();
 
@@ -36,106 +36,58 @@ const ReportDetailCard = memo(function ReportDetailCard({
     [incident],
   );
 
-  const content = useMemo(() => {
-    if (!incident) return null;
-
-    return (
-      <article
-        className={cn(
-          "flex flex-col mx-auto border-1 border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5 overflow-hidden transition-all duration-300",
-          !isExpanded && "w-full max-w-2xl hover:shadow-md cursor-pointer",
-          isExpanded &&
-            "w-fit max-w-full border-none shadow-none bg-transparent h-full",
-          className,
-        )}
-      >
-        <div
-          className={cn(
-            "p-4 md:p-5 flex flex-col",
-            isExpanded ? "gap-6 h-full overflow-y-auto" : "h-full",
-          )}
-        >
-          <ReportHeader
-            reportId={incident.id}
-            user={incident.user}
-            createdAt={incident.created_at}
-            isSaved={incident.saved}
-            showAction={showAction}
-          />
-
-          <ReportContent
-            title={localizedTitle(incident) || incident.title}
-            address={incident.detail_address || null}
-            description={localizedDescription(incident) || incident.description}
-            aiRecommendation={incident.ai_recommendation ?? null}
-            images={images}
-            isExpanded={isExpanded}
-            onPreviewOpenChange={handlePreviewOpenChange}
-          />
-
-          <ReportFooter
-            wasteType={incident.waste_type}
-            condition={incident.condition}
-            severityLevel={incident.severity_level}
-          />
-
-          {showAction ? (
-            <ReportActions
-              reportId={incident.id}
-              initialVotePoint={
-                (incident.votes?.upvote_count || 0) -
-                (incident.votes?.downvote_count || 0)
-              }
-              initialUserVote={incident.votes?.my_vote || null}
-            />
-          ) : null}
-        </div>
-      </article>
-    );
-  }, [
-    className,
-    handlePreviewOpenChange,
-    images,
-    incident,
-    isExpanded,
-    localizedDescription,
-    localizedTitle,
-    showAction,
-  ]);
-
   if (!incident) return null;
 
-  if (isExpanded) {
-    return content;
-  }
+  const href = linkToDetail ? `/incidents/${incident.id}` : undefined;
+  const onCardClick = href
+    ? (e: React.MouseEvent) => openReportOnCardClick(e, href, (to) => router.push(to))
+    : undefined;
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(next) => {
-        if (isPreviewOpen) {
-          if (next === false) {
-            setOpen(true);
-          }
-          return;
-        }
-        setOpen(next);
-      }}
+    <article
+      onClick={onCardClick}
+      onAuxClick={onCardClick}
+      className={cn(
+        "flex flex-col mx-auto w-full max-w-2xl border-1 border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5 overflow-hidden transition-all duration-300",
+        href && "hover:shadow-md cursor-pointer",
+        className,
+      )}
     >
-      <DialogTrigger asChild>
-        <div>{content}</div>
-      </DialogTrigger>
-      <DialogContent
-        className="w-fit min-w-[min(100%,36rem)] max-w-[95vw] h-[90vh] md:h-[85vh] p-0 overflow-hidden border-none bg-white/95 backdrop-blur-md"
-      >
-        <ReportDetailCard
-          incident={incident}
-          isExpanded={true}
+      <div className={cn("p-4 md:p-5 flex flex-col h-full")}>
+        <ReportHeader
+          reportId={incident.id}
+          user={incident.user}
+          createdAt={incident.created_at}
+          isSaved={incident.saved}
           showAction={showAction}
-          onPreviewOpenChange={setIsPreviewOpen}
         />
-      </DialogContent>
-    </Dialog>
+
+        <ReportContent
+          title={localizedTitle(incident) || incident.title}
+          href={href}
+          address={incident.detail_address || null}
+          description={localizedDescription(incident) || incident.description}
+          aiRecommendation={incident.ai_recommendation ?? null}
+          images={images}
+          isExpanded={isExpanded}
+        />
+
+        <div className="my-4">
+          <ReportFacts incident={incident} />
+        </div>
+
+        {showAction ? (
+          <ReportActions
+            reportId={incident.id}
+            initialVotePoint={
+              (incident.votes?.upvote_count || 0) -
+              (incident.votes?.downvote_count || 0)
+            }
+            initialUserVote={incident.votes?.my_vote || null}
+          />
+        ) : null}
+      </div>
+    </article>
   );
 });
 

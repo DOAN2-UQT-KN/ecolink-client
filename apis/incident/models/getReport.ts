@@ -16,6 +16,8 @@ export interface IGetReportsRequest {
   sort_order?: SortOrder;
   page?: number;
   limit?: number;
+  /** Admin only (specs/008): moderation queue filter, sorted by risk; the server ignores it for others. */
+  moderation?: "REVIEW" | "REJECT";
 }
 
 export type IGetReportsResponse = IPaginationResponse<IIncident[], "reports">;

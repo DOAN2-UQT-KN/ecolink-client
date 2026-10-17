@@ -8,11 +8,11 @@ import { IncidentProvider } from "./_context/IncidentContext";
 import { FormFilter } from "./_components/FormFilter";
 import { DataTable } from "./_components/DataTable";
 
-function IncidentsContent() {
+function ReportsContent() {
   const breadcrumbs: BreadcrumbItemProps[] = useMemo(
     () => [
       { label: "Dashboard", path: "/admin", type: "link" },
-      { label: "Incidents", path: "/admin/incidents", type: "page" },
+      { label: "Reports", path: "/admin/reports", type: "page" },
     ],
     [],
   );
@@ -27,10 +27,10 @@ function IncidentsContent() {
   );
 }
 
-export default function AdminIncidentsPage() {
+export default function AdminReportsPage() {
   return (
     <IncidentProvider>
-      <IncidentsContent />
+      <ReportsContent />
     </IncidentProvider>
   );
 }

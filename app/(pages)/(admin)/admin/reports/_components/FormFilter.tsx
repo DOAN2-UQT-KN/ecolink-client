@@ -13,12 +13,14 @@ import {
 } from "@/components/ui/select";
 import { useDebounce } from "@/hooks/useDebounce";
 import { STATUS } from "@/constants/status";
-import { useIncidentContext } from "../_context/IncidentContext";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
+import { MODERATION_STATUS_PREFIX, moderationOf, useIncidentContext } from "../_context/IncidentContext";
 
 type FormFieldConfig = {
   key: string;
   label: string;
   render: () => React.ReactNode;
+  hint?: string;
 };
 
 export function FormFilter() {
@@ -42,7 +44,9 @@ export function FormFilter() {
   const formFields: FormFieldConfig[] = useMemo(() => {
     const statusOptions = [
       { label: t("All"), value: "all" },
-      { label: t("Pending"), value: String(STATUS.PENDING) },
+      { label: t("Awaiting review"), value: `${MODERATION_STATUS_PREFIX}REVIEW` },
+      { label: t("Auto-rejected"), value: `${MODERATION_STATUS_PREFIX}REJECT` },
+      { label: t("Checking"), value: String(STATUS.PENDING) },
       { label: t("To Do"), value: String(STATUS.TODO) },
       { label: t("In Progress"), value: String(STATUS.IN_PROGRESS) },
       { label: t("Completed"), value: String(STATUS.COMPLETED) },
@@ -68,6 +72,7 @@ export function FormFilter() {
       {
         key: "status",
         label: t("Status"),
+        hint: moderationOf(values.status) ? t("Sorted by risk score, highest first") : undefined,
         render: () => (
           <Select
             value={values.status}
@@ -96,6 +101,7 @@ export function FormFilter() {
           <Field key={field.key}>
             <FieldLabel className="text-sm font-medium text-foreground-secondary">
               {field.label}
+              {field.hint && <InfoTooltip content={field.hint} />}
             </FieldLabel>
             {field.render()}
           </Field>
