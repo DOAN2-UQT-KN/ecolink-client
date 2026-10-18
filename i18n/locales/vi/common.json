@@ -2107,9 +2107,6 @@
   "{{check}}, risk {{risk}}.": "{{check}}, risk {{risk}}.",
   "Signals": "Tín hiệu",
   "Report under review": "Báo cáo đang xét",
-  "Context: {{category}} fits the location, {{name}} {{distance}} m away.": "Bối cảnh: {{category}} hợp địa điểm, {{name}} cách {{distance}} m.",
-  "Context: {{category}} fits the location.": "Bối cảnh: {{category}} hợp địa điểm.",
-  "Context: {{category}} does not fit the location.": "Bối cảnh: {{category}} không hợp địa điểm.",
   "pHash distance": "Khoảng cách pHash",
   "{{n}} / 64 bit": "{{n}} / 64 bit",
   "ORB inliers": "Điểm khớp ORB",
@@ -2176,10 +2173,13 @@
   "About photos": "Về ảnh",
   "© OpenStreetMap contributors": "© OpenStreetMap contributors",
   "Suitable for this location": "Phù hợp với vị trí",
-  "Context: not enough map data around the location.": "Bối cảnh: khu vực quanh vị trí chưa đủ dữ liệu bản đồ.",
   "Not enough map data ({{count}} places nearby)": "Chưa đủ dữ liệu bản đồ ({{count}} địa điểm quanh đó)",
   "OSM tag": "Tag OSM",
   "Map data": "Dữ liệu bản đồ",
   "View on OpenStreetMap": "Xem trên OpenStreetMap",
-  "Address suggestions": "Gợi ý địa chỉ"
+  "Address suggestions": "Gợi ý địa chỉ",
+  "Types that fit this location: {{types}}": "Loại phù hợp với vị trí này: {{types}}",
+  "Fits this location": "Phù hợp với vị trí",
+  "Fits": "Phù hợp",
+  "Mismatch": "Không phù hợp"
 }

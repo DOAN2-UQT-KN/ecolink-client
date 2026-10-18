@@ -2107,9 +2107,6 @@
   "{{check}}, risk {{risk}}.": "{{check}}, risk {{risk}}.",
   "Signals": "Signals",
   "Report under review": "Report under review",
-  "Context: {{category}} fits the location, {{name}} {{distance}} m away.": "Context: {{category}} fits the location, {{name}} {{distance}} m away.",
-  "Context: {{category}} fits the location.": "Context: {{category}} fits the location.",
-  "Context: {{category}} does not fit the location.": "Context: {{category}} does not fit the location.",
   "pHash distance": "pHash distance",
   "{{n}} / 64 bit": "{{n}} / 64 bit",
   "ORB inliers": "ORB inliers",
@@ -2176,10 +2173,13 @@
   "About photos": "About photos",
   "© OpenStreetMap contributors": "© OpenStreetMap contributors",
   "Suitable for this location": "Suitable for this location",
-  "Context: not enough map data around the location.": "Context: not enough map data around the location.",
   "Not enough map data ({{count}} places nearby)": "Not enough map data ({{count}} places nearby)",
   "OSM tag": "OSM tag",
   "Map data": "Map data",
   "View on OpenStreetMap": "View on OpenStreetMap",
-  "Address suggestions": "Address suggestions"
+  "Address suggestions": "Address suggestions",
+  "Types that fit this location: {{types}}": "Types that fit this location: {{types}}",
+  "Fits this location": "Fits this location",
+  "Fits": "Fits",
+  "Mismatch": "Mismatch"
 }

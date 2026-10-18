@@ -17,11 +17,9 @@ const BANDS = [
 /** Total risk with its scale, one bar per check, and the engine formula in a tooltip (mockup "Risk tổng"). */
 export function RiskSummary({
   verification,
-  contextSummary,
   isDark,
 }: {
   verification: IAdminVerification;
-  contextSummary: string | null;
   isDark: boolean;
 }) {
   const { t } = useTranslation();
@@ -128,7 +126,6 @@ export function RiskSummary({
             </div>
           );
         })}
-        {contextSummary && <p className={cn("pt-1 text-sm", muted)}>{contextSummary}</p>}
       </div>
     </section>
   );

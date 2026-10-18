@@ -122,6 +122,8 @@ export interface ContextEvidence {
   nearest: { name: string | null; distanceM: number | null; featureClass: string | null; tag: string | null; osm: string | null } | null;
   coveragePoi: number | null;
   osmDataAt: string | null;
+  /** On a MISMATCH: categories that fit the location (specs/012), nearest first. */
+  suggested: { category: string; name: string | null; distanceM: number | null }[];
 }
 
 const OSM_ID = /^(node|way|relation)\/\d+$/;
@@ -145,6 +147,12 @@ export function readContextEvidence(evidence: unknown): ContextEvidence {
           }
         : null,
     coveragePoi: num(obj(e?.coverage)?.poi),
+    suggested: (Array.isArray(e?.suggested_categories) ? e.suggested_categories : []).flatMap((item) => {
+      const c = obj(item);
+      const category = str(c?.category);
+      const n = obj(c?.nearest);
+      return category ? [{ category, name: str(n?.name), distanceM: num(n?.distance_m) }] : [];
+    }),
     osmDataAt: str(e?.osm_data_at),
   };
 }

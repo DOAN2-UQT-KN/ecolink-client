@@ -7,6 +7,7 @@ import {
 import { isAdminVerification } from "@/apis/incident/models/verification";
 import type { IIncident } from "@/apis/incident/models/incident";
 import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
+import { Pill, PILL_TONE } from "@/components/ui/Pill";
 import { Skeleton } from "@/components/ui/skeleton";
 import { canModerate, reportCategoryLabel } from "@/constants/reportVerification";
 import { cn } from "@/libs/utils";
@@ -63,20 +64,6 @@ export function ModerationDetail({ report, onDecided }: { report: IIncident; onD
   const canDecide = canModerate(report);
 
   const nearestLabel = context.nearest ? (context.nearest.name ?? context.nearest.featureClass ?? "—") : null;
-  const contextSummary =
-    context.verdict === "SPARSE_DATA"
-      ? t("Context: not enough map data around the location.")
-      : v.checks.context?.status !== "COMPLETED"
-      ? null
-      : context.verdict === "FIT"
-        ? context.nearest
-          ? t("Context: {{category}} fits the location, {{name}} {{distance}} m away.", {
-              category: categoryCode,
-              name: nearestLabel,
-              distance: Math.round(context.nearest.distanceM ?? 0),
-            })
-          : t("Context: {{category}} fits the location.", { category: categoryCode })
-        : t("Context: {{category}} does not fit the location.", { category: categoryCode });
 
   const webFailed = v.checks.duplicate?.signals.find((s) => s.name === "internet")?.status === "FAILED";
   const webCandidates = webFailed ? readWebCandidates(v.checks.duplicate?.evidence) : [];
@@ -120,8 +107,50 @@ export function ModerationDetail({ report, onDecided }: { report: IIncident; onD
       label: t("Verdict"),
       value:
         context.verdict === "SPARSE_DATA"
-          ? t("Not enough map data ({{count}} places nearby)", { count: context.coveragePoi ?? 0 })
-          : context.verdict,
+          ? (
+              <Pill tone="neutral" isDark={isDark}>
+                {t("Not enough map data ({{count}} places nearby)", { count: context.coveragePoi ?? 0 })}
+              </Pill>
+            )
+          : context.verdict === "FIT"
+            ? (
+                <Pill tone="green" isDark={isDark}>
+                  {t("Fits")}
+                </Pill>
+              )
+          : context.verdict === "MISMATCH" && context.suggested.length > 0
+            ? (
+                <div
+                  className={cn(
+                    "flex flex-col gap-1.5 rounded-md border px-3 py-2",
+                    PILL_TONE.red[isDark ? "dark" : "light"],
+                  )}
+                >
+                  <Pill tone="red" isDark={isDark} className="w-fit">
+                    {t("Mismatch")}
+                  </Pill>
+                  <span className={cn("text-xs font-normal", muted)}>{t("Fits this location")}</span>
+                  <ul className={cn("flex flex-col gap-1.5", isDark ? "text-zinc-100" : "text-foreground")}>
+                    {context.suggested.map((c) => (
+                      <li key={c.category} className="flex flex-col break-words">
+                        <span className="text-sm font-medium">{t(reportCategoryLabel(c.category) ?? c.category)}</span>
+                        {c.name && (
+                          <span className={cn("text-xs font-normal", muted)}>
+                            {c.name} · {Math.round(c.distanceM ?? 0)} m
+                          </span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )
+            : context.verdict === "MISMATCH"
+              ? (
+                  <Pill tone="red" isDark={isDark}>
+                    {t("Mismatch")}
+                  </Pill>
+                )
+              : context.verdict,
     },
     context.nearest != null && {
       label: t("Nearest place"),
@@ -146,7 +175,7 @@ export function ModerationDetail({ report, onDecided }: { report: IIncident; onD
           })}
         </p>
 
-        <RiskSummary verification={v} contextSummary={contextSummary} isDark={isDark} />
+        <RiskSummary verification={v} isDark={isDark} />
 
         <div className="grid gap-4 lg:grid-cols-[repeat(3,minmax(0,1fr))] lg:grid-rows-[auto_1fr_auto]">
           <CheckCard name="duplicate" check={v.checks.duplicate} isDark={isDark} rows={duplicateRows}>

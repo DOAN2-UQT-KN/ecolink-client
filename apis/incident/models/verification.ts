@@ -33,6 +33,8 @@ export interface IVerificationIssue {
     distance_m?: number | null;
     time_delta_hours?: number | null;
     nearest?: { name: string | null; distance_m: number | null } | null;
+    /** CTX_CATEGORY_LOCATION_MISMATCH: categories that fit the location, nearest first (specs/012). */
+    suggested_categories?: { category: string; nearest: { name: string | null; distance_m: number | null } | null }[];
     /** DUP_WEB_IMAGE_MATCH: the web image and the page it was found on (https only). */
     image_index?: number | null;
     source_url?: string | null;
