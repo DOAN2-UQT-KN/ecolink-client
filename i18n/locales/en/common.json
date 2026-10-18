@@ -2180,5 +2180,6 @@
   "Not enough map data ({{count}} places nearby)": "Not enough map data ({{count}} places nearby)",
   "OSM tag": "OSM tag",
   "Map data": "Map data",
-  "View on OpenStreetMap": "View on OpenStreetMap"
+  "View on OpenStreetMap": "View on OpenStreetMap",
+  "Address suggestions": "Address suggestions"
 }

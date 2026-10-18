@@ -2180,5 +2180,6 @@
   "Not enough map data ({{count}} places nearby)": "Chưa đủ dữ liệu bản đồ ({{count}} địa điểm quanh đó)",
   "OSM tag": "Tag OSM",
   "Map data": "Dữ liệu bản đồ",
-  "View on OpenStreetMap": "Xem trên OpenStreetMap"
+  "View on OpenStreetMap": "Xem trên OpenStreetMap",
+  "Address suggestions": "Gợi ý địa chỉ"
 }
