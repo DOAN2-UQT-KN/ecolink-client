@@ -7,6 +7,7 @@ import {
 import { isAdminVerification } from "@/apis/incident/models/verification";
 import type { IIncident } from "@/apis/incident/models/incident";
 import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
+import { Pill, PILL_TONE } from "@/components/ui/Pill";
 import { Skeleton } from "@/components/ui/skeleton";
 import { canModerate, reportCategoryLabel } from "@/constants/reportVerification";
 import { cn } from "@/libs/utils";
@@ -21,7 +22,7 @@ import { DuplicateEvidence } from "./DuplicateEvidence";
 import { ModerationDecision } from "./ModerationDecision";
 import { RiskSummary } from "./RiskSummary";
 import { VerificationHistory } from "./VerificationHistory";
-import { WebCandidateList, WebMatchEvidence } from "./WebMatchEvidence";
+import { ExternalLink, WebCandidateList, WebMatchEvidence } from "./WebMatchEvidence";
 
 const isRow = <T extends EvidenceRow>(row: T | false): row is T => row !== false;
 
@@ -62,18 +63,7 @@ export function ModerationDetail({ report, onDecided }: { report: IIncident; onD
   const category = t(reportCategoryLabel(categoryCode) ?? "Other");
   const canDecide = canModerate(report);
 
-  const contextSummary =
-    v.checks.context?.status !== "COMPLETED"
-      ? null
-      : context.verdict === "FIT"
-        ? context.nearest
-          ? t("Context: {{category}} fits the location, {{name}} {{distance}} m away.", {
-              category: categoryCode,
-              name: context.nearest.name,
-              distance: Math.round(context.nearest.distanceM ?? 0),
-            })
-          : t("Context: {{category}} fits the location.", { category: categoryCode })
-        : t("Context: {{category}} does not fit the location.", { category: categoryCode });
+  const nearestLabel = context.nearest ? (context.nearest.name ?? context.nearest.featureClass ?? "—") : null;
 
   const webFailed = v.checks.duplicate?.signals.find((s) => s.name === "internet")?.status === "FAILED";
   const webCandidates = webFailed ? readWebCandidates(v.checks.duplicate?.evidence) : [];
@@ -113,15 +103,66 @@ export function ModerationDetail({ report, onDecided }: { report: IIncident; onD
 
   const contextRows = [
     { label: t("Report type"), value: category },
-    context.verdict != null && { label: t("Verdict"), value: context.verdict },
+    context.verdict != null && {
+      label: t("Verdict"),
+      value:
+        context.verdict === "SPARSE_DATA"
+          ? (
+              <Pill tone="neutral" isDark={isDark}>
+                {t("Not enough map data ({{count}} places nearby)", { count: context.coveragePoi ?? 0 })}
+              </Pill>
+            )
+          : context.verdict === "FIT"
+            ? (
+                <Pill tone="green" isDark={isDark}>
+                  {t("Fits")}
+                </Pill>
+              )
+          : context.verdict === "MISMATCH" && context.suggested.length > 0
+            ? (
+                <div
+                  className={cn(
+                    "flex flex-col gap-1.5 rounded-md border px-3 py-2",
+                    PILL_TONE.red[isDark ? "dark" : "light"],
+                  )}
+                >
+                  <Pill tone="red" isDark={isDark} className="w-fit">
+                    {t("Mismatch")}
+                  </Pill>
+                  <span className={cn("text-xs font-normal", muted)}>{t("Fits this location")}</span>
+                  <ul className={cn("flex flex-col gap-1.5", isDark ? "text-zinc-100" : "text-foreground")}>
+                    {context.suggested.map((c) => (
+                      <li key={c.category} className="flex flex-col break-words">
+                        <span className="text-sm font-medium">{t(reportCategoryLabel(c.category) ?? c.category)}</span>
+                        {c.name && (
+                          <span className={cn("text-xs font-normal", muted)}>
+                            {c.name} · {Math.round(c.distanceM ?? 0)} m
+                          </span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )
+            : context.verdict === "MISMATCH"
+              ? (
+                  <Pill tone="red" isDark={isDark}>
+                    {t("Mismatch")}
+                  </Pill>
+                )
+              : context.verdict,
+    },
     context.nearest != null && {
       label: t("Nearest place"),
       value:
         context.nearest.distanceM != null
-          ? `${context.nearest.name}, ${Math.round(context.nearest.distanceM)} m`
-          : context.nearest.name,
+          ? `${nearestLabel}, ${Math.round(context.nearest.distanceM)} m`
+          : nearestLabel,
     },
+    context.nearest?.tag != null && { label: t("OSM tag"), value: context.nearest.tag },
+    context.osmDataAt != null && { label: t("Map data"), value: new Date(context.osmDataAt).toLocaleDateString() },
   ].filter(isRow);
+  const contextOsm = context.nearest?.osm ?? null;
 
   return (
     <div className="flex flex-col gap-4">
@@ -134,7 +175,7 @@ export function ModerationDetail({ report, onDecided }: { report: IIncident; onD
           })}
         </p>
 
-        <RiskSummary verification={v} contextSummary={contextSummary} isDark={isDark} />
+        <RiskSummary verification={v} isDark={isDark} />
 
         <div className="grid gap-4 lg:grid-cols-[repeat(3,minmax(0,1fr))] lg:grid-rows-[auto_1fr_auto]">
           <CheckCard name="duplicate" check={v.checks.duplicate} isDark={isDark} rows={duplicateRows}>
@@ -143,7 +184,19 @@ export function ModerationDetail({ report, onDecided }: { report: IIncident; onD
             {webCandidates.length > 0 && <WebCandidateList candidates={webCandidates} isDark={isDark} />}
           </CheckCard>
           <CheckCard name="trust" check={v.checks.trust} isDark={isDark} rows={trustRows} />
-          <CheckCard name="context" check={v.checks.context} isDark={isDark} rows={contextRows} />
+          <CheckCard name="context" check={v.checks.context} isDark={isDark} rows={contextRows}>
+            {(contextOsm || context.osmDataAt) && (
+              <div className="flex flex-col gap-1">
+                {contextOsm && (
+                  <ExternalLink href={`https://www.openstreetmap.org/${contextOsm}`} isDark={isDark}>
+                    {t("View on OpenStreetMap")}
+                  </ExternalLink>
+                )}
+                {/* ODbL attribution wherever OSM evidence is shown (specs/012 FR-019). */}
+                <p className={cn("text-xs", muted)}>© OpenStreetMap contributors</p>
+              </div>
+            )}
+          </CheckCard>
         </div>
 
         {canDecide && <ModerationDecision reportId={report.id} isDark={isDark} onDecided={onDecided} />}

@@ -3,15 +3,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   getAddressFromLatLng,
   getLatLngFromAddress,
+  getPlaceLocation,
   isSamePosition,
   normalizeAddressQuery,
   reverseCacheKey,
+  type AddressSuggestion,
   type ForwardGeocodingResult,
   type LatLng,
   type ReverseGeocodingAddress,
 } from '@/libs/geocoding';
 import { useTranslation } from 'react-i18next';
-import { IoIosSearch } from 'react-icons/io';
+import { AddressSearchField } from '@/components/form/AddressSearchField';
 import { toast } from 'sonner';
 
 import useAuthStore from '@/stores/useAuthStore';
@@ -234,8 +236,9 @@ export function ProfileLocationSection() {
     setIsEditing(false);
   }, []);
 
-  const handleSearch = useCallback(async () => {
-    const query = searchQuery.trim();
+  /** `pick`: a suggestion from the autocomplete, resolved by place id instead of a text search. */
+  const handleSearch = useCallback(async (pick?: AddressSuggestion) => {
+    const query = (pick?.description ?? searchQuery).trim();
     if (!query) {
       setCanConfirm(false);
       setForwardWarning(t('Please enter an address to search'));
@@ -246,9 +249,9 @@ export function ProfileLocationSection() {
     setCanConfirm(false);
     const generation = ++searchGenerationRef.current;
 
-    const cacheKey = normalizeAddressQuery(query);
+    const cacheKey = pick ? `place:${pick.placeId}` : normalizeAddressQuery(query);
     const cached = forwardCacheRef.current.get(cacheKey);
-    const result = cached ?? (await getLatLngFromAddress(query));
+    const result = cached ?? (await (pick ? getPlaceLocation(pick.placeId) : getLatLngFromAddress(query)));
 
     if (generation !== searchGenerationRef.current || !isEditingRef.current) {
       return;
@@ -385,39 +388,23 @@ export function ProfileLocationSection() {
               }}
               className="w-full"
             >
-              <div
-                className={cn(
-                  'flex h-[50px] w-full overflow-hidden rounded-md border border-[rgba(136,122,71,0.35)]',
-                  'focus-within:border-ring focus-within:ring-3 focus-within:ring-[rgba(136,122,71,0.35)]/50',
-                  forwardWarning && 'border-amber-600',
-                )}
-              >
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(event) => {
-                    setSearchQuery(event.target.value);
-                    setCanConfirm(false);
-                    setForwardWarning(null);
-                  }}
-                  maxLength={DETAIL_ADDRESS_MAX_LENGTH}
-                  placeholder={t('Search...')}
-                  disabled={isSearching || saving}
-                  className="min-w-0 flex-1 bg-transparent px-3 text-sm outline-none placeholder:text-foreground-tertiary disabled:opacity-60"
-                />
-                <button
-                  type="submit"
-                  disabled={isSearching || saving}
-                  aria-label={t('Search')}
-                  className="flex h-full w-[50px] shrink-0 items-center justify-center border-l border-[rgba(136,122,71,0.35)] bg-button-accent text-white transition-colors hover:bg-button-accent-hover disabled:opacity-60"
-                >
-                  {isSearching ? (
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  ) : (
-                    <IoIosSearch size={20} />
-                  )}
-                </button>
-              </div>
+              <AddressSearchField
+                value={searchQuery}
+                onChange={(value) => {
+                  setSearchQuery(value);
+                  setCanConfirm(false);
+                  setForwardWarning(null);
+                }}
+                onPick={(suggestion) => {
+                  setSearchQuery(suggestion.description);
+                  void handleSearch(suggestion);
+                }}
+                loading={isSearching}
+                warning={!!forwardWarning}
+                disabled={saving}
+                maxLength={DETAIL_ADDRESS_MAX_LENGTH}
+                near={position}
+              />
             </form>
             {forwardWarning && (
               <p role="status" className="text-sm font-normal text-amber-700">

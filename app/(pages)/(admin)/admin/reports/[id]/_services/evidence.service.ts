@@ -116,17 +116,43 @@ export function readTrustEvidence(evidence: unknown): TrustEvidence {
 
 export interface ContextEvidence {
   category: string | null;
+  /** FIT | MISMATCH | SPARSE_DATA (OSM, specs/012); Goong-era evidence has FIT | MISMATCH. */
   verdict: string | null;
-  nearest: { name: string; distanceM: number | null } | null;
+  /** `name` may be null for an unnamed OSM feature; `osm` is "node|way|relation/<id>". */
+  nearest: { name: string | null; distanceM: number | null; featureClass: string | null; tag: string | null; osm: string | null } | null;
+  coveragePoi: number | null;
+  osmDataAt: string | null;
+  /** On a MISMATCH: categories that fit the location (specs/012), nearest first. */
+  suggested: { category: string; name: string | null; distanceM: number | null }[];
 }
+
+const OSM_ID = /^(node|way|relation)\/\d+$/;
 
 export function readContextEvidence(evidence: unknown): ContextEvidence {
   const e = obj(evidence);
   const nearest = obj(e?.nearest);
   const name = str(nearest?.name);
+  const osm = str(nearest?.osm);
   return {
     category: str(e?.category),
     verdict: str(e?.verdict),
-    nearest: name ? { name, distanceM: num(nearest?.distance_m) } : null,
+    nearest:
+      nearest && (name || osm)
+        ? {
+            name,
+            distanceM: num(nearest.distance_m),
+            featureClass: str(nearest.class),
+            tag: str(nearest.tag),
+            osm: osm && OSM_ID.test(osm) ? osm : null,
+          }
+        : null,
+    coveragePoi: num(obj(e?.coverage)?.poi),
+    suggested: (Array.isArray(e?.suggested_categories) ? e.suggested_categories : []).flatMap((item) => {
+      const c = obj(item);
+      const category = str(c?.category);
+      const n = obj(c?.nearest);
+      return category ? [{ category, name: str(n?.name), distanceM: num(n?.distance_m) }] : [];
+    }),
+    osmDataAt: str(e?.osm_data_at),
   };
 }

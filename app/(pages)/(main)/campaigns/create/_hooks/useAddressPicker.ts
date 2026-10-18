@@ -8,9 +8,11 @@ import { useCampaign } from "../_context/CampaignContext";
 import {
   getAddressFromLatLng,
   getLatLngFromAddress,
+  getPlaceLocation,
   isSamePosition,
   normalizeAddressQuery,
   reverseCacheKey,
+  type AddressSuggestion,
   type ForwardGeocodingResult,
   type LatLng,
   type ReverseGeocodingAddress,
@@ -188,8 +190,9 @@ export function useAddressPicker(index: number) {
     setForwardWarning(null);
   };
 
-  const handleSearch = async () => {
-    const query = searchQuery.trim();
+  /** `pick`: a suggestion from the autocomplete, resolved by place id instead of a text search. */
+  const handleSearch = async (pick?: AddressSuggestion) => {
+    const query = (pick?.description ?? searchQuery).trim();
     if (!query) {
       setCanConfirm(false);
       setForwardWarning(t("Please enter an address to search"));
@@ -200,9 +203,9 @@ export function useAddressPicker(index: number) {
     setCanConfirm(false);
     const generation = ++searchGenerationRef.current;
 
-    const cacheKey = normalizeAddressQuery(query);
+    const cacheKey = pick ? `place:${pick.placeId}` : normalizeAddressQuery(query);
     const cached = forwardCacheRef.current.get(cacheKey);
-    const result = cached ?? (await getLatLngFromAddress(query));
+    const result = cached ?? (await (pick ? getPlaceLocation(pick.placeId) : getLatLngFromAddress(query)));
 
     if (generation !== searchGenerationRef.current || !isEditingRef.current) {
       return;

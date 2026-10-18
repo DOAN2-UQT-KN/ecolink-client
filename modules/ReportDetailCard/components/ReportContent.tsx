@@ -54,13 +54,13 @@ export const ReportContent = memo(function ReportContent({
     return (
       <AntdImage.PreviewGroup preview={previewProps}>
         <div
-          className="grid w-full max-w-3xl grid-cols-3 gap-1 overflow-hidden rounded-lg"
+          className="grid w-full max-w-3xl grid-cols-3 gap-1"
           {...imageInteractionShieldProps}
         >
           {shown.map((img, idx) => (
             <div
               key={idx}
-              className="group relative aspect-square cursor-pointer overflow-hidden bg-muted"
+              className="group relative aspect-square cursor-pointer overflow-hidden rounded-lg bg-muted"
               {...imageInteractionShieldProps}
             >
               <AntdImage

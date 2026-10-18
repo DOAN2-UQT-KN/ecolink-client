@@ -92,3 +92,69 @@ export async function getLatLngFromAddress(query: string): Promise<ForwardGeocod
     return { ok: false, reason: "error" };
   }
 }
+
+export type AddressSuggestion = {
+  placeId: string;
+  mainText: string;
+  secondaryText: string;
+  description: string;
+};
+
+type GoongAutocompleteResponse = {
+  status?: string;
+  predictions?: Array<{
+    place_id?: string;
+    description?: string;
+    structured_formatting?: { main_text?: string; secondary_text?: string };
+  }>;
+};
+
+type GoongPlaceDetailResponse = {
+  status?: string;
+  result?: {
+    formatted_address?: string;
+    name?: string;
+    geometry?: { location?: { lat?: number; lng?: number } };
+  };
+};
+
+/** Suggestions while typing (Goong Place AutoComplete), biased towards `near`. Throws on failure. */
+export async function autocompleteAddress(input: string, near?: LatLng | null): Promise<AddressSuggestion[]> {
+  if (!GOONG_API_KEY) return [];
+  const params = new URLSearchParams({ input, limit: "5", api_key: GOONG_API_KEY });
+  if (near) params.set("location", `${near.lat},${near.lng}`);
+  const response = await fetch(`${GOONG_REST_BASE}/Place/AutoComplete?${params}`);
+  if (!response.ok) throw new Error("Address autocomplete failed");
+
+  const data = (await response.json()) as GoongAutocompleteResponse;
+  return (data.predictions ?? []).flatMap((p) =>
+    p.place_id && p.description
+      ? [
+          {
+            placeId: p.place_id,
+            description: p.description,
+            mainText: p.structured_formatting?.main_text ?? p.description,
+            secondaryText: p.structured_formatting?.secondary_text ?? "",
+          },
+        ]
+      : [],
+  );
+}
+
+/** Coordinates of a picked suggestion (Goong Place Detail), in the same shape as a forward search. */
+export async function getPlaceLocation(placeId: string): Promise<ForwardGeocodingResult> {
+  if (!GOONG_API_KEY) return { ok: false, reason: "error" };
+  try {
+    const params = new URLSearchParams({ place_id: placeId, api_key: GOONG_API_KEY });
+    const response = await fetch(`${GOONG_REST_BASE}/Place/Detail?${params}`);
+    if (!response.ok) return { ok: false, reason: "error" };
+
+    const data = (await response.json()) as GoongPlaceDetailResponse;
+    const lat = Number(data.result?.geometry?.location?.lat);
+    const lng = Number(data.result?.geometry?.location?.lng);
+    if (!data.result || !Number.isFinite(lat) || !Number.isFinite(lng)) return { ok: false, reason: "not_found" };
+    return { ok: true, lat, lng, displayName: data.result.formatted_address?.trim() || data.result.name?.trim() || "" };
+  } catch {
+    return { ok: false, reason: "error" };
+  }
+}
