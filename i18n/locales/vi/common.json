@@ -2173,5 +2173,12 @@
   "Mirroring": "Lật gương",
   "Mirrored copy": "Bản lật gương",
   "Not mirrored": "Không lật",
-  "About photos": "Về ảnh"
+  "About photos": "Về ảnh",
+  "© OpenStreetMap contributors": "© OpenStreetMap contributors",
+  "Suitable for this location": "Phù hợp với vị trí",
+  "Context: not enough map data around the location.": "Bối cảnh: khu vực quanh vị trí chưa đủ dữ liệu bản đồ.",
+  "Not enough map data ({{count}} places nearby)": "Chưa đủ dữ liệu bản đồ ({{count}} địa điểm quanh đó)",
+  "OSM tag": "Tag OSM",
+  "Map data": "Dữ liệu bản đồ",
+  "View on OpenStreetMap": "Xem trên OpenStreetMap"
 }

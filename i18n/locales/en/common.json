@@ -2173,5 +2173,12 @@
   "Mirroring": "Mirroring",
   "Mirrored copy": "Mirrored copy",
   "Not mirrored": "Not mirrored",
-  "About photos": "About photos"
+  "About photos": "About photos",
+  "© OpenStreetMap contributors": "© OpenStreetMap contributors",
+  "Suitable for this location": "Suitable for this location",
+  "Context: not enough map data around the location.": "Context: not enough map data around the location.",
+  "Not enough map data ({{count}} places nearby)": "Not enough map data ({{count}} places nearby)",
+  "OSM tag": "OSM tag",
+  "Map data": "Map data",
+  "View on OpenStreetMap": "View on OpenStreetMap"
 }

@@ -48,12 +48,14 @@ const Information = memo(function Information() {
         value: c.value,
         label: c.label,
         hint: c.hint
-          ? c.hint.distanceM != null
-            ? t('Suitable for this location · {{name}}, {{distance}} m', {
-                name: c.hint.name,
-                distance: Math.round(c.hint.distanceM),
-              })
-            : t('Suitable for this location · {{name}}', { name: c.hint.name })
+          ? c.hint.name == null
+            ? t('Suitable for this location')
+            : c.hint.distanceM != null
+              ? t('Suitable for this location · {{name}}, {{distance}} m', {
+                  name: c.hint.name,
+                  distance: Math.round(c.hint.distanceM),
+                })
+              : t('Suitable for this location · {{name}}', { name: c.hint.name })
           : undefined,
       })),
     [contextData, t],
@@ -134,6 +136,12 @@ const Information = memo(function Information() {
         </span>
 
         <CategorySelect options={categoryOptions} triggerClassName={inputClassName} />
+        {/* ODbL: the suggested places come from OpenStreetMap (specs/012 FR-018). */}
+        {categoryOptions.some((c) => c.hint) && (
+          <p className="-mt-4 text-xs text-foreground-tertiary">
+            {contextData?.data?.attribution ?? t('© OpenStreetMap contributors')}
+          </p>
+        )}
 
         {/* Waste Type — multi-select */}
         <Field>
@@ -248,7 +256,7 @@ const Information = memo(function Information() {
         </Field>
       </div>
     ),
-    [categoryOptions, control, errors.wasteTypes, inputClassName, t, translatedConditionOptions, translatedWasteTypeOptions],
+    [categoryOptions, contextData, control, errors.wasteTypes, inputClassName, t, translatedConditionOptions, translatedWasteTypeOptions],
   );
 
   return (

@@ -4,7 +4,7 @@ import type { ReportCategory } from "@/apis/incident/models/verification";
 export interface OrderedCategory {
   value: ReportCategory;
   label: string;
-  hint?: { name: string; distanceM: number | null };
+  hint?: { name: string | null; distanceM: number | null };
 }
 
 /**

@@ -21,7 +21,7 @@ import { DuplicateEvidence } from "./DuplicateEvidence";
 import { ModerationDecision } from "./ModerationDecision";
 import { RiskSummary } from "./RiskSummary";
 import { VerificationHistory } from "./VerificationHistory";
-import { WebCandidateList, WebMatchEvidence } from "./WebMatchEvidence";
+import { ExternalLink, WebCandidateList, WebMatchEvidence } from "./WebMatchEvidence";
 
 const isRow = <T extends EvidenceRow>(row: T | false): row is T => row !== false;
 
@@ -62,14 +62,17 @@ export function ModerationDetail({ report, onDecided }: { report: IIncident; onD
   const category = t(reportCategoryLabel(categoryCode) ?? "Other");
   const canDecide = canModerate(report);
 
+  const nearestLabel = context.nearest ? (context.nearest.name ?? context.nearest.featureClass ?? "—") : null;
   const contextSummary =
-    v.checks.context?.status !== "COMPLETED"
+    context.verdict === "SPARSE_DATA"
+      ? t("Context: not enough map data around the location.")
+      : v.checks.context?.status !== "COMPLETED"
       ? null
       : context.verdict === "FIT"
         ? context.nearest
           ? t("Context: {{category}} fits the location, {{name}} {{distance}} m away.", {
               category: categoryCode,
-              name: context.nearest.name,
+              name: nearestLabel,
               distance: Math.round(context.nearest.distanceM ?? 0),
             })
           : t("Context: {{category}} fits the location.", { category: categoryCode })
@@ -113,15 +116,24 @@ export function ModerationDetail({ report, onDecided }: { report: IIncident; onD
 
   const contextRows = [
     { label: t("Report type"), value: category },
-    context.verdict != null && { label: t("Verdict"), value: context.verdict },
+    context.verdict != null && {
+      label: t("Verdict"),
+      value:
+        context.verdict === "SPARSE_DATA"
+          ? t("Not enough map data ({{count}} places nearby)", { count: context.coveragePoi ?? 0 })
+          : context.verdict,
+    },
     context.nearest != null && {
       label: t("Nearest place"),
       value:
         context.nearest.distanceM != null
-          ? `${context.nearest.name}, ${Math.round(context.nearest.distanceM)} m`
-          : context.nearest.name,
+          ? `${nearestLabel}, ${Math.round(context.nearest.distanceM)} m`
+          : nearestLabel,
     },
+    context.nearest?.tag != null && { label: t("OSM tag"), value: context.nearest.tag },
+    context.osmDataAt != null && { label: t("Map data"), value: new Date(context.osmDataAt).toLocaleDateString() },
   ].filter(isRow);
+  const contextOsm = context.nearest?.osm ?? null;
 
   return (
     <div className="flex flex-col gap-4">
@@ -143,7 +155,19 @@ export function ModerationDetail({ report, onDecided }: { report: IIncident; onD
             {webCandidates.length > 0 && <WebCandidateList candidates={webCandidates} isDark={isDark} />}
           </CheckCard>
           <CheckCard name="trust" check={v.checks.trust} isDark={isDark} rows={trustRows} />
-          <CheckCard name="context" check={v.checks.context} isDark={isDark} rows={contextRows} />
+          <CheckCard name="context" check={v.checks.context} isDark={isDark} rows={contextRows}>
+            {(contextOsm || context.osmDataAt) && (
+              <div className="flex flex-col gap-1">
+                {contextOsm && (
+                  <ExternalLink href={`https://www.openstreetmap.org/${contextOsm}`} isDark={isDark}>
+                    {t("View on OpenStreetMap")}
+                  </ExternalLink>
+                )}
+                {/* ODbL attribution wherever OSM evidence is shown (specs/012 FR-019). */}
+                <p className={cn("text-xs", muted)}>© OpenStreetMap contributors</p>
+              </div>
+            )}
+          </CheckCard>
         </div>
 
         {canDecide && <ModerationDecision reportId={report.id} isDark={isDark} onDecided={onDecided} />}
