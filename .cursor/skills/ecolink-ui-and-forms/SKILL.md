@@ -288,7 +288,7 @@ import { InfoTooltip } from '@/components/ui/InfoTooltip';
 - Vẫn để **inline** dưới field những gì người dùng phải thấy ngay: lỗi (`FieldError`), cảnh báo (amber / đỏ, ví dụ "Tổ chức chưa xác thực", điểm rác bị lấy), hướng dẫn phụ thuộc trạng thái ("Chọn vị trí trước…").
 - **Không** tự dựng `Tooltip` + icon trợ giúp (`TbHelpCircle`, `TbInfoCircle`…) — luôn dùng `InfoTooltip`.
 - Tooltip làm **nhãn cho nút chỉ có icon** (Remove, Add image…) là pattern khác: vẫn dùng `Tooltip` / `TooltipTrigger asChild` / `TooltipContent` trực tiếp (xem `organizations/[id]/_components/OwnerActions.tsx`).
-- Đang dùng ở: form tạo chiến dịch (`campaigns/create/_components/*`), chọn lane trong `admin/organization-applications/_components/ApplicationReviewDialog.tsx`, dialog thay người đại diện pháp lý (`organizations/[id]/_components/OwnerActions.tsx`).
+- Đang dùng ở: form tạo chiến dịch (`campaigns/create/_components/*`), chọn lane trong `admin/organizations/applications/_components/ApplicationReviewDialog.tsx`, dialog thay người đại diện pháp lý (`organizations/[id]/_components/OwnerActions.tsx`).
 
 ## Upload ảnh
 

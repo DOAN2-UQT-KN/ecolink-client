@@ -22,7 +22,7 @@ type FormFieldConfig = {
 
 export function FormFilter() {
   const { t } = useTranslation();
-  const { filters, onFilterChange, onResetFilters } = useApplicationsContext();
+  const { filters, onFilterChange } = useApplicationsContext();
   const [searchInput, setSearchInput] = useState(filters.search);
   const debouncedSearch = useDebounce(searchInput, 500);
 
@@ -136,16 +136,6 @@ export function FormFilter() {
             {field.render()}
           </Field>
         ))}
-      </div>
-
-      <div className="flex justify-end">
-        <button
-          type="button"
-          onClick={onResetFilters}
-          className="text-sm text-muted-foreground underline"
-        >
-          {t("Reset filters")}
-        </button>
       </div>
     </div>
   );

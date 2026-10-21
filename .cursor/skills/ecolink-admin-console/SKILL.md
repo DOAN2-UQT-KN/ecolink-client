@@ -13,7 +13,9 @@ description: Khuôn chuẩn cho console quản trị /admin của ecolink-client
 - Nav: `app/(pages)/(admin)/_config/adminNav.ts`
 - State layout (collapse / mobile / theme): `app/(pages)/(admin)/_context/AdminLayoutContext.tsx`
 
-Route hiện có: `/admin`, `/admin/campaigns`, `/admin/incidents`, `/admin/organizations`, `/admin/organization-applications`, `/admin/users`, `/admin/gifts`, `/admin/point-rules` (Quy tắc điểm: form + lịch sử, không theo khuôn CRUD), `/admin/settings`.
+Route hiện có: `/admin`, `/admin/campaigns` (2 tab: Campaigns, SOS — `?tab=sos`; `/admin/sos` chuyển hướng về đây), `/admin/incidents`, `/admin/organizations` (2 tab: Organizations, Organization applications — `?tab=applications`; `/admin/organization-applications` chuyển hướng về đây), `/admin/users`, `/admin/gifts` (3 tab: Catalog, Redeems, Gift sources; chi tiết nguồn `/admin/gifts/sources/:id`, kho `/admin/gifts/:id/stock`), `/admin/point-rules` (Quy tắc điểm: form + lịch sử, không theo khuôn CRUD), `/admin/settings`.
+
+Trang nhiều tab lưu tab đang mở ở `?tab=` qua `hooks/useUrlTab.ts`; đổi tab thì xoá các query param khác (mỗi tab tự giữ bộ lọc trên URL, các tab trùng tên param như `search`, `status`, `page`). Trang gộp vào tab của trang khác thì để lại redirect `TabRedirect` trong `src/routes/LegacyAdminRedirect.tsx`.
 
 ⚠️ **Guard `/admin`** ở `src/layouts/AdminLayout.tsx` **chỉ kiểm `has_hydrated` và `is_authenticated`** — đoạn check `roleId` đang bị comment out, nên mọi user đã đăng nhập đều vào được giao diện admin. Chỉ link "Admin" trong menu `Header.tsx` là ẩn theo `roleId`. Chặn quyền thật ở server. Xem skill `ecolink-architecture`.
 

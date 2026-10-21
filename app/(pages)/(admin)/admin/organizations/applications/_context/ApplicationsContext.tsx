@@ -38,7 +38,6 @@ type ApplicationsContextType = {
   total: number;
   loading: boolean;
   onFilterChange: (next: Partial<ApplicationFilterValues>) => void;
-  onResetFilters: () => void;
   onPageChange: (nextPage: number) => void;
   onPageSizeChange: (pageSize: number) => void;
 };
@@ -56,14 +55,6 @@ function normalizePageSize(limit: number): number {
     ? limit
     : 10;
 }
-
-const DEFAULT_FILTERS: ApplicationFilterValues = {
-  search: "",
-  // Reviewers land on the queue, not on the archive.
-  status: "open",
-  orgType: "all",
-  lane: "all",
-};
 
 /**
  * `open` is a UI shorthand for the statuses that still need a decision. Drafts and
@@ -83,6 +74,7 @@ export function ApplicationsProvider({
   searchParamsRef.current = searchParams;
 
   const urlSearch = useGetParam<string>("q", "string", "");
+  // Reviewers land on the queue, not on the archive.
   const urlStatus = useGetParam<string>("status", "string", "open");
   const urlOrgType = useGetParam<string>("org_type", "string", "all");
   const urlLane = useGetParam<string>("lane", "string", "all");
@@ -186,18 +178,6 @@ export function ApplicationsProvider({
     [setParams],
   );
 
-  const onResetFilters = useCallback(() => {
-    setFilters(DEFAULT_FILTERS);
-    setPagination((prev) => ({ ...prev, current: 1 }));
-    setParams({
-      q: undefined,
-      status: undefined,
-      org_type: undefined,
-      lane: undefined,
-      page: undefined,
-    });
-  }, [setParams]);
-
   const onPageChange = useCallback(
     (nextPage: number) => {
       setPagination((prev) => ({ ...prev, current: nextPage }));
@@ -223,7 +203,6 @@ export function ApplicationsProvider({
       total,
       loading: isLoading,
       onFilterChange,
-      onResetFilters,
       onPageChange,
       onPageSizeChange,
     }),
@@ -234,7 +213,6 @@ export function ApplicationsProvider({
       onFilterChange,
       onPageChange,
       onPageSizeChange,
-      onResetFilters,
       pagination,
       total,
     ],
