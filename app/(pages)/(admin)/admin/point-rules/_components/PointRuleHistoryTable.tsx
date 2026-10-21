@@ -14,6 +14,7 @@ const FIELD_LABEL = {
   baseReportPoint: "Report base points",
   reportMilestoneThresholds: "Upvote milestones",
   reportCompletionPoints: "Report completion points",
+  pointExpirationDays: "Point expiry (days)",
 } as const;
 
 export function PointRuleHistoryTable() {

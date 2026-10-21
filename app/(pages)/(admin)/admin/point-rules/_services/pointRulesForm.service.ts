@@ -6,6 +6,7 @@ export interface PointRulesFormValues {
   baseReportPoint: string;
   reportMilestoneThresholds: string;
   reportCompletionPoints: string;
+  pointExpirationDays: string;
 }
 
 export const POINT_RULE_FIELDS = [
@@ -13,6 +14,7 @@ export const POINT_RULE_FIELDS = [
   "baseReportPoint",
   "reportMilestoneThresholds",
   "reportCompletionPoints",
+  "pointExpirationDays",
 ] as const;
 
 export function toFormValues(rules: IPointRulesValues): PointRulesFormValues {
@@ -21,6 +23,7 @@ export function toFormValues(rules: IPointRulesValues): PointRulesFormValues {
     baseReportPoint: String(rules.baseReportPoint),
     reportMilestoneThresholds: rules.reportMilestoneThresholds.join(", "),
     reportCompletionPoints: String(rules.reportCompletionPoints),
+    pointExpirationDays: String(rules.pointExpirationDays),
   };
 }
 
@@ -34,6 +37,11 @@ export function parseMilestones(value: string): number[] {
 /** Same rules as the server: whole numbers ≥ 0. Returns an untranslated message key or true. */
 export function validatePoints(value: string): true | string {
   return /^\d+$/.test(value.trim()) ? true : "Enter a whole number of 0 or more";
+}
+
+/** Point expiry: whole number of days, at least 1 (same as the server). */
+export function validateExpirationDays(value: string): true | string {
+  return /^\d+$/.test(value.trim()) && Number(value) >= 1 ? true : "Enter a whole number of 1 or more";
 }
 
 /** Milestones: whole numbers > 0, no repeats. */
@@ -52,6 +60,7 @@ export function toRequest(values: PointRulesFormValues): IPointRulesValues {
     baseReportPoint: Number(values.baseReportPoint.trim()),
     reportMilestoneThresholds: parseMilestones(values.reportMilestoneThresholds),
     reportCompletionPoints: Number(values.reportCompletionPoints.trim()),
+    pointExpirationDays: Number(values.pointExpirationDays.trim()),
   };
 }
 
@@ -60,7 +69,9 @@ export function describeChanges(
   before: IPointRulesValues | null,
   after: IPointRulesValues,
 ): Array<{ field: (typeof POINT_RULE_FIELDS)[number]; from: string | null; to: string }> {
-  const show = (v: number | number[]) => (Array.isArray(v) ? v.join(", ") || "—" : String(v));
+  // Saves from before spec 014 have no pointExpirationDays.
+  const show = (v: number | number[] | undefined) =>
+    v === undefined ? "—" : Array.isArray(v) ? v.join(", ") || "—" : String(v);
   return POINT_RULE_FIELDS.flatMap((field) => {
     const to = show(after[field]);
     const from = before ? show(before[field]) : null;

@@ -15,6 +15,7 @@ import {
   POINT_RULE_FIELDS,
   toFormValues,
   toRequest,
+  validateExpirationDays,
   validateMilestones,
   validatePoints,
   type PointRulesFormValues,
@@ -37,6 +38,18 @@ const LABELS: Record<(typeof POINT_RULE_FIELDS)[number], { label: string; hint: 
     label: "Report completion points",
     hint: "Paid to the reporter when an admin marks the report done.",
   },
+  pointExpirationDays: {
+    label: "Point expiry (days)",
+    hint: "Points from each award expire after this many days. Applies to points credited after you save.",
+  },
+};
+
+const VALIDATORS: Record<(typeof POINT_RULE_FIELDS)[number], (value: string) => true | string> = {
+  campaignCompletionPoints: validatePoints,
+  baseReportPoint: validatePoints,
+  reportMilestoneThresholds: validateMilestones,
+  reportCompletionPoints: validatePoints,
+  pointExpirationDays: validateExpirationDays,
 };
 
 export function PointRulesForm() {
@@ -148,7 +161,7 @@ export function PointRulesForm() {
               aria-invalid={!!errors[field]}
               {...register(field, {
                 validate: (v) => {
-                  const r = field === "reportMilestoneThresholds" ? validateMilestones(v) : validatePoints(v);
+                  const r = VALIDATORS[field](v);
                   return r === true ? true : t(r);
                 },
               })}

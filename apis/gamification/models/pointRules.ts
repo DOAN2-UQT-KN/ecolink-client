@@ -1,11 +1,13 @@
 import type { IBaseResponse } from "@/types/BaseResponse";
 
-/** The four earning rates admins edit (reward-service point rules). */
+/** The point rules admins edit: earning rates and point expiry (reward-service). */
 export interface IPointRulesValues {
   campaignCompletionPoints: number;
   baseReportPoint: number;
   reportMilestoneThresholds: number[];
   reportCompletionPoints: number;
+  /** Days until a newly credited lot of points expires */
+  pointExpirationDays: number;
 }
 
 export interface IPointRules extends IPointRulesValues {
