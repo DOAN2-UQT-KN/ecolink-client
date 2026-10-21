@@ -6,8 +6,6 @@ import {
   TbGift,
   TbFlag,
   TbUser,
-  TbFileCheck,
-  TbUrgent,
   TbCoins,
 } from 'react-icons/tb';
 import { IconType } from 'react-icons';
@@ -55,18 +53,11 @@ export const adminNavItems: AdminNavItem[] = [
   },
   {
     kind: 'link',
-    href: '/admin/organization-applications',
-    labelKey: 'Organization applications',
-    icon: TbFileCheck,
-  },
-  {
-    kind: 'link',
     href: '/admin/users',
     labelKey: 'Users',
     icon: TbUser,
   },
   { kind: 'link', href: '/admin/campaigns', labelKey: 'Campaigns', icon: TbFlag },
-  { kind: 'link', href: '/admin/sos', labelKey: 'SOS', icon: TbUrgent },
   { kind: 'link', href: '/admin/gifts', labelKey: 'Gifts', icon: TbGift },
   { kind: 'link', href: '/admin/point-rules', labelKey: 'Point rules', icon: TbCoins },
   { kind: 'link', href: '/admin/settings', labelKey: 'Settings', icon: TbSettings },

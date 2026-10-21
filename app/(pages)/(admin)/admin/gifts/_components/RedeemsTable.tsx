@@ -5,6 +5,7 @@ import {
   useGetAdminGiftRedemptions,
   useUpdateGiftRedemptionStatus,
 } from '@/apis/gift/adminGiftRedemptions';
+import { useGetGiftSources } from '@/apis/gift-source/getGiftSources';
 import type {
   GiftRedemptionStatus,
   IAdminGiftRedemptionListItem,
@@ -38,16 +39,19 @@ export function RedeemsTable() {
   const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<GiftRedemptionStatus | undefined>(undefined);
+  const [sourceId, setSourceId] = useState<string | undefined>(undefined);
   const request = useMemo(
     () => ({
       page,
       limit: PAGE_SIZE,
       status,
+      sourceId,
       sortBy: 'createdAt' as const,
       sortOrder: 'desc' as const,
     }),
-    [page, status],
+    [page, status, sourceId],
   );
+  const sources = useGetGiftSources({ limit: 100 }).data?.data?.sources ?? [];
   const { data, isLoading } = useGetAdminGiftRedemptions(request);
   const { mutateAsync, isPending } = useUpdateGiftRedemptionStatus();
   const redemptions = data?.data?.redemptions ?? [];
@@ -84,6 +88,12 @@ export function RedeemsTable() {
             </span>
           </div>
         ),
+      },
+      {
+        key: 'source',
+        title: t('Gift source'),
+        className: 'min-w-[140px]',
+        render: (_, row) => row.source?.name ?? '—',
       },
       {
         key: 'phone',
@@ -153,6 +163,7 @@ export function RedeemsTable() {
             {t('Manage gift redemption records and delivery status.')}
           </p>
         </div>
+        <div className="flex flex-col gap-3 sm:flex-row">
         <Select
           value={status ?? 'ALL'}
           onValueChange={(value) => {
@@ -172,6 +183,26 @@ export function RedeemsTable() {
             ))}
           </SelectContent>
         </Select>
+        <Select
+          value={sourceId ?? 'ALL'}
+          onValueChange={(value) => {
+            setSourceId(value === 'ALL' ? undefined : value);
+            setPage(1);
+          }}
+        >
+          <SelectTrigger className="!h-10 w-full !border-input sm:w-[210px]" aria-label={t('Gift source')}>
+            <SelectValue placeholder={t('Gift source')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">{t('All sources')}</SelectItem>
+            {sources.map((s) => (
+              <SelectItem key={s.id} value={s.id}>
+                {s.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        </div>
       </div>
 
       <SharedDataTable

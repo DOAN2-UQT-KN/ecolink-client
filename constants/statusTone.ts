@@ -1,3 +1,4 @@
+import type { StockBatchState } from "@/apis/gift-stock/models/stock";
 import type { GiftRedemptionStatus } from "@/apis/gift/models/gift";
 import type { CheckStatus, ISignal, VerificationFlag } from "@/apis/incident/models/verification";
 import { RISK_THRESHOLDS, type VerificationOutcome } from "@/constants/reportVerification";
@@ -92,6 +93,21 @@ export const GIFT_REDEEM_TONE: Record<GiftRedemptionStatus, PillTone> = {
   SHIPPED: "blue",
   DELIVERED: "green",
   CANCELLED: "red",
+};
+
+/** Stock batch state (spec 015); "expiring soon" warns, "expired" no longer counts. */
+export const STOCK_BATCH_TONE: Record<StockBatchState, PillTone> = {
+  IN_STOCK: "green",
+  OUT_OF_STOCK: "neutral",
+  EXPIRING_SOON: "amber",
+  EXPIRED: "red",
+};
+
+export const STOCK_BATCH_LABEL: Record<StockBatchState, string> = {
+  IN_STOCK: "In stock",
+  OUT_OF_STOCK: "Out of stock",
+  EXPIRING_SOON: "Expiring soon",
+  EXPIRED: "Expired",
 };
 
 /** Report verification outcome (specs/007); "accepted" is green even though STATUS.TODO is neutral. */

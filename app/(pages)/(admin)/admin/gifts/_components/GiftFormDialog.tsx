@@ -16,7 +16,6 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Field, FieldLabel } from '@/components/ui/field';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   Select,
   SelectContent,
@@ -76,10 +75,6 @@ export function GiftFormDialog({ mode, gift, open, onOpenChange }: GiftFormDialo
   const onSubmit = form.handleSubmit(async (data) => {
     const gp = Number.parseInt(data.greenPoints, 10);
     if (!Number.isFinite(gp) || gp < 0) return;
-    const stockNum = Number.parseInt(data.stockRemaining, 10);
-    if (!data.unlimitedStock && (!Number.isFinite(stockNum) || stockNum < 0)) return;
-
-    const bodyStock = data.unlimitedStock ? null : stockNum;
     const hasNewImage = isBlobLike(data.giftImage) || data?.giftImage?.constructor === File;
 
     let resolvedImageUrl = '';
@@ -116,7 +111,6 @@ export function GiftFormDialog({ mode, gift, open, onOpenChange }: GiftFormDialo
           imageUrl: resolvedImageUrl,
           description: data.description.trim(),
           greenPoints: gp,
-          stockRemaining: bodyStock,
           isActive: data.isActive,
         });
         return;
@@ -129,7 +123,6 @@ export function GiftFormDialog({ mode, gift, open, onOpenChange }: GiftFormDialo
           imageUrl: resolvedImageUrl,
           description: data.description.trim(),
           greenPoints: gp,
-          stockRemaining: bodyStock,
           isActive: data.isActive,
         },
       });
@@ -139,7 +132,6 @@ export function GiftFormDialog({ mode, gift, open, onOpenChange }: GiftFormDialo
   });
 
   const { register, watch, setValue } = form;
-  const unlimitedStock = watch('unlimitedStock');
   // const isActive = watch('isActive');
   const giftImage = watch('giftImage');
   const hasNewImage = isBlobLike(giftImage) || giftImage?.constructor?.name === 'File';
@@ -227,37 +219,6 @@ export function GiftFormDialog({ mode, gift, open, onOpenChange }: GiftFormDialo
               />
             </Field>
 
-            <Field>
-              <FieldLabel>{t('Stock type')}</FieldLabel>
-              <RadioGroup
-                value={unlimitedStock ? 'unlimited' : 'limited'}
-                onValueChange={(value) => setValue('unlimitedStock', value === 'unlimited')}
-                disabled={formDisabled}
-                className="flex flex-col gap-2"
-              >
-                <label className="flex items-center gap-2 text-sm">
-                  <RadioGroupItem value="unlimited" />
-                  {t('Unlimited')}
-                </label>
-                <label className="flex items-center gap-2 text-sm">
-                  <RadioGroupItem value="limited" />
-                  {t('Limited')}
-                </label>
-              </RadioGroup>
-            </Field>
-
-            {!unlimitedStock ? (
-              <Field>
-                <FieldLabel>{t('Stock remaining')}</FieldLabel>
-                <Input
-                  type="number"
-                  min={0}
-                  {...register('stockRemaining')}
-                  className="h-10 !border !border-zinc-300"
-                  disabled={formDisabled}
-                />
-              </Field>
-            ) : null}
 
             {isEditMode ? (
               <Field>

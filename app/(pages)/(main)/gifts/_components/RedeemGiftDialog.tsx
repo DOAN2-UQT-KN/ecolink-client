@@ -1,4 +1,5 @@
 import { FormEvent, memo, useEffect, useState } from 'react';
+import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
 import { MapPin, Phone } from 'lucide-react';
 import { TbCoinFilled } from 'react-icons/tb';
 import { useTranslation } from 'react-i18next';
@@ -32,6 +33,7 @@ export const RedeemGiftDialog = memo(function RedeemGiftDialog({
   onSubmit,
 }: RedeemGiftDialogProps) {
   const { t } = useTranslation();
+  const { title } = useLocalizedDisplay();
   const [phoneNumber, setPhoneNumber] = useState('');
   const [pickupLocation, setPickupLocation] = useState('');
 
@@ -62,7 +64,7 @@ export const RedeemGiftDialog = memo(function RedeemGiftDialog({
             <DialogTitle>{t('Redeem gift')}</DialogTitle>
             <DialogDescription>
               {gift
-                ? t('Enter your receiving information for {{name}}.', { name: gift.name })
+                ? t('Enter your receiving information for {{name}}.', { name: title(gift) })
                 : t('Enter your receiving information.')}
             </DialogDescription>
           </DialogHeader>
@@ -70,7 +72,7 @@ export const RedeemGiftDialog = memo(function RedeemGiftDialog({
           {gift && (
             <div className="flex items-center justify-between rounded-lg border border-[rgba(136,122,71,0.28)] bg-[#fbfaf5] px-3 py-2">
               <div className="min-w-0">
-                <p className="truncate font-medium text-foreground">{gift.name}</p>
+                <p className="truncate font-medium text-foreground">{title(gift)}</p>
                 <p className="text-xs text-muted-foreground">{t('Order starts as Processing')}</p>
               </div>
               <span className="inline-flex items-center gap-1 rounded-md bg-white px-2 py-1 text-sm font-semibold text-button-accent">

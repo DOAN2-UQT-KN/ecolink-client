@@ -2,23 +2,40 @@ import type { IBaseResponse } from '@/types/BaseResponse';
 
 export interface IGift {
   id: string;
-  name: string;
+  /** The server sends null here; read the name via `useLocalizedDisplay().title(gift)`. */
+  name: string | null;
+  nameVi?: string | null;
+  nameEn?: string | null;
   mediaId: string | null;
-  description: string;
+  /** The server sends null here; read it via `useLocalizedDisplay().description(gift)`. */
+  description: string | null;
+  descriptionVi?: string | null;
+  descriptionEn?: string | null;
   greenPoints: number;
-  stockRemaining: number | null;
+  /** Items left in live stock batches; never null since spec 015. */
+  stockRemaining: number;
   isActive: boolean;
   media: {
     id: string;
     url: string;
   } | null;
+  /** Sources shown as "Sponsored by". */
+  sponsors?: IGiftSponsor[];
+  /** Admin only: items in batches expiring within 7 days. */
+  expiringSoon?: { quantity: number; earliestAt: string } | null;
+}
+
+export interface IGiftSponsor {
+  id: string;
+  name: string;
+  logoUrl: string | null;
 }
 
 export interface IGetGiftsRequest {
   page?: number;
   limit?: number;
   search?: string;
-  /** When true, only gifts with stock remaining or unlimited stock. */
+  /** When true, only gifts with stock remaining. */
   inStock?: boolean;
   /** Admin-only filter (ignored for non-admin callers). */
   isActive?: boolean;
@@ -42,13 +59,14 @@ export type IGetGiftsResponse = IBaseResponse<{
   totalPages?: number;
 }>;
 
+export type IGetGiftResponse = IBaseResponse<{ gift: IGift }>;
+
 export interface ICreateGiftRequest {
   name: string;
   // mediaId: string;
   imageUrl: string;
   description: string;
   greenPoints: number;
-  stockRemaining?: number | null;
   isActive?: boolean;
 }
 
@@ -60,7 +78,6 @@ export interface IUpdateGiftRequest {
   imageUrl?: string;
   description?: string;
   greenPoints?: number;
-  stockRemaining?: number | null;
   isActive?: boolean;
 }
 
@@ -76,6 +93,8 @@ export interface IGiftRedeem {
   statusUpdatedAt: string;
   cancelledAt: string | null;
   createdAt: string;
+  /** Stock batch the item came from; null for orders before spec 015. */
+  batchId?: string | null;
 }
 
 export type GiftRedemptionStatus = 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
@@ -116,12 +135,16 @@ export interface IGiftRedemptionListItem extends IGiftRedeem {
 export interface IAdminGiftRedemptionListItem extends IGiftRedemptionListItem {
   userId: string;
   user: IGiftRedemptionUserSnapshot | null;
+  /** Source of the batch the item came from; null for older orders. */
+  source: { id: string; name: string } | null;
 }
 
 export interface IGetGiftRedemptionsRequest {
   page?: number;
   limit?: number;
   status?: GiftRedemptionStatus;
+  /** Admin list only: orders whose item came from this source. */
+  sourceId?: string;
   sortBy?: 'createdAt' | 'greenPointsSpent' | 'statusUpdatedAt';
   sortOrder?: 'asc' | 'desc';
 }

@@ -6,6 +6,14 @@ export function IncidentsRedirect() {
   return <Navigate to={`/admin/reports${search}`} replace />;
 }
 
+/** Pages merged into a tab of another page: old links open that tab, query kept. */
+export function TabRedirect({ to, tab }: { to: string; tab: string }) {
+  const { search } = useLocation();
+  const params = new URLSearchParams(search);
+  params.set("tab", tab);
+  return <Navigate to={`${to}?${params.toString()}`} replace />;
+}
+
 /** Old moderation links: one report → its Moderation tab; the queue → the filtered report list. */
 export function ModerationRedirect() {
   const [params] = useSearchParams();

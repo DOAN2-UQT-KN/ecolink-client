@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
 import { useTranslation } from 'react-i18next';
 import { Image } from 'antd';
 
@@ -13,7 +14,10 @@ import { STATUS } from '@/constants/status';
 import { cn } from '@/libs/utils';
 import { useGiftContext } from '../_context/GiftContext';
 
-import { TbPencil } from 'react-icons/tb';
+import { TbBuildingWarehouse, TbPencil } from 'react-icons/tb';
+import { Pill } from '@/components/ui/Pill';
+import { Link } from '@/libs/router';
+import { formattedDate } from '@/utils/formattedDate';
 
 const COLUMN_KEYS = {
   NO: 'no',
@@ -27,6 +31,7 @@ const COLUMN_KEYS = {
 
 export function DataTable({ onEdit }: { onEdit: (gift: IGift) => void }) {
   const { t } = useTranslation();
+  const { title, description } = useLocalizedDisplay();
   const { gifts, loading, pagination, total, onPageChange, onPageSizeChange } = useGiftContext();
   const { theme } = useAdminLayout();
   const isDark = theme === 'dark';
@@ -38,7 +43,7 @@ export function DataTable({ onEdit }: { onEdit: (gift: IGift) => void }) {
         title: t('No'),
         className: 'w-[72px]',
         render: (_, __, index) => (
-          <span className="tabular-nums">
+          <span className="text-sm tabular-nums">
             {(pagination.current - 1) * pagination.pageSize + index + 1}
           </span>
         ),
@@ -49,8 +54,8 @@ export function DataTable({ onEdit }: { onEdit: (gift: IGift) => void }) {
         className: 'min-w-[160px]',
         render: (_, record) => (
           <div className="flex flex-col gap-0.5">
-            <span className={cn('font-medium', isDark ? 'text-zinc-100' : 'text-zinc-900')}>
-              {record.name}
+            <span className={cn('text-sm font-medium [overflow-wrap:anywhere]', isDark ? 'text-zinc-100' : 'text-zinc-900')}>
+              {title(record)}
             </span>
             <span
               className={cn(
@@ -58,7 +63,7 @@ export function DataTable({ onEdit }: { onEdit: (gift: IGift) => void }) {
                 isDark ? 'text-zinc-500' : 'text-muted-foreground',
               )}
             >
-              {record.description}
+              {description(record)}
             </span>
           </div>
         ),
@@ -67,16 +72,21 @@ export function DataTable({ onEdit }: { onEdit: (gift: IGift) => void }) {
         key: COLUMN_KEYS.POINTS,
         title: t('Green points'),
         className: 'w-[120px]',
-        render: (_, record) => <span className="tabular-nums">{record.greenPoints}</span>,
+        render: (_, record) => <span className="text-sm tabular-nums">{record.greenPoints}</span>,
       },
       {
         key: COLUMN_KEYS.STOCK,
         title: t('Stock'),
         className: 'w-[120px]',
         render: (_, record) => (
-          <span className="tabular-nums">
-            {record.stockRemaining === null ? t('Unlimited') : record.stockRemaining}
-          </span>
+          <div className="flex flex-col items-start gap-1">
+            <span className="text-sm tabular-nums">{record.stockRemaining}</span>
+            {record.expiringSoon ? (
+              <Pill tone="amber" isDark={isDark}>
+                {t('Expiring soon')} · {formattedDate(record.expiringSoon.earliestAt)}
+              </Pill>
+            ) : null}
+          </div>
         ),
       },
       {
@@ -99,7 +109,7 @@ export function DataTable({ onEdit }: { onEdit: (gift: IGift) => void }) {
         render: (_, record) => (
           <Image
             src={record.media?.url?.startsWith('http') ? record.media.url : '/banner-default.jpg'}
-            alt={record.name}
+            alt={title(record)}
             width={48}
             height={48}
             className="rounded-md object-cover"
@@ -111,8 +121,9 @@ export function DataTable({ onEdit }: { onEdit: (gift: IGift) => void }) {
       {
         key: COLUMN_KEYS.ACTION,
         title: t('Action'),
-        className: 'w-[100px]',
+        className: 'w-[120px]',
         render: (_, record) => (
+          <div className="flex items-center gap-2">
           <button
             type="button"
             className={cn(
@@ -125,10 +136,24 @@ export function DataTable({ onEdit }: { onEdit: (gift: IGift) => void }) {
           >
             <TbPencil className="size-5" />
           </button>
+          <Link
+            href={`/admin/gifts/${record.id}/stock`}
+            aria-label={t('Stock')}
+            title={t('Stock')}
+            className={cn(
+              'rounded-md border px-1.5 py-1.5 transition-colors duration-200',
+              isDark
+                ? 'border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-blue-300'
+                : 'border-zinc-300 text-zinc-700 hover:bg-zinc-100 hover:text-blue-700',
+            )}
+          >
+            <TbBuildingWarehouse className="size-5" />
+          </Link>
+          </div>
         ),
       },
     ],
-    [isDark, onEdit, pagination.current, pagination.pageSize, t],
+    [description, isDark, onEdit, pagination.current, pagination.pageSize, t, title],
   );
 
   return (
