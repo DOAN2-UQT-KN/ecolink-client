@@ -5,7 +5,6 @@ import { TbZoom, TbZoomReset } from 'react-icons/tb';
 import { Button } from '@/components/client/shared/Button';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { Slider } from '@/components/ui/slider';
 import {
   Select,
   SelectContent,
@@ -28,17 +27,6 @@ const FILTER_PANEL_CLASS =
   'w-full  p-6 border border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5 h-fit';
 
 const FILTER_CONTROL_H = '!h-11';
-const GREEN_POINTS_MIN = 0;
-const GREEN_POINTS_MAX = 100;
-
-const normalizeGreenPointsRange = (from?: number, to?: number): [number, number] => {
-  const normalizedFrom = Math.min(Math.max(from ?? GREEN_POINTS_MIN, GREEN_POINTS_MIN), GREEN_POINTS_MAX);
-  const normalizedTo = Math.min(Math.max(to ?? GREEN_POINTS_MAX, GREEN_POINTS_MIN), GREEN_POINTS_MAX);
-
-  return normalizedFrom <= normalizedTo
-    ? [normalizedFrom, normalizedTo]
-    : [normalizedTo, normalizedFrom];
-};
 
 const SEARCH_INPUT_CLASS = cn(
   'pl-10 border border-[rgba(136,122,71,0.5)] focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-[rgba(136,122,71,0.5)]/50 bg-white/50 focus-visible:bg-white transition-all',
@@ -63,16 +51,12 @@ export function SearchFilter() {
   const [searchValue, setSearchValue] = useState(urlSearch);
   const debouncedSearchValue = useDebounce(searchValue, CAMPAIGN_SEARCH_DEBOUNCE_MS);
 
-  const urlRange = normalizeGreenPointsRange(filters.greenPointsFrom, filters.greenPointsTo);
-  const [greenPointsRange, setGreenPointsRange] = useState<[number, number]>(urlRange);
-
   // Adopt URL changes made elsewhere (reset, reload, links) — React's "adjust state on prop change".
-  const urlKey = `${urlSearch}|${urlRange.join('-')}`;
+  const urlKey = urlSearch;
   const [syncedKey, setSyncedKey] = useState(urlKey);
   if (syncedKey !== urlKey) {
     setSyncedKey(urlKey);
     if (searchValue.trim() !== urlSearch) setSearchValue(urlSearch);
-    setGreenPointsRange(urlRange);
   }
 
   useEffect(() => {
@@ -85,23 +69,9 @@ export function SearchFilter() {
     setFilters({ statuses: value === 'all' ? [...DEFAULT_CAMPAIGN_SEARCH_STATUSES] : [Number(value)] });
   };
 
-  const handleGreenPointsChange = (value: number[]) => {
-    if (value.length < 2) return;
-    setGreenPointsRange([value[0] ?? GREEN_POINTS_MIN, value[1] ?? GREEN_POINTS_MAX]);
-  };
-
-  const handleGreenPointsCommit = (value: number[]) => {
-    if (value.length < 2) return;
-    setFilters({
-      greenPointsFrom: value[0] ?? GREEN_POINTS_MIN,
-      greenPointsTo: value[1] ?? GREEN_POINTS_MAX,
-    });
-  };
-
   const onReset = () => {
     resetFilters();
     setSearchValue('');
-    setGreenPointsRange([GREEN_POINTS_MIN, GREEN_POINTS_MAX]);
   };
 
   const statusItems = CAMPAIGN_STATUS_OPTIONS.map((option) => ({
@@ -133,30 +103,6 @@ export function SearchFilter() {
             />
           </div>
         </Field>
-
-        {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 w-full"> */}
-        <Field className="w-full">
-          <FieldLabel className="text-foreground-tertiary font-display-3">
-            {t('Green points')}
-          </FieldLabel>
-          <div className="rounded-md border border-[rgba(136,122,71,0.5)] bg-white/50 px-4 py-3 w-full">
-            <Slider
-              min={GREEN_POINTS_MIN}
-              max={GREEN_POINTS_MAX}
-              step={1}
-              value={greenPointsRange}
-              onValueChange={handleGreenPointsChange}
-              onValueCommit={handleGreenPointsCommit}
-              aria-label={t('Green points')}
-              className="[&_[data-slot=slider-range]]:bg-button-accent [&_[data-slot=slider-thumb]]:border-button-accent"
-            />
-            <div className="mt-2 flex items-center justify-between text-sm text-muted-foreground">
-              <span>{greenPointsRange[0]}</span>
-              <span>{greenPointsRange[1]}</span>
-            </div>
-          </div>
-        </Field>
-        {/* </div> */}
 
         <Field className="w-full">
           <FieldLabel className="text-foreground-tertiary font-display-3">{t('Status')}</FieldLabel>

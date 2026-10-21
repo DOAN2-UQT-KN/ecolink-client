@@ -11,7 +11,6 @@ export interface IGetCampaignsRequest {
   latitude?: number;
   longitude?: number;
   radius_km?: number;
-  difficulty?: number;
 
   is_owner?: boolean;
   /** Admin review queue: leave out organizations the admin belongs to. */

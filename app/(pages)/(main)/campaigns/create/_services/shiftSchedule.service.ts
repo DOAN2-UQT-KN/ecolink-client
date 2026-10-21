@@ -18,7 +18,6 @@ const timeOf = (minutes: number): string => {
 export const dayMinTotal = (row: ShiftFormValues[] | undefined): number =>
   (row ?? []).reduce((sum, c) => sum + (Number(c?.min_volunteers) || 0), 0);
 
-const isBelow = (total: number, suggested: number) => total > 0 && total < suggested;
 
 /** "07:00 – 11:00" for a day. */
 export const dayHours = (day?: CampaignDayFormValues) =>
@@ -52,18 +51,6 @@ export const copyFirstDayToAll = (values: CampaignFormValues): ShiftFormValues[]
     });
   });
 };
-
-/** Indexes of the days whose total minimum is under what the difficulty suggests. */
-export const daysBelowSuggestion = (
-  dayCount: number,
-  schedule: ShiftFormValues[][],
-  suggestedMinPerDay: number | null,
-): number[] =>
-  suggestedMinPerDay == null
-    ? []
-    : Array.from({ length: dayCount }, (_, d) => d).filter((d) =>
-        isBelow(dayMinTotal(schedule[d]), suggestedMinPerDay),
-      );
 
 // Validators: true when valid, otherwise the i18n key of the message.
 type Result = true | string;
@@ -148,15 +135,3 @@ export const validateLeader = (
   !(Number(values.schedule[d]?.[p]?.min_volunteers) > 0) ||
   Boolean(v) ||
   'Choose who is in charge of this shift';
-
-/** A day below the difficulty's suggestion needs a reason. */
-export const validateMinVolunteersReason = (
-  v: string,
-  values: CampaignFormValues,
-  suggestedMinPerDay: number | null,
-): Result => {
-  const low =
-    suggestedMinPerDay != null &&
-    values.schedule.some((row) => isBelow(dayMinTotal(row), suggestedMinPerDay));
-  return !low || Boolean(v?.trim()) || 'Explain why a day needs fewer volunteers than suggested for this difficulty';
-};

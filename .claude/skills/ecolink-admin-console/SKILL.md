@@ -13,7 +13,7 @@ description: Khuôn chuẩn cho console quản trị /admin của ecolink-client
 - Nav: `app/(pages)/(admin)/_config/adminNav.ts`
 - State layout (collapse / mobile / theme): `app/(pages)/(admin)/_context/AdminLayoutContext.tsx`
 
-Route hiện có: `/admin`, `/admin/campaigns`, `/admin/incidents`, `/admin/organizations`, `/admin/organization-applications`, `/admin/users`, `/admin/gifts`, `/admin/settings`.
+Route hiện có: `/admin`, `/admin/campaigns`, `/admin/incidents`, `/admin/organizations`, `/admin/organization-applications`, `/admin/users`, `/admin/gifts`, `/admin/point-rules` (Quy tắc điểm: form + lịch sử, không theo khuôn CRUD), `/admin/settings`.
 
 ⚠️ **Guard `/admin`** ở `src/layouts/AdminLayout.tsx` **chỉ kiểm `has_hydrated` và `is_authenticated`** — đoạn check `roleId` đang bị comment out, nên mọi user đã đăng nhập đều vào được giao diện admin. Chỉ link "Admin" trong menu `Header.tsx` là ẩn theo `roleId`. Chặn quyền thật ở server. Xem skill `ecolink-architecture`.
 

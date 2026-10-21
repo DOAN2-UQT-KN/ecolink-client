@@ -155,7 +155,7 @@ function CampaignForm() {
             {approvedEdit && (
               <span className="text-foreground-tertiary">
                 {t(
-                  "Title, description, banner, contact, safety notes and shift numbers save at once. Changing the meeting points, days or their hours, waste points, difficulty or conditions sends the campaign back for review.",
+                  "Title, description, banner, contact, safety notes and shift numbers save at once. Changing the meeting points, days or their hours, waste points or conditions sends the campaign back for review.",
                 )}
               </span>
             )}

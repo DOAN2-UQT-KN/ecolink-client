@@ -2,7 +2,6 @@ import { useTranslation } from 'react-i18next';
 
 import type { ICampaign } from '@/apis/campaign/models/campaign';
 import { SummaryRow } from '@/components/client/shared/SummaryRow';
-import { impliedMinAge } from '@/constants/campaignLifecycle';
 import { CollapsibleCard } from '@/components/client/shared/CollapsibleCard';
 
 /** Contact, safety notes and participation conditions; empty rows hidden, nothing when all are. */
@@ -15,7 +14,7 @@ export function ParticipationInfoCard({
 }) {
   const { t } = useTranslation('common');
   const requirements = campaign.requirements;
-  const minAge = requirements?.min_age ?? impliedMinAge(campaign.difficulty ?? 0);
+  const minAge = requirements?.min_age ?? null;
   const conditions = [
     minAge != null ? t('From {{age}} years old', { age: minAge }) : null,
     requirements?.skills?.length

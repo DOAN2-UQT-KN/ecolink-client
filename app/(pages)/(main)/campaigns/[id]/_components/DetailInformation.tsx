@@ -14,7 +14,6 @@ import { HiMapPin } from 'react-icons/hi2';
 import { TooltipTruncatedText } from '@/components/ui/TooltipTruncatedText';
 import ReportSummaryCard from '@/modules/ReportSummaryCard';
 
-import { getDifficultyLevel } from '@/constants/difficulty';
 import { Link } from '@/libs/router';
 
 import { ParticipationInfoCard } from './ParticipationInfoCard';
@@ -37,7 +36,6 @@ export function DetailInformation() {
     return null;
   }
 
-  const difficulty = getDifficultyLevel(campaign.difficulty ?? 0);
   const organization = campaign.organization;
   const points = campaign.meeting_points ?? [];
   const pointName = (index: number) => meetingPointName(points[index], index, t);
@@ -49,7 +47,7 @@ export function DetailInformation() {
           <div className="flex min-w-0 flex-1 flex-col">
             <div className="flex flex-row items-center justify-between w-full">
               <Pill tone="green">
-                {campaign.green_points ?? ''} {t('Reward (GP & SP)')}
+                {campaign.green_points ?? '—'} {t('Reward (GP & SP)')}
               </Pill>
               <span className="font-display-1 text-muted-foreground">
                 {formattedDate(campaign?.created_at)}
@@ -85,25 +83,17 @@ export function DetailInformation() {
               </span>
             </div>
 
-            {(organization || difficulty) && (
+            {organization && (
               <div className="flex flex-wrap items-center gap-x-6 gap-y-2 pt-3 text-sm">
-                {organization && (
-                  <span>
-                    <span className="text-foreground-tertiary">{t('Organization')}: </span>
-                    <Link
-                      href={`/organizations/${organization.slug ?? organization.id}`}
-                      className="font-medium text-button-accent hover:underline"
-                    >
-                      {organization.name}
-                    </Link>
-                  </span>
-                )}
-                {difficulty && (
-                  <span>
-                    <span className="text-foreground-tertiary">{t('Difficulty')}: </span>
-                    <span className="font-medium">{t(difficulty.label)}</span>
-                  </span>
-                )}
+                <span>
+                  <span className="text-foreground-tertiary">{t('Organization')}: </span>
+                  <Link
+                    href={`/organizations/${organization.slug ?? organization.id}`}
+                    className="font-medium text-button-accent hover:underline"
+                  >
+                    {organization.name}
+                  </Link>
+                </span>
               </div>
             )}
 

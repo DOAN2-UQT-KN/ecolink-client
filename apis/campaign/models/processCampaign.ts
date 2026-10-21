@@ -12,8 +12,6 @@ export type ICompletionReviewRequest = {
   decision: CompletionDecision;
   /** Required to cancel. */
   reject_reason?: string;
-  /** Approve: the settled difficulty (points follow it). */
-  difficulty?: number;
 };
 
 export type CompletionReportStatus = 'cleaned' | 'partial' | 'unhandled';
@@ -53,8 +51,6 @@ export interface ICompletionReviewShift {
 export interface ICompletionReview {
   campaign_id: string;
   status: number;
-  difficulty: number;
-  difficulty_range: { min: number; max: number };
   reject_reason: string | null;
   completion_submitted_at: string | null;
   rejection_count: number;

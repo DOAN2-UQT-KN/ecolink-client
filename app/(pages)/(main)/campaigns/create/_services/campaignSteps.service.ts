@@ -10,10 +10,10 @@ export type CampaignStep = (typeof CAMPAIGN_STEPS)[number];
 
 /** Fields validated when leaving each step. */
 export const STEP_FIELDS: Record<CampaignStep, Path<CampaignFormValues>[]> = {
-  general: ['title', 'difficulty', 'description', 'banner'],
+  general: ['title', 'description', 'banner'],
   schedule: ['days', 'contact_name', 'contact_phone', 'min_age'],
   meeting_points: ['meeting_points'],
-  shifts: ['schedule', 'min_volunteers_reason'],
+  shifts: ['schedule'],
   review: [],
 };
 

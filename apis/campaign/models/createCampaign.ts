@@ -11,13 +11,11 @@ export interface ICreateCampaignRequest {
   organization_id: string;
   title: string;
   description?: string;
-  difficulty: number;
   banner?: string;
   contact_name?: string | null;
   contact_phone?: string | null;
   safety_notes?: string | null;
   requirements?: ICampaignRequirements | null;
-  min_volunteers_reason?: string | null;
   days?: ICampaignDayInput[];
   meeting_points?: IMeetingPoint[];
   shifts?: ICampaignShiftInput[];

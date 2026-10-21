@@ -57,7 +57,7 @@ components/
   client/            # layout/, providers/, shared/, ai-chat/ — phía người dùng cuối
   admin/             # layout/ (AdminShell...), shared/ (DataTable, ConfirmPopover)
   form/              # SelectListCampaign, SelectListOrganization, SelectListPriority
-constants/           # status, priority, severity, difficulty, gamification, roles, i18n, notificationPreferences
+constants/           # status, priority, severity, gamification, roles, i18n, notificationPreferences
 hooks/               # reactQuery.ts (useGet/usePost), useDebounce, useGetParam, useQueryString, useMediaQuery, useLocalizedDisplay
 i18n/                # index.ts + locales/{en,vi}/common.json
 libs/                # axiosClient, queryClient, router.tsx (shim Next), utils.ts (cn), localizedText, compressImage, dynamic.tsx

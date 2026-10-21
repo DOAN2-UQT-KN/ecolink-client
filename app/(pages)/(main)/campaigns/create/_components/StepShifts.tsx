@@ -9,9 +9,7 @@ import { useCampaign } from '../_context/CampaignContext';
 import { useDayLabel } from '../_hooks/useDayLabel';
 import { useLeaderOptions } from '../../_hooks/useLeaderOptions';
 import { fitSchedule, type CampaignFormValues } from '../_services/campaignForm.service';
-import { daysBelowSuggestion } from '../_services/shiftSchedule.service';
 import { meetingPointName } from '@/utils/campaignLabels';
-import MinVolunteersReasonField from './MinVolunteersReasonField';
 import ShiftsSingleForm from './ShiftsSingleForm';
 import ShiftsTable from './ShiftsTable';
 
@@ -21,8 +19,6 @@ export interface ShiftsViewProps {
   points: CampaignFormValues['meeting_points'];
   schedule: CampaignFormValues['schedule'];
   members: IMember[];
-  /** Days whose total minimum is under what the difficulty suggests. */
-  belowSuggestion: number[];
   /** Messages per day: its cells, and the server's day-level ones. */
   dayMessages: string[][];
   cellErrors: (d: number, p: number) => Record<string, RHFFieldError> | undefined;
@@ -34,12 +30,11 @@ export interface ShiftsViewProps {
  * Step 4 (spec 1.4): volunteers per shift, one shift per day × meeting point. Each shift has its
  * hours (the day's by default), a minimum (0 turns it off) and an optional expected maximum;
  * neither caps sign-ups. Each day
- * needs one shift on; a day below the difficulty's suggested minimum needs a reason. A one-day,
- * one-point campaign shows a single set of fields.
+ * needs one shift on. A one-day, one-point campaign shows a single set of fields.
  */
 const StepShifts = memo(function StepShifts() {
   const { t } = useTranslation();
-  const { form, suggestedMinPerDay, campaign } = useCampaign();
+  const { form, campaign } = useCampaign();
   const { control, setValue, formState } = form;
   const days = useWatch({ control, name: 'days' });
   const points = useWatch({ control, name: 'meeting_points' });
@@ -66,8 +61,6 @@ const StepShifts = memo(function StepShifts() {
     createdBy: campaign?.created_by ?? currentUserId,
   });
 
-  const belowSuggestion = daysBelowSuggestion(days.length, schedule, suggestedMinPerDay);
-
   const scheduleErrors = formState.errors.schedule;
   const dayMessages = days.map((_, d) => {
     const row = scheduleErrors?.[d] as
@@ -87,7 +80,6 @@ const StepShifts = memo(function StepShifts() {
     points,
     schedule,
     members,
-    belowSuggestion,
     dayMessages,
     cellErrors: (d, p) =>
       // cast: react-hook-form types nested array errors loosely.
@@ -99,7 +91,6 @@ const StepShifts = memo(function StepShifts() {
   return (
     <div className="w-full flex flex-col gap-6 px-[30px] py-[35px] border-1 border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5">
       {single ? <ShiftsSingleForm {...view} /> : <ShiftsTable {...view} />}
-      {belowSuggestion.length > 0 && <MinVolunteersReasonField />}
     </div>
   );
 });

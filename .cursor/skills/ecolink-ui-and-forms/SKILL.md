@@ -383,7 +383,7 @@ export function isSeverityLevel(value: number): value is SeverityLevelValue { re
 export function getSeverityLevel(value?: number | string | null) { ... }
 ```
 
-Có sẵn: `constants/severity.ts`, `difficulty.ts`, `priority.ts`, `gamification.ts`, `notificationPreferences.ts`, `organizationApplicationStatus.ts` (status hồ sơ / owner → `STATUS` + label), `apiErrorMessages.ts` (mã lỗi → câu i18n), `roles.ts` (`ADMIN_ROLE_ID`), `statusTone.ts` (màu tag). Kiểm tra ở đây trước khi khai báo hằng mới.
+Có sẵn: `constants/severity.ts`, `priority.ts`, `gamification.ts`, `notificationPreferences.ts`, `organizationApplicationStatus.ts` (status hồ sơ / owner → `STATUS` + label), `apiErrorMessages.ts` (mã lỗi → câu i18n), `roles.ts` (`ADMIN_ROLE_ID`), `statusTone.ts` (màu tag). Kiểm tra ở đây trước khi khai báo hằng mới.
 
 ## Toast
 

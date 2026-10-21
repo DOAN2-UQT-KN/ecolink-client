@@ -49,9 +49,7 @@ export const issueFieldToFormName = (field: string, code?: string): string | nul
     banner: "banner",
     contactName: "contact_name",
     contactPhone: "contact_phone",
-    difficulty: "difficulty",
     "requirements.minAge": "min_age",
-    minVolunteersReason: "min_volunteers_reason",
   };
   return top[field] ?? null;
 };

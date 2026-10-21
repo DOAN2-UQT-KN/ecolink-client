@@ -9,7 +9,6 @@ import useGetParam from "@/hooks/useGetParam";
 import type { IGetCampaignsRequest } from "@/apis/campaign/models/getCampaigns";
 
 import {
-  applyGreenPointsRange,
   buildCampaignSearchFilters,
   CAMPAIGN_PAGE_SIZE,
   type CampaignSearchFilters,
@@ -41,7 +40,7 @@ export const CampaignSearchContext = createContext<CampaignSearchContextType | u
 );
 
 /** URL keys owned by the filter panel. */
-const FILTER_URL_KEYS = ["search", "status", "statuses", "green_points_from", "green_points_to"];
+const FILTER_URL_KEYS = ["search", "status", "statuses"];
 
 export const CampaignSearchProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
@@ -79,8 +78,6 @@ export const CampaignSearchProvider = ({ children }: { children: ReactNode }) =>
   const urlSearch = useGetParam<string>("search", "string", "");
   const urlStatuses = useGetParam<string>("statuses", "string", undefined);
   const urlStatus = useGetParam<string>("status", "string", undefined);
-  const urlGreenPointsFrom = useGetParam<string>("green_points_from", "string", undefined);
-  const urlGreenPointsTo = useGetParam<string>("green_points_to", "string", undefined);
 
   const filters = useMemo(
     () =>
@@ -88,10 +85,8 @@ export const CampaignSearchProvider = ({ children }: { children: ReactNode }) =>
         search: urlSearch,
         statuses: urlStatuses,
         status: urlStatus,
-        greenPointsFrom: urlGreenPointsFrom,
-        greenPointsTo: urlGreenPointsTo,
       }),
-    [urlGreenPointsFrom, urlGreenPointsTo, urlSearch, urlStatus, urlStatuses],
+    [urlSearch, urlStatus, urlStatuses],
   );
 
   const setFilters = useCallback(
@@ -104,8 +99,6 @@ export const CampaignSearchProvider = ({ children }: { children: ReactNode }) =>
           : serializeStatuses(next.statuses);
         updates.status = undefined;
       }
-      if ("greenPointsFrom" in next) updates.green_points_from = next.greenPointsFrom?.toString();
-      if ("greenPointsTo" in next) updates.green_points_to = next.greenPointsTo?.toString();
       replaceParams(updates);
     },
     [replaceParams],
@@ -136,22 +129,11 @@ export const CampaignSearchProvider = ({ children }: { children: ReactNode }) =>
   });
 
   const queryResult = viewMode === "mine" ? myQuery : exploreQuery;
-  const rawCampaigns = useMemo<ICampaign[]>(
+  const campaigns = useMemo<ICampaign[]>(
     () => queryResult.data?.data?.campaigns ?? [],
     [queryResult.data],
   );
-
-  const campaigns = useMemo(
-    () => applyGreenPointsRange(rawCampaigns, filters.greenPointsFrom, filters.greenPointsTo),
-    [filters.greenPointsFrom, filters.greenPointsTo, rawCampaigns],
-  );
-
-  const hasClientGreenPointsFilter = Boolean(
-    filters.greenPointsFrom || filters.greenPointsTo,
-  );
-  const total = hasClientGreenPointsFilter
-    ? campaigns.length
-    : (queryResult.data?.data?.total ?? campaigns.length);
+  const total = queryResult.data?.data?.total ?? campaigns.length;
 
   const contextValue = useMemo(
     () => ({

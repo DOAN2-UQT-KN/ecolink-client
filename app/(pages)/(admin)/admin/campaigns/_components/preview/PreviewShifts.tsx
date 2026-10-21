@@ -51,15 +51,8 @@ export const CampaignShifts = memo(function CampaignShifts({ campaign }: { campa
             };
           }),
         )}
-        suggestedMinPerDay={campaign.suggested_min_volunteers ?? null}
         variant="admin"
       />
-      {campaign.min_volunteers_reason && (
-        <p className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
-          <span className="font-semibold">{t("Why fewer volunteers than suggested")}:</span>{" "}
-          {campaign.min_volunteers_reason}
-        </p>
-      )}
     </div>
   );
 });
