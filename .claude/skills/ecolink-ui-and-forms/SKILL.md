@@ -288,7 +288,7 @@ import { InfoTooltip } from '@/components/ui/InfoTooltip';
 - Vẫn để **inline** dưới field những gì người dùng phải thấy ngay: lỗi (`FieldError`), cảnh báo (amber / đỏ, ví dụ "Tổ chức chưa xác thực", điểm rác bị lấy), hướng dẫn phụ thuộc trạng thái ("Chọn vị trí trước…").
 - **Không** tự dựng `Tooltip` + icon trợ giúp (`TbHelpCircle`, `TbInfoCircle`…) — luôn dùng `InfoTooltip`.
 - Tooltip làm **nhãn cho nút chỉ có icon** (Remove, Add image…) là pattern khác: vẫn dùng `Tooltip` / `TooltipTrigger asChild` / `TooltipContent` trực tiếp (xem `organizations/[id]/_components/OwnerActions.tsx`).
-- Đang dùng ở: form tạo chiến dịch (`campaigns/create/_components/*`), chọn lane trong `admin/organization-applications/_components/ApplicationReviewDialog.tsx`, dialog thay người đại diện pháp lý (`organizations/[id]/_components/OwnerActions.tsx`).
+- Đang dùng ở: form tạo chiến dịch (`campaigns/create/_components/*`), chọn lane trong `admin/organizations/applications/_components/ApplicationReviewDialog.tsx`, dialog thay người đại diện pháp lý (`organizations/[id]/_components/OwnerActions.tsx`).
 
 ## Upload ảnh
 
@@ -383,7 +383,7 @@ export function isSeverityLevel(value: number): value is SeverityLevelValue { re
 export function getSeverityLevel(value?: number | string | null) { ... }
 ```
 
-Có sẵn: `constants/severity.ts`, `difficulty.ts`, `priority.ts`, `gamification.ts`, `notificationPreferences.ts`, `organizationApplicationStatus.ts` (status hồ sơ / owner → `STATUS` + label), `apiErrorMessages.ts` (mã lỗi → câu i18n), `roles.ts` (`ADMIN_ROLE_ID`), `statusTone.ts` (màu tag). Kiểm tra ở đây trước khi khai báo hằng mới.
+Có sẵn: `constants/severity.ts`, `priority.ts`, `gamification.ts`, `notificationPreferences.ts`, `organizationApplicationStatus.ts` (status hồ sơ / owner → `STATUS` + label), `apiErrorMessages.ts` (mã lỗi → câu i18n), `roles.ts` (`ADMIN_ROLE_ID`), `statusTone.ts` (màu tag). Kiểm tra ở đây trước khi khai báo hằng mới.
 
 ## Toast
 

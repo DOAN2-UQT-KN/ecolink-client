@@ -30,9 +30,9 @@ export const useGetAdminGiftRedemptions = (
 
 export const updateGiftRedemptionStatus = async ({
   id,
-  status,
+  ...body
 }: IUpdateGiftRedemptionStatusRequest): Promise<IRedeemGiftResponse> => {
-  return await requestApi.patch<IRedeemGiftResponse>(`${url}/${id}/status`, { status });
+  return await requestApi.patch<IRedeemGiftResponse>(`${url}/${id}/status`, body);
 };
 
 export const useUpdateGiftRedemptionStatus = (

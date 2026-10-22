@@ -95,8 +95,6 @@ export interface ICampaignCreateEligibility {
   hidden: boolean;
   reasons: CampaignCreateBlockReason[];
   is_verified: boolean;
-  /** Highest difficulty allowed; null = any. */
-  max_difficulty: number | null;
   open_count: number;
   open_limit: number | null;
   review_queue_count: number;

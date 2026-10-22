@@ -1,17 +1,12 @@
 import { ICampaign } from '@/apis/campaign/models/campaign';
 
 export interface IPoint {
-  /** SP wallet — use for gift redemption */
-  spendablePoints?: number;
-  spendable_points?: number;
-  /** Current green points balance */
-  greenPoints?: number;
-  green_points?: number;
-  /** Lifetime green points earned */
-  greenPointsEarnedTotal?: number;
-  green_points_earned_total?: number;
-  /** @deprecated Prefer spendablePoints */
-  balance?: number;
+  /** Points left in unexpired lots — what can be spent on gifts */
+  balance: number;
+  /** Lifetime earnings; redemptions, expiry and refunds do not change it */
+  earnedTotal: number;
+  /** Points expiring within 7 days and the earliest expiry date (ISO) */
+  expiringSoon: { amount: number; earliestAt: string | null };
 }
 
 export interface IPointTransaction {

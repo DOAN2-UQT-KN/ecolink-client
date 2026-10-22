@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Controller, useWatch } from 'react-hook-form';
+import { Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import NeedsReviewTag from './NeedsReviewTag';
@@ -11,7 +11,6 @@ import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { InfoTooltip } from '@/components/ui/InfoTooltip';
 
 import { useCampaign } from '../_context/CampaignContext';
-import { impliedMinAge } from '@/constants/campaignLifecycle';
 import { inputClassName } from '../_services/fieldStyles';
 
 /** 0xxxxxxxxx or +84xxxxxxxxx, spaces/dots/dashes allowed (same rule as the server). */
@@ -25,9 +24,6 @@ const ContactAndSafety = memo(function ContactAndSafety() {
     control,
     formState: { errors },
   } = form;
-  const difficulty = useWatch({ control, name: 'difficulty' });
-  const defaultMinAge = impliedMinAge(difficulty);
-
 
   return (
     <div className="w-full flex flex-col gap-6 px-[30px] py-[35px] border-1 border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5">
@@ -85,13 +81,7 @@ const ContactAndSafety = memo(function ContactAndSafety() {
             {t('Minimum age')}
             <NeedsReviewTag />
             <InfoTooltip
-              content={
-                defaultMinAge != null
-                  ? t('Hard campaigns require volunteers aged {{age}}+ by default', {
-                      age: defaultMinAge,
-                    })
-                  : t('Leave empty for no age limit')
-              }
+              content={t('Leave empty for no age limit')}
             />
           </FieldLabel>
           <Input
@@ -104,7 +94,7 @@ const ContactAndSafety = memo(function ContactAndSafety() {
                 v == null || (Number.isInteger(v) && v >= 0 && v <= 100) ||
                 t('Minimum age must be 0–100'),
             })}
-            placeholder={defaultMinAge ? String(defaultMinAge) : t('No limit')}
+            placeholder={t('No limit')}
             className={inputClassName}
           />
           <FieldError errors={[errors.min_age]} />

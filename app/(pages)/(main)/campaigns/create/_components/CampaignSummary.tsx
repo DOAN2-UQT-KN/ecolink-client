@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import Image from '@/components/ui/AppImage';
 import { RichTextContent } from '@/components/ui/RichTextContent';
 import { useGetMembersByOrg } from '@/apis/organization/organizationById';
-import { getDifficultyLevel } from '@/constants/difficulty';
 import { useImagePreviewSrc } from '@/libs/useImagePreviewSrc';
 import { SummaryRow } from '@/components/client/shared/SummaryRow';
 
@@ -13,7 +12,6 @@ import { ShiftSlotsTable } from '@/components/client/shared/ShiftSlotsTable';
 import { useDayLabel } from '../_hooks/useDayLabel';
 import type { CampaignStep } from '../_services/campaignSteps.service';
 import { type CampaignFormValues } from '../_services/campaignForm.service';
-import { impliedMinAge } from '@/constants/campaignLifecycle';
 import { meetingPointName } from '@/utils/campaignLabels';
 
 const Section = memo(function Section({
@@ -54,12 +52,10 @@ const Section = memo(function Section({
 export const CampaignSummary = memo(function CampaignSummary({
   values,
   organizationName,
-  suggestedMinPerDay,
   onEdit,
 }: {
   values: CampaignFormValues;
   organizationName?: string | null;
-  suggestedMinPerDay?: number | null;
   onEdit?: (step: CampaignStep) => void;
 }) {
   const { t } = useTranslation();
@@ -75,9 +71,8 @@ export const CampaignSummary = memo(function CampaignSummary({
     return member?.user?.name || member?.user?.email || '—';
   };
 
-  const difficulty = getDifficultyLevel(values.difficulty);
   const pointName = (index: number) => meetingPointName(values.meeting_points[index], index, t);
-  const minAge = values.min_age ?? impliedMinAge(values.difficulty);
+  const minAge = values.min_age;
   const conditions = [
     minAge != null ? t('From {{age}} years old', { age: minAge }) : null,
     values.skills.trim() ? `${t('Required skills')}: ${values.skills.trim()}` : null,
@@ -89,7 +84,6 @@ export const CampaignSummary = memo(function CampaignSummary({
       <Section title={t('General information')} step="general" onEdit={onEdit}>
         <SummaryRow label={t('Organization')} value={organizationName} />
         <SummaryRow label={t('Title')} value={values.title} />
-        <SummaryRow label={t('Difficulty')} value={difficulty ? t(difficulty.label) : null} />
         <SummaryRow
           label={t('Description')}
           value={<RichTextContent value={values.description} maxLines={4} />}
@@ -171,14 +165,7 @@ export const CampaignSummary = memo(function CampaignSummary({
               leader: cell.leader_user_id ? memberName(cell.leader_user_id) : null,
             })),
           )}
-          suggestedMinPerDay={suggestedMinPerDay}
         />
-        {values.min_volunteers_reason?.trim() && (
-          <SummaryRow
-            label={t('Why fewer volunteers than suggested')}
-            value={values.min_volunteers_reason}
-          />
-        )}
       </Section>
     </div>
   );

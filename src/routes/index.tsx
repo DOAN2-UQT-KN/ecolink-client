@@ -1,6 +1,6 @@
 import { lazy, Suspense, type ComponentType, type LazyExoticComponent } from "react";
 import { createBrowserRouter, Navigate } from "react-router-dom";
-import { IncidentsRedirect, ModerationRedirect } from "./LegacyAdminRedirect";
+import { IncidentsRedirect, ModerationRedirect, TabRedirect } from "./LegacyAdminRedirect";
 
 import RootLayout from "@/src/layouts/RootLayout";
 import MainLayout from "@/src/layouts/MainLayout";
@@ -66,6 +66,7 @@ export const router = createBrowserRouter([
               { path: "notification-settings", element: lazyPage(() => import("@/app/(pages)/(main)/profile/notification-settings/page"), "profile-notification-settings") },
               { path: "points", element: lazyPage(() => import("@/app/(pages)/(main)/profile/points/page"), "profile-points") },
               { path: "orders", element: lazyPage(() => import("@/app/(pages)/(main)/profile/orders/page"), "profile-orders") },
+              { path: "orders/:code", element: lazyPage(() => import("@/app/(pages)/(main)/profile/orders/[code]/page"), "profile-order-detail") },
             ],
           },
           { path: "*", element: <NotFound /> },
@@ -101,10 +102,14 @@ export const router = createBrowserRouter([
           { path: "incidents", element: <IncidentsRedirect /> },
           { path: "moderation", element: <ModerationRedirect /> },
           { path: "organizations", element: lazyPage(() => import("@/app/(pages)/(admin)/admin/organizations/page"), "admin-organizations") },
-          { path: "organization-applications", element: lazyPage(() => import("@/app/(pages)/(admin)/admin/organization-applications/page"), "admin-organization-applications") },
+          { path: "organization-applications", element: <TabRedirect to="/admin/organizations" tab="applications" /> },
           { path: "users", element: lazyPage(() => import("@/app/(pages)/(admin)/admin/users/page"), "admin-users") },
           { path: "gifts", element: lazyPage(() => import("@/app/(pages)/(admin)/admin/gifts/page"), "admin-gifts") },
-          { path: "sos", element: lazyPage(() => import("@/app/(pages)/(admin)/admin/sos/page"), "admin-sos") },
+          { path: "gifts/orders/:code", element: lazyPage(() => import("@/app/(pages)/(admin)/admin/gifts/orders/[code]/page"), "admin-gift-order-detail") },
+          { path: "gifts/:id/stock", element: lazyPage(() => import("@/app/(pages)/(admin)/admin/gifts/[id]/stock/page"), "admin-gift-stock") },
+          { path: "gifts/sources/:id", element: lazyPage(() => import("@/app/(pages)/(admin)/admin/gifts/sources/[id]/page"), "admin-gift-source-detail") },
+          { path: "point-rules", element: lazyPage(() => import("@/app/(pages)/(admin)/admin/point-rules/page"), "admin-point-rules") },
+          { path: "sos", element: <TabRedirect to="/admin/campaigns" tab="sos" /> },
           { path: "settings", element: lazyPage(() => import("@/app/(pages)/(admin)/admin/settings/page"), "admin-settings") },
           { path: "*", element: <NotFound /> },
         ],

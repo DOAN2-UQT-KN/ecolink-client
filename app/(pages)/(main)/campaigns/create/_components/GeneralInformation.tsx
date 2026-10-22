@@ -1,9 +1,8 @@
 import { memo, useEffect } from 'react';
-import { Controller, useWatch } from 'react-hook-form';
+import { useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Input } from '@/components/ui/input';
-import { Slider } from '@/components/ui/slider';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { cn } from '@/libs/utils';
 import Image from '@/components/ui/AppImage';
@@ -15,15 +14,7 @@ import {
   CAMPAIGN_TITLE_MIN_LENGTH,
   stripHtml,
 } from '@/constants/campaignLifecycle';
-import {
-  DIFFICULTY_LEVEL,
-  DIFFICULTY_MAX,
-  DIFFICULTY_MIN,
-  DIFFICULTY_VALUES,
-  getDifficultyLevel,
-} from '@/constants/difficulty';
 import UploadBanner from './UploadBanner';
-import NeedsReviewTag from './NeedsReviewTag';
 import RichTextEditor from '@/components/ui/RichTextEditor';
 import { inputClassName } from '../_services/fieldStyles';
 
@@ -36,7 +27,6 @@ const GeneralInformation = memo(function GeneralInformation() {
     formState: { errors },
   } = form;
   const description = useWatch({ control, name: 'description' });
-  const maxDifficulty = eligibility?.max_difficulty ?? null;
   const isUnverified = eligibility != null && !eligibility.is_verified;
 
   // Rules checked on "Send for review"; a draft may be saved half-filled.
@@ -50,14 +40,6 @@ const GeneralInformation = memo(function GeneralInformation() {
         }),
     });
   }, [register, t]);
-
-  // An unverified organization only gets the lowest difficulty. An effect, because it writes to
-  // react-hook-form (an external store) once server eligibility arrives.
-  useEffect(() => {
-    if (maxDifficulty != null && form.getValues('difficulty') > maxDifficulty) {
-      form.setValue('difficulty', maxDifficulty);
-    }
-  }, [form, maxDifficulty]);
 
   return (
     <div className="w-full h-full flex flex-col gap-[30px] px-[30px] py-[35px] border-1 border-[rgba(136,122,71,0.5)] rounded-[10px] bg-white/80 shadow-sm ring-1 ring-white/5">
@@ -86,7 +68,7 @@ const GeneralInformation = memo(function GeneralInformation() {
             </div>
             {isUnverified && (
               <span className="text-xs font-medium text-amber-700">
-                {t('Unverified organization')}: {t('lowest difficulty only, at most 2 campaigns running at a time')}
+                {t('Unverified organization')}: {t('at most 2 campaigns running at a time')}
               </span>
             )}
           </Field>
@@ -116,66 +98,6 @@ const GeneralInformation = memo(function GeneralInformation() {
               className={inputClassName}
             />
             <FieldError errors={[errors.title]} />
-          </Field>
-
-          <Field className="col-span-2">
-            <FieldLabel className="text-foreground-tertiary font-display-3">
-              {t('Difficulty')}
-              <NeedsReviewTag />
-            </FieldLabel>
-            <Controller
-              name="difficulty"
-              control={control}
-              render={({ field }) => {
-                const level = field.value ?? DIFFICULTY_MIN;
-                const difficulty =
-                  getDifficultyLevel(level) ?? DIFFICULTY_LEVEL[DIFFICULTY_MIN];
-                return (
-                  <div className="flex flex-col gap-3 rounded-lg border border-[rgba(136,122,71,0.5)] bg-white/5 px-4 py-3">
-                    <div className="flex items-center justify-center text-sm">
-                      <span className={cn('font-semibold text-center', difficulty.textClass)}>
-                        {t(difficulty.label)}
-                      </span>
-                    </div>
-                    <Slider
-                      min={DIFFICULTY_MIN}
-                      max={maxDifficulty ?? DIFFICULTY_MAX}
-                      disabled={maxDifficulty === DIFFICULTY_MIN}
-                      step={1}
-                      value={[level]}
-                      onValueChange={(value) => field.onChange(value[0] ?? DIFFICULTY_MIN)}
-                      aria-label={t('Difficulty')}
-                      className={difficulty.sliderClass}
-                    />
-                    <div className="flex justify-between px-0.5">
-                      {DIFFICULTY_VALUES.map((value) => {
-                        const item = DIFFICULTY_LEVEL[value];
-                        const selected = value === level;
-                        const allowed = maxDifficulty == null || value <= maxDifficulty;
-                        return (
-                          <button
-                            key={value}
-                            type="button"
-                            disabled={!allowed}
-                            onClick={() => field.onChange(value)}
-                            className={cn(
-                              'flex flex-col items-center gap-0.5 text-[10px] transition-colors',
-                              selected
-                                ? cn('font-semibold', item.textClass)
-                                : 'text-foreground-tertiary',
-                              !allowed && 'opacity-40 cursor-not-allowed',
-                            )}
-                          >
-                            <span className="hidden sm:block">{t(item.label)}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              }}
-            />
-            <FieldError errors={[errors.difficulty]} />
           </Field>
 
           <Field>

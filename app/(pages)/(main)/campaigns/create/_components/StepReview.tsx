@@ -10,7 +10,7 @@ import { CampaignSummary } from './CampaignSummary';
 /** Last step: everything the admin will see, with a way back to each step. */
 const StepReview = memo(function StepReview() {
   const { t } = useTranslation();
-  const { form, organization, suggestedMinPerDay, goToStep } = useCampaign();
+  const { form, organization, goToStep } = useCampaign();
   // useWatch, not form.watch(): watch() would re-render the whole wizard provider on every keystroke.
   // cast: useWatch returns a deep-partial type; the form always holds full defaults.
   const values = useWatch({ control: form.control }) as CampaignFormValues;
@@ -23,7 +23,6 @@ const StepReview = memo(function StepReview() {
       <CampaignSummary
         values={values}
         organizationName={organization?.name}
-        suggestedMinPerDay={suggestedMinPerDay}
         onEdit={(step) => goToStep(CAMPAIGN_STEPS.indexOf(step))}
       />
     </div>

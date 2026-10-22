@@ -159,6 +159,8 @@ export function getNotificationHref(
     }
     case 'REPORT_REJECTED':
       return '/incidents/me';
+    case 'GIFT_ORDER_SHIPPED':
+      return typeof p.orderCode === 'string' ? `/profile/orders/${p.orderCode}` : '/profile/orders';
     case 'REPORT_STATUS':
     case 'REPORT_READY':
     case 'REPORT_APPROVED':

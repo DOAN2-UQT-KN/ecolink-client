@@ -5,6 +5,7 @@ export const CHANGE_LABELS: Record<string, string> = {
   title: "Title",
   description: "Description",
   banner: "Banner",
+  // Difficulty and the min-volunteers reason were removed (spec 013); kept for older change logs.
   difficulty: "Difficulty",
   contact_name: "Contact name",
   contact_phone: "Contact phone",

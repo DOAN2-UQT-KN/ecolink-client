@@ -12,8 +12,6 @@ export const DEFAULT_CAMPAIGN_SEARCH_STATUSES = [
 
 export type CampaignSearchFilters = Pick<IGetCampaignsRequest, "search"> & {
   statuses: number[];
-  greenPointsFrom?: number;
-  greenPointsTo?: number;
 };
 
 export const CAMPAIGN_PAGE_SIZE = 12;
@@ -70,21 +68,10 @@ export function isDefaultCampaignStatuses(statuses: number[] | undefined): boole
   return DEFAULT_CAMPAIGN_SEARCH_STATUSES.every((status) => statuses.includes(status));
 }
 
-function parseGreenPoints(value: string | undefined): number | undefined {
-  if (!value) return undefined;
-
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed) || parsed < 0) return undefined;
-
-  return Math.floor(parsed);
-}
-
 export function buildCampaignSearchFilters(initial: {
   search?: string;
   statuses?: number[] | string;
   status?: string;
-  greenPointsFrom?: string;
-  greenPointsTo?: string;
 }): CampaignSearchFilters {
   const parsedStatuses =
     parseStatuses(initial.statuses) ??
@@ -94,27 +81,5 @@ export function buildCampaignSearchFilters(initial: {
   return {
     search: initial.search ?? "",
     statuses: parsedStatuses,
-    greenPointsFrom: parseGreenPoints(initial.greenPointsFrom),
-    greenPointsTo: parseGreenPoints(initial.greenPointsTo),
   };
-}
-
-export function applyGreenPointsRange<T extends { green_points?: number }>(
-  campaigns: T[],
-  from?: number,
-  to?: number,
-): T[] {
-  return campaigns.filter((campaign) => {
-    const points = campaign.green_points ?? 0;
-
-    if (from !== undefined && points < from) {
-      return false;
-    }
-
-    if (to !== undefined && points > to) {
-      return false;
-    }
-
-    return true;
-  });
 }

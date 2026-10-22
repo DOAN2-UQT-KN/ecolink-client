@@ -14,16 +14,8 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import { DIFFICULTY_LEVEL, isDifficultyLevel } from "@/constants/difficulty";
 import { queryClient } from "@/libs/queryClient";
 import { cn } from "@/libs/utils";
 import showMessage, { MessageLevel, MessageType } from "@/utils/showMessage";
@@ -41,13 +33,13 @@ type Props = {
 
 /**
  * The decision form, loaded on first open by `CompletionReviewButton`. Each open mounts a fresh
- * instance (new `key`), so the choice, difficulty and reason start empty every time.
+ * instance (new `key`), so the choice and reason start empty every time.
  */
 /**
  * Admin on a campaign marked done, with the evidence: result verification of each meeting point
  * (flagged ones are verified or rejected here, one by one), the submission and the totals. The
  * campaign itself is decided by verification; the admin may cancel it (reason) at any time, and
- * approve it (settling the difficulty) only when verification hands it over (`can_approve`).
+ * approve it only when verification hands it over (`can_approve`).
  */
 export const CompletionReviewDialog = memo(function CompletionReviewDialog({
   campaignId,
@@ -59,7 +51,6 @@ export const CompletionReviewDialog = memo(function CompletionReviewDialog({
   const { t } = useTranslation();
   const isDark = theme === "dark";
   const [chosen, setChosen] = useState<CompletionDecision | null>(null);
-  const [difficulty, setDifficulty] = useState<number | null>(null);
   const [reason, setReason] = useState("");
   const [error, setError] = useState("");
 
@@ -68,10 +59,6 @@ export const CompletionReviewDialog = memo(function CompletionReviewDialog({
   const { mutateAsync, isPending } = useReviewCampaignCompletion();
   // Approve only while verification hands the campaign to the admin; otherwise only cancel.
   const decision: CompletionDecision = review?.can_approve ? (chosen ?? "approve") : "cancel";
-
-  const range = review?.difficulty_range ?? { min: 1, max: 4 };
-  const levels = Array.from({ length: range.max - range.min + 1 }, (_, i) => range.min + i);
-  const chosenDifficulty = difficulty ?? review?.difficulty ?? null;
 
   const onConfirm = async () => {
     if (!review) return;
@@ -84,11 +71,7 @@ export const CompletionReviewDialog = memo(function CompletionReviewDialog({
     await mutateAsync({
       id: campaignId,
       decision,
-      ...(decision === "approve"
-        ? chosenDifficulty != null
-          ? { difficulty: chosenDifficulty }
-          : {}
-        : { reject_reason: text }),
+      ...(decision === "approve" ? {} : { reject_reason: text }),
     });
     await queryClient.invalidateQueries({ queryKey: ["campaigns"] });
     showMessage({
@@ -172,33 +155,11 @@ export const CompletionReviewDialog = memo(function CompletionReviewDialog({
                 )}
 
                 {decision === "approve" && (
-                  <div className="flex flex-col gap-2">
-                    <p className={cn("text-sm", muted)}>
-                      {t(
-                        "Handled waste points are completed, the others go back to the waiting list. Volunteers get points at the difficulty below.",
-                      )}
-                    </p>
-                    <Label className={cn(isDark ? "text-zinc-200" : "text-zinc-800")}>
-                      {t("Final difficulty")}
-                    </Label>
-                    <Select
-                      value={chosenDifficulty != null ? String(chosenDifficulty) : undefined}
-                      onValueChange={(v) => setDifficulty(Number(v))}
-                      disabled={isPending}
-                    >
-                      <SelectTrigger className={cn("w-56", inputDark)}>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {levels.map((level) => (
-                          <SelectItem key={level} value={String(level)}>
-                            {isDifficultyLevel(level) ? t(DIFFICULTY_LEVEL[level].label) : level}
-                            {level === review.difficulty ? ` (${t("current")})` : ""}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <p className={cn("text-sm", muted)}>
+                    {t(
+                      "Handled waste points are completed, the others go back to the waiting list. Volunteers get points by the shifts they attended.",
+                    )}
+                  </p>
                 )}
 
                 {decision === "cancel" && (

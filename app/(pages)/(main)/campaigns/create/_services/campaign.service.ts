@@ -2,7 +2,6 @@ import { IIncident } from "@/apis/incident/models/incident";
 import { IResource } from "@/apis/saved-resource/models/getResource";
 import { ICampaign } from "@/apis/campaign/models/campaign";
 import { ICreateCampaignRequest } from "@/apis/campaign/models/createCampaign";
-import { clampDifficulty } from "@/constants/difficulty";
 import { truncateDetailAddress } from "@/constants/address";
 import {
   DEFAULT_MEETING_POINT_RADIUS_KM,
@@ -95,12 +94,10 @@ export const transformToApiData = (data: CampaignFormValues): ICreateCampaignReq
     title: data.title.trim().slice(0, TITLE_MAX_LENGTH),
     description: data.description.trim() || undefined,
     banner: typeof data.banner === "string" ? data.banner : undefined,
-    difficulty: clampDifficulty(data.difficulty),
     ...scheduleToApi(data),
     contact_name: optionalText(data.contact_name),
     contact_phone: optionalText(data.contact_phone),
     safety_notes: optionalText(data.safety_notes),
-    min_volunteers_reason: optionalText(data.min_volunteers_reason),
     requirements: hasRequirements
       ? {
           min_age: data.min_age ?? null,
@@ -126,7 +123,6 @@ export const campaignToFormValues = (campaign: ICampaign): CampaignFormValues =>
     title: campaign.title ?? "",
     description: campaign.description ?? "",
     banner: campaign.banner ?? undefined,
-    difficulty: clampDifficulty(campaign.difficulty),
     days:
       days.length > 0
         ? days.map((d) => ({
@@ -139,7 +135,6 @@ export const campaignToFormValues = (campaign: ICampaign): CampaignFormValues =>
     contact_name: campaign.contact_name ?? "",
     contact_phone: campaign.contact_phone ?? "",
     safety_notes: campaign.safety_notes ?? "",
-    min_volunteers_reason: campaign.min_volunteers_reason ?? "",
     min_age: requirements?.min_age ?? null,
     skills: (requirements?.skills ?? []).join(", "),
     bring_own_tools: Boolean(requirements?.bring_own_tools),
@@ -212,7 +207,6 @@ export const majorFieldsFingerprint = (values: CampaignFormValues, leaderUserId:
     schedule: fitSchedule(values.schedule, values.days.length, values.meeting_points.length, leaderUserId),
   });
   return JSON.stringify({
-    difficulty: payload.difficulty,
     requirements: payload.requirements,
     days: (payload.days ?? []).map((d) => `${d.id ?? ""}|${d.start_at}|${d.end_at}`),
     meeting_points: payload.meeting_points,

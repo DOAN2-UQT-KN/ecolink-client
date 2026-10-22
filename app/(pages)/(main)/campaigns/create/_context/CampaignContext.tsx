@@ -57,8 +57,6 @@ interface CampaignContextType {
   next: () => Promise<void>;
   back: () => void;
   goToStep: (index: number) => void;
-  /** Minimum volunteers per day the difficulty suggests, once the draft is saved; null = none. */
-  suggestedMinPerDay: number | null;
   /**
    * Keep the day × meeting point grid in step with the days and meeting points lists: call
    * after adding or removing one of them.
@@ -165,7 +163,6 @@ export function CampaignProvider({
       next,
       back,
       goToStep,
-      suggestedMinPerDay: saved?.suggested_min_volunteers ?? null,
       addScheduleRow,
       removeScheduleRow,
       addScheduleColumn,

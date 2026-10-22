@@ -1,5 +1,4 @@
 import { IIncident } from "@/apis/incident/models/incident";
-import { DIFFICULTY_MIN } from "@/constants/difficulty";
 import { CAMPAIGN_TITLE_MAX_LENGTH } from "@/constants/campaignLifecycle";
 
 /** Form shape of the campaign wizard: values, empty rows and grid helpers (no payload mapping). */
@@ -48,7 +47,6 @@ export interface CampaignFormValues {
   title: string;
   description: string;
   banner?: string | File | Blob;
-  difficulty: number;
   days: CampaignDayFormValues[];
   contact_name: string;
   contact_phone: string;
@@ -60,8 +58,6 @@ export interface CampaignFormValues {
   meeting_points: MeetingPointFormValues[];
   /** `schedule[day][meetingPoint]`, always days.length × meeting_points.length. */
   schedule: ShiftFormValues[][];
-  /** Required when a day's minimum is below the difficulty's suggestion. */
-  min_volunteers_reason: string;
 }
 
 export const emptyMeetingPoint = (): MeetingPointFormValues => ({
@@ -107,7 +103,6 @@ export const DEFAULT_CAMPAIGN_FORM_VALUES: CampaignFormValues = {
   title: "",
   description: "",
   banner: undefined,
-  difficulty: DIFFICULTY_MIN,
   days: [emptyDay()],
   contact_name: "",
   contact_phone: "",
@@ -117,7 +112,6 @@ export const DEFAULT_CAMPAIGN_FORM_VALUES: CampaignFormValues = {
   bring_own_tools: false,
   meeting_points: [emptyMeetingPoint()],
   schedule: [[emptyShift()]],
-  min_volunteers_reason: "",
 };
 
 /** The grid without day `dayIndex`. */

@@ -20,8 +20,8 @@ export interface ICampaign {
   status?: number;
   /** Admin ban reason; `null`/empty when the campaign has not been banned. */
   reject_reason?: string | null;
-  difficulty?: number;
-  green_points?: number;
+  /** Campaign completion points (same for every campaign); null when reward-service is unavailable. */
+  green_points?: number | null;
 
   is_verify?: boolean;
 
@@ -74,10 +74,6 @@ export interface ICampaign {
   completion_rejection_count?: number;
   /** Only in an update response: the edit sent the campaign back for review (spec 3.5). */
   re_review?: boolean;
-  /** Why a day's minimum volunteers is below the difficulty's suggestion. */
-  min_volunteers_reason?: string | null;
-  /** Minimum volunteers per day the difficulty suggests (detail responses). */
-  suggested_min_volunteers?: number | null;
   /** In time order; the campaign runs from the first start to the last end. */
   days?: ICampaignDay[];
   meeting_points?: IMeetingPoint[];

@@ -23,14 +23,13 @@ export default function ShiftsTable({
   points,
   schedule,
   members,
-  belowSuggestion,
   dayMessages,
   cellErrors,
   dayLabel,
   pointName,
 }: ShiftsViewProps) {
   const { t } = useTranslation();
-  const { form, suggestedMinPerDay } = useCampaign();
+  const { form } = useCampaign();
   const { register, setValue, getValues, trigger } = form;
   const rules = useShiftRules();
 
@@ -91,7 +90,6 @@ export default function ShiftsTable({
             {days.map((day, d) => {
               const row = schedule[d] ?? [];
               const total = dayMinTotal(row);
-              const below = belowSuggestion.includes(d);
               const span = Math.max(points.length, 1);
               return (
                 <Fragment key={d}>
@@ -174,15 +172,9 @@ export default function ShiftsTable({
                             className={cn(
                               cellClass,
                               'font-semibold tabular-nums whitespace-nowrap',
-                              below && 'text-amber-600',
                             )}
                           >
                             {total}
-                            {below && (
-                              <div className="text-xs font-normal">
-                                {t('Suggested ≥ {{n}}', { n: suggestedMinPerDay })}
-                              </div>
-                            )}
                           </td>
                         )}
                       </tr>

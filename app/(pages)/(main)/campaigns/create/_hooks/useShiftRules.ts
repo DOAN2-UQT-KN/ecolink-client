@@ -7,7 +7,6 @@ import {
   validateLeader,
   validateMaxVolunteers,
   validateMinVolunteers,
-  validateMinVolunteersReason,
   validateShiftWindow,
 } from '../_services/shiftSchedule.service';
 
@@ -16,7 +15,7 @@ const toNumber = (v: unknown) => (v === '' || v == null ? null : Number(v));
 /** react-hook-form `rules` for the shift grid, with translated messages. */
 export function useShiftRules() {
   const { t } = useTranslation();
-  const { approvedEdit, suggestedMinPerDay } = useCampaign();
+  const { approvedEdit } = useCampaign();
   const translated = (result: true | string) => result === true || t(result);
 
   return {
@@ -42,9 +41,5 @@ export function useShiftRules() {
       validate: (v: string, values: CampaignFormValues) =>
         translated(validateLeader(v, values, d, p)),
     }),
-    minReason: {
-      validate: (v: string, values: CampaignFormValues) =>
-        translated(validateMinVolunteersReason(v, values, suggestedMinPerDay)),
-    },
   };
 }

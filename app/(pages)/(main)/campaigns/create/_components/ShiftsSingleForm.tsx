@@ -18,14 +18,13 @@ export default function ShiftsSingleForm({
   days,
   schedule,
   members,
-  belowSuggestion,
   dayMessages,
   cellErrors,
   dayLabel,
   pointName,
 }: ShiftsViewProps) {
   const { t } = useTranslation();
-  const { form, suggestedMinPerDay, approvedEdit } = useCampaign();
+  const { form, approvedEdit } = useCampaign();
   const { register } = form;
   const rules = useShiftRules();
   const errors = cellErrors(0, 0);
@@ -71,11 +70,6 @@ export default function ShiftsSingleForm({
               className={cn(inputClassName, 'w-[160px]')}
             />
           </div>
-          {belowSuggestion.includes(0) && (
-            <span className="text-xs text-amber-600">
-              {t('Suggested ≥ {{n}}', { n: suggestedMinPerDay })}
-            </span>
-          )}
           <FieldError errors={[errors?.min_volunteers, errors?.max_volunteers]} />
         </Field>
         <Field>

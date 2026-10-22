@@ -40,12 +40,3 @@ export function formatTransactionDate(value?: string): string {
     minute: '2-digit',
   });
 }
-
-export function inferTransactionKind(type?: string, points?: number): 'earned' | 'spent' {
-  const normalizedType = (type ?? '').trim().toLowerCase();
-
-  if (normalizedType.includes('spend') || normalizedType.includes('redeem')) return 'spent';
-  if (normalizedType.includes('earn') || normalizedType.includes('reward')) return 'earned';
-
-  return (points ?? 0) < 0 ? 'spent' : 'earned';
-}

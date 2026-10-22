@@ -17,7 +17,6 @@ import { CampaignDateRange } from '@/components/client/shared/CampaignDateRange'
 import { OrganizationIdentity } from '@/components/admin/shared/OrganizationIdentity';
 import { formattedDate } from '@/utils/formattedDate';
 import { CAMPAIGN_STATUS } from '@/constants/campaignLifecycle';
-import { getDifficultyLevel } from '@/constants/difficulty';
 import { CompletionReviewButton } from './CompletionReviewButton';
 import { DialogLoading } from './DialogLoading';
 import dynamic from '@/libs/dynamic';
@@ -49,9 +48,7 @@ const GeneralInformationCell = memo(function GeneralInformationCell({
   title: string;
   isDark: boolean;
 }) {
-  const { t } = useTranslation();
   const bannerUrl = campaign.banner?.trim() ? campaign.banner : DEFAULT_BANNER;
-  const difficulty = getDifficultyLevel(campaign.difficulty);
 
   return (
     <div className="flex items-start gap-3 min-w-[280px] max-w-[420px]">
@@ -81,14 +78,6 @@ const GeneralInformationCell = memo(function GeneralInformationCell({
           )}
         >
           <CampaignDateRange campaign={campaign} />
-        </span>
-        <span
-          className={cn(
-            'font-display-1 text-xs font-medium',
-            difficulty?.textClass ?? (isDark ? 'text-zinc-500' : 'text-zinc-500'),
-          )}
-        >
-          {difficulty ? t(difficulty.label) : '—'}
         </span>
       </div>
     </div>

@@ -22,8 +22,6 @@ export interface ShiftSlotsTableProps {
   points: string[];
   /** `cells[day][point]` */
   cells: ShiftSlotsCell[][];
-  /** Minimum per day the difficulty suggests; day totals below it are highlighted. */
-  suggestedMinPerDay?: number | null;
   /** `admin` follows the admin console tables (theme tokens, no grid lines). */
   variant?: 'client' | 'admin';
 }
@@ -58,7 +56,6 @@ export const ShiftSlotsTable = memo(function ShiftSlotsTable({
   days,
   points,
   cells,
-  suggestedMinPerDay,
   variant = 'client',
 }: ShiftSlotsTableProps) {
   const { t } = useTranslation();
@@ -93,7 +90,6 @@ export const ShiftSlotsTable = memo(function ShiftSlotsTable({
               (sum, c) => sum + (Number(c?.minVolunteers) || 0),
               0,
             );
-            const below = suggestedMinPerDay != null && total < suggestedMinPerDay;
             const span = Math.max(points.length, 1);
             return (
               <Fragment key={d}>
@@ -134,15 +130,9 @@ export const ShiftSlotsTable = memo(function ShiftSlotsTable({
                             cell,
                             style.groupEnd,
                             'font-semibold tabular-nums whitespace-nowrap',
-                            below && 'text-amber-600',
                           )}
                         >
                           {total}
-                          {below && (
-                            <div className="text-xs font-normal">
-                              {t('Suggested ≥ {{n}}', { n: suggestedMinPerDay })}
-                            </div>
-                          )}
                         </td>
                       )}
                     </tr>

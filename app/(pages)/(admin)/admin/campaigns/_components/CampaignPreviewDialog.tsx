@@ -4,7 +4,6 @@ import { useGetCampaignById } from "@/apis/campaign/getCampaignById";
 import { useGetCampaignHistory } from "@/apis/campaign/getCampaignHistory";
 import { CAMPAIGN_STATUS } from "@/constants/campaignLifecycle";
 import { useAdminLayout } from "@/app/(pages)/(admin)/_context/AdminLayoutContext";
-import { impliedMinAge } from "@/constants/campaignLifecycle";
 import { OrganizationIdentity } from "@/components/admin/shared/OrganizationIdentity";
 import { ReviewRow, ReviewSectionCard } from "@/components/ui/ReviewSection";
 import Image from "@/components/ui/AppImage";
@@ -21,7 +20,6 @@ import { RichTextContent } from "@/components/ui/RichTextContent";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CAMPAIGN_PUBLIC_STATUSES } from "@/constants/campaignLifecycle";
-import { getDifficultyLevel } from "@/constants/difficulty";
 import { useLocalizedDisplay } from "@/hooks/useLocalizedDisplay";
 import { cn } from "@/libs/utils";
 import { formattedDate } from "@/utils/formattedDate";
@@ -50,9 +48,8 @@ export function CampaignPreviewDialog({
   const { data, isLoading } = useGetCampaignById(campaignId);
   const campaign = data?.data?.campaign;
 
-  const difficulty = getDifficultyLevel(campaign?.difficulty);
   const requirements = campaign?.requirements;
-  const minAge = requirements?.min_age ?? impliedMinAge(campaign?.difficulty ?? 0);
+  const minAge = requirements?.min_age ?? null;
   const conditions = [
     minAge != null ? t("From {{age}} years old", { age: minAge }) : null,
     requirements?.skills?.length
@@ -173,15 +170,7 @@ export function CampaignPreviewDialog({
                     label={t("Creator")}
                     value={campaign.owner ? campaign.owner.name || campaign.owner.email : null}
                   />
-                  <ReviewRow
-                    label={t("Difficulty")}
-                    value={
-                      difficulty ? (
-                        <span className={difficulty.textClass}>{t(difficulty.label)}</span>
-                      ) : null
-                    }
-                  />
-                  <ReviewRow label={t("Reward (GP & SP)")} value={campaign.green_points} />
+                  <ReviewRow label={t("Reward (GP & SP)")} value={campaign.green_points ?? "—"} />
                   <ReviewRow label={t("Created at")} value={formattedDate(campaign.created_at, true)} />
                   <ReviewRow
                     label={t("Submitted")}

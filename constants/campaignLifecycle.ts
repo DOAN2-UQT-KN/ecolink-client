@@ -91,11 +91,6 @@ export const CAMPAIGN_DAY_MAX = 7;
 export const CAMPAIGN_DAY_SPAN_DAYS = 14;
 export const CAMPAIGN_MEETING_POINT_MAX = 5;
 export const CAMPAIGN_MEETING_POINT_MAX_DISTANCE_KM = 5;
-const CAMPAIGN_HIGH_DIFFICULTY_LEVEL = 3;
-const CAMPAIGN_HIGH_DIFFICULTY_MIN_AGE = 18;
-/** Minimum age implied by the difficulty (volunteers must be adults on hard campaigns). */
-export const impliedMinAge = (difficulty: number): number | null =>
-  difficulty >= CAMPAIGN_HIGH_DIFFICULTY_LEVEL ? CAMPAIGN_HIGH_DIFFICULTY_MIN_AGE : null;
 
 /** Why the create button is disabled, as a translatable sentence. */
 export const CAMPAIGN_CREATE_BLOCK_REASON_LABEL: Record<string, string> = {
@@ -141,15 +136,12 @@ export const CAMPAIGN_ISSUE_MESSAGES: Record<string, string> = {
   MULTI_DAY_UNSUPPORTED: "A day must start and end on the same date",
   CONTACT_NAME_REQUIRED: "Contact name is required",
   CONTACT_PHONE_INVALID: "Enter a valid phone number",
-  DIFFICULTY_NOT_ALLOWED: "Unverified organizations can only create the lowest difficulty",
-  DIFFICULTY_UNKNOWN: "This difficulty level does not exist",
   MIN_AGE_INVALID: "Minimum age must be 0–100",
   MEETING_POINT_COUNT: "A campaign needs 1–5 meeting points",
   MEETING_POINT_NAME_REQUIRED: "Name each meeting point",
   RADIUS_INVALID: "Radius must be greater than 0",
   MIN_VOLUNTEERS_INVALID: "Minimum volunteers must be a whole number, 0 to turn the shift off",
   MAX_BELOW_MIN: "The expected maximum must be a whole number no lower than the minimum",
-  MIN_VOLUNTEERS_REASON_REQUIRED: "Explain why a day needs fewer volunteers than suggested for this difficulty",
   LEADER_INVALID: "The person in charge must be an active member of the organization",
   GATHER_TIME_INVALID: "Gathering time must be on that day, before it ends",
   REPORT_DUPLICATED: "A waste point can belong to only one meeting point",

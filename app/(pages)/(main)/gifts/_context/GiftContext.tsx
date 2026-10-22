@@ -14,6 +14,7 @@ import type { IGift, IRedeemGiftRequest } from '@/apis/gift/models/gift';
 import { useGetGifts } from '@/apis/gift/getGifts';
 import { useRedeemGift } from '@/apis/gift/redeemGift';
 import useGetParam from '@/hooks/useGetParam';
+import { useLocalizedDisplay } from '@/hooks/useLocalizedDisplay';
 
 import {
   buildGiftFilters,
@@ -102,15 +103,16 @@ export const GiftProvider = React.memo(function GiftProvider({
   const { mutateAsync: redeemGiftMutateAsync, isPending: isRedeeming } = useRedeemGift();
 
   const rawGifts = useMemo(() => data?.data?.gifts ?? [], [data]);
+  const { title } = useLocalizedDisplay();
 
   const gifts = useMemo(() => {
     const sorted = [...rawGifts];
     switch (filters.sortBy) {
       case 'name_asc':
-        sorted.sort((a, b) => a.name.localeCompare(b.name));
+        sorted.sort((a, b) => title(a).localeCompare(title(b)));
         break;
       case 'name_desc':
-        sorted.sort((a, b) => b.name.localeCompare(a.name));
+        sorted.sort((a, b) => title(b).localeCompare(title(a)));
         break;
       case 'points_desc':
         sorted.sort((a, b) => b.greenPoints - a.greenPoints);
@@ -121,7 +123,7 @@ export const GiftProvider = React.memo(function GiftProvider({
         break;
     }
     return sorted;
-  }, [filters.sortBy, rawGifts]);
+  }, [filters.sortBy, rawGifts, title]);
 
   const total = useMemo(() => data?.data?.meta?.total ?? data?.data?.total ?? 0, [data]);
   const totalPages = useMemo(

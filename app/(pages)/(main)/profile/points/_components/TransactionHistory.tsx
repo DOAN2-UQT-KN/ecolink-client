@@ -1,6 +1,7 @@
 import { memo, useCallback, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, History } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 
 import type { IPointTransaction } from '@/apis/points/models/point';
 import {
@@ -16,18 +17,36 @@ import usePointsContext from '../_hooks/usePointsContext';
 import { formatPoints } from '../_services/points.service';
 import { formattedDate } from '@/utils/formattedDate';
 
+function transactionMessage(transaction: IPointTransaction, t: TFunction): string {
+  const campaignTitle = transaction.resource?.title?.trim();
+  const redemption = transaction.resource as { gift?: { name?: string }; quantity?: number } | undefined;
+  const baseName = redemption?.gift?.name?.trim();
+  // One ledger row per order (spec 018): show how many items it paid for.
+  const giftName =
+    baseName && (redemption?.quantity ?? 1) > 1 ? `${baseName} × ${redemption?.quantity}` : baseName;
+  switch (transaction.type) {
+    case 'CAMPAIGN_COMPLETION':
+      return campaignTitle ? t('Campaign completed message', { title: campaignTitle }) : t('Activity completed');
+    case 'REPORT_VOTE_MILESTONE':
+      return t('Report upvote milestone');
+    case 'REPORT_COMPLETION':
+      return t('Report resolved');
+    case 'GIFT_REDEEM':
+      return giftName ? t('Gift redeemed message', { name: giftName }) : t('Gift redeemed');
+    case 'GIFT_REDEEM_REFUND':
+      return giftName ? t('Gift refund message', { name: giftName }) : t('Gift refund');
+    case 'EXPIRE':
+      return t('Points expired');
+    case 'MIGRATION_ADJUST':
+      return t('Balance adjustment');
+    default:
+      return t('Activity completed');
+  }
+}
+
 function TransactionCard({ transaction }: { transaction: IPointTransaction }) {
   const { t } = useTranslation();
-  const campaignTitle = transaction.resource?.title?.trim();
-  const giftName = (transaction.resource as { name?: string } | undefined)?.name?.trim();
-  const isGiftRedemption = transaction.resourceType === 'GIFT_REDEMPTION';
-  const message = isGiftRedemption
-    ? giftName
-      ? t('Gift redeemed message', { name: giftName })
-      : t('Gift redeemed')
-    : campaignTitle
-      ? t('Campaign completed message', { title: campaignTitle })
-      : t('Activity completed');
+  const message = transactionMessage(transaction, t);
   const timestamp = formattedDate(transaction.createdAt, true);
   const points = transaction.points ?? 0;
   const pointsPrefix = points > 0 ? '+' : points < 0 ? '-' : '';
