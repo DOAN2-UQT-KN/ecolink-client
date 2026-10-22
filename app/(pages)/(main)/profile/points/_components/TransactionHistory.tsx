@@ -19,7 +19,11 @@ import { formattedDate } from '@/utils/formattedDate';
 
 function transactionMessage(transaction: IPointTransaction, t: TFunction): string {
   const campaignTitle = transaction.resource?.title?.trim();
-  const giftName = (transaction.resource as { gift?: { name?: string } } | undefined)?.gift?.name?.trim();
+  const redemption = transaction.resource as { gift?: { name?: string }; quantity?: number } | undefined;
+  const baseName = redemption?.gift?.name?.trim();
+  // One ledger row per order (spec 018): show how many items it paid for.
+  const giftName =
+    baseName && (redemption?.quantity ?? 1) > 1 ? `${baseName} × ${redemption?.quantity}` : baseName;
   switch (transaction.type) {
     case 'CAMPAIGN_COMPLETION':
       return campaignTitle ? t('Campaign completed message', { title: campaignTitle }) : t('Activity completed');

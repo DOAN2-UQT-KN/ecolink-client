@@ -5,7 +5,6 @@ import Image from '@/components/ui/AppImage';
 import type { IGift } from '@/apis/gift/models/gift';
 import { cn } from '@/libs/utils';
 import bannerDefault from '@/public/banner-default.jpg';
-import { ConfirmPopover } from '@/components/ui/ConfirmPopover';
 import { Pill } from '@/components/ui/Pill';
 import { Button } from '../client/shared/Button';
 import { TbCoinFilled } from 'react-icons/tb';
@@ -108,28 +107,15 @@ export const GiftCard = memo(function GiftCard({
             <span className="text-xl font-bold tabular-nums">{gift.greenPoints}</span>
             <span className="text-sm text-foreground-secondary">{t('points')}</span>
           </p>
-          <ConfirmPopover
-            theme="light"
-            title={t('Exchange this reward?')}
-            description={t('You will spend {{points}} SP to redeem «{{name}}».', {
-              points: gift.greenPoints,
-              name,
-            })}
-            confirmLabel={t('Exchange')}
-            cancelLabel={t('Cancel')}
-            onConfirm={handleExchange}
-            confirmPending={exchangePending}
-            trigger={
-              <Button
-                variant="brown"
-                size="medium"
-                className="!h-[44px] shrink-0"
-                isDisabled={exchangePending || outOfStock}
-              >
-                {outOfStock ? t('Out of stock') : t('Exchange')}
-              </Button>
-            }
-          />
+          <Button
+            variant="brown"
+            size="medium"
+            className="!h-[44px] shrink-0"
+            isDisabled={exchangePending || outOfStock}
+            onClick={handleExchange}
+          >
+            {outOfStock ? t('Out of stock') : t('Exchange')}
+          </Button>
         </div>
       </div>
     </article>

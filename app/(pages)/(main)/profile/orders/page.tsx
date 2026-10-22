@@ -1,10 +1,8 @@
-import { useMemo, useState } from 'react';
-import { Gift, Truck } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Gift, Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { useGetGiftRedemptions } from '@/apis/gift/getGiftRedemptions';
-import { Pill } from '@/components/ui/Pill';
-import { GIFT_REDEEM_TONE } from '@/constants/statusTone';
 import { Button } from '@/components/ui/button';
 import {
   Empty,
@@ -14,7 +12,10 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { Skeleton } from '@/components/ui/skeleton';
-import { formattedDate } from '@/utils/formattedDate';
+import { Input } from '@/components/ui/input';
+import { useDebounce } from '@/hooks/useDebounce';
+import { usePathname, useRouter, useSearchParams } from '@/libs/router';
+import { OrderCard } from './_components/OrderCard';
 
 const PAGE_SIZE = 10;
 
@@ -30,10 +31,27 @@ function OrderCardSkeleton() {
 
 export default function ProfileOrdersPage() {
   const { t } = useTranslation();
+  const router = useRouter();
+  const pathname = usePathname();
+  const code = useSearchParams().get('code') ?? '';
   const [page, setPage] = useState(1);
+  const [codeInput, setCodeInput] = useState(code);
+  const debouncedCode = useDebounce(codeInput.trim(), 300);
+  useEffect(() => {
+    // Keep the searched code in the URL (?code=) once typing pauses.
+    if (debouncedCode === code) return;
+    setPage(1);
+    router.replace(debouncedCode ? `${pathname}?code=${encodeURIComponent(debouncedCode)}` : pathname, { scroll: false });
+  }, [debouncedCode, code, pathname, router]);
   const request = useMemo(
-    () => ({ page, limit: PAGE_SIZE, sortBy: 'createdAt' as const, sortOrder: 'desc' as const }),
-    [page],
+    () => ({
+      page,
+      limit: PAGE_SIZE,
+      code: code || undefined,
+      sortBy: 'createdAt' as const,
+      sortOrder: 'desc' as const,
+    }),
+    [page, code],
   );
   const { data, isLoading } = useGetGiftRedemptions(request);
   const redemptions = data?.data?.redemptions ?? [];
@@ -41,7 +59,19 @@ export default function ProfileOrdersPage() {
 
   return (
     <section className="rounded-xl border border-[rgba(136,122,71,0.35)] bg-white p-5 sm:p-6">
-      <h2 className="text-lg font-semibold text-button-accent">{t('Orders')}</h2>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h2 className="text-lg font-semibold text-button-accent">{t('Orders')}</h2>
+        <div className="relative w-full sm:w-64">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-foreground-secondary" aria-hidden />
+          <Input
+            value={codeInput}
+            onChange={(e) => setCodeInput(e.target.value)}
+            placeholder={t('Order code')}
+            aria-label={t('Search by order code')}
+            className="!h-10 pl-9 font-mono"
+          />
+        </div>
+      </div>
 
       {isLoading ? (
         <div className="mt-4 space-y-3">
@@ -56,8 +86,10 @@ export default function ProfileOrdersPage() {
               <EmptyMedia variant="icon">
                 <Gift className="h-5 w-5 text-muted-foreground" />
               </EmptyMedia>
-              <EmptyTitle>{t('No orders yet')}</EmptyTitle>
-              <EmptyDescription>{t('Redeemed gifts will appear here.')}</EmptyDescription>
+              <EmptyTitle>{code ? t('No order matches this code') : t('No orders yet')}</EmptyTitle>
+              <EmptyDescription>
+                {code ? t('Check the code and try again.') : t('Redeemed gifts will appear here.')}
+              </EmptyDescription>
             </EmptyHeader>
           </Empty>
         </div>
@@ -65,40 +97,7 @@ export default function ProfileOrdersPage() {
         <>
           <div className="mt-4 space-y-3">
             {redemptions.map((order) => (
-              <article
-                key={order.id}
-                className="rounded-lg border border-[rgba(136,122,71,0.35)] bg-background/20 p-4"
-              >
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="min-w-0 space-y-1">
-                    <h3 className="truncate text-sm font-semibold text-foreground-primary sm:text-base">
-                      {order.gift?.name ?? t('Gift')}
-                    </h3>
-                    <p className="text-xs text-foreground-secondary sm:text-sm">
-                      {t('{{points}} SP', { points: order.greenPointsSpent })} ·{' '}
-                      {formattedDate(order.createdAt, true)}
-                    </p>
-                  </div>
-                  <Pill tone={GIFT_REDEEM_TONE[order.status]}>
-                    {t(order.status)}
-                  </Pill>
-                </div>
-
-                <div className="mt-4 grid gap-2 text-sm text-foreground-secondary md:grid-cols-2">
-                  <p>
-                    <span className="font-medium text-foreground">{t('Phone')}:</span>{' '}
-                    {order.phoneNumber}
-                  </p>
-                  <p className="md:col-span-2">
-                    <span className="font-medium text-foreground">{t('Receiving address')}:</span>{' '}
-                    {order.pickupLocation}
-                  </p>
-                  <p className="inline-flex items-center gap-1">
-                    <Truck className="size-4" />
-                    {t('Last updated')}: {formattedDate(order.statusUpdatedAt, true)}
-                  </p>
-                </div>
-              </article>
+              <OrderCard key={order.id} order={order} />
             ))}
           </div>
 
