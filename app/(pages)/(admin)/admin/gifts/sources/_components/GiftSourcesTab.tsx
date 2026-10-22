@@ -20,11 +20,6 @@ export function GiftSourcesTab({ createOpen, onCreateOpenChange }: Props) {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h2 className="text-lg font-semibold">{t('Gift sources')}</h2>
-        <p className="text-sm text-muted-foreground">{t('Create a source before receiving stock.')}</p>
-      </div>
-
       <GiftSourceFilter request={request} onChange={setFilter} />
       <CreateButton label={t('Create gift source')} onClick={() => onCreateOpenChange(true)} />
       <GiftSourceTable
