@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAdminLayout } from '@/app/(pages)/(admin)/_context/AdminLayoutContext';
 import { cn } from '@/libs/utils';
 import { formattedDate } from '@/utils/formattedDate';
-import { ADJUST_REASON_LABEL, MOVEMENT_TYPE_LABEL, MOVEMENT_TYPES } from '../_services/stockForm.service';
+import { ADJUST_REASON_LABEL, MOVEMENT_TYPE_LABEL, MOVEMENT_TYPES } from '../../_services/stockForm.service';
 
 const PAGE_SIZE = 20;
 const ALL = 'all';

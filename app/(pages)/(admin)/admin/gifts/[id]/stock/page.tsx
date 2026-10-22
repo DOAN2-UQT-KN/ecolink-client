@@ -10,10 +10,10 @@ import { Breadcrumbs, type BreadcrumbItemProps } from '@/components/client/share
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useParams } from '@/libs/router';
-import { AdjustDialog } from './_components/AdjustDialog';
-import { BatchTable } from './_components/BatchTable';
-import { MovementTable } from './_components/MovementTable';
-import { StockInDialog } from './_components/StockInDialog';
+import { AdjustDialog } from '../../_components/stock/AdjustDialog';
+import { BatchTable } from '../../_components/stock/BatchTable';
+import { MovementTable } from '../../_components/stock/MovementTable';
+import { StockInDialog } from '../../_components/stock/StockInDialog';
 
 const PAGE_SIZE = 10;
 

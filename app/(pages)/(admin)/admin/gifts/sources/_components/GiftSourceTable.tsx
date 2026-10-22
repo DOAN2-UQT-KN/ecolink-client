@@ -11,7 +11,7 @@ import { Link } from '@/libs/router';
 import { cn } from '@/libs/utils';
 import { GIFT_SOURCE_TYPE_LABEL } from '../_services/giftSourceForm.service';
 import { GiftSourceStatusPill } from './GiftSourceStatusPill';
-import { SourceAvatar } from './SourceAvatar';
+import { SourceAvatar } from '../../_components/SourceAvatar';
 
 type Props = {
   sources: IGiftSource[];

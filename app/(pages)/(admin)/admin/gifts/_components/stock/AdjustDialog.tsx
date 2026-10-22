@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/libs/utils';
 import { fieldErrorsFromApi } from '@/utils/validationErrors';
-import { ADJUST_REASON_LABEL, ADJUST_REASONS, isWholeNumber } from '../_services/stockForm.service';
+import { ADJUST_REASON_LABEL, ADJUST_REASONS, isWholeNumber } from '../../_services/stockForm.service';
 
 type Values = { quantity: string; reason: StockAdjustReason | ''; note: string };
 const EMPTY: Values = { quantity: '1', reason: '', note: '' };

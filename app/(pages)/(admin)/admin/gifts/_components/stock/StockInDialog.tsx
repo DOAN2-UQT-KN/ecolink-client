@@ -16,7 +16,7 @@ import { uploadToCloudinary } from '@/libs/cloudinary';
 import { cn } from '@/libs/utils';
 import showMessage, { MessageLevel, MessageType } from '@/utils/showMessage';
 import { ProofFilesField } from './ProofFilesField';
-import { SourceAvatar } from '../../../sources/_components/SourceAvatar';
+import { SourceAvatar } from '../SourceAvatar';
 import { fieldErrorsFromApi } from '@/utils/validationErrors';
 import {
   defaultStockInValues,
@@ -29,7 +29,7 @@ import {
   todayVn,
   toStockInRequest,
   type StockInFormValues,
-} from '../_services/stockForm.service';
+} from '../../_services/stockForm.service';
 
 const FIELDS = ['sourceId', 'quantity', 'unitValueVnd', 'receivedAt', 'expiresAt', 'reference', 'note'] as const;
 

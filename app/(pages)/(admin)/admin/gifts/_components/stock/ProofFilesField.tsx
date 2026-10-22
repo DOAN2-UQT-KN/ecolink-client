@@ -4,7 +4,7 @@ import { TbCloudUpload, TbFileTypePdf, TbTrash } from 'react-icons/tb';
 
 import { TooltipTruncatedText } from '@/components/ui/TooltipTruncatedText';
 import { cn } from '@/libs/utils';
-import { MAX_PROOF_FILES, PROOF_FILE_ACCEPT } from '../_services/stockForm.service';
+import { MAX_PROOF_FILES, PROOF_FILE_ACCEPT } from '../../_services/stockForm.service';
 
 type Props = {
   files: File[];
