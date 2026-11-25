@@ -85,6 +85,11 @@ const items = [
         ariaLabel: 'Report Trash',
         href: '/incidents',
       },
+      {
+        label: 'Trash Risk Map',
+        ariaLabel: 'Trash Risk Map',
+        href: '/risk-map',
+      },
     ],
   },
   {
