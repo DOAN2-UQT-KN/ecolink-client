@@ -7,6 +7,8 @@ import {
   TbFlag,
   TbUser,
   TbCoins,
+  TbGridDots,
+  TbMapPinCheck,
 } from 'react-icons/tb';
 import { IconType } from 'react-icons';
 
@@ -58,6 +60,8 @@ export const adminNavItems: AdminNavItem[] = [
     icon: TbUser,
   },
   { kind: 'link', href: '/admin/campaigns', labelKey: 'Campaigns', icon: TbFlag },
+  { kind: 'link', href: '/admin/grid-cells', labelKey: 'Grid cells', icon: TbGridDots },
+  { kind: 'link', href: '/admin/risk-sites', labelKey: 'Risk site checks', icon: TbMapPinCheck },
   { kind: 'link', href: '/admin/gifts', labelKey: 'Gifts', icon: TbGift },
   { kind: 'link', href: '/admin/point-rules', labelKey: 'Point rules', icon: TbCoins },
   { kind: 'link', href: '/admin/settings', labelKey: 'Settings', icon: TbSettings },

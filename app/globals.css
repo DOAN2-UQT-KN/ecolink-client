@@ -1,4 +1,6 @@
 @import "tailwindcss";
+/* public/ holds static files (e.g. the 3 MB risk map HTML); scanning them for classes hangs the dev server. */
+@source not "../public";
 @import "tailwind-scrollbar-hide/v4";
 
 @import "./_styles/typography.css";
